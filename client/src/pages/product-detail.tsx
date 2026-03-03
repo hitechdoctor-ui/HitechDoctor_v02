@@ -156,6 +156,13 @@ function buildImageAlt(imageUrl: string, productName: string): string {
   if (url.includes("mavro-side")) {
     return `${productName} — Apple Silicone Case MagSafe Μαύρο πλαϊνή όψη iPhone 17 Pro Max — HiTech Doctor Θεσσαλονίκη`;
   }
+  // Chargers & cables
+  if (url.includes("kalodio") && url.includes("cable")) {
+    return `${productName} — Γνήσιο Apple USB-C to Lightning καλώδιο 1m λευκό για iPhone, studio φωτογραφία — HiTech Doctor Θεσσαλονίκη`;
+  }
+  if (url.includes("kalodio") && url.includes("box")) {
+    return `${productName} — Γνήσια συσκευασία Apple USB-C to Lightning Cable 1m MM0A3ZM/A — HiTech Doctor Θεσσαλονίκη`;
+  }
   return `${productName} — αξεσουάρ iPhone — HiTech Doctor Θεσσαλονίκη`;
 }
 
