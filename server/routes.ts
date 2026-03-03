@@ -1,16 +1,129 @@
 import type { Express } from "express";
-import { createServer, type Server } from "http";
+import type { Server } from "http";
 import { storage } from "./storage";
+import { api, errorSchemas } from "@shared/routes";
+import { z } from "zod";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  // put application routes here
-  // prefix all routes with /api
+  
+  // --- Products API ---
+  app.get(api.products.list.path, async (req, res) => {
+    try {
+      const category = req.query.category as string | undefined;
+      const products = await storage.getProducts(category);
+      res.json(products);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch products" });
+    }
+  });
 
-  // use storage to perform CRUD operations on the storage interface
-  // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
+  app.get(api.products.get.path, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const product = await storage.getProduct(id);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      res.json(product);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch product" });
+    }
+  });
+
+  app.post(api.products.create.path, async (req, res) => {
+    try {
+      // Coerce price from string to string format required by numeric
+      const input = api.products.create.input.parse(req.body);
+      const product = await storage.createProduct(input);
+      res.status(201).json(product);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put(api.products.update.path, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const input = api.products.update.input.parse(req.body);
+      const product = await storage.updateProduct(id, input);
+      res.json(product);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      res.status(404).json({ message: "Product not found or update failed" });
+    }
+  });
+
+  app.delete(api.products.delete.path, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteProduct(id);
+      res.status(204).send();
+    } catch (error) {
+      res.status(404).json({ message: "Product not found" });
+    }
+  });
+
+  // --- Customers API ---
+  app.get(api.customers.list.path, async (req, res) => {
+    try {
+      const customers = await storage.getCustomers();
+      res.json(customers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch customers" });
+    }
+  });
+
+  // --- Orders & Checkout API ---
+  app.get(api.orders.list.path, async (req, res) => {
+    try {
+      const ordersList = await storage.getOrders();
+      res.json(ordersList);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch orders" });
+    }
+  });
+
+  app.post(api.orders.create.path, async (req, res) => {
+    try {
+      const input = api.orders.create.input.parse(req.body);
+      const order = await storage.createOrder(input);
+      res.status(201).json(order);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      console.error("Checkout error:", err);
+      res.status(500).json({ message: "Failed to process checkout" });
+    }
+  });
+
+  app.patch(api.orders.updateStatus.path, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const input = api.orders.updateStatus.input.parse(req.body);
+      const order = await storage.updateOrderStatus(id, input.status);
+      res.json(order);
+    } catch (err) {
+      res.status(404).json({ message: "Order not found" });
+    }
+  });
 
   return httpServer;
 }
