@@ -117,6 +117,21 @@ function buildJsonLd(product: Product) {
   return [productSchema, breadcrumb];
 }
 
+// ── SEO image alt text builder ──────────────────────────────────────────────
+function buildImageAlt(imageUrl: string, productName: string): string {
+  const url = imageUrl || "";
+  if (url.includes("aplo") || url.includes("kit")) {
+    return `${productName} — Κιτ εγκατάστασης Tempered Glass 9H Aurora Glisch: γυαλί προστασίας iPhone, πανάκι μικροϊνών, αλκοόλ καθαρισμού και sticker σκόνης — HiTech Doctor Θεσσαλονίκη`;
+  }
+  if (url.includes("privacy")) {
+    return `${productName} — Συσκευασία Aurora Glisch Privacy Screen Protector 9H δίπλα σε iPhone 17 Pro Max: λευκό studio φόντο, τζάμι τοποθετημένο με dark privacy τεχνολογία — HiTech Doctor Θεσσαλονίκη`;
+  }
+  if (url.includes("keramiko") || url.includes("dark")) {
+    return `${productName} — Συσκευασία Aurora Glisch Κεραμικό Premium δίπλα σε iPhone 17 Pro Max, lifestyle φωτογραφία με σκούρο ambient φόντο από γκρι πέτρα — HiTech Doctor Θεσσαλονίκη`;
+  }
+  return `${productName} — αξεσουάρ iPhone — HiTech Doctor Θεσσαλονίκη`;
+}
+
 // ── Component ──────────────────────────────────────────────────────────────
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -257,7 +272,7 @@ export default function ProductDetail() {
                 {product.imageUrl ? (
                   <img
                     src={product.imageUrl}
-                    alt={`${product.name} — ${subcatLabel} για iPhone — HiTech Doctor Θεσσαλονίκη`}
+                    alt={buildImageAlt(product.imageUrl ?? "", product.name)}
                     className="w-full h-full object-cover"
                     loading="eager"
                     decoding="async"
