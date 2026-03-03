@@ -17,18 +17,18 @@ import {
 } from "lucide-react";
 import type { Product } from "@shared/schema";
 
-// ── iPhone models list ─────────────────────────────────────────────────────
+// ── iPhone models list — newest first ──────────────────────────────────────
 const IPHONE_MODELS = [
-  "iPhone 8", "iPhone 8 Plus",
+  "iPhone 17 Pro Max", "iPhone 17 Pro", "iPhone 17 Plus", "iPhone 17",
+  "iPhone 16 Pro Max", "iPhone 16 Pro", "iPhone 16 Plus", "iPhone 16",
+  "iPhone 15 Pro Max", "iPhone 15 Pro", "iPhone 15 Plus", "iPhone 15",
+  "iPhone 14 Pro Max", "iPhone 14 Pro", "iPhone 14 Plus", "iPhone 14",
+  "iPhone 13 Pro Max", "iPhone 13 Pro", "iPhone 13", "iPhone 13 Mini",
+  "iPhone 12 Pro Max", "iPhone 12 Pro", "iPhone 12", "iPhone 12 Mini",
+  "iPhone 11 Pro Max", "iPhone 11 Pro", "iPhone 11",
+  "iPhone XS Max", "iPhone XS", "iPhone XR",
   "iPhone X",
-  "iPhone XR", "iPhone XS", "iPhone XS Max",
-  "iPhone 11", "iPhone 11 Pro", "iPhone 11 Pro Max",
-  "iPhone 12 Mini", "iPhone 12", "iPhone 12 Pro", "iPhone 12 Pro Max",
-  "iPhone 13 Mini", "iPhone 13", "iPhone 13 Pro", "iPhone 13 Pro Max",
-  "iPhone 14", "iPhone 14 Plus", "iPhone 14 Pro", "iPhone 14 Pro Max",
-  "iPhone 15", "iPhone 15 Plus", "iPhone 15 Pro", "iPhone 15 Pro Max",
-  "iPhone 16", "iPhone 16 Plus", "iPhone 16 Pro", "iPhone 16 Pro Max",
-  "iPhone 17", "iPhone 17 Plus", "iPhone 17 Pro", "iPhone 17 Pro Max",
+  "iPhone 8 Plus", "iPhone 8",
 ];
 
 const SUBCATEGORY_LABELS: Record<string, string> = {
@@ -555,6 +555,94 @@ export default function ProductDetail() {
             </div>
           </div>
         </section>
+
+        {/* ── Related Products ── */}
+        {(() => {
+          if (!products) return null;
+          const relatedSubcats: Record<string, string[]> = {
+            "screen-protectors": ["cases", "chargers"],
+            cases: ["screen-protectors", "chargers"],
+            chargers: ["screen-protectors", "cases"],
+          };
+          const targets = product.subcategory ? relatedSubcats[product.subcategory] ?? [] : [];
+          const related = products
+            .filter(
+              (p) =>
+                p.id !== product.id &&
+                p.category === "accessory" &&
+                (targets.length === 0 || targets.includes(p.subcategory ?? ""))
+            )
+            .slice(0, 4);
+          if (related.length === 0) return null;
+
+          const subcatBadgeLabel: Record<string, string> = {
+            "screen-protectors": "Τζάμι",
+            cases: "Θήκη",
+            chargers: "Φορτιστής",
+          };
+
+          return (
+            <section className="container mx-auto px-4 pb-20">
+              <div className="border-t border-border pt-10">
+                <h2 className="text-2xl font-display font-bold text-foreground mb-2">
+                  Συνδύασέ το με…
+                </h2>
+                <p className="text-sm text-muted-foreground mb-7">
+                  Πλήρης προστασία για το iPhone σου — προστατέψτο από κάθε γωνία.
+                </p>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {related.map((rel) => (
+                    <Link
+                      key={rel.id}
+                      href={`/eshop/${rel.slug}`}
+                      data-testid={`related-product-${rel.id}`}
+                      className="group flex flex-col bg-card/60 border border-border hover:border-primary/50 rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-[0_0_20px_rgba(0,210,200,0.12)]"
+                    >
+                      {/* Image */}
+                      <div className="aspect-square overflow-hidden bg-card relative">
+                        {rel.imageUrl ? (
+                          <img
+                            src={rel.imageUrl}
+                            alt={`${rel.name} — αξεσουάρ iPhone`}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            loading="lazy"
+                            decoding="async"
+                            width="400"
+                            height="400"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Package className="w-10 h-10 text-primary/20" />
+                          </div>
+                        )}
+                        {rel.subcategory && (
+                          <span className="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full border border-primary/40 text-primary"
+                            style={{ background: "rgba(0,210,200,0.12)" }}>
+                            {subcatBadgeLabel[rel.subcategory] ?? rel.subcategory}
+                          </span>
+                        )}
+                      </div>
+                      {/* Info */}
+                      <div className="p-3 flex flex-col gap-2 flex-1">
+                        <p className="text-xs font-semibold text-foreground line-clamp-2 leading-snug group-hover:text-primary transition-colors">
+                          {rel.name}
+                        </p>
+                        <div className="mt-auto flex items-center justify-between">
+                          <span className="text-primary font-extrabold text-sm">
+                            {formatPrice(rel.price)}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground border border-border rounded-full px-2 py-0.5 group-hover:border-primary/40 transition-colors">
+                            Δες →
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </section>
+          );
+        })()}
       </main>
     </div>
   );
