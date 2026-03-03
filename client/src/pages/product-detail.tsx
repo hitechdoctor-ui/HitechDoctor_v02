@@ -9,10 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { useState } from "react";
 import {
-  ShoppingCart, CheckCircle2, ChevronRight, Shield,
-  Clock, Star, ArrowLeft, Package, Truck,
+  ShoppingCart, CheckCircle2, ChevronRight, ChevronLeft, Shield,
+  Clock, Star, ArrowLeft, Package, Truck, ZoomIn, X,
 } from "lucide-react";
 import type { Product } from "@shared/schema";
 
@@ -80,7 +81,7 @@ function buildJsonLd(product: Product) {
     "@type": "Product",
     "name": product.name,
     "description": product.description,
-    "image": product.imageUrl ? [product.imageUrl] : [],
+    "image": product.images?.length ? product.images : product.imageUrl ? [product.imageUrl] : [],
     "brand": {
       "@type": "Brand",
       "name": "HiTech Doctor",
@@ -136,6 +137,8 @@ function buildImageAlt(imageUrl: string, productName: string): string {
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
   const [selectedModel, setSelectedModel] = useState("");
+  const [activeImg, setActiveImg] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
   const { toast } = useToast();
 
@@ -152,6 +155,15 @@ export default function ProductDetail() {
   const needsModel = product?.subcategory === "screen-protectors";
   const features = product?.subcategory ? FEATURE_BULLETS[product.subcategory] ?? [] : [];
   const jsonLdData = product ? buildJsonLd(product) : null;
+
+  const gallery: string[] = product?.images?.length
+    ? product.images
+    : product?.imageUrl
+    ? [product.imageUrl]
+    : [];
+
+  const prevImg = () => setActiveImg((i) => (i - 1 + gallery.length) % gallery.length);
+  const nextImg = () => setActiveImg((i) => (i + 1) % gallery.length);
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -266,19 +278,34 @@ export default function ProductDetail() {
         <section className="container mx-auto px-4 pt-8 pb-16">
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
 
-            {/* ── Left: Image ── */}
+            {/* ── Left: Gallery ── */}
             <div className="relative">
-              <div className="aspect-square rounded-2xl overflow-hidden bg-card pcb-border relative">
-                {product.imageUrl ? (
-                  <img
-                    src={product.imageUrl}
-                    alt={buildImageAlt(product.imageUrl ?? "", product.name)}
-                    className="w-full h-full object-cover"
-                    loading="eager"
-                    decoding="async"
-                    width="800"
-                    height="800"
-                  />
+
+              {/* Main image — clickable → lightbox */}
+              <div
+                className="group aspect-square rounded-2xl overflow-hidden bg-card pcb-border relative cursor-zoom-in select-none"
+                onClick={() => gallery.length > 0 && setLightboxOpen(true)}
+                data-testid="product-main-image"
+              >
+                {gallery[activeImg] ? (
+                  <>
+                    <img
+                      src={gallery[activeImg]}
+                      alt={buildImageAlt(gallery[activeImg], product.name)}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      loading="eager"
+                      decoding="async"
+                      width="800"
+                      height="800"
+                    />
+                    {/* Zoom overlay */}
+                    <div className="absolute inset-0 flex items-end justify-end p-4 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-sm rounded-lg px-3 py-1.5">
+                        <ZoomIn className="w-4 h-4 text-white" />
+                        <span className="text-white text-xs font-medium">Μεγέθυνση</span>
+                      </div>
+                    </div>
+                  </>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <Package className="w-24 h-24 text-primary/20" />
@@ -293,7 +320,35 @@ export default function ProductDetail() {
                 </div>
               </div>
 
-              {/* Perks row below image */}
+              {/* Thumbnails — visible only when gallery has >1 image */}
+              {gallery.length > 1 && (
+                <div className="flex gap-2.5 mt-3" data-testid="product-thumbnails">
+                  {gallery.map((src, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setActiveImg(i)}
+                      data-testid={`thumb-${i}`}
+                      className={`relative flex-1 aspect-square rounded-xl overflow-hidden border-2 transition-all duration-200 focus:outline-none ${
+                        i === activeImg
+                          ? "border-primary shadow-[0_0_12px_rgba(0,210,200,0.5)]"
+                          : "border-border/50 hover:border-primary/60 opacity-70 hover:opacity-100"
+                      }`}
+                    >
+                      <img
+                        src={src}
+                        alt={buildImageAlt(src, product.name)}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                        width="200"
+                        height="200"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Perks row below thumbnails */}
               <div className="grid grid-cols-2 gap-3 mt-4">
                 {PERKS.map(({ icon: Icon, label }) => (
                   <div key={label} className="flex items-center gap-2 bg-card/50 border border-border rounded-xl px-3 py-2.5">
@@ -303,6 +358,77 @@ export default function ProductDetail() {
                 ))}
               </div>
             </div>
+
+            {/* ── Lightbox ── */}
+            <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+              <DialogContent
+                className="max-w-5xl w-full p-0 bg-black/95 border border-primary/20 overflow-hidden"
+                data-testid="lightbox-dialog"
+              >
+                <DialogTitle className="sr-only">Φωτογραφία προϊόντος: {product.name}</DialogTitle>
+
+                {/* Close button */}
+                <DialogClose asChild>
+                  <button
+                    className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-black/60 hover:bg-primary/30 border border-white/20 flex items-center justify-center transition-colors"
+                    data-testid="button-lightbox-close"
+                  >
+                    <X className="w-5 h-5 text-white" />
+                  </button>
+                </DialogClose>
+
+                {/* Main lightbox image */}
+                <div className="relative flex items-center justify-center min-h-[60vw] max-h-[85vh]">
+                  {gallery[activeImg] && (
+                    <img
+                      src={gallery[activeImg]}
+                      alt={buildImageAlt(gallery[activeImg], product.name)}
+                      className="max-w-full max-h-[85vh] object-contain"
+                      loading="eager"
+                      decoding="async"
+                    />
+                  )}
+
+                  {/* Prev / Next arrows */}
+                  {gallery.length > 1 && (
+                    <>
+                      <button
+                        onClick={prevImg}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-primary/30 border border-white/20 flex items-center justify-center transition-colors"
+                        data-testid="button-lightbox-prev"
+                      >
+                        <ChevronLeft className="w-5 h-5 text-white" />
+                      </button>
+                      <button
+                        onClick={nextImg}
+                        className="absolute right-12 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-primary/30 border border-white/20 flex items-center justify-center transition-colors"
+                        data-testid="button-lightbox-next"
+                      >
+                        <ChevronRight className="w-5 h-5 text-white" />
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* Lightbox thumbnails strip */}
+                {gallery.length > 1 && (
+                  <div className="flex gap-2 p-3 border-t border-white/10 justify-center">
+                    {gallery.map((src, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setActiveImg(i)}
+                        className={`w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${
+                          i === activeImg ? "border-primary" : "border-white/20 opacity-60 hover:opacity-100"
+                        }`}
+                        data-testid={`lightbox-thumb-${i}`}
+                      >
+                        <img src={src} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
 
             {/* ── Right: Info ── */}
             <div className="flex flex-col gap-6">
