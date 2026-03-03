@@ -9,7 +9,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { ShoppingCart, Package, Shield, ChevronDown, Smartphone, Cable, Tag } from "lucide-react";
+import { ShoppingCart, Package, Shield, ChevronDown, Smartphone, Cable, Tag, ExternalLink } from "lucide-react";
+import { Link } from "wouter";
 import type { Product } from "@shared/schema";
 
 // ── iPhone models list (8 → 17, all variants) ──────────────────────────────
@@ -64,37 +65,41 @@ function ScreenProtectorCard({ product }: { product: Product }) {
       className="bg-card pcb-border rounded-2xl flex flex-col overflow-hidden group hover:-translate-y-1 hover:shadow-[0_0_28px_rgba(0,210,200,0.12)] transition-all duration-300"
       data-testid={`card-product-${product.id}`}
     >
-      {/* Image */}
-      <div className="relative h-48 bg-black/40 overflow-hidden">
-        {product.imageUrl ? (
-          <img
-            src={product.imageUrl}
-            alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80"
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Shield className="w-12 h-12 text-primary/30" />
+      {/* Image — clickable */}
+      <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
+        <div className="relative h-48 bg-black/40 overflow-hidden cursor-pointer">
+          {product.imageUrl ? (
+            <img
+              src={product.imageUrl}
+              alt={`${product.name} — Τζάμι Προστασίας iPhone — HiTech Doctor`}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Shield className="w-12 h-12 text-primary/30" />
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
+          {product.subcategory && (
+            <Badge className="absolute top-3 left-3 bg-primary/20 border border-primary/40 text-primary text-xs">
+              {SUBCATEGORY_LABELS[product.subcategory] ?? product.subcategory}
+            </Badge>
+          )}
+          <div className="absolute bottom-3 right-3 bg-background/80 backdrop-blur border border-primary/30 px-2.5 py-1 rounded-lg">
+            <span className="text-primary font-bold text-sm">{formatPrice(product.price)}</span>
           </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
-        {product.subcategory && (
-          <Badge className="absolute top-3 left-3 bg-primary/20 border border-primary/40 text-primary text-xs">
-            {SUBCATEGORY_LABELS[product.subcategory] ?? product.subcategory}
-          </Badge>
-        )}
-        <div className="absolute bottom-3 right-3 bg-background/80 backdrop-blur border border-primary/30 px-2.5 py-1 rounded-lg">
-          <span className="text-primary font-bold text-sm">{formatPrice(product.price)}</span>
         </div>
-      </div>
+      </Link>
 
       {/* Content */}
       <div className="flex flex-col flex-1 p-4 gap-3">
         <div>
-          <h3 className="font-display font-bold text-foreground text-base leading-tight mb-0.5">
-            {product.name}
-          </h3>
+          <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
+            <h3 className="font-display font-bold text-foreground text-base leading-tight mb-0.5 hover:text-primary transition-colors cursor-pointer">
+              {product.name}
+            </h3>
+          </Link>
           <p className="text-xs text-muted-foreground line-clamp-2">{product.description}</p>
         </div>
 
@@ -160,37 +165,41 @@ function ProductCard({ product }: { product: Product }) {
       className="bg-card pcb-border rounded-2xl flex flex-col overflow-hidden group hover:-translate-y-1 hover:shadow-[0_0_28px_rgba(0,210,200,0.12)] transition-all duration-300"
       data-testid={`card-product-${product.id}`}
     >
-      {/* Image */}
-      <div className="relative h-48 bg-black/40 overflow-hidden">
-        {product.imageUrl ? (
-          <img
-            src={product.imageUrl}
-            alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80"
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Package className="w-12 h-12 text-primary/30" />
+      {/* Image — clickable */}
+      <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
+        <div className="relative h-48 bg-black/40 overflow-hidden cursor-pointer">
+          {product.imageUrl ? (
+            <img
+              src={product.imageUrl}
+              alt={`${product.name} — ${product.subcategory ? SUBCATEGORY_LABELS[product.subcategory] : ""} — HiTech Doctor`}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Package className="w-12 h-12 text-primary/30" />
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
+          {product.subcategory && (
+            <Badge className="absolute top-3 left-3 bg-primary/20 border border-primary/40 text-primary text-xs">
+              {SUBCATEGORY_LABELS[product.subcategory] ?? product.subcategory}
+            </Badge>
+          )}
+          <div className="absolute bottom-3 right-3 bg-background/80 backdrop-blur border border-primary/30 px-2.5 py-1 rounded-lg">
+            <span className="text-primary font-bold text-sm">{formatPrice(product.price)}</span>
           </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
-        {product.subcategory && (
-          <Badge className="absolute top-3 left-3 bg-primary/20 border border-primary/40 text-primary text-xs">
-            {SUBCATEGORY_LABELS[product.subcategory] ?? product.subcategory}
-          </Badge>
-        )}
-        <div className="absolute bottom-3 right-3 bg-background/80 backdrop-blur border border-primary/30 px-2.5 py-1 rounded-lg">
-          <span className="text-primary font-bold text-sm">{formatPrice(product.price)}</span>
         </div>
-      </div>
+      </Link>
 
       {/* Content */}
       <div className="flex flex-col flex-1 p-4 gap-3">
         <div className="flex-1">
-          <h3 className="font-display font-bold text-foreground text-base leading-tight mb-0.5">
-            {product.name}
-          </h3>
+          <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
+            <h3 className="font-display font-bold text-foreground text-base leading-tight mb-0.5 hover:text-primary transition-colors cursor-pointer">
+              {product.name}
+            </h3>
+          </Link>
           <p className="text-xs text-muted-foreground line-clamp-3">{product.description}</p>
         </div>
 

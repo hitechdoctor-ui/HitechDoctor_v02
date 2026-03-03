@@ -11,6 +11,7 @@ import Home from "./pages/home";
 import Services from "./pages/services";
 import ServiceMobile from "./pages/service-mobile";
 import EShop from "./pages/eshop";
+import ProductDetail from "./pages/product-detail";
 import Checkout from "./pages/checkout";
 
 // Admin Pages
@@ -27,6 +28,7 @@ function Router() {
       <Route path="/services" component={Services} />
       <Route path="/services/episkeui-kiniton" component={ServiceMobile} />
       <Route path="/eshop" component={EShop} />
+      <Route path="/eshop/:slug" component={ProductDetail} />
       <Route path="/checkout" component={Checkout} />
 
       {/* Admin Routes */}

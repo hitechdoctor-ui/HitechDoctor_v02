@@ -10,6 +10,7 @@ export const products = pgTable("products", {
   imageUrl: text("image_url"),
   category: text("category").notNull(),
   subcategory: text("subcategory"),
+  slug: text("slug"),
   compatibleModels: text("compatible_models").array(),
   createdAt: timestamp("created_at").defaultNow(),
 });
