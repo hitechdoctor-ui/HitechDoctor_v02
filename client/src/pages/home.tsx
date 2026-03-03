@@ -23,7 +23,7 @@ import {
 import { Link } from "wouter";
 
 const homeServices = [
-  { icon: Smartphone, title: "Επισκευή Κινητών", href: "/services#episkeui-kiniton" },
+  { icon: Smartphone, title: "Επισκευή Κινητών", href: "/services/episkeui-kiniton" },
   { icon: Tablet, title: "Επισκευή Tablet", href: "/services#episkeui-tablet" },
   { icon: Laptop, title: "Επισκευή Laptop", href: "/services#episkeui-laptop" },
   { icon: Monitor, title: "Επισκευή Desktop", href: "/services#episkeui-desktop" },

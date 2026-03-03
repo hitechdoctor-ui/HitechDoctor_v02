@@ -69,7 +69,8 @@ Zod schemas are auto-generated from the Drizzle table definitions using `drizzle
 
 **Public routes:**
 - `/` — Home (hero, services overview)
-- `/services` — Detailed services page
+- `/services` — Detailed services page (10 service cards; each can link to a dedicated subpage)
+- `/services/episkeui-kiniton` — Dedicated mobile repair page with 5 brand cards (iPhone, Samsung, Xiaomi, Huawei, OnePlus) + "Άλλη Μάρκα" CTA
 - `/eshop` — Product catalog with category filtering
 - `/checkout` — Cart checkout form
 

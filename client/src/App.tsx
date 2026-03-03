@@ -9,6 +9,7 @@ import NotFound from "@/pages/not-found";
 // Public Pages
 import Home from "./pages/home";
 import Services from "./pages/services";
+import ServiceMobile from "./pages/service-mobile";
 import EShop from "./pages/eshop";
 import Checkout from "./pages/checkout";
 
@@ -24,6 +25,7 @@ function Router() {
       {/* Public Routes */}
       <Route path="/" component={Home} />
       <Route path="/services" component={Services} />
+      <Route path="/services/episkeui-kiniton" component={ServiceMobile} />
       <Route path="/eshop" component={EShop} />
       <Route path="/checkout" component={Checkout} />
 

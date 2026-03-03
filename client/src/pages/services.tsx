@@ -29,7 +29,7 @@ const allServices = [
     id: "episkeui-kiniton",
     icon: Smartphone,
     title: "Επισκευή Κινητών",
-    subtitle: "iPhone, Samsung, Xiaomi, Huawei & όλες οι μάρκες",
+    subtitle: "iPhone, Samsung, Xiaomi, Huawei & OnePlus",
     description:
       "Αντικατάσταση οθόνης, μπαταρίας, κάμερας και επισκευή πλακέτας. Χρησιμοποιούμε μόνο γνήσια ανταλλακτικά με εγγύηση.",
     features: ["Αλλαγή οθόνης & αφής", "Αντικατάσταση μπαταρίας", "Επισκευή μετά από βρέξιμο", "Επισκευή πλακέτας"],
@@ -38,6 +38,7 @@ const allServices = [
     priceFrom: "€20",
     timeFrom: "30 λεπτά",
     tag: "Δημοφιλές",
+    href: "/services/episkeui-kiniton",
   },
   {
     id: "episkeui-tablet",
@@ -302,14 +303,23 @@ export default function Services() {
                     ))}
                   </ul>
 
-                  {/* Price & Time */}
-                  <div className="flex items-center gap-2 pt-2 border-t border-border">
-                    <span className="text-sm font-bold text-primary">Από {service.priceFrom}</span>
-                    <span className="text-muted-foreground text-xs">·</span>
-                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Clock className="w-3 h-3" />
-                      {service.timeFrom}
-                    </span>
+                  {/* Price & Time + optional link */}
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-border">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-primary">Από {service.priceFrom}</span>
+                      <span className="text-muted-foreground text-xs">·</span>
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Clock className="w-3 h-3" />
+                        {service.timeFrom}
+                      </span>
+                    </div>
+                    {(service as any).href && (
+                      <Link href={(service as any).href}>
+                        <span className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline cursor-pointer whitespace-nowrap" data-testid={`link-details-${service.id}`}>
+                          Λεπτομέρειες <ArrowRight className="w-3 h-3" />
+                        </span>
+                      </Link>
+                    )}
                   </div>
                 </div>
               </article>
