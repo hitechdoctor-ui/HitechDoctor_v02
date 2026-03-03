@@ -17,6 +17,7 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import { SiApple, SiSamsung, SiXiaomi, SiHuawei, SiOneplus } from "react-icons/si";
+import { GlobalSearch } from "@/components/global-search";
 
 // ── Phone brands ─────────────────────────────────────────────────────────────
 const PHONE_BRANDS = [
@@ -204,8 +205,11 @@ export function Navbar() {
           </Link>
         </nav>
 
-        {/* Right side — cart + mobile hamburger */}
-        <div className="flex items-center gap-4">
+        {/* Right side — search + cart + mobile hamburger */}
+        <div className="flex items-center gap-3">
+          {/* Desktop search */}
+          <GlobalSearch className="hidden md:block w-56 lg:w-72" />
+
           <Button
             variant="outline"
             className="relative border-white/10 hover:border-primary/50 bg-white/5 hover:bg-primary/10 transition-all"
@@ -228,7 +232,11 @@ export function Navbar() {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="bg-background border-white/10 overflow-y-auto">
-              <nav className="flex flex-col gap-2 mt-12">
+              {/* Mobile search */}
+              <div className="mt-12 mb-4">
+                <GlobalSearch placeholder="Αναζήτηση..." />
+              </div>
+              <nav className="flex flex-col gap-2">
                 <Link href="/" className={`flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium ${location === "/" ? "text-primary bg-primary/10" : "text-foreground"}`}>
                   <Wrench className="w-5 h-5" />
                   Αρχική
