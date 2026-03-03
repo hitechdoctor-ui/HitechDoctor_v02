@@ -1,5 +1,9 @@
 import { Link, useLocation } from "wouter";
-import { ShoppingCart, Wrench, Package, ShieldCheck, Menu, Zap, Smartphone, ChevronRight, Hammer } from "lucide-react";
+import {
+  ShoppingCart, Wrench, Package, ShieldCheck, Menu, Zap,
+  Smartphone, ChevronRight, Hammer, Laptop, Monitor, Watch,
+  Gamepad2, Tablet,
+} from "lucide-react";
 import { useState } from "react";
 import { useCartStore } from "@/store/cart";
 import { Button } from "@/components/ui/button";
@@ -12,54 +16,25 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
-import {
-  SiApple, SiSamsung, SiXiaomi, SiHuawei, SiOneplus,
-} from "react-icons/si";
+import { SiApple, SiSamsung, SiXiaomi, SiHuawei, SiOneplus } from "react-icons/si";
 
-// ── Phone brand grid for "Επισκευή Κινητών" submenu ─────────────────────────
+// ── Phone brands ─────────────────────────────────────────────────────────────
 const PHONE_BRANDS = [
-  {
-    name: "iPhone",
-    href: "/services/episkeui-kiniton",
-    icon: SiApple,
-    color: "text-gray-300",
-    bg: "bg-gray-500/10 hover:bg-gray-500/20 border-gray-500/20",
-  },
-  {
-    name: "Samsung",
-    href: "/services/episkeui-kiniton",
-    icon: SiSamsung,
-    color: "text-blue-400",
-    bg: "bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/20",
-  },
-  {
-    name: "Xiaomi",
-    href: "/services/episkeui-kiniton",
-    icon: SiXiaomi,
-    color: "text-orange-400",
-    bg: "bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/20",
-  },
-  {
-    name: "Huawei",
-    href: "/services/episkeui-kiniton",
-    icon: SiHuawei,
-    color: "text-red-400",
-    bg: "bg-red-500/10 hover:bg-red-500/20 border-red-500/20",
-  },
-  {
-    name: "OnePlus",
-    href: "/services/episkeui-kiniton",
-    icon: SiOneplus,
-    color: "text-rose-400",
-    bg: "bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/20",
-  },
-  {
-    name: "Άλλη Μάρκα",
-    href: "/services/episkeui-kiniton",
-    icon: Smartphone,
-    color: "text-primary",
-    bg: "bg-primary/10 hover:bg-primary/20 border-primary/20",
-  },
+  { name: "iPhone", href: "/services/episkeui-iphone", icon: SiApple, color: "text-gray-300", bg: "bg-gray-500/10 hover:bg-gray-500/20 border-gray-500/20" },
+  { name: "Samsung", href: "/services/episkeui-kiniton", icon: SiSamsung, color: "text-blue-400", bg: "bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/20" },
+  { name: "Xiaomi", href: "/services/episkeui-kiniton", icon: SiXiaomi, color: "text-orange-400", bg: "bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/20" },
+  { name: "Huawei", href: "/services/episkeui-kiniton", icon: SiHuawei, color: "text-red-400", bg: "bg-red-500/10 hover:bg-red-500/20 border-red-500/20" },
+  { name: "OnePlus", href: "/services/episkeui-kiniton", icon: SiOneplus, color: "text-rose-400", bg: "bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/20" },
+  { name: "Άλλη Μάρκα", href: "/services/episkeui-kiniton", icon: Smartphone, color: "text-primary", bg: "bg-primary/10 hover:bg-primary/20 border-primary/20" },
+];
+
+// ── Other repair services ────────────────────────────────────────────────────
+const OTHER_SERVICES = [
+  { name: "Επισκευή Tablet", href: "/services", icon: Tablet, color: "text-sky-400" },
+  { name: "Επισκευή PlayStation", href: "/services", icon: Gamepad2, color: "text-blue-400" },
+  { name: "Επισκευή Laptop", href: "/services", icon: Laptop, color: "text-emerald-400" },
+  { name: "Επισκευή Υπολογιστή", href: "/services", icon: Monitor, color: "text-violet-400" },
+  { name: "Επισκευή Apple Watch", href: "/services", icon: Watch, color: "text-gray-300" },
 ];
 
 export function Navbar() {
@@ -98,7 +73,7 @@ export function Navbar() {
             Αρχική
           </Link>
 
-          {/* Υπηρεσίες — NavigationMenu with dropdown */}
+          {/* Υπηρεσίες — NavigationMenu with mega dropdown */}
           <NavigationMenu>
             <NavigationMenuList>
               <NavigationMenuItem>
@@ -112,44 +87,79 @@ export function Navbar() {
                 </NavigationMenuTrigger>
 
                 <NavigationMenuContent>
-                  <div className="w-[520px] p-4 bg-background/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl"
-                    style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(0,210,200,0.06)" }}>
+                  <div
+                    className="w-[680px] p-4 bg-background/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl"
+                    style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(0,210,200,0.06)" }}
+                  >
+                    <div className="flex gap-4">
 
-                    {/* Section header */}
-                    <div className="flex items-center gap-2 mb-3 pb-3 border-b border-white/8">
-                      <div className="w-7 h-7 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center">
-                        <Hammer className="w-3.5 h-3.5 text-primary" />
+                      {/* ─── Left: Επισκευή Κινητών ─── */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-3 pb-2.5 border-b border-white/8">
+                          <div className="w-6 h-6 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center shrink-0">
+                            <Hammer className="w-3 h-3 text-primary" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-foreground">Επισκευή Κινητών</p>
+                            <p className="text-[10px] text-muted-foreground">Επιλέξτε μάρκα</p>
+                          </div>
+                          <Link
+                            href="/services/episkeui-kiniton"
+                            className="ml-auto shrink-0 text-[10px] text-primary hover:text-primary/80 flex items-center gap-0.5 transition-colors"
+                          >
+                            Δες Όλες <ChevronRight className="w-3 h-3" />
+                          </Link>
+                        </div>
+
+                        {/* 3×2 brand grid */}
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {PHONE_BRANDS.map((brand) => (
+                            <Link
+                              key={brand.name}
+                              href={brand.href}
+                              data-testid={`nav-brand-${brand.name.toLowerCase().replace(/\s+/g, "-")}`}
+                              className={`group flex flex-col items-center gap-1.5 p-2.5 rounded-xl border transition-all duration-200 ${brand.bg}`}
+                            >
+                              <brand.icon className={`w-6 h-6 ${brand.color} transition-transform duration-200 group-hover:scale-110`} />
+                              <span className="text-[10px] font-semibold text-foreground group-hover:text-primary transition-colors text-center leading-tight">
+                                {brand.name}
+                              </span>
+                            </Link>
+                          ))}
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-xs font-bold text-foreground">Επισκευή Κινητών</p>
-                        <p className="text-[10px] text-muted-foreground">Επιλέξτε τη μάρκα του κινητού σας</p>
+
+                      {/* Divider */}
+                      <div className="w-px bg-white/8 self-stretch" />
+
+                      {/* ─── Right: Άλλες Υπηρεσίες ─── */}
+                      <div className="w-[200px] shrink-0">
+                        <div className="flex items-center gap-2 mb-3 pb-2.5 border-b border-white/8">
+                          <div className="w-6 h-6 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center shrink-0">
+                            <Zap className="w-3 h-3 text-primary" />
+                          </div>
+                          <p className="text-xs font-bold text-foreground">Άλλες Υπηρεσίες</p>
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          {OTHER_SERVICES.map((svc) => (
+                            <Link
+                              key={svc.name}
+                              href={svc.href}
+                              data-testid={`nav-service-${svc.name.toLowerCase().replace(/\s+/g, "-")}`}
+                              className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-white/5 transition-colors group"
+                            >
+                              <svc.icon className={`w-4 h-4 shrink-0 ${svc.color} group-hover:scale-110 transition-transform`} />
+                              <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors leading-tight">
+                                {svc.name}
+                              </span>
+                            </Link>
+                          ))}
+                        </div>
                       </div>
-                      <Link
-                        href="/services/episkeui-kiniton"
-                        className="ml-auto text-[10px] text-primary hover:text-primary/80 flex items-center gap-0.5 transition-colors"
-                      >
-                        Δες Όλες <ChevronRight className="w-3 h-3" />
-                      </Link>
                     </div>
 
-                    {/* Brand image grid 3×2 */}
-                    <div className="grid grid-cols-3 gap-2">
-                      {PHONE_BRANDS.map((brand) => (
-                        <Link
-                          key={brand.name}
-                          href={brand.href}
-                          data-testid={`nav-brand-${brand.name.toLowerCase().replace(/\s+/g, "-")}`}
-                          className={`group flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-200 ${brand.bg}`}
-                        >
-                          <brand.icon className={`w-7 h-7 ${brand.color} transition-transform duration-200 group-hover:scale-110`} />
-                          <span className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors text-center leading-tight">
-                            {brand.name}
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-
-                    {/* Footer link — all services */}
+                    {/* Footer */}
                     <div className="mt-3 pt-3 border-t border-white/8">
                       <Link
                         href="/services"
@@ -194,7 +204,7 @@ export function Navbar() {
           </Link>
         </nav>
 
-        {/* Right side */}
+        {/* Right side — cart + mobile hamburger */}
         <div className="flex items-center gap-4">
           <Button
             variant="outline"
@@ -224,7 +234,7 @@ export function Navbar() {
                   Αρχική
                 </Link>
 
-                {/* Mobile: Υπηρεσίες with expandable brands */}
+                {/* Mobile: Υπηρεσίες expandable */}
                 <div>
                   <button
                     onClick={() => setMobileServicesOpen((v) => !v)}
@@ -239,18 +249,27 @@ export function Navbar() {
 
                   {mobileServicesOpen && (
                     <div className="ml-8 mt-1 flex flex-col gap-1">
-                      <p className="text-xs font-bold text-muted-foreground px-3 py-1 uppercase tracking-wider">Επισκευή Κινητών</p>
+                      {/* Κινητά */}
+                      <p className="text-[10px] font-bold text-muted-foreground px-3 py-1 uppercase tracking-wider">Επισκευή Κινητών</p>
                       {PHONE_BRANDS.map((brand) => (
-                        <Link
-                          key={brand.name}
-                          href={brand.href}
-                          className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 text-sm text-foreground"
-                        >
+                        <Link key={brand.name} href={brand.href} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 text-sm text-foreground">
                           <brand.icon className={`w-4 h-4 ${brand.color}`} />
                           {brand.name}
                         </Link>
                       ))}
-                      <Link href="/services" className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-primary/10 text-sm text-primary font-medium">
+
+                      {/* Άλλες */}
+                      <div className="mt-1 pt-1 border-t border-white/8">
+                        <p className="text-[10px] font-bold text-muted-foreground px-3 py-1 uppercase tracking-wider">Άλλες Υπηρεσίες</p>
+                        {OTHER_SERVICES.map((svc) => (
+                          <Link key={svc.name} href={svc.href} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 text-sm text-foreground">
+                            <svc.icon className={`w-4 h-4 ${svc.color}`} />
+                            {svc.name}
+                          </Link>
+                        ))}
+                      </div>
+
+                      <Link href="/services" className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-primary/10 text-sm text-primary font-medium mt-1">
                         <Zap className="w-4 h-4" />
                         Όλες οι Υπηρεσίες
                       </Link>
