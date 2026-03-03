@@ -4,6 +4,7 @@ import {
   customers,
   orders,
   orderItems,
+  repairRequests,
   type Product,
   type InsertProduct,
   type Customer,
@@ -12,6 +13,8 @@ import {
   type InsertOrder,
   type OrderItem,
   type InsertOrderItem,
+  type RepairRequest,
+  type InsertRepairRequest,
   type CheckoutPayload
 } from "@shared/schema";
 import { eq, desc, and } from "drizzle-orm";
@@ -29,9 +32,14 @@ export interface IStorage {
   getCustomerByEmail(email: string): Promise<Customer | undefined>;
 
   // Orders
-  getOrders(): Promise<any[]>; // Will return orders with customer details
+  getOrders(): Promise<any[]>;
   createOrder(payload: CheckoutPayload): Promise<Order>;
   updateOrderStatus(id: number, status: string): Promise<Order>;
+
+  // Repair Requests
+  getRepairRequests(): Promise<RepairRequest[]>;
+  createRepairRequest(data: InsertRepairRequest): Promise<RepairRequest>;
+  updateRepairRequestStatus(id: number, status: string): Promise<RepairRequest>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -81,7 +89,6 @@ export class DatabaseStorage implements IStorage {
 
   // --- Orders ---
   async getOrders(): Promise<any[]> {
-    // Basic join to get orders with customer name and email
     const results = await db.select({
       order: orders,
       customerName: customers.name,
@@ -99,13 +106,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOrder(payload: CheckoutPayload): Promise<Order> {
-    // Determine customer
     let customerId: number;
     const existingCustomer = await this.getCustomerByEmail(payload.customer.email);
-    
+
     if (existingCustomer) {
       customerId = existingCustomer.id;
-      // Optionally update phone/address if new
       await db.update(customers).set({
         phone: payload.customer.phone || existingCustomer.phone,
         address: payload.customer.address || existingCustomer.address
@@ -115,33 +120,28 @@ export class DatabaseStorage implements IStorage {
       customerId = newCustomer.id;
     }
 
-    // Calculate total amount
     let totalAmount = 0;
     const itemsToInsert: InsertOrderItem[] = [];
 
     for (const item of payload.items) {
       const product = await this.getProduct(item.productId);
       if (!product) throw new Error(`Product ${item.productId} not found`);
-      
       const price = parseFloat(product.price);
       totalAmount += price * item.quantity;
-      
       itemsToInsert.push({
-        orderId: 0, // placeholder, updated below
+        orderId: 0,
         productId: product.id,
         quantity: item.quantity,
         priceAtTime: product.price,
       });
     }
 
-    // Create the order
     const [order] = await db.insert(orders).values({
       customerId,
       totalAmount: totalAmount.toString(),
       status: "pending"
     }).returning();
 
-    // Insert order items
     for (const item of itemsToInsert) {
       item.orderId = order.id;
       await db.insert(orderItems).values(item);
@@ -156,6 +156,25 @@ export class DatabaseStorage implements IStorage {
       .where(eq(orders.id, id))
       .returning();
     if (!updated) throw new Error("Order not found");
+    return updated;
+  }
+
+  // --- Repair Requests ---
+  async getRepairRequests(): Promise<RepairRequest[]> {
+    return await db.select().from(repairRequests).orderBy(desc(repairRequests.createdAt));
+  }
+
+  async createRepairRequest(data: InsertRepairRequest): Promise<RepairRequest> {
+    const [created] = await db.insert(repairRequests).values(data).returning();
+    return created;
+  }
+
+  async updateRepairRequestStatus(id: number, status: string): Promise<RepairRequest> {
+    const [updated] = await db.update(repairRequests)
+      .set({ status })
+      .where(eq(repairRequests.id, id))
+      .returning();
+    if (!updated) throw new Error("Repair request not found");
     return updated;
   }
 }

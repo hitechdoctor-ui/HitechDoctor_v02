@@ -5,11 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   CheckCircle2, Shield, Clock, Wrench, ChevronRight, Phone,
-  Zap, Wifi, Camera, Battery, Monitor, ArrowRight,
+  Zap, Wifi, Camera, Battery, Monitor, ArrowRight, CalendarCheck,
 } from "lucide-react";
 import { SiApple } from "react-icons/si";
 import { Link } from "wouter";
 import { useState } from "react";
+import { RepairRequestModal } from "@/components/repair-request-modal";
 
 // ── iPhone model data ────────────────────────────────────────────────────────
 const IPHONE_SERIES = [
@@ -187,6 +188,8 @@ const jsonLd = {
 
 export default function ServiceIphone() {
   const [activeSeries, setActiveSeries] = useState<string>("all");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedModel, setSelectedModel] = useState("");
 
   const visibleSeries =
     activeSeries === "all"
@@ -377,18 +380,17 @@ export default function ServiceIphone() {
                       </div>
                     </div>
 
-                    {/* CTA */}
-                    <a href="tel:+30-000-000-0000" className="mt-auto">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="w-full border-white/10 hover:border-primary/40 hover:bg-primary/10 text-xs h-8 group-hover:border-primary/30 transition-all"
-                        data-testid={`button-repair-${model.name.toLowerCase().replace(/\s+/g, "-")}`}
-                      >
-                        <Phone className="w-3 h-3 mr-1.5" />
-                        Κράτηση Ραντεβού
-                      </Button>
-                    </a>
+                    {/* CTA — opens repair request modal */}
+                    <Button
+                      size="sm"
+                      onClick={() => { setSelectedModel(model.name); setModalOpen(true); }}
+                      className="mt-auto w-full h-8 text-xs font-semibold border-0 group-hover:opacity-90 transition-all"
+                      style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
+                      data-testid={`button-repair-${model.name.toLowerCase().replace(/\s+/g, "-")}`}
+                    >
+                      <CalendarCheck className="w-3 h-3 mr-1.5" />
+                      Αίτημα Επισκευής
+                    </Button>
                   </article>
                 ))}
               </div>
@@ -434,6 +436,13 @@ export default function ServiceIphone() {
           </div>
         </section>
       </main>
+
+      {/* Repair Request Modal */}
+      <RepairRequestModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        defaultDeviceName={selectedModel}
+      />
     </div>
   );
 }

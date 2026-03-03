@@ -41,11 +41,34 @@ export const orderItems = pgTable("order_items", {
   priceAtTime: numeric("price_at_time").notNull(),
 });
 
+// ── Repair Requests (CRM) ────────────────────────────────────────────────────
+export const repairRequests = pgTable("repair_requests", {
+  id: serial("id").primaryKey(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  phone: text("phone").notNull(),
+  email: text("email").notNull(),
+  deviceName: text("device_name").notNull(),
+  serialNumber: text("serial_number").notNull(),
+  deviceCode: text("device_code"),
+  notes: text("notes"),
+  status: text("status").notNull().default("pending"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Zod schemas
 export const insertProductSchema = createInsertSchema(products).omit({ id: true, createdAt: true });
 export const insertCustomerSchema = createInsertSchema(customers).omit({ id: true, createdAt: true });
 export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true });
 export const insertOrderItemSchema = createInsertSchema(orderItems).omit({ id: true });
+export const insertRepairRequestSchema = createInsertSchema(repairRequests).omit({ id: true, createdAt: true }).extend({
+  email: z.string().email("Μη έγκυρο email"),
+  phone: z.string().min(10, "Εισάγετε έγκυρο αριθμό τηλεφώνου"),
+  firstName: z.string().min(2, "Εισάγετε το όνομά σας"),
+  lastName: z.string().min(2, "Εισάγετε το επίθετό σας"),
+  deviceName: z.string().min(2, "Εισάγετε το όνομα της συσκευής"),
+  serialNumber: z.string().min(3, "Εισάγετε τον αριθμό σειράς"),
+});
 
 // Type definitions
 export type Product = typeof products.$inferSelect;
@@ -59,6 +82,9 @@ export type InsertOrder = z.infer<typeof insertOrderSchema>;
 
 export type OrderItem = typeof orderItems.$inferSelect;
 export type InsertOrderItem = z.infer<typeof insertOrderItemSchema>;
+
+export type RepairRequest = typeof repairRequests.$inferSelect;
+export type InsertRepairRequest = z.infer<typeof insertRepairRequestSchema>;
 
 // Order payload for checkout
 export const checkoutPayloadSchema = z.object({
