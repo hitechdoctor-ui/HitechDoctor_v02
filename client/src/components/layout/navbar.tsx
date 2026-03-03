@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { ShoppingCart, Wrench, Package, ShieldCheck, Menu, X } from "lucide-react";
+import { ShoppingCart, Wrench, Package, ShieldCheck, Menu, X, Zap } from "lucide-react";
 import { useState } from "react";
 import { useCartStore } from "@/store/cart";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ export function Navbar() {
 
   const navLinks = [
     { href: "/", label: "Αρχική", icon: Wrench },
+    { href: "/services", label: "Υπηρεσίες", icon: Zap },
     { href: "/eshop", label: "eShop", icon: Package },
     { href: "/admin", label: "Admin", icon: ShieldCheck },
   ];

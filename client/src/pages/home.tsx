@@ -1,34 +1,38 @@
 import { Navbar } from "@/components/layout/navbar";
 import { Seo } from "@/components/seo";
 import { Button } from "@/components/ui/button";
-import { Smartphone, Laptop, Shield, Zap, ArrowRight } from "lucide-react";
+import { Smartphone, Laptop, Shield, Zap, ArrowRight, Wifi, HardDrive } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Home() {
   const services = [
     {
-      title: "Επισκευές Κινητών",
-      desc: "Άμεση διάγνωση και αντικατάσταση οθόνης, μπαταρίας και πλακέτας με γνήσια ανταλλακτικά.",
+      title: "Επισκευές Κινητών & Tablet",
+      desc: "iPhone, Samsung, Xiaomi — αντικατάσταση οθόνης, μπαταρίας και πλακέτας με γνήσια ανταλλακτικά.",
       icon: Smartphone,
       color: "from-blue-500/20 to-cyan-500/20",
+      href: "/services#episkeues-kinition",
     },
     {
-      title: "IT Support",
-      desc: "Υποστήριξη δικτύων, format, εγκατάσταση λογισμικού και ανάκτηση δεδομένων.",
+      title: "IT Support & Υπολογιστές",
+      desc: "Format, αναβάθμιση, αντιική προστασία, εγκατάσταση λογισμικού — επί τόπου ή εξ αποστάσεως.",
       icon: Laptop,
       color: "from-purple-500/20 to-indigo-500/20",
+      href: "/services#it-support",
     },
     {
-      title: "Εγγύηση Ποιότητας",
-      desc: "Όλες μας οι εργασίες συνοδεύονται από γραπτή εγγύηση καλής λειτουργίας.",
-      icon: Shield,
+      title: "Δίκτυα & Wi-Fi",
+      desc: "Σχεδιασμός και εγκατάσταση ενσύρματων και ασύρματων δικτύων για σπίτι και επιχείρηση.",
+      icon: Wifi,
       color: "from-emerald-500/20 to-teal-500/20",
+      href: "/services#dixtia-kai-ptyxiaki",
     },
     {
-      title: "Express Εξυπηρέτηση",
-      desc: "Οι περισσότερες βλάβες επισκευάζονται σε λιγότερο από 2 ώρες στο εργαστήριό μας.",
-      icon: Zap,
+      title: "Ανάκτηση Δεδομένων",
+      desc: "Ανάκτηση αρχείων από κατεστραμμένους δίσκους, USB και κάρτες μνήμης. Δωρεάν αξιολόγηση.",
+      icon: HardDrive,
       color: "from-amber-500/20 to-orange-500/20",
+      href: "/services#anaktisi-dedomenon",
     },
   ];
 
@@ -99,17 +103,27 @@ export default function Home() {
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {services.map((service, idx) => (
-                <div 
-                  key={idx} 
-                  className="bg-background rounded-2xl p-6 border border-white/5 hover:border-white/10 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-black/50 group"
-                >
-                  <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${service.color} flex items-center justify-center mb-6 border border-white/10 group-hover:scale-110 transition-transform`}>
-                    <service.icon className="w-7 h-7 text-white" />
+                <Link key={idx} href={service.href}>
+                  <div className="bg-background rounded-2xl p-6 border border-white/5 hover:border-white/10 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-black/50 group cursor-pointer h-full">
+                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${service.color} flex items-center justify-center mb-6 border border-white/10 group-hover:scale-110 transition-transform`}>
+                      <service.icon className="w-7 h-7 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-3">{service.title}</h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed mb-4">{service.desc}</p>
+                    <span className="text-primary text-sm font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
+                      Μάθε περισσότερα <ArrowRight className="w-3.5 h-3.5" />
+                    </span>
                   </div>
-                  <h3 className="text-xl font-bold mb-3">{service.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{service.desc}</p>
-                </div>
+                </Link>
               ))}
+            </div>
+            <div className="text-center mt-10">
+              <Link href="/services">
+                <Button size="lg" variant="outline" className="border-white/10 h-12 px-8">
+                  Όλες οι Υπηρεσίες
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
             </div>
           </div>
         </section>
