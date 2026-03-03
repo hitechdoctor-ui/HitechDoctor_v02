@@ -1,93 +1,350 @@
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Seo } from "@/components/seo";
 import { useOrders, useUpdateOrderStatus } from "@/hooks/use-orders";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useState, useMemo } from "react";
+import {
+  ShoppingCart, Euro, CheckCircle2, XCircle, Clock, AlertCircle,
+  ChevronDown, ChevronRight, Mail, Phone, Package, Search, X,
+  User,
+} from "lucide-react";
 
+// ── Status config ────────────────────────────────────────────────────────────
+const ORDER_STATUSES = [
+  { value: "pending",   label: "Εκκρεμεί",       icon: AlertCircle, color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/30" },
+  { value: "completed", label: "Ολοκληρώθηκε", icon: CheckCircle2,  color: "text-green-400",  bg: "bg-green-400/10 border-green-400/30"  },
+  { value: "cancelled", label: "Ακυρώθηκε",    icon: XCircle,       color: "text-red-400",    bg: "bg-red-400/10 border-red-400/30"     },
+];
+
+function StatusBadge({ status }: { status: string }) {
+  const cfg = ORDER_STATUSES.find((s) => s.value === status) ?? ORDER_STATUSES[0];
+  const Icon = cfg.icon;
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${cfg.bg} ${cfg.color}`}>
+      <Icon className="w-3 h-3" />
+      {cfg.label}
+    </span>
+  );
+}
+
+const formatPrice = (price: string | number) =>
+  new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR" }).format(Number(price));
+
+const formatDate = (d: string | Date | null) =>
+  d ? new Intl.DateTimeFormat("el-GR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(d)) : "—";
+
+// ── Search Input ─────────────────────────────────────────────────────────────
+function SearchInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="flex items-center gap-2 px-3 h-10 rounded-xl border border-white/10 bg-card hover:border-white/20 focus-within:border-primary/40 focus-within:shadow-[0_0_0_2px_rgba(0,210,200,0.1)] transition-all w-full max-w-sm">
+      <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Αναζήτηση πελάτη, email, #παραγγελία..."
+        className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none"
+        data-testid="input-orders-search"
+      />
+      {value && (
+        <button onClick={() => onChange("")} className="shrink-0">
+          <X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground transition-colors" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ── Order Items expanded row ──────────────────────────────────────────────────
+function OrderItemsRow({ orderId }: { orderId: number }) {
+  const { data: items, isLoading } = useQuery<any[]>({
+    queryKey: [`/api/orders/${orderId}/items`],
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 py-4 pl-6 text-xs text-muted-foreground">
+        <span className="w-4 h-4 border-2 border-primary/40 border-t-primary rounded-full animate-spin" />
+        Φόρτωση προϊόντων...
+      </div>
+    );
+  }
+
+  if (!items || items.length === 0) {
+    return (
+      <div className="py-4 pl-6 text-xs text-muted-foreground">Δεν βρέθηκαν προϊόντα για αυτή την παραγγελία.</div>
+    );
+  }
+
+  return (
+    <div className="py-3 pl-6 pr-4">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-2">Προϊόντα παραγγελίας</p>
+      <div className="flex flex-col gap-1.5">
+        {items.map((item) => (
+          <div
+            key={item.id}
+            className="flex items-center gap-3 p-2.5 rounded-xl bg-background/50 border border-white/8"
+            data-testid={`order-item-${item.id}`}
+          >
+            {item.productImage ? (
+              <img src={item.productImage} alt="" className="w-10 h-10 rounded-lg object-cover border border-white/8 shrink-0" />
+            ) : (
+              <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                <Package className="w-4 h-4 text-primary" />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-foreground truncate">{item.productName ?? "Άγνωστο Προϊόν"}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Ποσότητα: {item.quantity}</p>
+            </div>
+            <span className="text-sm font-bold text-primary shrink-0">
+              {formatPrice(Number(item.priceAtTime) * item.quantity)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Order Row ────────────────────────────────────────────────────────────────
+function OrderRow({ order, onStatusChange }: { order: any; onStatusChange: (id: number, s: string) => void }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <>
+      <tr
+        className="border-b border-white/6 hover:bg-white/3 transition-colors cursor-pointer"
+        onClick={() => setExpanded((v) => !v)}
+        data-testid={`row-order-${order.id}`}
+      >
+        {/* # */}
+        <td className="py-4 pl-4 pr-3">
+          <div className="flex items-center gap-2">
+            {expanded
+              ? <ChevronDown className="w-3.5 h-3.5 text-primary shrink-0" />
+              : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />}
+            <span className="text-xs font-mono text-muted-foreground">#{order.id}</span>
+          </div>
+        </td>
+
+        {/* Πελάτης */}
+        <td className="py-4 pr-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+              <User className="w-3.5 h-3.5 text-primary" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground truncate">{order.customerName}</p>
+              <a
+                href={`mailto:${order.customerEmail}`}
+                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Mail className="w-2.5 h-2.5 shrink-0" />
+                {order.customerEmail}
+              </a>
+            </div>
+          </div>
+        </td>
+
+        {/* Ημερομηνία */}
+        <td className="py-4 pr-4">
+          <span className="text-xs text-muted-foreground whitespace-nowrap">{formatDate(order.createdAt)}</span>
+        </td>
+
+        {/* Σύνολο */}
+        <td className="py-4 pr-4">
+          <span className="text-sm font-bold text-primary">{formatPrice(order.totalAmount)}</span>
+        </td>
+
+        {/* Κατάσταση */}
+        <td className="py-4 pr-4" onClick={(e) => e.stopPropagation()}>
+          <Select
+            value={order.status}
+            onValueChange={(val) => onStatusChange(order.id, val)}
+          >
+            <SelectTrigger
+              className="h-8 w-40 text-xs border-white/10 bg-card"
+              data-testid={`select-order-status-${order.id}`}
+            >
+              <SelectValue><StatusBadge status={order.status} /></SelectValue>
+            </SelectTrigger>
+            <SelectContent className="bg-background border-white/10">
+              {ORDER_STATUSES.map((s) => (
+                <SelectItem key={s.value} value={s.value} className="text-xs">
+                  <StatusBadge status={s.value} />
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </td>
+      </tr>
+
+      {/* Expanded items row */}
+      {expanded && (
+        <tr className="border-b border-white/6 bg-white/2">
+          <td colSpan={5}>
+            <OrderItemsRow orderId={order.id} />
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+
+// ── Main Page ────────────────────────────────────────────────────────────────
 export default function AdminOrders() {
   const { data: orders, isLoading } = useOrders();
   const { mutateAsync: updateStatus } = useUpdateOrderStatus();
   const { toast } = useToast();
 
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
   const handleStatusChange = async (id: number, status: string) => {
     try {
       await updateStatus({ id, status });
-      toast({ title: "Η κατάσταση ενημερώθηκε" });
-    } catch (e) {
+      toast({ title: "Ενημερώθηκε", description: "Η κατάσταση αποθηκεύτηκε." });
+    } catch {
       toast({ variant: "destructive", title: "Σφάλμα κατά την ενημέρωση" });
     }
   };
 
-  const formatPrice = (price: string | number) => 
-    new Intl.NumberFormat('el-GR', { style: 'currency', currency: 'EUR' }).format(Number(price));
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('el-GR', {
-      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+  const filtered = useMemo(() => {
+    if (!orders) return [];
+    const q = search.toLowerCase().trim();
+    return orders.filter((o: any) => {
+      const matchesSearch =
+        !q ||
+        String(o.id).includes(q) ||
+        (o.customerName ?? "").toLowerCase().includes(q) ||
+        (o.customerEmail ?? "").toLowerCase().includes(q) ||
+        String(o.totalAmount).includes(q);
+      const matchesStatus = statusFilter === "all" || o.status === statusFilter;
+      return matchesSearch && matchesStatus;
     });
-  };
+  }, [orders, search, statusFilter]);
+
+  // ── Stats ──
+  const totalRevenue = orders?.reduce((s: number, o: any) => o.status !== "cancelled" ? s + Number(o.totalAmount) : s, 0) ?? 0;
+  const byStatus = (v: string) => orders?.filter((o: any) => o.status === v).length ?? 0;
+
+  const stats = [
+    { label: "Συνολικά Έσοδα", value: formatPrice(totalRevenue), icon: Euro, color: "text-green-400", bg: "bg-green-400/10 border-green-400/20" },
+    { label: "Σύνολο Παραγγελιών", value: orders?.length ?? 0, icon: ShoppingCart, color: "text-blue-400", bg: "bg-blue-400/10 border-blue-400/20" },
+    { label: "Εκκρεμείς", value: byStatus("pending"), icon: Clock, color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/20" },
+    { label: "Ολοκληρωμένες", value: byStatus("completed"), icon: CheckCircle2, color: "text-green-400", bg: "bg-green-400/10 border-green-400/20" },
+    { label: "Ακυρωμένες", value: byStatus("cancelled"), icon: XCircle, color: "text-red-400", bg: "bg-red-400/10 border-red-400/20" },
+  ];
 
   return (
     <AdminLayout>
-      <Seo title="Διαχείριση Παραγγελιών" description="Admin" />
-      
-      <div className="mb-8">
+      <Seo title="Παραγγελίες — Admin" description="Διαχείριση παραγγελιών eShop" />
+
+      <div className="mb-6">
         <h1 className="text-3xl font-display font-bold">Παραγγελίες</h1>
-        <p className="text-muted-foreground">Παρακολούθηση και διεκπεραίωση παραγγελιών eShop</p>
+        <p className="text-muted-foreground mt-1">Παρακολούθηση, αναζήτηση και διεκπεραίωση παραγγελιών eShop</p>
       </div>
 
-      <div className="bg-card rounded-2xl border border-white/5 overflow-hidden">
-        <Table>
-          <TableHeader className="bg-white/5">
-            <TableRow className="border-white/5 hover:bg-transparent">
-              <TableHead>ID</TableHead>
-              <TableHead>Ημερομηνία</TableHead>
-              <TableHead>Πελάτης</TableHead>
-              <TableHead>Σύνολο</TableHead>
-              <TableHead>Κατάσταση</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-8">Φόρτωση...</TableCell></TableRow>
-            ) : orders?.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Δεν υπάρχουν παραγγελίες</TableCell></TableRow>
-            ) : (
-              orders?.map(order => (
-                <TableRow key={order.id} className="border-white/5 hover:bg-white/5">
-                  <TableCell className="font-mono text-muted-foreground">#{order.id}</TableCell>
-                  <TableCell>{formatDate(order.createdAt)}</TableCell>
-                  <TableCell>Πελάτης #{order.customerId} (Δείτε στο CRM)</TableCell>
-                  <TableCell className="font-bold">{formatPrice(order.totalAmount)}</TableCell>
-                  <TableCell>
-                    <Select 
-                      defaultValue={order.status} 
-                      onValueChange={(val) => handleStatusChange(order.id, val)}
-                    >
-                      <SelectTrigger className="w-[140px] bg-background border-white/10 h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending">
-                          <span className="flex items-center gap-2 text-amber-500">Εκκρεμεί</span>
-                        </SelectItem>
-                        <SelectItem value="completed">
-                          <span className="flex items-center gap-2 text-green-500">Ολοκληρώθηκε</span>
-                        </SelectItem>
-                        <SelectItem value="cancelled">
-                          <span className="flex items-center gap-2 text-red-500">Ακυρώθηκε</span>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+      {/* ── Stats cards ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+        {stats.map((s, i) => (
+          <Card key={i} className={`bg-card border ${s.bg}`}>
+            <CardHeader className="flex flex-row items-center justify-between pb-1 pt-3 px-4">
+              <CardTitle className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{s.label}</CardTitle>
+              <s.icon className={`w-4 h-4 ${s.color}`} />
+            </CardHeader>
+            <CardContent className="px-4 pb-3">
+              <div className={`text-xl font-bold ${s.color}`}>{s.value}</div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
+
+      {/* ── Orders Table ── */}
+      <Card className="bg-card border-white/8">
+        <CardHeader className="flex flex-col gap-3 pb-4 border-b border-white/8">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center">
+                <ShoppingCart className="w-4.5 h-4.5 text-blue-400" />
+              </div>
+              <div>
+                <h2 className="text-base font-display font-bold">Λίστα Παραγγελιών</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {filtered.length} / {orders?.length ?? 0} παραγγελίες
+                  {search || statusFilter !== "all" ? " (φιλτραρισμένες)" : ""}
+                </p>
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground hidden sm:block">
+              Κάντε κλικ σε μια παραγγελία για να δείτε τα προϊόντα
+            </p>
+          </div>
+
+          {/* Filters */}
+          <div className="flex flex-wrap gap-2">
+            <SearchInput value={search} onChange={setSearch} />
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-10 text-sm w-44 border-white/10 bg-card" data-testid="select-orders-status-filter">
+                <SelectValue placeholder="Κατάσταση" />
+              </SelectTrigger>
+              <SelectContent className="bg-background border-white/10">
+                <SelectItem value="all" className="text-xs">Όλες οι Καταστάσεις</SelectItem>
+                {ORDER_STATUSES.map((s) => (
+                  <SelectItem key={s.value} value={s.value} className="text-xs">
+                    <StatusBadge status={s.value} />
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16 text-muted-foreground text-sm gap-3">
+              <span className="w-5 h-5 border-2 border-primary/40 border-t-primary rounded-full animate-spin" />
+              Φόρτωση παραγγελιών...
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <ShoppingCart className="w-10 h-10 text-muted-foreground/20 mx-auto mb-3" />
+              <p className="text-sm font-semibold text-foreground mb-1">
+                {search || statusFilter !== "all" ? "Δεν βρέθηκαν παραγγελίες" : "Δεν υπάρχουν παραγγελίες ακόμη"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {search ? "Δοκιμάστε διαφορετική αναζήτηση" : "Οι παραγγελίες eShop θα εμφανιστούν εδώ."}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-white/8 bg-white/2">
+                    <th className="pl-4 pr-3 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 w-20">#</th>
+                    <th className="pr-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Πελάτης</th>
+                    <th className="pr-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Ημερομηνία</th>
+                    <th className="pr-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Σύνολο</th>
+                    <th className="pr-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Κατάσταση</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((order: any) => (
+                    <OrderRow key={order.id} order={order} onStatusChange={handleStatusChange} />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </AdminLayout>
   );
 }

@@ -33,6 +33,7 @@ export interface IStorage {
 
   // Orders
   getOrders(): Promise<any[]>;
+  getOrderItems(orderId: number): Promise<any[]>;
   createOrder(payload: CheckoutPayload): Promise<Order>;
   updateOrderStatus(id: number, status: string): Promise<Order>;
 
@@ -103,6 +104,23 @@ export class DatabaseStorage implements IStorage {
       customerName: row.customerName,
       customerEmail: row.customerEmail,
     }));
+  }
+
+  async getOrderItems(orderId: number): Promise<any[]> {
+    const rows = await db.select({
+      id: orderItems.id,
+      orderId: orderItems.orderId,
+      productId: orderItems.productId,
+      quantity: orderItems.quantity,
+      priceAtTime: orderItems.priceAtTime,
+      productName: products.name,
+      productSlug: products.slug,
+      productImage: products.imageUrl,
+    })
+    .from(orderItems)
+    .leftJoin(products, eq(orderItems.productId, products.id))
+    .where(eq(orderItems.orderId, orderId));
+    return rows;
   }
 
   async createOrder(payload: CheckoutPayload): Promise<Order> {

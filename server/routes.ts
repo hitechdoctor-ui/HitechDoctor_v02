@@ -104,6 +104,16 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/orders/:id/items", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const items = await storage.getOrderItems(id);
+      res.json(items);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch order items" });
+    }
+  });
+
   app.patch(api.orders.updateStatus.path, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
