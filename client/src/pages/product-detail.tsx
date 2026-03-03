@@ -121,14 +121,40 @@ function buildJsonLd(product: Product) {
 // ── SEO image alt text builder ──────────────────────────────────────────────
 function buildImageAlt(imageUrl: string, productName: string): string {
   const url = imageUrl || "";
+  // Screen protectors
   if (url.includes("aplo") || url.includes("kit")) {
     return `${productName} — Κιτ εγκατάστασης Tempered Glass 9H Aurora Glisch: γυαλί προστασίας iPhone, πανάκι μικροϊνών, αλκοόλ καθαρισμού και sticker σκόνης — HiTech Doctor Θεσσαλονίκη`;
   }
   if (url.includes("privacy")) {
     return `${productName} — Συσκευασία Aurora Glisch Privacy Screen Protector 9H δίπλα σε iPhone 17 Pro Max: λευκό studio φόντο, τζάμι τοποθετημένο με dark privacy τεχνολογία — HiTech Doctor Θεσσαλονίκη`;
   }
-  if (url.includes("keramiko") || url.includes("dark")) {
-    return `${productName} — Συσκευασία Aurora Glisch Κεραμικό Premium δίπλα σε iPhone 17 Pro Max, lifestyle φωτογραφία με σκούρο ambient φόντο από γκρι πέτρα — HiTech Doctor Θεσσαλονίκη`;
+  if (url.includes("keramiko")) {
+    return `${productName} — Συσκευασία Aurora Glisch Κεραμικό Premium δίπλα σε iPhone 17 Pro Max, lifestyle φωτογραφία με σκούρο ambient φόντο — HiTech Doctor Θεσσαλονίκη`;
+  }
+  // Cases
+  if (url.includes("terra-cotta-back")) {
+    return `${productName} — Apple Silicone Case MagSafe Terra Cotta πορτοκαλί πίσω όψη για iPhone 17 Pro Max — HiTech Doctor Θεσσαλονίκη`;
+  }
+  if (url.includes("terra-cotta-side")) {
+    return `${productName} — Apple Silicone Case MagSafe Terra Cotta πλαϊνή όψη με οθόνη iPhone 17 Pro Max — HiTech Doctor Θεσσαλονίκη`;
+  }
+  if (url.includes("midnight-back")) {
+    return `${productName} — Apple Silicone Case MagSafe Midnight σκούρο ναυτικό μπλε πίσω όψη iPhone 17 Pro Max — HiTech Doctor Θεσσαλονίκη`;
+  }
+  if (url.includes("midnight-side")) {
+    return `${productName} — Apple Silicone Case MagSafe Midnight πλαϊνή όψη iPhone 17 Pro Max — HiTech Doctor Θεσσαλονίκη`;
+  }
+  if (url.includes("purple-fog-back")) {
+    return `${productName} — Apple Silicone Case MagSafe Purple Fog μωβ σιλικόνη για iPhone 17 Pro Max — HiTech Doctor Θεσσαλονίκη`;
+  }
+  if (url.includes("purple-fog-alt")) {
+    return `${productName} — Apple Silicone Case MagSafe Purple Fog εναλλακτική γωνία iPhone 17 — HiTech Doctor Θεσσαλονίκη`;
+  }
+  if (url.includes("mavro-back")) {
+    return `${productName} — Apple Silicone Case MagSafe Μαύρο ματ σιλικόνη πίσω όψη iPhone 17 Pro Max — HiTech Doctor Θεσσαλονίκη`;
+  }
+  if (url.includes("mavro-side")) {
+    return `${productName} — Apple Silicone Case MagSafe Μαύρο πλαϊνή όψη iPhone 17 Pro Max — HiTech Doctor Θεσσαλονίκη`;
   }
   return `${productName} — αξεσουάρ iPhone — HiTech Doctor Θεσσαλονίκη`;
 }
