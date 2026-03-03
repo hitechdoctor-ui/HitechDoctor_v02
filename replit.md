@@ -58,10 +58,14 @@ Four tables in PostgreSQL via Drizzle:
 
 | Table | Purpose |
 |---|---|
-| `products` | Items for sale (name, description, price, category, imageUrl) |
+| `products` | Items for sale (name, description, price, category, subcategory, imageUrl, compatibleModels) |
 | `customers` | Customer records created at checkout |
 | `orders` | Order records linked to a customer, with status and total |
 | `order_items` | Line items linking orders to products with quantity and price snapshot |
+
+`products` has two extra columns:
+- `subcategory` (text, nullable): e.g. `screen-protectors`, `cases`, `chargers`
+- `compatible_models` (text[], nullable): list of device models the product fits (e.g. all iPhone 8–17 variants for screen protectors)
 
 Zod schemas are auto-generated from the Drizzle table definitions using `drizzle-zod`.
 

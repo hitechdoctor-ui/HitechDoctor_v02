@@ -2,11 +2,15 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
 import type { Product, InsertProduct } from "@shared/schema";
 
-export function useProducts(category?: string) {
+export function useProducts(category?: string, subcategory?: string) {
   return useQuery({
-    queryKey: [api.products.list.path, category],
+    queryKey: [api.products.list.path, category, subcategory],
     queryFn: async () => {
-      const url = category ? `${api.products.list.path}?category=${category}` : api.products.list.path;
+      const params = new URLSearchParams();
+      if (category) params.set("category", category);
+      if (subcategory) params.set("subcategory", subcategory);
+      const qs = params.toString();
+      const url = qs ? `${api.products.list.path}?${qs}` : api.products.list.path;
       const res = await fetch(url, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch products");
       const data = await res.json();

@@ -8,7 +8,9 @@ export const products = pgTable("products", {
   description: text("description").notNull(),
   price: numeric("price").notNull(),
   imageUrl: text("image_url"),
-  category: text("category").notNull(), // e.g., 'mobile', 'repair', 'accessory'
+  category: text("category").notNull(),
+  subcategory: text("subcategory"),
+  compatibleModels: text("compatible_models").array(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -24,7 +26,7 @@ export const customers = pgTable("customers", {
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
   customerId: integer("customer_id").notNull(),
-  status: text("status").notNull().default("pending"), // pending, completed, cancelled
+  status: text("status").notNull().default("pending"),
   totalAmount: numeric("total_amount").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
