@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import {
   ShoppingCart, Wrench, Package, ShieldCheck, Menu, Zap,
   Smartphone, ChevronRight, Hammer, Laptop, Monitor, Watch,
-  Gamepad2, Tablet,
+  Gamepad2, Tablet, LogIn,
 } from "lucide-react";
 import { useState } from "react";
 import { useCartStore } from "@/store/cart";
@@ -203,6 +203,19 @@ export function Navbar() {
             <ShieldCheck className="w-4 h-4" />
             Admin
           </Link>
+
+          {/* Login */}
+          <Link href="/admin">
+            <Button
+              size="sm"
+              className="bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 hover:border-primary/50 transition-all gap-2 font-semibold"
+              variant="ghost"
+              data-testid="btn-login"
+            >
+              <LogIn className="w-4 h-4" />
+              Σύνδεση
+            </Button>
+          </Link>
         </nav>
 
         {/* Right side — search + cart + mobile hamburger */}
@@ -293,6 +306,13 @@ export function Navbar() {
                 <Link href="/admin" className={`flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium ${isActive("/admin") ? "text-primary bg-primary/10" : "text-foreground"}`}>
                   <ShieldCheck className="w-5 h-5" />
                   Admin
+                </Link>
+
+                <Link href="/admin">
+                  <div className="flex items-center gap-3 px-3 py-3 rounded-xl text-base font-semibold text-primary bg-primary/10 border border-primary/20 mt-2" data-testid="btn-login-mobile">
+                    <LogIn className="w-5 h-5" />
+                    Σύνδεση
+                  </div>
                 </Link>
               </nav>
             </SheetContent>

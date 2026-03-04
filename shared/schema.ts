@@ -57,11 +57,22 @@ export const repairRequests = pgTable("repair_requests", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// ── Repair Items (cost breakdown per repair) ──────────────────────────────────
+export const repairItems = pgTable("repair_items", {
+  id: serial("id").primaryKey(),
+  repairRequestId: integer("repair_request_id").notNull(),
+  description: text("description").notNull(),
+  amount: numeric("amount").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Zod schemas
 export const insertProductSchema = createInsertSchema(products).omit({ id: true, createdAt: true });
 export const insertCustomerSchema = createInsertSchema(customers).omit({ id: true, createdAt: true });
 export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true });
 export const insertOrderItemSchema = createInsertSchema(orderItems).omit({ id: true });
+export const insertRepairItemSchema = createInsertSchema(repairItems).omit({ id: true, createdAt: true });
+
 export const insertRepairRequestSchema = createInsertSchema(repairRequests).omit({ id: true, createdAt: true }).extend({
   email: z.string().email("Μη έγκυρο email"),
   phone: z.string().min(10, "Εισάγετε έγκυρο αριθμό τηλεφώνου"),
@@ -86,6 +97,9 @@ export type InsertOrderItem = z.infer<typeof insertOrderItemSchema>;
 
 export type RepairRequest = typeof repairRequests.$inferSelect;
 export type InsertRepairRequest = z.infer<typeof insertRepairRequestSchema>;
+
+export type RepairItem = typeof repairItems.$inferSelect;
+export type InsertRepairItem = z.infer<typeof insertRepairItemSchema>;
 
 // Order payload for checkout
 export const checkoutPayloadSchema = z.object({

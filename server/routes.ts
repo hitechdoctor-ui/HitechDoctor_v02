@@ -2,7 +2,7 @@ import type { Express } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
 import { api, errorSchemas } from "@shared/routes";
-import { insertRepairRequestSchema } from "@shared/schema";
+import { insertRepairRequestSchema, insertRepairItemSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(
@@ -197,6 +197,60 @@ export async function registerRoutes(
       res.json(request);
     } catch (err) {
       res.status(404).json({ message: "Repair request not found" });
+    }
+  });
+
+  // --- Repair Items API ---
+  app.get("/api/repair-requests/:id/items", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const items = await storage.getRepairItems(id);
+      res.json(items);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch repair items" });
+    }
+  });
+
+  app.post("/api/repair-requests/:id/items", async (req, res) => {
+    try {
+      const repairRequestId = parseInt(req.params.id);
+      const schema = z.object({
+        description: z.string().min(1),
+        amount: z.string(),
+      });
+      const { description, amount } = schema.parse(req.body);
+      const item = await storage.createRepairItem({ repairRequestId, description, amount });
+      res.status(201).json(item);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      res.status(500).json({ message: "Failed to create repair item" });
+    }
+  });
+
+  app.put("/api/repair-items/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const schema = z.object({
+        description: z.string().min(1).optional(),
+        amount: z.string().optional(),
+      });
+      const data = schema.parse(req.body);
+      const item = await storage.updateRepairItem(id, data);
+      res.json(item);
+    } catch (err) {
+      res.status(404).json({ message: "Repair item not found" });
+    }
+  });
+
+  app.delete("/api/repair-items/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteRepairItem(id);
+      res.status(204).send();
+    } catch (error) {
+      res.status(404).json({ message: "Repair item not found" });
     }
   });
 

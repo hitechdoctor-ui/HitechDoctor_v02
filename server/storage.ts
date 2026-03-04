@@ -5,6 +5,7 @@ import {
   orders,
   orderItems,
   repairRequests,
+  repairItems,
   type Product,
   type InsertProduct,
   type Customer,
@@ -15,6 +16,8 @@ import {
   type InsertOrderItem,
   type RepairRequest,
   type InsertRepairRequest,
+  type RepairItem,
+  type InsertRepairItem,
   type CheckoutPayload
 } from "@shared/schema";
 import { eq, desc, and } from "drizzle-orm";
@@ -45,6 +48,12 @@ export interface IStorage {
   createRepairRequest(data: InsertRepairRequest): Promise<RepairRequest>;
   updateRepairRequestStatus(id: number, status: string): Promise<RepairRequest>;
   updateRepairRequest(id: number, data: { status?: string; price?: string | null }): Promise<RepairRequest>;
+
+  // Repair Items (line items)
+  getRepairItems(repairRequestId: number): Promise<RepairItem[]>;
+  createRepairItem(data: InsertRepairItem): Promise<RepairItem>;
+  updateRepairItem(id: number, data: { description?: string; amount?: string }): Promise<RepairItem>;
+  deleteRepairItem(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -222,6 +231,31 @@ export class DatabaseStorage implements IStorage {
       .returning();
     if (!updated) throw new Error("Repair request not found");
     return updated;
+  }
+
+  // --- Repair Items ---
+  async getRepairItems(repairRequestId: number): Promise<RepairItem[]> {
+    return await db.select().from(repairItems)
+      .where(eq(repairItems.repairRequestId, repairRequestId))
+      .orderBy(repairItems.createdAt);
+  }
+
+  async createRepairItem(data: InsertRepairItem): Promise<RepairItem> {
+    const [created] = await db.insert(repairItems).values(data).returning();
+    return created;
+  }
+
+  async updateRepairItem(id: number, data: { description?: string; amount?: string }): Promise<RepairItem> {
+    const [updated] = await db.update(repairItems)
+      .set(data)
+      .where(eq(repairItems.id, id))
+      .returning();
+    if (!updated) throw new Error("Repair item not found");
+    return updated;
+  }
+
+  async deleteRepairItem(id: number): Promise<void> {
+    await db.delete(repairItems).where(eq(repairItems.id, id));
   }
 }
 
