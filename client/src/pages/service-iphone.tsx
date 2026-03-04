@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { ReviewsSection } from "@/components/reviews-section";
 import { Seo } from "@/components/seo";
 import { Helmet } from "react-helmet-async";
 import { Badge } from "@/components/ui/badge";
@@ -436,6 +437,7 @@ export default function ServiceIphone() {
             </div>
           </div>
         </section>
+        <ReviewsSection />
       </main>
 
       {/* Repair Request Modal */}

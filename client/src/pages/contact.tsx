@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { ReviewsSection } from "@/components/reviews-section";
 import { Phone, Mail, Clock, MapPin, MessageCircle, Send } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -247,6 +248,7 @@ export default function Contact() {
           </div>
         </section>
 
+        <ReviewsSection />
       </main>
 
       <Footer />

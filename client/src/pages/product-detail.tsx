@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { ReviewsSection } from "@/components/reviews-section";
 import { Seo } from "@/components/seo";
 import { Helmet } from "react-helmet-async";
 import { useParams, Link } from "wouter";
@@ -677,6 +678,7 @@ export default function ProductDetail() {
             </section>
           );
         })()}
+        <ReviewsSection />
       </main>
       <Footer />
     </div>
