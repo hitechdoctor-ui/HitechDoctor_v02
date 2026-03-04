@@ -14,6 +14,9 @@ export const products = pgTable("products", {
   subcategory: text("subcategory"),
   slug: text("slug"),
   compatibleModels: text("compatible_models").array(),
+  brand: text("brand"),
+  color: text("color"),
+  storage: text("storage"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
