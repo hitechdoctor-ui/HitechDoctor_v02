@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertProductSchema } from "@shared/schema";
-import { Plus, Edit, Trash2, Package, Search, X, FileText, AlignLeft } from "lucide-react";
+import { Plus, Edit, Trash2, Package, Search, X, FileText, AlignLeft, ImagePlus, GripVertical, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { RichTextEditor } from "@/components/rich-text-editor";
@@ -24,6 +24,153 @@ const formSchema = insertProductSchema.extend({
 
 type ProductFormData = z.infer<typeof formSchema>;
 
+// ── Extra Images Manager ─────────────────────────────────────────────────────
+function ExtraImagesManager({
+  images,
+  onChange,
+}: {
+  images: string[];
+  onChange: (imgs: string[]) => void;
+}) {
+  const [inputVal, setInputVal] = useState("");
+
+  const addImage = () => {
+    const url = inputVal.trim();
+    if (!url) return;
+    if (images.includes(url)) {
+      setInputVal("");
+      return;
+    }
+    onChange([...images, url]);
+    setInputVal("");
+  };
+
+  const removeImage = (idx: number) => {
+    onChange(images.filter((_, i) => i !== idx));
+  };
+
+  const moveUp = (idx: number) => {
+    if (idx === 0) return;
+    const next = [...images];
+    [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
+    onChange(next);
+  };
+
+  const moveDown = (idx: number) => {
+    if (idx === images.length - 1) return;
+    const next = [...images];
+    [next[idx + 1], next[idx]] = [next[idx], next[idx + 1]];
+    onChange(next);
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Gallery thumbnails */}
+      {images.length > 0 && (
+        <div className="space-y-2">
+          {images.map((url, idx) => (
+            <div
+              key={idx}
+              className="flex items-center gap-3 p-2.5 rounded-xl bg-background border border-white/10 group"
+            >
+              {/* Drag handle aesthetic */}
+              <GripVertical className="w-3.5 h-3.5 text-muted-foreground/30 shrink-0" />
+
+              {/* Thumbnail */}
+              <div className="w-12 h-12 rounded-lg bg-black/40 border border-white/10 overflow-hidden shrink-0 flex items-center justify-center">
+                <img
+                  src={url}
+                  alt=""
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
+                />
+              </div>
+
+              {/* URL - truncated */}
+              <p className="flex-1 text-xs text-muted-foreground/70 truncate min-w-0 font-mono">
+                {url}
+              </p>
+
+              {/* Position badge */}
+              <span className="text-[9px] font-bold text-muted-foreground/40 shrink-0">
+                #{idx + 1}
+                {idx === 0 && (
+                  <Star className="inline w-2.5 h-2.5 text-primary/50 ml-1" />
+                )}
+              </span>
+
+              {/* Up/Down */}
+              <div className="flex flex-col gap-0.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => moveUp(idx)}
+                  disabled={idx === 0}
+                  className="text-[10px] leading-none text-muted-foreground/50 hover:text-foreground disabled:opacity-20 px-1"
+                >
+                  ▲
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveDown(idx)}
+                  disabled={idx === images.length - 1}
+                  className="text-[10px] leading-none text-muted-foreground/50 hover:text-foreground disabled:opacity-20 px-1"
+                >
+                  ▼
+                </button>
+              </div>
+
+              {/* Remove */}
+              <button
+                type="button"
+                onClick={() => removeImage(idx)}
+                className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full text-muted-foreground/50 hover:bg-red-500/20 hover:text-red-400 transition-all"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add new URL row */}
+      <div className="flex gap-2">
+        <Input
+          value={inputVal}
+          onChange={(e) => setInputVal(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addImage())}
+          placeholder="https://... ή /images/photo.webp"
+          className="bg-background text-sm flex-1"
+          data-testid="input-extra-image-url"
+        />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={addImage}
+          disabled={!inputVal.trim()}
+          className="shrink-0 gap-1.5 border-white/15 hover:border-primary/40 hover:text-primary"
+          data-testid="btn-add-extra-image"
+        >
+          <ImagePlus className="w-4 h-4" />
+          Προσθήκη
+        </Button>
+      </div>
+
+      {images.length === 0 && (
+        <p className="text-[11px] text-muted-foreground/40 italic">
+          Δεν έχουν προστεθεί επιπλέον φωτογραφίες ακόμη.
+        </p>
+      )}
+
+      <p className="text-[11px] text-muted-foreground/50">
+        Η πρώτη (#1) εμφανίζεται κύρια στο gallery. Χρησιμοποιήστε ▲▼ για αλλαγή σειράς.
+      </p>
+    </div>
+  );
+}
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
 export default function AdminProducts() {
   const { data: products, isLoading } = useProducts();
   const { mutateAsync: createProduct } = useCreateProduct();
@@ -34,6 +181,7 @@ export default function AdminProducts() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [richContent, setRichContent] = useState("");
+  const [extraImages, setExtraImages] = useState<string[]>([]);
   const { toast } = useToast();
 
   const filteredProducts = useMemo(() => {
@@ -57,6 +205,7 @@ export default function AdminProducts() {
   const openNew = () => {
     setEditingId(null);
     setRichContent("");
+    setExtraImages([]);
     form.reset({ name: "", description: "", fullDescription: "", price: "", imageUrl: "", category: "mobile" });
     setIsDialogOpen(true);
   };
@@ -65,6 +214,7 @@ export default function AdminProducts() {
     setEditingId(product.id);
     const full = product.fullDescription ?? "";
     setRichContent(full);
+    setExtraImages(product.images ?? []);
     form.reset({
       name: product.name,
       description: product.description,
@@ -85,7 +235,11 @@ export default function AdminProducts() {
 
   const onSubmit = async (data: ProductFormData) => {
     try {
-      const payload = { ...data, fullDescription: richContent };
+      const payload = {
+        ...data,
+        fullDescription: richContent,
+        images: extraImages.length > 0 ? extraImages : null,
+      };
       if (editingId) {
         await updateProduct({ id: editingId, ...payload });
         toast({ title: "Ενημερώθηκε επιτυχώς" });
@@ -114,14 +268,15 @@ export default function AdminProducts() {
         </Button>
       </div>
 
-      {/* Dialog */}
+      {/* ── Dialog ── */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="bg-card border-white/10 sm:max-w-3xl max-h-[92vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingId ? "Επεξεργασία Προϊόντος" : "Νέο Προϊόν"}</DialogTitle>
           </DialogHeader>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 pt-1">
-            {/* Name + Price + Category */}
+
+            {/* ── Name + Price + Category ── */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="sm:col-span-3 space-y-1.5">
                 <Label>Όνομα Προϊόντος</Label>
@@ -152,13 +307,65 @@ export default function AdminProducts() {
                   )}
                 />
               </div>
-              <div className="space-y-1.5">
-                <Label>URL Εικόνας</Label>
-                <Input className="bg-background" placeholder="https://..." {...form.register("imageUrl")} />
+              <div className="sm:col-span-1" />
+            </div>
+
+            {/* ── Images Section ── */}
+            <div className="rounded-2xl border border-white/10 bg-white/2 p-4 space-y-4">
+              <div className="flex items-center gap-2 pb-1 border-b border-white/8">
+                <ImagePlus className="w-4 h-4 text-primary" />
+                <h3 className="text-sm font-semibold">Φωτογραφίες Προϊόντος</h3>
+              </div>
+
+              {/* Cover image */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">
+                    Κύρια Φωτογραφία (Cover)
+                    <span className="ml-1.5 text-[9px] text-yellow-400/80 border border-yellow-400/20 bg-yellow-400/5 rounded px-1.5 py-0.5">κύρια</span>
+                  </Label>
+                  <Input
+                    className="bg-background text-sm"
+                    placeholder="https://... ή /images/photo.webp"
+                    {...form.register("imageUrl")}
+                    data-testid="input-product-image"
+                  />
+                  <p className="text-[10px] text-muted-foreground/50">Εμφανίζεται στη λίστα και στην κάρτα προϊόντος.</p>
+                </div>
+
+                {/* Cover preview */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground/60">Preview</Label>
+                  <div className="w-full h-28 rounded-xl bg-black/40 border border-white/10 overflow-hidden flex items-center justify-center">
+                    {form.watch("imageUrl") ? (
+                      <img
+                        src={form.watch("imageUrl") ?? ""}
+                        alt="preview"
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <Package className="w-8 h-8 text-muted-foreground/20" />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Extra images */}
+              <div className="space-y-2">
+                <Label className="text-xs flex items-center gap-1.5">
+                  Επιπλέον Φωτογραφίες (Gallery)
+                  <span className="text-[9px] text-primary/70 border border-primary/20 bg-primary/5 rounded px-1.5 py-0.5">
+                    {extraImages.length} φωτ.
+                  </span>
+                </Label>
+                <ExtraImagesManager images={extraImages} onChange={setExtraImages} />
               </div>
             </div>
 
-            {/* Short Description */}
+            {/* ── Short Description ── */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <AlignLeft className="w-3.5 h-3.5 text-primary" />
@@ -175,7 +382,7 @@ export default function AdminProducts() {
               <p className="text-[11px] text-muted-foreground/50">Εμφανίζεται στην κάρτα προϊόντος και στο meta description (SEO).</p>
             </div>
 
-            {/* Full Description - Rich Text */}
+            {/* ── Full Description ── */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <FileText className="w-3.5 h-3.5 text-primary" />
@@ -240,10 +447,17 @@ export default function AdminProducts() {
               filteredProducts.map((product) => (
                 <TableRow key={product.id} className="border-white/5 hover:bg-white/5" data-testid={`row-product-${product.id}`}>
                   <TableCell>
-                    <div className="w-10 h-10 rounded bg-black/50 flex items-center justify-center overflow-hidden">
-                      {product.imageUrl
-                        ? <img src={product.imageUrl} className="w-full h-full object-cover" alt="" />
-                        : <Package className="w-4 h-4 text-muted-foreground" />}
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-10 h-10 rounded bg-black/50 flex items-center justify-center overflow-hidden shrink-0">
+                        {product.imageUrl
+                          ? <img src={product.imageUrl} className="w-full h-full object-cover" alt="" />
+                          : <Package className="w-4 h-4 text-muted-foreground" />}
+                      </div>
+                      {(product.images ?? []).length > 0 && (
+                        <span className="text-[9px] text-primary/60 font-semibold">
+                          +{(product.images ?? []).length}
+                        </span>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell className="font-medium max-w-[180px]">
