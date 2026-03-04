@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Seo } from "@/components/seo";
 import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct } from "@/hooks/use-products";
@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertProductSchema } from "@shared/schema";
-import { Plus, Edit, Trash2, Package } from "lucide-react";
+import { Plus, Edit, Trash2, Package, Search, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
@@ -28,7 +28,21 @@ export default function AdminProducts() {
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [search, setSearch] = useState("");
   const { toast } = useToast();
+
+  const filteredProducts = useMemo(() => {
+    if (!products) return [];
+    const q = search.trim().toLowerCase();
+    if (!q) return products;
+    return products.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q) ||
+        (p.subcategory ?? "").toLowerCase().includes(q) ||
+        String(p.price).includes(q)
+    );
+  }, [products, search]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -79,7 +93,7 @@ export default function AdminProducts() {
     <AdminLayout>
       <Seo title="Διαχείριση Προϊόντων" description="Admin" />
       
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
           <h1 className="text-3xl font-display font-bold">Προϊόντα</h1>
           <p className="text-muted-foreground">Διαχειριστείτε τον κατάλογο προϊόντων σας</p>
@@ -142,6 +156,24 @@ export default function AdminProducts() {
         </Dialog>
       </div>
 
+      {/* ── Search bar ── */}
+      <div className="mb-4 flex items-center gap-2 px-3 h-10 rounded-xl border border-white/10 bg-card hover:border-white/20 focus-within:border-primary/40 focus-within:shadow-[0_0_0_2px_rgba(0,210,200,0.1)] transition-all max-w-sm">
+        <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Αναζήτηση προϊόντος, κατηγορίας, τιμής…"
+          className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/50"
+          data-testid="input-product-search"
+        />
+        {search && (
+          <button onClick={() => setSearch("")} className="text-muted-foreground hover:text-foreground">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+
       <div className="bg-card rounded-2xl border border-white/5 overflow-hidden">
         <Table>
           <TableHeader className="bg-white/5">
@@ -156,10 +188,12 @@ export default function AdminProducts() {
           <TableBody>
             {isLoading ? (
               <TableRow><TableCell colSpan={5} className="text-center py-8">Φόρτωση...</TableCell></TableRow>
-            ) : products?.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Δεν υπάρχουν προϊόντα</TableCell></TableRow>
+            ) : filteredProducts.length === 0 ? (
+              <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                {search ? `Δεν βρέθηκαν αποτελέσματα για "${search}"` : "Δεν υπάρχουν προϊόντα"}
+              </TableCell></TableRow>
             ) : (
-              products?.map(product => (
+              filteredProducts.map(product => (
                 <TableRow key={product.id} className="border-white/5 hover:bg-white/5">
                   <TableCell>
                     <div className="w-10 h-10 rounded bg-black/50 flex items-center justify-center overflow-hidden">

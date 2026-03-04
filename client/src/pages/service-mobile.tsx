@@ -32,6 +32,8 @@ const brands = [
     color: "from-slate-600/30 to-slate-500/20",
     glowColor: "rgba(148,163,184,0.15)",
     borderColor: "border-slate-500/25",
+    pageUrl: "/services/episkeui-iphone",
+    btnLabel: "Επισκευή iPhone",
   },
   {
     id: "samsung",
@@ -56,6 +58,8 @@ const brands = [
     color: "from-blue-600/25 to-blue-500/15",
     glowColor: "rgba(59,130,246,0.15)",
     borderColor: "border-blue-500/25",
+    pageUrl: null,
+    btnLabel: "Επικοινωνία",
   },
   {
     id: "xiaomi",
@@ -80,6 +84,8 @@ const brands = [
     color: "from-orange-600/25 to-orange-500/15",
     glowColor: "rgba(249,115,22,0.12)",
     borderColor: "border-orange-500/25",
+    pageUrl: null,
+    btnLabel: "Επικοινωνία",
   },
   {
     id: "huawei",
@@ -104,6 +110,8 @@ const brands = [
     color: "from-red-600/25 to-red-500/15",
     glowColor: "rgba(239,68,68,0.12)",
     borderColor: "border-red-500/25",
+    pageUrl: null,
+    btnLabel: "Επικοινωνία",
   },
   {
     id: "oneplus",
@@ -128,6 +136,8 @@ const brands = [
     color: "from-red-700/25 to-rose-600/15",
     glowColor: "rgba(220,38,38,0.12)",
     borderColor: "border-red-600/25",
+    pageUrl: null,
+    btnLabel: "Επικοινωνία",
   },
 ];
 
@@ -305,6 +315,35 @@ export default function ServiceMobile() {
                     <Clock className="w-3.5 h-3.5 text-primary shrink-0" />
                     <span>Εξυπηρέτηση από {brand.timeFrom}</span>
                   </div>
+
+                  {/* CTA Button */}
+                  {brand.pageUrl ? (
+                    <Link href={brand.pageUrl}>
+                      <Button
+                        size="sm"
+                        className="w-full mt-1 font-semibold border-0 text-xs"
+                        style={{
+                          background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))",
+                        }}
+                        data-testid={`button-brand-page-${brand.id}`}
+                      >
+                        <ArrowRight className="w-3.5 h-3.5 mr-1.5" />
+                        {brand.btnLabel}
+                      </Button>
+                    </Link>
+                  ) : (
+                    <a href="tel:6981882005" className="block mt-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full text-xs border-primary/25 text-primary hover:bg-primary/10"
+                        data-testid={`button-brand-contact-${brand.id}`}
+                      >
+                        <Phone className="w-3.5 h-3.5 mr-1.5" />
+                        {brand.btnLabel}
+                      </Button>
+                    </a>
+                  )}
                 </div>
               </article>
             ))}
