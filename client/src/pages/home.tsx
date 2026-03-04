@@ -23,6 +23,7 @@ import {
   Cpu,
 } from "lucide-react";
 import { Link } from "wouter";
+import { BLOG_POSTS, formatBlogDate } from "@/data/blog-posts";
 
 const homeServices = [
   { icon: Smartphone, title: "Επισκευή Κινητών", href: "/services/episkeui-kiniton" },
@@ -251,6 +252,47 @@ export default function Home() {
             </Link>
           </div>
         </section>
+        {/* Blog Latest News Section */}
+        <section className="py-16 border-t border-white/6">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-display font-black mb-3">
+                Διαβάστε τα <span className="text-primary">Νέα μας</span>
+              </h2>
+              <p className="text-muted-foreground">Συμβουλές και οδηγοί από τους τεχνικούς μας — γραμμένα ανθρώπινα, για ανθρώπους.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              {BLOG_POSTS.slice(0, 3).map((post) => (
+                <article key={post.id} className="group bg-card border border-white/6 rounded-2xl overflow-hidden hover:border-primary/30 transition-all">
+                  <Link href={`/blog/${post.slug}`}>
+                    <div className="aspect-[16/9] overflow-hidden bg-black/40">
+                      <img
+                        src={post.image}
+                        alt={post.title}
+                        loading="lazy"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    </div>
+                    <div className="p-5">
+                      <p className="text-[10px] text-muted-foreground/60 mb-2">{formatBlogDate(post.date)} · {post.readTime} λεπτά ανάγνωσης</p>
+                      <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 mb-2">{post.title}</h3>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{post.excerpt}</p>
+                    </div>
+                  </Link>
+                </article>
+              ))}
+            </div>
+            <div className="text-center">
+              <Link href="/blog">
+                <Button variant="outline" className="border-white/20 hover:border-primary/40 gap-2">
+                  Διαβάστε περισσότερα
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+
         <ReviewsSection />
       </main>
       <Footer />

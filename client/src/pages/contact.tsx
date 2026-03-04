@@ -2,13 +2,16 @@ import { Helmet } from "react-helmet-async";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { ReviewsSection } from "@/components/reviews-section";
-import { Phone, Mail, Clock, MapPin, MessageCircle, Send } from "lucide-react";
+import { Breadcrumb } from "@/components/breadcrumb";
+import { Phone, Mail, Clock, MapPin, MessageCircle, Send, QrCode, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
+import QRCode from "react-qr-code";
 
 const HOURS = [
-  { day: "Δευτέρα – Παρασκευή", time: "09:00 – 20:00", open: true },
-  { day: "Σάββατο", time: "09:00 – 15:00", open: true },
+  { day: "Δευτέρα – Παρασκευή", time: "10:00 – 19:00", open: true },
+  { day: "Σάββατο", time: "10:00 – 16:00", open: true },
   { day: "Κυριακή", time: "Κλειστά", open: false },
 ];
 
@@ -45,12 +48,59 @@ const INFO_CARDS = [
   },
 ];
 
+const MAPS_URL = "https://maps.google.com/?q=37.9528736,23.6792087";
+const VCARD = `BEGIN:VCARD
+VERSION:3.0
+FN:HiTech Doctor
+ORG:HiTech Doctor
+TEL;TYPE=CELL:+306981882005
+EMAIL:info@hitechdoctor.com
+URL:https://hitechdoctor.com
+END:VCARD`;
+
+const localBusinessSchema = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "HiTech Doctor",
+  "description": "Επαγγελματική επισκευή κινητών τηλεφώνων, tablet και laptop στην Αθήνα.",
+  "url": "https://hitechdoctor.com",
+  "telephone": "+306981882005",
+  "email": "info@hitechdoctor.com",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Αθήνα",
+    "addressLocality": "Αθήνα",
+    "postalCode": "10000",
+    "addressCountry": "GR",
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 37.9528736,
+    "longitude": 23.6792087,
+  },
+  "openingHoursSpecification": [
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      "opens": "10:00",
+      "closes": "19:00",
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": "Saturday",
+      "opens": "10:00",
+      "closes": "16:00",
+    },
+  ],
+};
+
 export default function Contact() {
-  const [form, setForm] = useState({ name: "", phone: "", message: "" });
+  const [form, setForm] = useState({ name: "", phone: "", message: "", gdpr: false });
   const [sent, setSent] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!form.gdpr) return;
     const subject = encodeURIComponent("Επικοινωνία από hitechdoctor.com");
     const body = encodeURIComponent(
       `Όνομα: ${form.name}\nΤηλέφωνο: ${form.phone}\n\nΜήνυμα:\n${form.message}`
@@ -61,6 +111,7 @@ export default function Contact() {
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} />
       <Helmet>
         <title>Επικοινωνία | HiTech Doctor – Επισκευές Κινητών & Τεχνολογία</title>
         <meta name="description" content="Επικοινωνήστε με το HiTech Doctor. Τηλέφωνο, WhatsApp, email και χάρτης. Επισκευές κινητών, tablet, laptop και gaming console." />
@@ -74,6 +125,7 @@ export default function Contact() {
 
         {/* ── Hero ─────────────────────────────────────────────────────── */}
         <section className="container mx-auto px-4 pt-10 pb-8 text-center">
+          <Breadcrumb items={[{ label: "Επικοινωνία" }]} className="justify-center mb-6" />
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-semibold mb-6">
             <MapPin className="w-4 h-4" />
             Επικοινωνία
@@ -115,7 +167,7 @@ export default function Contact() {
         </section>
 
         {/* ── Map + Hours + Form ────────────────────────────────────────── */}
-        <section className="container mx-auto px-4 pb-16">
+        <section className="container mx-auto px-4 pb-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
             {/* Left: Map */}
@@ -137,7 +189,7 @@ export default function Contact() {
               </div>
               <div className="p-4">
                 <a
-                  href="https://maps.app.goo.gl/hitechdoctor"
+                  href={MAPS_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   data-testid="link-open-maps"
@@ -169,7 +221,8 @@ export default function Contact() {
                   ))}
                 </div>
                 <p className="text-[11px] text-muted-foreground/50 mt-3 pt-3 border-t border-white/8">
-                  * Εκτός αδείας / αργιών. Για επείγοντα καλέστε στο 698 188 2005.
+                  * Εκτός αδείας / αργιών. Για επείγοντα καλέστε στο{" "}
+                  <a href="tel:+306981882005" className="text-primary hover:underline">698 188 2005</a>.
                 </p>
               </div>
 
@@ -191,7 +244,7 @@ export default function Contact() {
                       variant="ghost"
                       size="sm"
                       className="text-primary mt-2"
-                      onClick={() => { setSent(false); setForm({ name: "", phone: "", message: "" }); }}
+                      onClick={() => { setSent(false); setForm({ name: "", phone: "", message: "", gdpr: false }); }}
                     >
                       Νέο μήνυμα
                     </Button>
@@ -225,7 +278,7 @@ export default function Contact() {
                       <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1 block">Μήνυμα</label>
                       <textarea
                         required
-                        rows={4}
+                        rows={3}
                         data-testid="input-contact-message"
                         value={form.message}
                         onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
@@ -233,10 +286,32 @@ export default function Contact() {
                         className="w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 transition-colors resize-none"
                       />
                     </div>
+
+                    {/* GDPR Consent Checkbox */}
+                    <div className="flex items-start gap-2.5">
+                      <input
+                        type="checkbox"
+                        id="gdpr-consent"
+                        required
+                        checked={form.gdpr}
+                        onChange={(e) => setForm((f) => ({ ...f, gdpr: e.target.checked }))}
+                        data-testid="checkbox-gdpr-consent"
+                        className="mt-0.5 w-4 h-4 rounded border-white/20 bg-white/5 accent-primary cursor-pointer"
+                      />
+                      <label htmlFor="gdpr-consent" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+                        Συμφωνώ με τους{" "}
+                        <Link href="/oroi-episkeuis" target="_blank" className="text-primary hover:underline">Όρους Χρήσης</Link>
+                        {" "}και την{" "}
+                        <Link href="/politiki-cookies" target="_blank" className="text-primary hover:underline">Πολιτική Απορρήτου</Link>
+                        {" "}και δίνω τη συγκατάθεσή μου για επεξεργασία των δεδομένων μου.
+                      </label>
+                    </div>
+
                     <Button
                       type="submit"
+                      disabled={!form.gdpr}
                       data-testid="btn-contact-submit"
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-11 rounded-xl gap-2"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-11 rounded-xl gap-2 disabled:opacity-50"
                     >
                       <Send className="w-4 h-4" />
                       Αποστολή Μηνύματος
@@ -244,6 +319,40 @@ export default function Contact() {
                   </form>
                 )}
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── QR Codes ─────────────────────────────────────────────────── */}
+        <section className="container mx-auto px-4 pb-16">
+          <h2 className="text-xl font-display font-bold text-center mb-6">
+            Σκανάρετε & <span className="text-primary">Δράστε</span>
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl mx-auto">
+            {/* QR A: Google Maps */}
+            <div className="glass-panel border border-white/8 rounded-2xl p-6 text-center hover:border-primary/30 transition-colors">
+              <div className="w-10 h-10 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center mx-auto mb-3">
+                <QrCode className="w-5 h-5 text-primary" />
+              </div>
+              <h3 className="font-bold text-sm mb-1">QR Οδηγίες GPS</h3>
+              <p className="text-xs text-muted-foreground mb-4">Σκανάρετε για οδηγίες στο Google Maps</p>
+              <div className="bg-white p-3 rounded-xl inline-block" loading="lazy">
+                <QRCode value={MAPS_URL} size={128} />
+              </div>
+              <p className="text-[10px] text-muted-foreground/60 mt-3">Ανοίγει αυτόματα τη διαδρομή</p>
+            </div>
+
+            {/* QR B: vCard */}
+            <div className="glass-panel border border-white/8 rounded-2xl p-6 text-center hover:border-primary/30 transition-colors">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center mx-auto mb-3">
+                <UserPlus className="w-5 h-5 text-emerald-400" />
+              </div>
+              <h3 className="font-bold text-sm mb-1">QR Αποθήκευση Επαφής</h3>
+              <p className="text-xs text-muted-foreground mb-4">Σκανάρετε για να αποθηκεύσετε τα στοιχεία μας</p>
+              <div className="bg-white p-3 rounded-xl inline-block" loading="lazy">
+                <QRCode value={VCARD} size={128} />
+              </div>
+              <p className="text-[10px] text-muted-foreground/60 mt-3">Αποθηκεύει όνομα, τηλ. & email</p>
             </div>
           </div>
         </section>

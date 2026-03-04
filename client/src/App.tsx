@@ -7,6 +7,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { HelmetProvider } from "react-helmet-async";
 import NotFound from "@/pages/not-found";
 
+// Global UI Components
+import { ScrollProgressBar } from "@/components/scroll-progress-bar";
+import { CookieBanner } from "@/components/cookie-banner";
+import { AccessibilityButton } from "@/components/accessibility-button";
+import { ExitIntentPopup } from "@/components/exit-intent-popup";
+
 // Public Pages
 import Home from "./pages/home";
 import Services from "./pages/services";
@@ -17,6 +23,13 @@ import ProductDetail from "./pages/product-detail";
 import Checkout from "./pages/checkout";
 import Terms from "./pages/terms";
 import Contact from "./pages/contact";
+import Blog from "./pages/blog";
+import BlogPost from "./pages/blog-post";
+import About from "./pages/about";
+import FAQ from "./pages/faq";
+import PaymentMethods from "./pages/payment-methods";
+import CookiesPolicy from "./pages/cookies-policy";
+import AccessibilityStatement from "./pages/accessibility-statement";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/dashboard";
@@ -35,10 +48,25 @@ function ScrollToTop() {
   return null;
 }
 
+function GlobalComponents() {
+  const [location] = useLocation();
+  const isAdmin = location.startsWith("/admin");
+  if (isAdmin) return null;
+  return (
+    <Fragment>
+      <ScrollProgressBar />
+      <CookieBanner />
+      <AccessibilityButton />
+      <ExitIntentPopup />
+    </Fragment>
+  );
+}
+
 function Router() {
   return (
     <Fragment>
       <ScrollToTop />
+      <GlobalComponents />
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/services" component={Services} />
@@ -49,6 +77,13 @@ function Router() {
         <Route path="/checkout" component={Checkout} />
         <Route path="/oroi-episkeuis" component={Terms} />
         <Route path="/epikoinonia" component={Contact} />
+        <Route path="/blog" component={Blog} />
+        <Route path="/blog/:slug" component={BlogPost} />
+        <Route path="/sxetika-me-mas" component={About} />
+        <Route path="/faq" component={FAQ} />
+        <Route path="/tropoi-pliromis" component={PaymentMethods} />
+        <Route path="/politiki-cookies" component={CookiesPolicy} />
+        <Route path="/prosvassimotita" component={AccessibilityStatement} />
         <Route path="/admin" component={AdminDashboard} />
         <Route path="/admin/repair-requests" component={AdminRepairRequests} />
         <Route path="/admin/products" component={AdminProducts} />

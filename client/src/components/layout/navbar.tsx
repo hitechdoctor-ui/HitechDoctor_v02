@@ -193,6 +193,30 @@ export function Navbar() {
             eShop
           </Link>
 
+          {/* Blog */}
+          <Link
+            href="/blog"
+            className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors hover:text-primary flex items-center gap-2 ${
+              isActive("/blog") ? "text-primary" : "text-muted-foreground"
+            }`}
+            data-testid="nav-blog"
+          >
+            <Wrench className="w-4 h-4" />
+            Blog
+          </Link>
+
+          {/* Σχετικά */}
+          <Link
+            href="/sxetika-me-mas"
+            className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors hover:text-primary flex items-center gap-2 ${
+              isActive("/sxetika-me-mas") ? "text-primary" : "text-muted-foreground"
+            }`}
+            data-testid="nav-about"
+          >
+            <ShieldCheck className="w-4 h-4" />
+            Σχετικά
+          </Link>
+
           {/* Επικοινωνία */}
           <Link
             href="/epikoinonia"
@@ -313,6 +337,16 @@ export function Navbar() {
                 <Link href="/eshop" className={`flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium ${isActive("/eshop") ? "text-primary bg-primary/10" : "text-foreground"}`}>
                   <Package className="w-5 h-5" />
                   eShop
+                </Link>
+
+                <Link href="/blog" className={`flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium ${isActive("/blog") ? "text-primary bg-primary/10" : "text-foreground"}`}>
+                  <Wrench className="w-5 h-5" />
+                  Blog
+                </Link>
+
+                <Link href="/sxetika-me-mas" className={`flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium ${isActive("/sxetika-me-mas") ? "text-primary bg-primary/10" : "text-foreground"}`}>
+                  <ShieldCheck className="w-5 h-5" />
+                  Σχετικά με εμάς
                 </Link>
 
                 <Link

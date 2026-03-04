@@ -1,35 +1,39 @@
 import { Link } from "wouter";
 import { Wrench, Package, Shield, Phone, Mail, MapPin, Facebook, Instagram, ExternalLink } from "lucide-react";
+import { SiTiktok } from "react-icons/si";
 
 const NAV_MENUS = [
   {
-    title: "Νομικά & Πολιτική",
+    title: "Πληροφορίες",
     links: [
-      { label: "Όροι Τεχνικού Ελέγχου & Επισκευής", href: "/oroi-episkeuis", external: false },
+      { label: "Σχετικά με εμάς", href: "/sxetika-me-mas", external: false },
+      { label: "Blog", href: "/blog", external: false },
+      { label: "Συχνές Ερωτήσεις", href: "/faq", external: false },
       { label: "Επικοινωνία", href: "/epikoinonia", external: false },
     ],
   },
   {
     title: "Υπηρεσίες",
     links: [
-      { label: "Επισκευή iPhone",    href: "/services/episkeui-iphone",  external: false },
-      { label: "Επισκευή Κινητών",  href: "/services/episkeui-kiniton", external: false },
-      { label: "Όλες οι Υπηρεσίες", href: "/services",                  external: false },
+      { label: "Επισκευή iPhone", href: "/services/episkeui-iphone", external: false },
+      { label: "Επισκευή Κινητών", href: "/services/episkeui-kiniton", external: false },
+      { label: "Όλες οι Υπηρεσίες", href: "/services", external: false },
     ],
   },
   {
-    title: "eShop",
+    title: "Νομικά & Βοήθεια",
     links: [
-      { label: "Τζάμια Προστασίας", href: "/eshop", external: false },
-      { label: "Θήκες iPhone",       href: "/eshop", external: false },
-      { label: "Φορτιστές & Καλώδια",href: "/eshop", external: false },
+      { label: "Τρόποι Πληρωμής", href: "/tropoi-pliromis", external: false },
+      { label: "Όροι Επισκευής", href: "/oroi-episkeuis", external: false },
+      { label: "Πολιτική Cookies", href: "/politiki-cookies", external: false },
+      { label: "Δήλωση Προσβασιμότητας", href: "/prosvassimotita", external: false },
     ],
   },
 ];
 
 const CONTACT = [
   { icon: Phone, label: "Τηλέφωνο", value: "698 188 2005", href: "tel:6981882005" },
-  { icon: Mail,  label: "Email",    value: "info@hitechdoctor.com", href: "mailto:info@hitechdoctor.com" },
+  { icon: Mail, label: "Email", value: "info@hitechdoctor.com", href: "mailto:info@hitechdoctor.com" },
   { icon: MapPin, label: "Διεύθυνση", value: "Βρείτε μας στον χάρτη", href: "/epikoinonia" },
 ];
 
@@ -49,20 +53,23 @@ export function Footer() {
                 HiTech <span className="text-primary">Doctor</span>
               </span>
             </Link>
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-xs mb-5">
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-xs mb-3">
               Επαγγελματική επισκευή κινητών, tablet, laptop και gaming console.
-              Αξεσουάρ iPhone υψηλής ποιότητας.
+              Αξεσουάρ iPhone υψηλής ποιότητας. Εγγύηση εργασίας 6 μήνες.
             </p>
+            {/* ΓΕΜΗ */}
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 mb-4">
+              <span className="text-[10px] text-muted-foreground/60">Αρ. ΓΕΜΗ:</span>
+              <span className="text-[10px] font-mono font-semibold text-primary/80">000000000000</span>
+            </div>
+
             {/* Contact */}
-            <div className="space-y-2.5">
+            <div className="space-y-2.5 mb-5">
               {CONTACT.map((c) => (
                 <div key={c.label} className="flex items-center gap-2.5">
                   <c.icon className="w-3.5 h-3.5 text-primary shrink-0" />
                   {c.href ? (
-                    <a
-                      href={c.href}
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                    >
+                    <a href={c.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
                       {c.value}
                     </a>
                   ) : (
@@ -71,25 +78,38 @@ export function Footer() {
                 </div>
               ))}
             </div>
+
             {/* Social */}
-            <div className="flex items-center gap-3 mt-5">
+            <div className="flex items-center gap-3">
               <a
-                href="https://facebook.com"
+                href="https://facebook.com/hitechdoctor"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"
-                className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:border-primary/40 hover:bg-primary/10 transition-all"
+                data-testid="footer-social-facebook"
+                className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:border-blue-500/40 hover:bg-blue-500/10 transition-all"
               >
                 <Facebook className="w-3.5 h-3.5 text-muted-foreground" />
               </a>
               <a
-                href="https://instagram.com"
+                href="https://instagram.com/hitechdoctor"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
-                className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:border-primary/40 hover:bg-primary/10 transition-all"
+                data-testid="footer-social-instagram"
+                className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:border-pink-500/40 hover:bg-pink-500/10 transition-all"
               >
                 <Instagram className="w-3.5 h-3.5 text-muted-foreground" />
+              </a>
+              <a
+                href="https://tiktok.com/@hitechdoctor"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="TikTok"
+                data-testid="footer-social-tiktok"
+                className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:border-white/30 hover:bg-white/10 transition-all"
+              >
+                <SiTiktok className="w-3.5 h-3.5 text-muted-foreground" />
               </a>
             </div>
           </div>
@@ -121,15 +141,19 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="mt-12 pt-6 border-t border-white/6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground/50">
-            © {new Date().getFullYear()} HiTech Doctor. Όλα τα δικαιώματα διατηρούνται.
+            © {new Date().getFullYear()} HiTech Doctor. Με επιφύλαξη παντός δικαιώματος. Design & Development by{" "}
+            <a href="https://hitechdoctor.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+              HiTech Doctor
+            </a>
           </p>
           <div className="flex items-center gap-4">
-            <Link
-              href="/oroi-episkeuis"
-              className="text-xs text-muted-foreground/50 hover:text-primary transition-colors"
-            >
+            <Link href="/oroi-episkeuis" className="text-xs text-muted-foreground/50 hover:text-primary transition-colors">
               <Shield className="w-3 h-3 inline mr-1" />
               Όροι & GDPR
+            </Link>
+            <span className="text-xs text-muted-foreground/30">|</span>
+            <Link href="/politiki-cookies" className="text-xs text-muted-foreground/50 hover:text-primary transition-colors">
+              Cookies
             </Link>
             <span className="text-xs text-muted-foreground/30">|</span>
             <Link href="/eshop" className="text-xs text-muted-foreground/50 hover:text-primary transition-colors">

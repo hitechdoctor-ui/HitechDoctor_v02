@@ -79,11 +79,25 @@ Zod schemas are auto-generated from the Drizzle table definitions using `drizzle
 - `/eshop/:slug` — Individual SEO-optimized product detail page (JSON-LD Product + BreadcrumbList schema, H1/H2 hierarchy, Open Graph tags, canonical URL); screen protectors show model picker before add-to-cart
 - `/checkout` — Cart checkout form
 
+**Content pages:**
+- `/blog` — Blog listing (6 posts in 3×2 grid, static data in `client/src/data/blog-posts.ts`)
+- `/blog/:slug` — Blog post with sticky sidebar, breadcrumb, Article JSON-LD schema
+- `/sxetika-me-mas` — About page
+- `/faq` — FAQ page with accordion + FAQPage JSON-LD schema
+- `/epikoinonia` — Contact page: QR codes (Google Maps GPS + vCard), LocalBusiness JSON-LD schema, GDPR consent checkbox, Google Maps iframe, hours
+- `/tropoi-pliromis` — Payment methods page
+- `/politiki-cookies` — Cookies/Privacy policy
+- `/prosvassimotita` — Accessibility statement
+- `/oroi-episkeuis` — Terms of service
+
 **Admin routes (no auth guard currently):**
-- `/admin` — Dashboard
-- `/admin/products` — CRUD for products
-- `/admin/orders` — View and update order status
-- `/admin/customers` — View customer list
+- `/admin` — Dashboard with stats overview
+- `/admin/repair-requests` — Repair request CRM
+- `/admin/products` — CRUD for products (TipTap rich text editor for full descriptions)
+- `/admin/orders` — View and update order status (print-to-PDF via window.print())
+- `/admin/customers` — Customer list with search
+- `/admin/customers/:id` — Customer detail page (order history, contact info)
+- `/admin/oikonomika` — Financial reports (revenue charts via Recharts, VAT 24%)
 
 ### Cart Flow
 
@@ -124,6 +138,19 @@ Zod schemas are auto-generated from the Drizzle table definitions using `drizzle
 
 ### SEO
 - **react-helmet-async** — Dynamic document head management
+- `client/public/robots.txt` — Search engine crawl rules (blocks /admin, /checkout)
+- `client/public/sitemap.xml` — XML sitemap for all public pages
+
+### Global UI Components (non-admin pages only, mounted in App.tsx)
+- **ScrollProgressBar** — Reading progress bar at top of viewport
+- **CookieBanner** — GDPR cookie consent (Accept/Reject/Settings); persists choice in localStorage
+- **AccessibilityButton** — Floating panel for text size, line height, contrast, dyslexia font, orientation
+- **ExitIntentPopup** — Email capture popup triggered by exit intent or 50% scroll
+- **Breadcrumb** — JSON-LD BreadcrumbList schema auto-injected per page
+
+### Rich Text
+- **@tiptap/react** + extensions — WYSIWYG editor for product fullDescription in Admin Products
+  - Greek content, stored as HTML string in `products.fullDescription`
 
 ### Build & Dev Tools
 - **Vite** — Frontend dev server and bundler
