@@ -14,12 +14,14 @@ import ServiceIphone from "./pages/service-iphone";
 import EShop from "./pages/eshop";
 import ProductDetail from "./pages/product-detail";
 import Checkout from "./pages/checkout";
+import Terms from "./pages/terms";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/dashboard";
 import AdminProducts from "./pages/admin/products";
 import AdminOrders from "./pages/admin/orders";
 import AdminCustomers from "./pages/admin/customers";
+import AdminRepairRequests from "./pages/admin/repair-requests";
 
 function Router() {
   return (
@@ -32,9 +34,11 @@ function Router() {
       <Route path="/eshop" component={EShop} />
       <Route path="/eshop/:slug" component={ProductDetail} />
       <Route path="/checkout" component={Checkout} />
+      <Route path="/oroi-episkeuis" component={Terms} />
 
       {/* Admin Routes */}
       <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/repair-requests" component={AdminRepairRequests} />
       <Route path="/admin/products" component={AdminProducts} />
       <Route path="/admin/orders" component={AdminOrders} />
       <Route path="/admin/customers" component={AdminCustomers} />

@@ -12,10 +12,11 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
 } from "@/components/ui/form";
-import { CheckCircle2, Wrench, Smartphone, Hash, Lock, Phone, Mail, User } from "lucide-react";
+import { CheckCircle2, Wrench, Smartphone, Hash, Lock, Phone, Mail, User, Shield, ExternalLink } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { insertRepairRequestSchema } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
 
 type FormValues = z.infer<typeof insertRepairRequestSchema>;
 
@@ -27,6 +28,8 @@ interface RepairRequestModalProps {
 
 export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" }: RepairRequestModalProps) {
   const [submitted, setSubmitted] = useState(false);
+  const [gdprConsent, setGdprConsent] = useState(false);
+  const [gdprError, setGdprError] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -60,9 +63,19 @@ export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" 
   function handleClose(open: boolean) {
     if (!open) {
       setSubmitted(false);
+      setGdprConsent(false);
+      setGdprError(false);
       form.reset({ ...form.getValues(), deviceName: defaultDeviceName });
     }
     onOpenChange(open);
+  }
+
+  function handleSubmit(data: FormValues) {
+    if (!gdprConsent) {
+      setGdprError(true);
+      return;
+    }
+    mutation.mutate(data);
   }
 
   return (
@@ -103,7 +116,7 @@ export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" 
             </DialogHeader>
 
             <Form {...form}>
-              <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-3">
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
 
                 {/* Όνομα & Επίθετο */}
                 <div className="grid grid-cols-2 gap-3">
@@ -284,11 +297,67 @@ export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" 
                   )}
                 />
 
-                {/* Privacy note */}
-                <p className="text-[10px] text-muted-foreground leading-relaxed">
-                  <Lock className="w-2.5 h-2.5 inline mr-1 text-primary" />
-                  Τα στοιχεία σας χρησιμοποιούνται αποκλειστικά για την επεξεργασία του αιτήματος επισκευής και δεν κοινοποιούνται σε τρίτους.
-                </p>
+                {/* ── GDPR Checkbox ── */}
+                <div
+                  className={`rounded-xl p-3.5 border transition-colors ${
+                    gdprError
+                      ? "bg-red-500/5 border-red-500/30"
+                      : gdprConsent
+                        ? "bg-primary/5 border-primary/25"
+                        : "bg-white/3 border-white/10"
+                  }`}
+                >
+                  <label className="flex items-start gap-3 cursor-pointer select-none" htmlFor="gdpr-consent">
+                    <div className="mt-0.5 shrink-0">
+                      <input
+                        id="gdpr-consent"
+                        type="checkbox"
+                        checked={gdprConsent}
+                        onChange={(e) => {
+                          setGdprConsent(e.target.checked);
+                          if (e.target.checked) setGdprError(false);
+                        }}
+                        className="sr-only"
+                        data-testid="checkbox-gdpr"
+                      />
+                      <div
+                        className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                          gdprConsent
+                            ? "bg-primary border-primary"
+                            : gdprError
+                              ? "border-red-400 bg-red-500/10"
+                              : "border-white/30 bg-card"
+                        }`}
+                      >
+                        {gdprConsent && (
+                          <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] leading-relaxed text-muted-foreground">
+                        <Shield className="w-2.5 h-2.5 inline mr-1 text-primary" />
+                        Επιτρέπω την επεξεργασία των δεδομένων μου για τους σκοπούς της επισκευής και έχω ενημερωθεί για την ανάγκη λήψης αντιγράφων ασφαλείας.{" "}
+                        <Link
+                          href="/oroi-episkeuis"
+                          className="text-primary hover:underline inline-flex items-center gap-0.5"
+                          target="_blank"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Διαβάστε τους Όρους & GDPR
+                          <ExternalLink className="w-2.5 h-2.5" />
+                        </Link>
+                      </p>
+                      {gdprError && (
+                        <p className="text-[10px] text-red-400 mt-1 font-medium">
+                          Απαιτείται η αποδοχή των όρων για να συνεχίσετε.
+                        </p>
+                      )}
+                    </div>
+                  </label>
+                </div>
 
                 <Button
                   type="submit"

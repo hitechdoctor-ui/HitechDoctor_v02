@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Package, Users, ShoppingCart, LayoutDashboard, LogOut } from "lucide-react";
+import { Package, Users, ShoppingCart, LayoutDashboard, LogOut, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface AdminLayoutProps {
@@ -10,10 +10,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const [location] = useLocation();
 
   const links = [
-    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/admin/products", label: "Προϊόντα", icon: Package },
-    { href: "/admin/orders", label: "Παραγγελίες", icon: ShoppingCart },
-    { href: "/admin/customers", label: "Πελάτες", icon: Users },
+    { href: "/admin",                 label: "Dashboard",             icon: LayoutDashboard },
+    { href: "/admin/repair-requests", label: "Αιτήματα Επισκευής",   icon: Wrench          },
+    { href: "/admin/customers",       label: "Πελατολόγιο (CRM)",    icon: Users           },
+    { href: "/admin/orders",          label: "Παραγγελίες",           icon: ShoppingCart    },
+    { href: "/admin/products",        label: "Προϊόντα eShop",        icon: Package         },
   ];
 
   return (
@@ -25,21 +26,24 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <h2 className="text-2xl font-display font-bold">HiTech Admin</h2>
           </Link>
         </div>
-        
-        <nav className="flex-1 p-4 flex flex-col gap-2">
+
+        <nav className="flex-1 p-4 flex flex-col gap-1.5">
           {links.map((link) => {
-            const isActive = location === link.href;
+            const isActive =
+              link.href === "/admin"
+                ? location === "/admin"
+                : location.startsWith(link.href);
             return (
-              <Link 
-                key={link.href} 
+              <Link
+                key={link.href}
                 href={link.href}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
-                  isActive 
-                    ? "bg-primary/10 text-primary border border-primary/20 shadow-[0_0_15px_rgba(0,229,255,0.1)]" 
+                  isActive
+                    ? "bg-primary/10 text-primary border border-primary/20 shadow-[0_0_15px_rgba(0,229,255,0.1)]"
                     : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
                 }`}
               >
-                <link.icon className="w-5 h-5" />
+                <link.icon className="w-5 h-5 shrink-0" />
                 {link.label}
               </Link>
             );

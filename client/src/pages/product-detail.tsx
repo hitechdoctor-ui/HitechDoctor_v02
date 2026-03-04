@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
 import { Seo } from "@/components/seo";
 import { Helmet } from "react-helmet-async";
 import { useParams, Link } from "wouter";
@@ -677,6 +678,7 @@ export default function ProductDetail() {
           );
         })()}
       </main>
+      <Footer />
     </div>
   );
 }

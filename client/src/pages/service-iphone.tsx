@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
 import { Seo } from "@/components/seo";
 import { Helmet } from "react-helmet-async";
 import { Badge } from "@/components/ui/badge";
@@ -438,6 +439,7 @@ export default function ServiceIphone() {
       </main>
 
       {/* Repair Request Modal */}
+      <Footer />
       <RepairRequestModal
         open={modalOpen}
         onOpenChange={setModalOpen}

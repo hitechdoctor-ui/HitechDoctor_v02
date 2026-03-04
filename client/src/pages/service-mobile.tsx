@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
 import { Seo } from "@/components/seo";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
@@ -365,6 +366,7 @@ export default function ServiceMobile() {
           </div>
         </section>
       </main>
+      <Footer />
     </div>
   );
 }

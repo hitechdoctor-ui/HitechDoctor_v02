@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
 import { Seo } from "@/components/seo";
 import { Helmet } from "react-helmet-async";
 import { useProducts } from "@/hooks/use-products";
@@ -353,6 +354,7 @@ export default function EShop() {
           </div>
         )}
       </main>
+      <Footer />
     </div>
   );
 }
