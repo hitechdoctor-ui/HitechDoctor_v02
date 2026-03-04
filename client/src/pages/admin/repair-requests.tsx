@@ -235,7 +235,7 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
 
   return (
     <tr>
-      <td colSpan={9} className="px-0 py-0">
+      <td colSpan={10} className="px-0 py-0">
         <div className="bg-background/60 border-t border-b border-white/8 px-6 py-5">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
@@ -593,7 +593,7 @@ export default function AdminRepairRequests() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-white/8 bg-white/2 text-left">
-                    {["", "#", "Πελάτης", "Επικοινωνία", "Συσκευή", "Serial / Κωδικός", "Ημερομηνία", "Κατάσταση", ""].map((h, i) => (
+                    {["", "#", "Πελάτης", "Επικοινωνία", "Συσκευή", "Serial / Κωδικός", "Τιμή", "Ημερομηνία", "Κατάσταση", ""].map((h, i) => (
                       <th key={i} className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
@@ -657,6 +657,16 @@ export default function AdminRepairRequests() {
                                 </div>
                               )}
                             </div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            {req.price ? (
+                              <div className="space-y-0.5">
+                                <div className="text-xs font-medium text-foreground">{fmt(parseFloat(req.price))}</div>
+                                <div className="text-[10px] text-primary font-semibold">{fmt(parseFloat(req.price) * (1 + VAT_RATE))} <span className="text-muted-foreground/60 font-normal">μεΦΠΑ</span></div>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground/40">—</span>
+                            )}
                           </td>
                           <td className="px-4 py-4">
                             <span className="text-xs text-muted-foreground whitespace-nowrap">{formatDate(req.createdAt)}</span>

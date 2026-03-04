@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { api, errorSchemas } from "@shared/routes";
 import { insertRepairRequestSchema, insertRepairItemSchema } from "@shared/schema";
 import { z } from "zod";
+import { sendRepairConfirmationEmail } from "./email";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -166,6 +167,7 @@ export async function registerRoutes(
       const input = insertRepairRequestSchema.parse(req.body);
       const request = await storage.createRepairRequest(input);
       res.status(201).json(request);
+      sendRepairConfirmationEmail(request).catch((e) => console.error("[email] background send failed:", e));
     } catch (err) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: err.errors[0].message, field: err.errors[0].path.join('.') });
