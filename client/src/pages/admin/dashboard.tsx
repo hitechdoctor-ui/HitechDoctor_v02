@@ -367,8 +367,13 @@ export default function AdminDashboard() {
     queryKey: ["/api/repair-requests"],
   });
 
-  const totalRevenue = orders?.reduce((sum, order) => {
-    if (order.status !== "cancelled") return sum + Number(order.totalAmount);
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const todayRevenue = orders?.reduce((sum, order) => {
+    if (order.status === "cancelled") return sum;
+    const created = new Date(order.createdAt);
+    if (created >= todayStart) return sum + Number(order.totalAmount);
     return sum;
   }, 0) || 0;
 
@@ -376,8 +381,8 @@ export default function AdminDashboard() {
 
   const stats = [
     {
-      title: "Συνολικά Έσοδα",
-      value: new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR" }).format(totalRevenue),
+      title: "Έσοδα Σήμερα",
+      value: new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR" }).format(todayRevenue),
       icon: Euro, color: "text-green-400",
     },
     { title: "Παραγγελίες", value: orders?.length ?? 0, icon: ShoppingCart, color: "text-blue-400" },

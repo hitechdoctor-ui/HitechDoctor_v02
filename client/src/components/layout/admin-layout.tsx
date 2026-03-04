@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Package, Users, ShoppingCart, LayoutDashboard, LogOut, Wrench } from "lucide-react";
+import { Package, Users, ShoppingCart, LayoutDashboard, LogOut, Wrench, Euro } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface AdminLayoutProps {
@@ -15,6 +15,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin/customers",       label: "Πελατολόγιο (CRM)",    icon: Users           },
     { href: "/admin/orders",          label: "Παραγγελίες",           icon: ShoppingCart    },
     { href: "/admin/products",        label: "Προϊόντα eShop",        icon: Package         },
+    { href: "/admin/oikonomika",      label: "Οικονομικά",            icon: Euro            },
   ];
 
   return (
