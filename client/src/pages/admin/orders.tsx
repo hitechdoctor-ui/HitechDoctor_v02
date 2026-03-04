@@ -14,8 +14,6 @@ import {
   User, Printer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 
 // ── Status config ────────────────────────────────────────────────────────────
 const ORDER_STATUSES = [
@@ -44,152 +42,166 @@ const formatDate = (d: string | Date | null) =>
 const formatDateShort = (d: string | Date | null) =>
   d ? new Intl.DateTimeFormat("el-GR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(d)) : "—";
 
-// ── PDF generator ─────────────────────────────────────────────────────────────
-async function generateOrderPDF(order: any, items: any[]) {
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  const W = doc.internal.pageSize.getWidth();
-  const H = doc.internal.pageSize.getHeight();
-
-  // Dark header background
-  doc.setFillColor(5, 12, 25);
-  doc.rect(0, 0, W, 42, "F");
-
-  // Cyan accent bar
-  doc.setFillColor(0, 210, 200);
-  doc.rect(0, 42, W, 1.5, "F");
-
-  // Company name
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(20);
-  doc.setTextColor(0, 210, 200);
-  doc.text("HiTech Doctor", 14, 18);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(180, 180, 200);
-  doc.text("info@hitechdoctor.com  |  698 188 2005", 14, 26);
-  doc.text("www.hitechdoctor.com", 14, 32);
-
-  // ORDER label top right
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(22);
-  doc.setTextColor(255, 255, 255);
-  doc.text("ΠΑΡΑΓΓΕΛΙΑ", W - 14, 20, { align: "right" });
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(180, 180, 200);
-  doc.text(`#ORD-${String(order.id).padStart(4, "0")}`, W - 14, 28, { align: "right" });
-  doc.text(formatDateShort(order.createdAt), W - 14, 35, { align: "right" });
-
-  // Customer info block
-  const gy = 54;
-  doc.setFillColor(15, 22, 40);
-  doc.roundedRect(14, gy, (W - 28) / 2 - 4, 30, 3, 3, "F");
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7);
-  doc.setTextColor(0, 210, 200);
-  doc.text("ΣΤΟΙΧΕΙΑ ΠΕΛΑΤΗ", 19, gy + 7);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(230, 230, 240);
-  doc.text(order.customerName ?? "—", 19, gy + 14);
-
-  doc.setFontSize(8);
-  doc.setTextColor(160, 160, 180);
-  doc.text(order.customerEmail ?? "", 19, gy + 21);
-
-  // Status + total block
-  const sx = 14 + (W - 28) / 2 + 4;
-  doc.setFillColor(15, 22, 40);
-  doc.roundedRect(sx, gy, (W - 28) / 2 - 4, 30, 3, 3, "F");
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7);
-  doc.setTextColor(0, 210, 200);
-  doc.text("ΚΑΤΑΣΤ. / ΣΥΝΟΛΟ", sx + 5, gy + 7);
-
+// ── Print order via browser window (full Greek Unicode support) ───────────────
+function printOrderWindow(order: any, items: any[]) {
+  const num = `#ORD-${String(order.id).padStart(4, "0")}`;
   const statusLabel = ORDER_STATUSES.find((s) => s.value === order.status)?.label ?? order.status;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(230, 230, 240);
-  doc.text(statusLabel, sx + 5, gy + 14);
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(13);
-  doc.setTextColor(0, 210, 200);
-  doc.text(formatPrice(order.totalAmount), sx + 5, gy + 24);
-
-  // Items table
-  const tableY = gy + 36;
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.setTextColor(120, 130, 160);
-  doc.text("ΠΡΟΪΟΝΤΑ ΠΑΡΑΓΓΕΛΙΑΣ", 14, tableY);
-
-  const rows = items.map((it) => [
-    it.productName ?? "—",
-    String(it.quantity),
-    formatPrice(it.priceAtTime),
-    formatPrice(Number(it.priceAtTime) * it.quantity),
-  ]);
-
-  autoTable(doc, {
-    startY: tableY + 4,
-    head: [["Προϊόν", "Ποσ.", "Τιμή μον.", "Σύνολο"]],
-    body: rows,
-    theme: "plain",
-    headStyles: {
-      fillColor: [0, 210, 200],
-      textColor: [5, 12, 25],
-      fontStyle: "bold",
-      fontSize: 8,
-    },
-    bodyStyles: { fontSize: 8, textColor: [40, 40, 60] },
-    alternateRowStyles: { fillColor: [245, 247, 252] },
-    columnStyles: {
-      0: { cellWidth: "auto" },
-      1: { cellWidth: 18, halign: "center" },
-      2: { cellWidth: 30, halign: "right" },
-      3: { cellWidth: 32, halign: "right", fontStyle: "bold" },
-    },
-    margin: { left: 14, right: 14 },
-  });
-
-  // Total row
-  const finalY = (doc as any).lastAutoTable.finalY + 6;
   const totalNet = Number(order.totalAmount) / 1.24;
   const vatAmt = Number(order.totalAmount) - totalNet;
 
-  doc.setFillColor(5, 12, 25);
-  doc.roundedRect(W - 14 - 70, finalY, 70, 24, 3, 3, "F");
+  const rows = items
+    .map(
+      (it) => `
+      <tr>
+        <td>${it.productName ?? "—"}</td>
+        <td class="center">${it.quantity}</td>
+        <td class="right">${formatPrice(it.priceAtTime)}</td>
+        <td class="right bold">${formatPrice(Number(it.priceAtTime) * it.quantity)}</td>
+      </tr>`
+    )
+    .join("");
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(160, 170, 200);
-  doc.text("Καθαρή αξία:", W - 14 - 65, finalY + 7);
-  doc.text(formatPrice(totalNet), W - 14, finalY + 7, { align: "right" });
+  const html = `<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <title>Παραγγελία ${num} — HiTech Doctor</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', Arial, sans-serif; background: #fff; color: #1a1a2e; font-size: 13px; }
+    
+    .header { background: #050C19; padding: 28px 36px; display: flex; justify-content: space-between; align-items: flex-start; }
+    .brand-name { font-size: 24px; font-weight: 900; color: #00D2C8; letter-spacing: -0.5px; margin-bottom: 6px; }
+    .brand-sub { color: #8890aa; font-size: 11px; line-height: 1.7; }
+    .order-badge { text-align: right; }
+    .order-label { font-size: 22px; font-weight: 900; color: #fff; letter-spacing: 2px; }
+    .order-num { color: #00D2C8; font-size: 13px; font-weight: 700; margin-top: 4px; }
+    .order-date { color: #8890aa; font-size: 11px; margin-top: 2px; }
+    
+    .accent-bar { height: 3px; background: linear-gradient(90deg, #00D2C8, #0099ff); }
+    
+    .body { padding: 28px 36px; }
+    
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+    .info-box { background: #f4f6fb; border-radius: 10px; padding: 16px 20px; }
+    .info-box-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #00D2C8; margin-bottom: 8px; }
+    .info-box-name { font-size: 14px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; }
+    .info-box-sub { font-size: 11px; color: #666; }
+    .total-val { font-size: 20px; font-weight: 900; color: #00D2C8; margin-top: 6px; }
+    
+    .section-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #8890aa; margin-bottom: 10px; }
+    
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    thead tr { background: #050C19; }
+    thead th { padding: 10px 14px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #00D2C8; }
+    tbody tr { border-bottom: 1px solid #eee; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody td { padding: 10px 14px; color: #1a1a2e; vertical-align: middle; }
+    tbody tr:nth-child(even) td { background: #f9fafb; }
+    .center { text-align: center; }
+    .right { text-align: right; }
+    .bold { font-weight: 700; }
+    
+    .totals { display: flex; justify-content: flex-end; margin-top: 4px; }
+    .totals-box { background: #050C19; border-radius: 10px; padding: 18px 24px; min-width: 240px; }
+    .totals-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .totals-row:last-child { margin-bottom: 0; padding-top: 10px; border-top: 1px solid #1e2a45; }
+    .totals-label { font-size: 11px; color: #8890aa; }
+    .totals-amount { font-size: 12px; font-weight: 600; color: #ccd0e0; }
+    .totals-total-label { font-size: 13px; font-weight: 800; color: #fff; }
+    .totals-total-amount { font-size: 18px; font-weight: 900; color: #00D2C8; }
+    
+    .footer { margin-top: 40px; padding: 16px 36px; background: #050C19; text-align: center; }
+    .footer p { font-size: 10px; color: #8890aa; line-height: 1.8; }
+    
+    @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      @page { margin: 0; size: A4; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="brand-name">HiTech Doctor</div>
+      <div class="brand-sub">
+        info@hitechdoctor.com &nbsp;|&nbsp; 698 188 2005<br/>
+        www.hitechdoctor.com
+      </div>
+    </div>
+    <div class="order-badge">
+      <div class="order-label">ΠΑΡΑΓΓΕΛΙΑ</div>
+      <div class="order-num">${num}</div>
+      <div class="order-date">${formatDateShort(order.createdAt)}</div>
+    </div>
+  </div>
+  <div class="accent-bar"></div>
 
-  doc.text("ΦΠΑ 24%:", W - 14 - 65, finalY + 13);
-  doc.text(formatPrice(vatAmt), W - 14, finalY + 13, { align: "right" });
+  <div class="body">
+    <div class="info-grid">
+      <div class="info-box">
+        <div class="info-box-label">Στοιχεία Πελάτη</div>
+        <div class="info-box-name">${order.customerName ?? "—"}</div>
+        <div class="info-box-sub">${order.customerEmail ?? ""}</div>
+      </div>
+      <div class="info-box">
+        <div class="info-box-label">Κατάσταση / Σύνολο</div>
+        <div class="info-box-name">${statusLabel}</div>
+        <div class="total-val">${formatPrice(order.totalAmount)}</div>
+      </div>
+    </div>
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.setTextColor(0, 210, 200);
-  doc.text("ΣΥΝΟΛΟ:", W - 14 - 65, finalY + 21);
-  doc.text(formatPrice(order.totalAmount), W - 14, finalY + 21, { align: "right" });
+    <div class="section-label">Προϊόντα Παραγγελίας</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Προϊόν</th>
+          <th class="center">Ποσ.</th>
+          <th class="right">Τιμή μον.</th>
+          <th class="right">Σύνολο</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
 
-  // Footer
-  doc.setFillColor(5, 12, 25);
-  doc.rect(0, H - 18, W, 18, "F");
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7);
-  doc.setTextColor(100, 110, 140);
-  doc.text("Ευχαριστούμε για την παραγγελία σας! | HiTech Doctor | info@hitechdoctor.com | 698 188 2005", W / 2, H - 8, { align: "center" });
+    <div class="totals">
+      <div class="totals-box">
+        <div class="totals-row">
+          <span class="totals-label">Καθαρή αξία</span>
+          <span class="totals-amount">${formatPrice(totalNet)}</span>
+        </div>
+        <div class="totals-row">
+          <span class="totals-label">ΦΠΑ 24%</span>
+          <span class="totals-amount">${formatPrice(vatAmt)}</span>
+        </div>
+        <div class="totals-row">
+          <span class="totals-total-label">ΣΥΝΟΛΟ</span>
+          <span class="totals-total-amount">${formatPrice(order.totalAmount)}</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  doc.save(`παραγγελια-ORD-${String(order.id).padStart(4, "0")}.pdf`);
+  <div class="footer">
+    <p>
+      Ευχαριστούμε για την παραγγελία σας!<br/>
+      HiTech Doctor &nbsp;|&nbsp; info@hitechdoctor.com &nbsp;|&nbsp; 698 188 2005 &nbsp;|&nbsp; www.hitechdoctor.com
+    </p>
+  </div>
+
+  <script>
+    window.onload = function() { window.print(); };
+  </script>
+</body>
+</html>`;
+
+  const win = window.open("", "_blank", "width=900,height=700");
+  if (win) {
+    win.document.write(html);
+    win.document.close();
+  }
 }
 
 // ── Search Input ─────────────────────────────────────────────────────────────
@@ -286,7 +298,7 @@ function OrderRow({ order, onStatusChange }: { order: any; onStatusChange: (id: 
         const res = await fetch(`/api/orders/${order.id}/items`);
         orderItems = await res.json();
       }
-      await generateOrderPDF(order, orderItems);
+      printOrderWindow(order, orderItems);
     } finally {
       setPrinting(false);
     }
