@@ -1,0 +1,77 @@
+{
+  "products": [
+    {
+      "id,name,description,price,image_url,category,created_at,subcategory,compatible_models,slug,images,full_description,brand,color,storage": "1,Αλλαγή Οθόνης iPhone 13 Pro,Αντικατάσταση σπασμένης οθόνης με γνήσια ανταλλακτικά.,150.00,https://images.unsplash.com/photo-1512054502232-10a0a035d672?auto=format&fit=crop&q=80&w=800,repair,2026-03-03 20:29:45.325431,,,allagi-othonis-iphone-13-pro,,,,,"
+    },
+    {
+      "id,name,description,price,image_url,category,created_at,subcategory,compatible_models,slug,images,full_description,brand,color,storage": "2,Αλλαγή Μπαταρίας Samsung Galaxy S22,Νέα μπαταρία για να κρατάει το κινητό σας όλη μέρα.,60.00,https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&q=80&w=800,repair,2026-03-03 20:29:45.325431,,,allagi-mpatarias-samsung-galaxy-s22,,,,,"
+    },
+    {
+      "id,name,description,price,image_url,category,created_at,subcategory,compatible_models,slug,images,full_description,brand,color,storage": "3,Tempered Glass iPhone 14,Προστατευτικό τζάμι οθόνης υψηλής αντοχής.,15.00,https://images.unsplash.com/photo-1601784551446-20c9e07cd8d3?auto=format&fit=crop&q=80&w=800,accessory,2026-03-03 20:29:45.325431,,,tempered-glass-iphone-14,,,,,"
+    },
+    {
+      "id,name,description,price,image_url,category,created_at,subcategory,compatible_models,slug,images,full_description,brand,color,storage": "4,IT Support - Απομακρυσμένη Υποστήριξη,\"Επίλυση προβλημάτων λογισμικού, αφαίρεση ιών και ρυθμίσεις υπολογιστή εξ αποστάσεως.\",40.00,https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=80&w=800,service,2026-03-03 20:29:45.325431,,,it-support-apomakreusmeni,,,,,"
+    },
+    {
+      "id,name,description,price,image_url,category,created_at,subcategory,compatible_models,slug,images,full_description,brand,color,storage": "8,Τζάμι Προστασίας iPhone — Απλό (Tempered Glass),\"Σκληρυμένο γυαλί προστασίας οθόνης 9H για iPhone. Κρατά την οθόνη αλώβητη από γρατσουνιές και πτώσεις. Εύκολη εφαρμογή χωρίς φυσαλίδες. Περιλαμβάνει πλήρες κιτ εγκατάστασης (πανάκι, αλκοόλ, sticker σκόνης).\",8.00,/images/tzami-prostasias-iphone-aplo-tempered-glass-kit.webp,accessory,2026-03-03 21:40:13.438225,screen-protectors,\"{\"\"iPhone 8\"\",\"\"iPhone 8 Plus\"\",\"\"iPhone X\"\",\"\"iPhone XR\"\",\"\"iPhone XS\"\",\"\"iPhone XS Max\"\",\"\"iPhone 11\"\",\"\"iPhone 11 Pro\"\",\"\"iPhone 11 Pro Max\"\",\"\"iPhone 12 Mini\"\",\"\"iPhone 12\"\",\"\"iPhone 12 Pro\"\",\"\"iPhone 12 Pro Max\"\",\"\"iPhone 13 Mini\"\",\"\"iPhone 13\"\",\"\"iPhone 13 Pro\"\",\"\"iPhone 13 Pro Max\"\",\"\"iPhone 14\"\",\"\"iPhone 14 Plus\"\",\"\"iPhone 14 Pro\"\",\"\"iPhone 14 Pro Max\"\",\"\"iPhone 15\"\",\"\"iPhone 15 Plus\"\",\"\"iPhone 15 Pro\"\",\"\"iPhone 15 Pro Max\"\",\"\"iPhone 16\"\",\"\"iPhone 16 Plus\"\",\"\"iPhone 16 Pro\"\",\"\"iPhone 16 Pro Max\"\",\"\"iPhone 17\"\",\"\"iPhone 17 Plus\"\",\"\"iPhone 17 Pro\"\",\"\"iPhone 17 Pro Max\"\"}\",tzami-prostasias-iphone-aplo,\"{/images/tzami-prostasias-iphone-aplo-tempered-glass-kit.webp,/images/tzami-prostasias-iphone-privacy-9h-tempered-glass.webp,/images/tzami-prostasias-iphone-keramiko-premium-dark.webp}\",,,,"
+    },
+    {
+      "id,name,description,price,image_url,category,created_at,subcategory,compatible_models,slug,images,full_description,brand,color,storage": "9,Τζάμι Προστασίας iPhone — Privacy,\"Τζάμι privacy Aurora Glisch 9H: εμποδίζει την πλαϊνή θέαση ώστε μόνο εσύ να βλέπεις την οθόνη. Darkness Activated Dark Privacy Tech. Ιδανικό για δημόσιους χώρους, μέσα μαζικής μεταφοράς και εργασία.\",15.00,/images/tzami-prostasias-iphone-aplo-tempered-glass-kit.webp,accessory,2026-03-03 21:40:13.449835,screen-protectors,\"{\"\"iPhone 8\"\",\"\"iPhone 8 Plus\"\",\"\"iPhone X\"\",\"\"iPhone XR\"\",\"\"iPhone XS\"\",\"\"iPhone XS Max\"\",\"\"iPhone 11\"\",\"\"iPhone 11 Pro\"\",\"\"iPhone 11 Pro Max\"\",\"\"iPhone 12 Mini\"\",\"\"iPhone 12\"\",\"\"iPhone 12 Pro\"\",\"\"iPhone 12 Pro Max\"\",\"\"iPhone 13 Mini\"\",\"\"iPhone 13\"\",\"\"iPhone 13 Pro\"\",\"\"iPhone 13 Pro Max\"\",\"\"iPhone 14\"\",\"\"iPhone 14 Plus\"\",\"\"iPhone 14 Pro\"\",\"\"iPhone 14 Pro Max\"\",\"\"iPhone 15\"\",\"\"iPhone 15 Plus\"\",\"\"iPhone 15 Pro\"\",\"\"iPhone 15 Pro Max\"\",\"\"iPhone 16\"\",\"\"iPhone 16 Plus\"\",\"\"iPhone 16 Pro\"\",\"\"iPhone 16 Pro Max\"\",\"\"iPhone 17\"\",\"\"iPhone 17 Plus\"\",\"\"iPhone 17 Pro\"\",\"\"iPhone 17 Pro Max\"\"}\",tzami-prostasias-iphone-privacy,\"{/images/tzami-prostasias-iphone-aplo-tempered-glass-kit.webp,/images/tzami-prostasias-iphone-privacy-9h-tempered-glass.webp,/images/tzami-prostasias-iphone-keramiko-premium-dark.webp}\",,,,"
+    },
+    {
+      "id,name,description,price,image_url,category,created_at,subcategory,compatible_models,slug,images,full_description,brand,color,storage": "10,Τζάμι Προστασίας iPhone — Κεραμικό Premium,\"Κεραμικό προστατευτικό οθόνης Aurora Glisch premium ποιότητας. Ελαφρύτερο από γυαλί, εξαιρετικά ανθεκτικό στις γρατσουνιές και τις πτώσεις. Πλήρης ευαισθησία αφής & αντι-δακτυλικό oleophobic coating.\",20.00,/images/tzami-prostasias-iphone-aplo-tempered-glass-kit.webp,accessory,2026-03-03 21:40:13.456517,screen-protectors,\"{\"\"iPhone 8\"\",\"\"iPhone 8 Plus\"\",\"\"iPhone X\"\",\"\"iPhone XR\"\",\"\"iPhone XS\"\",\"\"iPhone XS Max\"\",\"\"iPhone 11\"\",\"\"iPhone 11 Pro\"\",\"\"iPhone 11 Pro Max\"\",\"\"iPhone 12 Mini\"\",\"\"iPhone 12\"\",\"\"iPhone 12 Pro\"\",\"\"iPhone 12 Pro Max\"\",\"\"iPhone 13 Mini\"\",\"\"iPhone 13\"\",\"\"iPhone 13 Pro\"\",\"\"iPhone 13 Pro Max\"\",\"\"iPhone 14\"\",\"\"iPhone 14 Plus\"\",\"\"iPhone 14 Pro\"\",\"\"iPhone 14 Pro Max\"\",\"\"iPhone 15\"\",\"\"iPhone 15 Plus\"\",\"\"iPhone 15 Pro\"\",\"\"iPhone 15 Pro Max\"\",\"\"iPhone 16\"\",\"\"iPhone 16 Plus\"\",\"\"iPhone 16 Pro\"\",\"\"iPhone 16 Pro Max\"\",\"\"iPhone 17\"\",\"\"iPhone 17 Plus\"\",\"\"iPhone 17 Pro\"\",\"\"iPhone 17 Pro Max\"\"}\",tzami-prostasias-iphone-keramiko,\"{/images/tzami-prostasias-iphone-aplo-tempered-glass-kit.webp,/images/tzami-prostasias-iphone-privacy-9h-tempered-glass.webp,/images/tzami-prostasias-iphone-keramiko-premium-dark.webp}\",,,,"
+    },
+    {
+      "id,name,description,price,image_url,category,created_at,subcategory,compatible_models,slug,images,full_description,brand,color,storage": "11,Apple Silicone Case with MagSafe — Midnight,\"Γνήσια Apple Silicone Case MagSafe για iPhone 17 Pro Max. Χρώμα Midnight: σκούρο ναυτικό μπλε με ματ φινίρισμα σιλικόνης. Πλήρως συμβατή με MagSafe φόρτιση και αξεσουάρ. Λεπτή κατασκευή, εξαιρετική λαβή, ακριβείς κοψίματα για όλα τα κουμπιά.\",49.00,/images/thiki-apple-silicone-magsafe-midnight-back.webp,accessory,2026-03-03 21:40:13.462887,cases,,thiki-apple-silicone-magsafe-midnight,\"{/images/thiki-apple-silicone-magsafe-midnight-back.webp,/images/thiki-apple-silicone-magsafe-midnight-side.webp}\",,,,"
+    },
+    {
+      "id,name,description,price,image_url,category,created_at,subcategory,compatible_models,slug,images,full_description,brand,color,storage": "12,Apple Silicone Case with MagSafe — Purple Fog,\"Γνήσια Apple Silicone Case MagSafe για iPhone 17 Pro Max. Χρώμα Purple Fog: μωβ σιλικόνη με ματ υφή. Πλήρως συμβατή με MagSafe φόρτιση και αξεσουάρ. Ελαφριά, λεπτή κατασκευή που αγκαλιάζει το iPhone χωρίς να προσθέτει όγκο.\",49.00,/images/thiki-apple-silicone-magsafe-purple-fog-back.webp,accessory,2026-03-03 21:40:13.473243,cases,,thiki-apple-silicone-magsafe-purple-fog,\"{/images/thiki-apple-silicone-magsafe-purple-fog-back.webp,/images/thiki-apple-silicone-magsafe-purple-fog-alt.webp}\",,,,"
+    },
+    {
+      "id,name,description,price,image_url,category,created_at,subcategory,compatible_models,slug,images,full_description,brand,color,storage": "13,Apple Silicone Case with MagSafe — Μαύρο,\"Γνήσια Apple Silicone Case MagSafe για iPhone 17 Pro Max. Χρώμα Μαύρο: κλασικό μαύρο ματ σιλικόνης. Πλήρως συμβατή με MagSafe φόρτιση και αξεσουάρ. Διαχρονικό design, εξαιρετική αίσθηση στο χέρι, αντιολισθητική επιφάνεια.\",49.00,/images/thiki-apple-silicone-magsafe-mavro-back.webp,accessory,2026-03-03 21:40:13.478696,cases,,thiki-apple-silicone-magsafe-mavro,\"{/images/thiki-apple-silicone-magsafe-mavro-back.webp,/images/thiki-apple-silicone-magsafe-mavro-side.webp}\",,,,"
+    },
+    {
+      "id,name,description,price,image_url,category,created_at,subcategory,compatible_models,slug,images,full_description,brand,color,storage": "14,Apple USB-C to Lightning Cable 18W Λευκό 1m (MM0A3ZM/A),\"Γνήσιο Apple καλώδιο USB-C to Lightning 1 μέτρο. Κωδικός MM0A3ZM/A. Υποστηρίζει ταχεία φόρτιση 18W σε συνδυασμό με αντάπτορα USB-C. Συμβατό με iPhone 8 έως iPhone 14, iPad, AirPods. Πιστοποιημένο MFi, γνήσιο Apple προϊόν.\",19.00,/images/kalodio-apple-usb-c-lightning-1m-leuko-cable.webp,accessory,2026-03-03 21:40:13.483767,chargers,\"{\"\"iPhone 14 Pro Max\"\",\"\"iPhone 14 Pro\"\",\"\"iPhone 14 Plus\"\",\"\"iPhone 14\"\",\"\"iPhone 13 Pro Max\"\",\"\"iPhone 13 Pro\"\",\"\"iPhone 13\"\",\"\"iPhone 13 Mini\"\",\"\"iPhone 12 Pro Max\"\",\"\"iPhone 12 Pro\"\",\"\"iPhone 12\"\",\"\"iPhone 12 Mini\"\",\"\"iPhone 11 Pro Max\"\",\"\"iPhone 11 Pro\"\",\"\"iPhone 11\"\",\"\"iPhone XS Max\"\",\"\"iPhone XS\"\",\"\"iPhone XR\"\",\"\"iPhone X\"\",\"\"iPhone 8 Plus\"\",\"\"iPhone 8\"\"}\",kalodio-apple-usb-c-lightning-1m-leuko,\"{/images/kalodio-apple-usb-c-lightning-1m-leuko-cable.webp,/images/kalodio-apple-usb-c-lightning-1m-leuko-box.webp}\",,,,"
+    },
+    {
+      "id,name,description,price,image_url,category,created_at,subcategory,compatible_models,slug,images,full_description,brand,color,storage": "15,Σετ Φορτιστής 20W + Καλώδιο USB-C 1m,Πλήρες σετ φόρτισης: αντάπτορας 20W με τεχνολογία Power Delivery + καλώδιο USB-C 1m. Φορτίζει το iPhone σου από 0 σε 50% σε 30 λεπτά.,35.00,https://images.unsplash.com/photo-1604689598793-b8bf1dc445a1?auto=format&fit=crop&q=80&w=800,accessory,2026-03-03 21:40:13.489751,chargers,,set-fortistis-20w-kalodio-usb-c,,,,,"
+    },
+    {
+      "id,name,description,price,image_url,category,created_at,subcategory,compatible_models,slug,images,full_description,brand,color,storage": "16,Apple Silicone Case with MagSafe — Terra Cotta,\"Γνήσια Apple Silicone Case MagSafe για iPhone 17 Pro Max. Χρώμα Terra Cotta: ζεστό πορτοκαλοκόκκινο σιλικόνης με ματ φινίρισμα. Πλήρως συμβατή με MagSafe φόρτιση και αξεσουάρ. Εντυπωσιακό χρώμα που ξεχωρίζει, μαλακή υφή, άριστη προστασία.\",49.00,/images/thiki-apple-silicone-magsafe-terra-cotta-back.webp,accessory,2026-03-03 23:09:34.716645,cases,\"{\"\"iPhone 17 Pro Max\"\",\"\"iPhone 17 Pro\"\",\"\"iPhone 17 Plus\"\",\"\"iPhone 17\"\"}\",thiki-apple-silicone-magsafe-terra-cotta,\"{/images/thiki-apple-silicone-magsafe-terra-cotta-back.webp,/images/thiki-apple-silicone-magsafe-terra-cotta-side.webp}\",,,,"
+    },
+    {
+      "id,name,description,price,image_url,category,created_at,subcategory,compatible_models,slug,images,full_description,brand,color,storage": "17,Samsung Galaxy S24 Ultra,Κορυφαίο Samsung smartphone,899,,mobile,2026-03-04 02:09:00.342817,,,,,,Samsung,Phantom Black,256GB"
+    }
+  ],
+  "customers": [
+    {
+      "id,name,email,phone,address,created_at": "1,Παπαδόπουλος Κώστας,rebelmobile@gmail.com,6981882005,kjhklhbglhb,2026-03-03 21:35:23.674261"
+    }
+  ],
+  "orders": [
+    {
+      "id,customer_id,status,total_amount,created_at": "1,1,completed,60,2026-03-03 21:35:23.918774"
+    }
+  ],
+  "order_items": [
+    {
+      "id,order_id,product_id,quantity,price_at_time": "1,1,2,1,60.00"
+    }
+  ],
+  "repair_requests": [
+    {
+      "id,first_name,last_name,phone,email,device_name,serial_number,device_code,notes,status,created_at,price": "1,Γιώργης,Παπαδόπουλος,6912345678,giorges@test.com,iPhone 15 Pro Max,F4GT789ABC12,,,in-progress,2026-03-03 23:36:47.223808,20.00"
+    },
+    {
+      "id,first_name,last_name,phone,email,device_name,serial_number,device_code,notes,status,created_at,price": "2,Γρηγόρης,Παπαδόπουλος,6981882005,rebelmobile@gmail.com,iphone 14 pro max,7878t7tggvi7787,1234,Εδώ περιγράφω το πρόβλημα που έχει το κινητό,pending,2026-03-03 23:37:10.476472,45.00"
+    }
+  ],
+  "repair_items": [
+    {
+      "id,repair_request_id,description,amount,created_at": "1,2,Φύλαξη μπροστινός οθόνης,15.00,2026-03-04 00:43:28.603403"
+    },
+    {
+      "id,repair_request_id,description,amount,created_at": "2,1,Αλλαγή οθόνης,50.00,2026-03-04 00:43:52.476491"
+    }
+  ]
+}

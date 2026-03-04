@@ -1,0 +1,3 @@
+id,first_name,last_name,phone,email,device_name,serial_number,device_code,notes,status,created_at,price
+"1,Γιώργης,Παπαδόπουλος,6912345678,giorges@test.com,iPhone 15 Pro Max,F4GT789ABC12,,,in-progress,2026-03-03 23:36:47.223808,20.00"
+"2,Γρηγόρης,Παπαδόπουλος,6981882005,rebelmobile@gmail.com,iphone 14 pro max,7878t7tggvi7787,1234,Εδώ περιγράφω το πρόβλημα που έχει το κινητό,pending,2026-03-03 23:37:10.476472,45.00"
