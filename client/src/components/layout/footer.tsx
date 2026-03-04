@@ -6,6 +6,7 @@ const NAV_MENUS = [
     title: "Νομικά & Πολιτική",
     links: [
       { label: "Όροι Τεχνικού Ελέγχου & Επισκευής", href: "/oroi-episkeuis", external: false },
+      { label: "Επικοινωνία", href: "/epikoinonia", external: false },
     ],
   },
   {
@@ -29,7 +30,7 @@ const NAV_MENUS = [
 const CONTACT = [
   { icon: Phone, label: "Τηλέφωνο", value: "698 188 2005", href: "tel:6981882005" },
   { icon: Mail,  label: "Email",    value: "info@hitechdoctor.com", href: "mailto:info@hitechdoctor.com" },
-  { icon: MapPin,label: "Διεύθυνση", value: "Αθήνα, Ελλάδα", href: null },
+  { icon: MapPin, label: "Διεύθυνση", value: "Βρείτε μας στον χάρτη", href: "/epikoinonia" },
 ];
 
 export function Footer() {

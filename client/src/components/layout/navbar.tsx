@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import {
   ShoppingCart, Wrench, Package, ShieldCheck, Menu, Zap,
   Smartphone, ChevronRight, Hammer, Laptop, Monitor, Watch,
-  Gamepad2, Tablet, LogIn,
+  Gamepad2, Tablet, LogIn, MapPin,
 } from "lucide-react";
 import { useState } from "react";
 import { useCartStore } from "@/store/cart";
@@ -193,6 +193,18 @@ export function Navbar() {
             eShop
           </Link>
 
+          {/* Επικοινωνία */}
+          <Link
+            href="/epikoinonia"
+            className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors hover:text-primary flex items-center gap-2 ${
+              isActive("/epikoinonia") ? "text-primary" : "text-muted-foreground"
+            }`}
+            data-testid="nav-contact"
+          >
+            <MapPin className="w-4 h-4" />
+            Επικοινωνία
+          </Link>
+
           {/* Admin */}
           <Link
             href="/admin"
@@ -301,6 +313,15 @@ export function Navbar() {
                 <Link href="/eshop" className={`flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium ${isActive("/eshop") ? "text-primary bg-primary/10" : "text-foreground"}`}>
                   <Package className="w-5 h-5" />
                   eShop
+                </Link>
+
+                <Link
+                  href="/epikoinonia"
+                  data-testid="nav-contact-mobile"
+                  className={`flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium ${isActive("/epikoinonia") ? "text-primary bg-primary/10" : "text-foreground"}`}
+                >
+                  <MapPin className="w-5 h-5" />
+                  Επικοινωνία
                 </Link>
 
                 <Link href="/admin" className={`flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium ${isActive("/admin") ? "text-primary bg-primary/10" : "text-foreground"}`}>

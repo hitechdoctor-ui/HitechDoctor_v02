@@ -16,6 +16,7 @@ import EShop from "./pages/eshop";
 import ProductDetail from "./pages/product-detail";
 import Checkout from "./pages/checkout";
 import Terms from "./pages/terms";
+import Contact from "./pages/contact";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/dashboard";
@@ -47,6 +48,7 @@ function Router() {
         <Route path="/eshop/:slug" component={ProductDetail} />
         <Route path="/checkout" component={Checkout} />
         <Route path="/oroi-episkeuis" component={Terms} />
+        <Route path="/epikoinonia" component={Contact} />
         <Route path="/admin" component={AdminDashboard} />
         <Route path="/admin/repair-requests" component={AdminRepairRequests} />
         <Route path="/admin/products" component={AdminProducts} />
