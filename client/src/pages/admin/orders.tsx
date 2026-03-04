@@ -10,9 +10,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo } from "react";
 import {
   ShoppingCart, Euro, CheckCircle2, XCircle, Clock, AlertCircle,
-  ChevronDown, ChevronRight, Mail, Phone, Package, Search, X,
-  User,
+  ChevronDown, ChevronRight, Mail, Package, Search, X,
+  User, Printer,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 // ── Status config ────────────────────────────────────────────────────────────
 const ORDER_STATUSES = [
@@ -37,6 +40,157 @@ const formatPrice = (price: string | number) =>
 
 const formatDate = (d: string | Date | null) =>
   d ? new Intl.DateTimeFormat("el-GR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(d)) : "—";
+
+const formatDateShort = (d: string | Date | null) =>
+  d ? new Intl.DateTimeFormat("el-GR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(d)) : "—";
+
+// ── PDF generator ─────────────────────────────────────────────────────────────
+async function generateOrderPDF(order: any, items: any[]) {
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const W = doc.internal.pageSize.getWidth();
+  const H = doc.internal.pageSize.getHeight();
+
+  // Dark header background
+  doc.setFillColor(5, 12, 25);
+  doc.rect(0, 0, W, 42, "F");
+
+  // Cyan accent bar
+  doc.setFillColor(0, 210, 200);
+  doc.rect(0, 42, W, 1.5, "F");
+
+  // Company name
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(20);
+  doc.setTextColor(0, 210, 200);
+  doc.text("HiTech Doctor", 14, 18);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(180, 180, 200);
+  doc.text("info@hitechdoctor.com  |  698 188 2005", 14, 26);
+  doc.text("www.hitechdoctor.com", 14, 32);
+
+  // ORDER label top right
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(22);
+  doc.setTextColor(255, 255, 255);
+  doc.text("ΠΑΡΑΓΓΕΛΙΑ", W - 14, 20, { align: "right" });
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(180, 180, 200);
+  doc.text(`#ORD-${String(order.id).padStart(4, "0")}`, W - 14, 28, { align: "right" });
+  doc.text(formatDateShort(order.createdAt), W - 14, 35, { align: "right" });
+
+  // Customer info block
+  const gy = 54;
+  doc.setFillColor(15, 22, 40);
+  doc.roundedRect(14, gy, (W - 28) / 2 - 4, 30, 3, 3, "F");
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7);
+  doc.setTextColor(0, 210, 200);
+  doc.text("ΣΤΟΙΧΕΙΑ ΠΕΛΑΤΗ", 19, gy + 7);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(230, 230, 240);
+  doc.text(order.customerName ?? "—", 19, gy + 14);
+
+  doc.setFontSize(8);
+  doc.setTextColor(160, 160, 180);
+  doc.text(order.customerEmail ?? "", 19, gy + 21);
+
+  // Status + total block
+  const sx = 14 + (W - 28) / 2 + 4;
+  doc.setFillColor(15, 22, 40);
+  doc.roundedRect(sx, gy, (W - 28) / 2 - 4, 30, 3, 3, "F");
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7);
+  doc.setTextColor(0, 210, 200);
+  doc.text("ΚΑΤΑΣΤ. / ΣΥΝΟΛΟ", sx + 5, gy + 7);
+
+  const statusLabel = ORDER_STATUSES.find((s) => s.value === order.status)?.label ?? order.status;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(230, 230, 240);
+  doc.text(statusLabel, sx + 5, gy + 14);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(13);
+  doc.setTextColor(0, 210, 200);
+  doc.text(formatPrice(order.totalAmount), sx + 5, gy + 24);
+
+  // Items table
+  const tableY = gy + 36;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(120, 130, 160);
+  doc.text("ΠΡΟΪΟΝΤΑ ΠΑΡΑΓΓΕΛΙΑΣ", 14, tableY);
+
+  const rows = items.map((it) => [
+    it.productName ?? "—",
+    String(it.quantity),
+    formatPrice(it.priceAtTime),
+    formatPrice(Number(it.priceAtTime) * it.quantity),
+  ]);
+
+  autoTable(doc, {
+    startY: tableY + 4,
+    head: [["Προϊόν", "Ποσ.", "Τιμή μον.", "Σύνολο"]],
+    body: rows,
+    theme: "plain",
+    headStyles: {
+      fillColor: [0, 210, 200],
+      textColor: [5, 12, 25],
+      fontStyle: "bold",
+      fontSize: 8,
+    },
+    bodyStyles: { fontSize: 8, textColor: [40, 40, 60] },
+    alternateRowStyles: { fillColor: [245, 247, 252] },
+    columnStyles: {
+      0: { cellWidth: "auto" },
+      1: { cellWidth: 18, halign: "center" },
+      2: { cellWidth: 30, halign: "right" },
+      3: { cellWidth: 32, halign: "right", fontStyle: "bold" },
+    },
+    margin: { left: 14, right: 14 },
+  });
+
+  // Total row
+  const finalY = (doc as any).lastAutoTable.finalY + 6;
+  const totalNet = Number(order.totalAmount) / 1.24;
+  const vatAmt = Number(order.totalAmount) - totalNet;
+
+  doc.setFillColor(5, 12, 25);
+  doc.roundedRect(W - 14 - 70, finalY, 70, 24, 3, 3, "F");
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(160, 170, 200);
+  doc.text("Καθαρή αξία:", W - 14 - 65, finalY + 7);
+  doc.text(formatPrice(totalNet), W - 14, finalY + 7, { align: "right" });
+
+  doc.text("ΦΠΑ 24%:", W - 14 - 65, finalY + 13);
+  doc.text(formatPrice(vatAmt), W - 14, finalY + 13, { align: "right" });
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(0, 210, 200);
+  doc.text("ΣΥΝΟΛΟ:", W - 14 - 65, finalY + 21);
+  doc.text(formatPrice(order.totalAmount), W - 14, finalY + 21, { align: "right" });
+
+  // Footer
+  doc.setFillColor(5, 12, 25);
+  doc.rect(0, H - 18, W, 18, "F");
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(100, 110, 140);
+  doc.text("Ευχαριστούμε για την παραγγελία σας! | HiTech Doctor | info@hitechdoctor.com | 698 188 2005", W / 2, H - 8, { align: "center" });
+
+  doc.save(`παραγγελια-ORD-${String(order.id).padStart(4, "0")}.pdf`);
+}
 
 // ── Search Input ─────────────────────────────────────────────────────────────
 function SearchInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
@@ -115,6 +269,28 @@ function OrderItemsRow({ orderId }: { orderId: number }) {
 // ── Order Row ────────────────────────────────────────────────────────────────
 function OrderRow({ order, onStatusChange }: { order: any; onStatusChange: (id: number, s: string) => void }) {
   const [expanded, setExpanded] = useState(false);
+  const [printing, setPrinting] = useState(false);
+
+  const { data: items } = useQuery<any[]>({
+    queryKey: [`/api/orders/${order.id}/items`],
+    enabled: false,
+  });
+
+  const handlePrint = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPrinting(true);
+    try {
+      // Fetch items if not yet loaded
+      let orderItems = items ?? [];
+      if (!items || items.length === 0) {
+        const res = await fetch(`/api/orders/${order.id}/items`);
+        orderItems = await res.json();
+      }
+      await generateOrderPDF(order, orderItems);
+    } finally {
+      setPrinting(false);
+    }
+  };
 
   return (
     <>
@@ -184,12 +360,29 @@ function OrderRow({ order, onStatusChange }: { order: any; onStatusChange: (id: 
             </SelectContent>
           </Select>
         </td>
+
+        {/* PDF Print */}
+        <td className="py-4 pr-4" onClick={(e) => e.stopPropagation()}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handlePrint}
+            disabled={printing}
+            data-testid={`btn-print-order-${order.id}`}
+            className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
+          >
+            {printing
+              ? <span className="w-3.5 h-3.5 border-2 border-primary/40 border-t-primary rounded-full animate-spin" />
+              : <Printer className="w-3.5 h-3.5" />}
+            PDF
+          </Button>
+        </td>
       </tr>
 
       {/* Expanded items row */}
       {expanded && (
         <tr className="border-b border-white/6 bg-white/2">
-          <td colSpan={5}>
+          <td colSpan={6}>
             <OrderItemsRow orderId={order.id} />
           </td>
         </tr>
@@ -283,9 +476,10 @@ export default function AdminOrders() {
                 </p>
               </div>
             </div>
-            <p className="text-[10px] text-muted-foreground hidden sm:block">
-              Κάντε κλικ σε μια παραγγελία για να δείτε τα προϊόντα
-            </p>
+            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+              <Printer className="w-3 h-3" />
+              Κλικ στο PDF για αποθήκευση παραστατικού
+            </div>
           </div>
 
           {/* Filters */}
@@ -333,6 +527,7 @@ export default function AdminOrders() {
                     <th className="pr-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Ημερομηνία</th>
                     <th className="pr-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Σύνολο</th>
                     <th className="pr-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Κατάσταση</th>
+                    <th className="pr-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Εκτύπωση</th>
                   </tr>
                 </thead>
                 <tbody>
