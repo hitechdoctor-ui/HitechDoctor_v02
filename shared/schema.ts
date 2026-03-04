@@ -53,6 +53,7 @@ export const repairRequests = pgTable("repair_requests", {
   deviceCode: text("device_code"),
   notes: text("notes"),
   status: text("status").notNull().default("pending"),
+  price: numeric("price"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

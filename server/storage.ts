@@ -29,7 +29,9 @@ export interface IStorage {
 
   // Customers
   getCustomers(): Promise<Customer[]>;
+  getCustomer(id: number): Promise<Customer | undefined>;
   getCustomerByEmail(email: string): Promise<Customer | undefined>;
+  getCustomerOrders(customerId: number): Promise<any[]>;
 
   // Orders
   getOrders(): Promise<any[]>;
@@ -39,8 +41,10 @@ export interface IStorage {
 
   // Repair Requests
   getRepairRequests(): Promise<RepairRequest[]>;
+  getRepairRequestsByEmail(email: string): Promise<RepairRequest[]>;
   createRepairRequest(data: InsertRepairRequest): Promise<RepairRequest>;
   updateRepairRequestStatus(id: number, status: string): Promise<RepairRequest>;
+  updateRepairRequest(id: number, data: { status?: string; price?: string | null }): Promise<RepairRequest>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -83,9 +87,18 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(customers).orderBy(desc(customers.createdAt));
   }
 
+  async getCustomer(id: number): Promise<Customer | undefined> {
+    const [customer] = await db.select().from(customers).where(eq(customers.id, id));
+    return customer;
+  }
+
   async getCustomerByEmail(email: string): Promise<Customer | undefined> {
     const [customer] = await db.select().from(customers).where(eq(customers.email, email));
     return customer;
+  }
+
+  async getCustomerOrders(customerId: number): Promise<any[]> {
+    return await db.select().from(orders).where(eq(orders.customerId, customerId)).orderBy(desc(orders.createdAt));
   }
 
   // --- Orders ---
@@ -182,6 +195,12 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(repairRequests).orderBy(desc(repairRequests.createdAt));
   }
 
+  async getRepairRequestsByEmail(email: string): Promise<RepairRequest[]> {
+    return await db.select().from(repairRequests)
+      .where(eq(repairRequests.email, email))
+      .orderBy(desc(repairRequests.createdAt));
+  }
+
   async createRepairRequest(data: InsertRepairRequest): Promise<RepairRequest> {
     const [created] = await db.insert(repairRequests).values(data).returning();
     return created;
@@ -190,6 +209,15 @@ export class DatabaseStorage implements IStorage {
   async updateRepairRequestStatus(id: number, status: string): Promise<RepairRequest> {
     const [updated] = await db.update(repairRequests)
       .set({ status })
+      .where(eq(repairRequests.id, id))
+      .returning();
+    if (!updated) throw new Error("Repair request not found");
+    return updated;
+  }
+
+  async updateRepairRequest(id: number, data: { status?: string; price?: string | null }): Promise<RepairRequest> {
+    const [updated] = await db.update(repairRequests)
+      .set(data)
       .where(eq(repairRequests.id, id))
       .returning();
     if (!updated) throw new Error("Repair request not found");

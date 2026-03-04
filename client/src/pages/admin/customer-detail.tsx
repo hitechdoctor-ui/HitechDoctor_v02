@@ -1,0 +1,383 @@
+import { AdminLayout } from "@/components/layout/admin-layout";
+import { Seo } from "@/components/seo";
+import { useQuery } from "@tanstack/react-query";
+import { useParams, Link } from "wouter";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  ArrowLeft, User, Mail, Phone, MapPin, ShoppingBag, Wrench,
+  Package, CheckCircle2, Clock, AlertCircle, XCircle, Printer, Euro,
+} from "lucide-react";
+import { type Customer, type RepairRequest } from "@shared/schema";
+
+const VAT_RATE = 0.24;
+const fmt = (n: number) => n.toFixed(2).replace(".", ",") + " €";
+
+// ── Order Status Badge ────────────────────────────────────────────────────────
+function OrderBadge({ status }: { status: string }) {
+  const map: Record<string, { label: string; color: string; bg: string; Icon: React.ElementType }> = {
+    pending:    { label: "Σε Αναμονή",   color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/30", Icon: Clock },
+    processing: { label: "Επεξεργασία", color: "text-blue-400",   bg: "bg-blue-400/10 border-blue-400/30",   Icon: AlertCircle },
+    shipped:    { label: "Απεστάλη",     color: "text-purple-400", bg: "bg-purple-400/10 border-purple-400/30", Icon: Package },
+    delivered:  { label: "Παραδόθηκε",  color: "text-green-400",  bg: "bg-green-400/10 border-green-400/30", Icon: CheckCircle2 },
+    cancelled:  { label: "Ακυρώθηκε",   color: "text-red-400",    bg: "bg-red-400/10 border-red-400/30",     Icon: XCircle },
+  };
+  const cfg = map[status] ?? map.pending;
+  const { Icon } = cfg;
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${cfg.bg} ${cfg.color}`}>
+      <Icon className="w-3 h-3" />
+      {cfg.label}
+    </span>
+  );
+}
+
+function RepairBadge({ status }: { status: string }) {
+  const map: Record<string, { label: string; color: string; bg: string; Icon: React.ElementType }> = {
+    pending:     { label: "Νέο",           color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/30", Icon: AlertCircle },
+    "in-progress": { label: "Σε Εξέλιξη", color: "text-blue-400",   bg: "bg-blue-400/10 border-blue-400/30",   Icon: Clock },
+    completed:   { label: "Ολοκληρώθηκε", color: "text-green-400",  bg: "bg-green-400/10 border-green-400/30", Icon: CheckCircle2 },
+    cancelled:   { label: "Ακυρώθηκε",    color: "text-red-400",    bg: "bg-red-400/10 border-red-400/30",     Icon: XCircle },
+  };
+  const cfg = map[status] ?? map.pending;
+  const { Icon } = cfg;
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${cfg.bg} ${cfg.color}`}>
+      <Icon className="w-3 h-3" />
+      {cfg.label}
+    </span>
+  );
+}
+
+// ── Invoice Print ─────────────────────────────────────────────────────────────
+function printRepairInvoice(req: RepairRequest, customer: Customer) {
+  const netPrice = req.price ? parseFloat(req.price) : null;
+  const vatAmount = netPrice !== null ? netPrice * VAT_RATE : null;
+  const totalPrice = netPrice !== null ? netPrice * (1 + VAT_RATE) : null;
+  const invoiceDate = new Date(req.createdAt!).toLocaleDateString("el-GR", {
+    day: "2-digit", month: "long", year: "numeric",
+  });
+
+  const priceSection = netPrice !== null ? `
+    <table class="price-table">
+      <tr><td class="label">Υποσύνολο (χωρίς ΦΠΑ)</td><td class="value">${fmt(netPrice)}</td></tr>
+      <tr><td class="label">ΦΠΑ 24%</td><td class="value">${fmt(vatAmount!)}</td></tr>
+      <tr class="total-row">
+        <td class="label"><strong>Σύνολο (με ΦΠΑ)</strong></td>
+        <td class="value total-value"><strong>${fmt(totalPrice!)}</strong></td>
+      </tr>
+    </table>` : `<p style="color:#888;font-size:13px;">Η τιμή δεν έχει οριστεί ακόμα.</p>`;
+
+  const html = `<!DOCTYPE html>
+<html lang="el"><head>
+<meta charset="UTF-8" />
+<title>Δελτίο Παροχής Υπηρεσιών #REPR-${String(req.id).padStart(4,"0")}</title>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:Arial,Helvetica,sans-serif; color:#1a1a2e; background:#fff; padding:50px 60px; font-size:14px; line-height:1.6; }
+  .header { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #00D2C8; padding-bottom:24px; margin-bottom:28px; }
+  .brand { font-size:28px; font-weight:900; color:#00D2C8; letter-spacing:-0.5px; }
+  .brand span { color:#1a1a2e; }
+  .brand-sub { font-size:12px; color:#555; margin-top:4px; }
+  .invoice-title { text-align:right; }
+  .invoice-title h2 { font-size:20px; font-weight:700; }
+  .invoice-num { font-size:24px; font-weight:900; color:#00D2C8; }
+  .invoice-title p { font-size:12px; color:#666; margin-top:4px; }
+  .section { margin-bottom:24px; }
+  .section-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#00D2C8; border-bottom:1px solid #e5e5e5; padding-bottom:6px; margin-bottom:12px; }
+  .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  .info-block p { font-size:13px; color:#333; margin-bottom:4px; }
+  .info-block .lbl { font-size:11px; color:#999; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+  .service-table { width:100%; border-collapse:collapse; margin-bottom:24px; }
+  .service-table th { background:#f7f9fc; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:#666; padding:10px 14px; text-align:left; border-bottom:2px solid #e5e5e5; }
+  .service-table td { padding:12px 14px; border-bottom:1px solid #f0f0f0; font-size:13px; color:#333; }
+  .price-table { width:100%; max-width:360px; margin-left:auto; border-collapse:collapse; }
+  .price-table td { padding:8px 14px; font-size:13px; }
+  .price-table .label { color:#555; }
+  .price-table .value { text-align:right; color:#333; }
+  .total-row { border-top:2px solid #00D2C8; }
+  .total-row td { padding-top:12px; font-size:15px; }
+  .total-value { color:#00D2C8 !important; font-size:18px !important; }
+  .footer { border-top:2px solid #e5e5e5; padding-top:24px; margin-top:40px; text-align:center; color:#777; font-size:12px; line-height:1.8; }
+  .footer strong { color:#00D2C8; font-size:14px; display:block; margin-bottom:6px; }
+  @media print { body { padding:30px 40px; } @page { margin:1.5cm; } }
+</style></head><body>
+<div class="header">
+  <div>
+    <div class="brand">HiTech<span>Doctor</span></div>
+    <div class="brand-sub">Επισκευές Κινητών &amp; IT Support<br/>Σπάρτη, Λακωνία<br/>Τηλ: 6981882005 | info@hitechdoctor.com</div>
+  </div>
+  <div class="invoice-title">
+    <h2>Δελτίο Παροχής Υπηρεσιών</h2>
+    <div class="invoice-num">#REPR-${String(req.id).padStart(4,"0")}</div>
+    <p>Ημερομηνία: ${invoiceDate}</p>
+  </div>
+</div>
+<div class="info-grid section">
+  <div class="info-block">
+    <div class="section-title">Στοιχεία Πελάτη</div>
+    <p><span class="lbl">Ονοματεπώνυμο</span><br/>${req.firstName} ${req.lastName}</p>
+    <p><span class="lbl">Τηλέφωνο</span><br/>${req.phone}</p>
+    <p><span class="lbl">Email</span><br/>${req.email}</p>
+    ${customer.address ? `<p><span class="lbl">Διεύθυνση</span><br/>${customer.address}</p>` : ""}
+  </div>
+  <div class="info-block">
+    <div class="section-title">Στοιχεία Συσκευής</div>
+    <p><span class="lbl">Συσκευή</span><br/>${req.deviceName}</p>
+    <p><span class="lbl">Serial Number</span><br/>${req.serialNumber}</p>
+    ${req.deviceCode ? `<p><span class="lbl">Κωδικός Συσκευής</span><br/>${req.deviceCode}</p>` : ""}
+  </div>
+</div>
+<div class="section">
+  <div class="section-title">Περιγραφή Εργασιών</div>
+  <table class="service-table">
+    <thead><tr><th>Περιγραφή</th><th>Κατάσταση</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>${req.notes || "Επισκευή — " + req.deviceName}</td>
+        <td>${req.status === "completed" ? "Ολοκληρώθηκε" : req.status === "in-progress" ? "Σε Εξέλιξη" : "Σε Αναμονή"}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<div class="section">
+  <div class="section-title">Ανάλυση Κόστους</div>
+  ${priceSection}
+</div>
+<div class="footer">
+  <strong>Ευχαριστούμε που μας επιλέξατε!</strong>
+  Εμπιστευτήκατε το HiTech Doctor για την επισκευή της συσκευής σας.<br/>
+  Είμαστε στη διάθεσή σας για οποιαδήποτε απορία ή μελλοντική ανάγκη.<br/>
+  <strong style="color:#555;font-size:12px;margin-top:8px;">hitechdoctor.com &nbsp;|&nbsp; 6981882005 &nbsp;|&nbsp; info@hitechdoctor.com</strong>
+</div>
+<script>window.onload=function(){setTimeout(function(){window.print();},400);}</script>
+</body></html>`;
+
+  const win = window.open("", "_blank");
+  if (win) { win.document.write(html); win.document.close(); }
+}
+
+function formatDate(d: string | null | undefined) {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("el-GR", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
+export default function AdminCustomerDetail() {
+  const { id } = useParams<{ id: string }>();
+  const customerId = parseInt(id);
+
+  const { data: customer, isLoading: loadingCustomer } = useQuery<Customer>({
+    queryKey: ["/api/customers", customerId],
+    queryFn: () => fetch(`/api/customers/${customerId}`).then(r => r.json()),
+  });
+
+  const { data: orders, isLoading: loadingOrders } = useQuery<any[]>({
+    queryKey: ["/api/customers", customerId, "orders"],
+    queryFn: () => fetch(`/api/customers/${customerId}/orders`).then(r => r.json()),
+    enabled: !!customer,
+  });
+
+  const { data: repairs, isLoading: loadingRepairs } = useQuery<RepairRequest[]>({
+    queryKey: ["/api/repair-requests", customer?.email],
+    queryFn: () => fetch(`/api/repair-requests?email=${encodeURIComponent(customer!.email)}`).then(r => r.json()),
+    enabled: !!customer?.email,
+  });
+
+  if (loadingCustomer) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center py-24 text-muted-foreground text-sm gap-3">
+          <span className="w-5 h-5 border-2 border-primary/40 border-t-primary rounded-full animate-spin" />
+          Φόρτωση...
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (!customer) {
+    return (
+      <AdminLayout>
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <p className="text-lg font-semibold mb-2">Ο πελάτης δεν βρέθηκε</p>
+          <Link href="/admin/customers">
+            <a className="text-primary text-sm hover:underline">← Επιστροφή στο Πελατολόγιο</a>
+          </Link>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  const totalSpent = orders?.reduce((sum, o) => sum + parseFloat(o.totalAmount || "0"), 0) ?? 0;
+
+  return (
+    <AdminLayout>
+      <Seo title={`Καρτέλα ${customer.name} — Admin`} description="Καρτέλα πελάτη" />
+
+      {/* Back link */}
+      <div className="mb-6">
+        <Link href="/admin/customers">
+          <a className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-4">
+            <ArrowLeft className="w-4 h-4" />
+            Επιστροφή στο Πελατολόγιο
+          </a>
+        </Link>
+        <h1 className="text-3xl font-display font-bold">Καρτέλα Πελάτη</h1>
+        <p className="text-muted-foreground mt-1">Πλήρες ιστορικό και στοιχεία επικοινωνίας</p>
+      </div>
+
+      {/* Customer Info Card */}
+      <Card className="bg-card border-white/8 mb-6">
+        <CardHeader className="border-b border-white/8 pb-4">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-primary/15 border border-primary/30 flex items-center justify-center">
+              <User className="w-7 h-7 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-xl font-display font-bold">{customer.name}</h2>
+              <p className="text-sm text-muted-foreground">Πελάτης από {formatDate(customer.createdAt)}</p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="flex items-start gap-3">
+              <Mail className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-bold mb-1">Email</p>
+                <a href={`mailto:${customer.email}`} className="text-sm hover:text-primary transition-colors">{customer.email}</a>
+              </div>
+            </div>
+            {customer.phone && (
+              <div className="flex items-start gap-3">
+                <Phone className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-bold mb-1">Τηλέφωνο</p>
+                  <a href={`tel:${customer.phone}`} className="text-sm hover:text-primary transition-colors">{customer.phone}</a>
+                </div>
+              </div>
+            )}
+            {customer.address && (
+              <div className="flex items-start gap-3">
+                <MapPin className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-bold mb-1">Διεύθυνση</p>
+                  <p className="text-sm">{customer.address}</p>
+                </div>
+              </div>
+            )}
+            <div className="flex items-start gap-3">
+              <Euro className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-bold mb-1">Συνολικές Αγορές</p>
+                <p className="text-sm font-bold text-primary">{fmt(totalSpent)}</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Orders */}
+        <Card className="bg-card border-white/8">
+          <CardHeader className="border-b border-white/8 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center">
+                <ShoppingBag className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-base font-display">Παραγγελίες eShop</CardTitle>
+                <p className="text-xs text-muted-foreground">{orders?.length ?? 0} παραγγελίες</p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {loadingOrders ? (
+              <div className="flex items-center justify-center py-10 text-muted-foreground text-sm gap-2">
+                <span className="w-4 h-4 border-2 border-primary/40 border-t-primary rounded-full animate-spin" />
+                Φόρτωση...
+              </div>
+            ) : !orders?.length ? (
+              <div className="py-10 text-center text-sm text-muted-foreground">Δεν υπάρχουν παραγγελίες</div>
+            ) : (
+              <div className="divide-y divide-white/5">
+                {orders.map((order) => (
+                  <div key={order.id} className="px-5 py-4 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold font-mono">#{order.id}</p>
+                      <p className="text-xs text-muted-foreground">{formatDate(order.createdAt)}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-bold text-primary">{fmt(parseFloat(order.totalAmount))}</span>
+                      <OrderBadge status={order.status} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Repair Requests */}
+        <Card className="bg-card border-white/8">
+          <CardHeader className="border-b border-white/8 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center">
+                <Wrench className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-base font-display">Ιστορικό Επισκευών</CardTitle>
+                <p className="text-xs text-muted-foreground">{repairs?.length ?? 0} αιτήματα</p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {loadingRepairs ? (
+              <div className="flex items-center justify-center py-10 text-muted-foreground text-sm gap-2">
+                <span className="w-4 h-4 border-2 border-primary/40 border-t-primary rounded-full animate-spin" />
+                Φόρτωση...
+              </div>
+            ) : !repairs?.length ? (
+              <div className="py-10 text-center text-sm text-muted-foreground">Δεν υπάρχουν αιτήματα επισκευής</div>
+            ) : (
+              <div className="divide-y divide-white/5">
+                {repairs.map((rep) => {
+                  const net = rep.price ? parseFloat(rep.price) : null;
+                  return (
+                    <div key={rep.id} className="px-5 py-4">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div>
+                          <p className="text-sm font-semibold">{rep.deviceName}</p>
+                          <p className="text-xs text-muted-foreground font-mono">SN: {rep.serialNumber}</p>
+                          <p className="text-xs text-muted-foreground">{formatDate(rep.createdAt)}</p>
+                        </div>
+                        <RepairBadge status={rep.status} />
+                      </div>
+                      {net !== null ? (
+                        <div className="flex items-center gap-4 mt-2 mb-3 bg-primary/5 border border-primary/15 rounded-xl px-3 py-2">
+                          <div className="text-xs text-muted-foreground">
+                            χωρίς ΦΠΑ: <span className="text-foreground font-medium">{fmt(net)}</span>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            με ΦΠΑ 24%: <span className="text-primary font-bold text-sm">{fmt(net * 1.24)}</span>
+                          </div>
+                        </div>
+                      ) : null}
+                      <button
+                        onClick={() => printRepairInvoice(rep, customer)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-primary/10 border border-white/10 hover:border-primary/30 text-muted-foreground hover:text-primary transition-all text-xs"
+                        data-testid={`btn-invoice-repair-${rep.id}`}
+                      >
+                        <Printer className="w-3.5 h-3.5" />
+                        Εκτύπωση Δελτίου / PDF
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </AdminLayout>
+  );
+}

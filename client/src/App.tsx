@@ -22,6 +22,7 @@ import AdminDashboard from "./pages/admin/dashboard";
 import AdminProducts from "./pages/admin/products";
 import AdminOrders from "./pages/admin/orders";
 import AdminCustomers from "./pages/admin/customers";
+import AdminCustomerDetail from "./pages/admin/customer-detail";
 import AdminRepairRequests from "./pages/admin/repair-requests";
 import AdminOikonomika from "./pages/admin/oikonomika";
 
@@ -51,6 +52,7 @@ function Router() {
         <Route path="/admin/products" component={AdminProducts} />
         <Route path="/admin/orders" component={AdminOrders} />
         <Route path="/admin/customers" component={AdminCustomers} />
+        <Route path="/admin/customers/:id" component={AdminCustomerDetail} />
         <Route path="/admin/oikonomika" component={AdminOikonomika} />
         <Route component={NotFound} />
       </Switch>

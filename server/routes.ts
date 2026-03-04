@@ -80,6 +80,27 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/customers/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const customer = await storage.getCustomer(id);
+      if (!customer) return res.status(404).json({ message: "Customer not found" });
+      res.json(customer);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch customer" });
+    }
+  });
+
+  app.get("/api/customers/:id/orders", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const orderList = await storage.getCustomerOrders(id);
+      res.json(orderList);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch customer orders" });
+    }
+  });
+
   // --- Orders & Checkout API ---
   app.get(api.orders.list.path, async (req, res) => {
     try {
@@ -128,6 +149,11 @@ export async function registerRoutes(
   // --- Repair Requests API ---
   app.get("/api/repair-requests", async (req, res) => {
     try {
+      const email = req.query.email as string | undefined;
+      if (email) {
+        const requests = await storage.getRepairRequestsByEmail(email);
+        return res.json(requests);
+      }
       const requests = await storage.getRepairRequests();
       res.json(requests);
     } catch (error) {
@@ -145,6 +171,21 @@ export async function registerRoutes(
         return res.status(400).json({ message: err.errors[0].message, field: err.errors[0].path.join('.') });
       }
       res.status(500).json({ message: "Failed to create repair request" });
+    }
+  });
+
+  app.patch("/api/repair-requests/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const schema = z.object({
+        status: z.string().optional(),
+        price: z.string().nullable().optional(),
+      });
+      const data = schema.parse(req.body);
+      const request = await storage.updateRepairRequest(id, data);
+      res.json(request);
+    } catch (err) {
+      res.status(404).json({ message: "Repair request not found" });
     }
   });
 
