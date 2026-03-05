@@ -31,14 +31,15 @@ export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" 
   const [gdprConsent, setGdprConsent] = useState(false);
   const [gdprError, setGdprError] = useState(false);
   const [priceInput, setPriceInput] = useState("");
-  const [priceMode, setPriceMode] = useState<"net" | "gross">("net");
+  const [selectedBox, setSelectedBox] = useState<"net" | "gross">("net");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const priceNum = parseFloat(priceInput);
   const hasPrice = priceInput !== "" && !isNaN(priceNum) && priceNum > 0;
-  const netPrice = hasPrice ? (priceMode === "net" ? priceNum : priceNum / 1.24) : 0;
-  const grossPrice = hasPrice ? (priceMode === "net" ? priceNum * 1.24 : priceNum) : 0;
+  const netPrice = hasPrice ? priceNum : 0;
+  const grossPrice = hasPrice ? priceNum * 1.24 : 0;
+  const agreedPrice = selectedBox === "net" ? netPrice : grossPrice;
 
   const fmt = (n: number) =>
     n.toLocaleString("el-GR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
@@ -62,7 +63,7 @@ export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" 
     mutationFn: (data: FormValues) =>
       apiRequest("POST", "/api/repair-requests", {
         ...data,
-        ...(hasPrice ? { price: netPrice.toFixed(2) } : {}),
+        ...(hasPrice ? { price: netPrice.toFixed(2), agreedPrice: agreedPrice.toFixed(2) } : {}),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/repair-requests"] });
@@ -79,7 +80,7 @@ export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" 
       setGdprConsent(false);
       setGdprError(false);
       setPriceInput("");
-      setPriceMode("net");
+      setSelectedBox("net");
       form.reset({ ...form.getValues(), deviceName: defaultDeviceName });
     }
     onOpenChange(open);
@@ -223,61 +224,74 @@ export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" 
                   )} />
                 </div>
 
-                {/* ── Price + VAT box ── */}
+                {/* ── Price + VAT boxes ── */}
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50">Τιμή Επισκευής (προαιρετικό)</label>
-                    <div className="flex rounded-lg border border-white/10 overflow-hidden text-[10px] font-semibold">
-                      <button
-                        type="button"
-                        onClick={() => { setPriceMode("net"); setPriceInput(""); }}
-                        data-testid="toggle-price-net"
-                        className={`px-2.5 py-1 transition-colors ${priceMode === "net" ? "bg-primary text-black" : "bg-card text-muted-foreground hover:text-foreground"}`}
-                      >
-                        χωρίς ΦΠΑ
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setPriceMode("gross"); setPriceInput(""); }}
-                        data-testid="toggle-price-gross"
-                        className={`px-2.5 py-1 border-l border-white/10 transition-colors ${priceMode === "gross" ? "bg-primary text-black" : "bg-card text-muted-foreground hover:text-foreground"}`}
-                      >
-                        με ΦΠΑ
-                      </button>
-                    </div>
-                  </div>
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 block">Τιμή Επισκευής (προαιρετικό)</label>
 
-                  <div className="h-11 rounded-xl border border-white/10 bg-card flex items-center overflow-hidden focus-within:border-primary/40 transition-colors">
-                    <span className="pl-3 text-xs text-muted-foreground/60 pointer-events-none select-none whitespace-nowrap">
-                      {priceMode === "net" ? "χωρίς ΦΠΑ" : "με ΦΠΑ"}
-                    </span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={priceInput}
-                      onChange={(e) => setPriceInput(e.target.value)}
-                      placeholder="0.00"
-                      data-testid="input-repair-price"
-                      className="flex-1 h-full bg-transparent text-center text-xl font-black text-foreground outline-none placeholder:text-muted-foreground/30 px-2"
-                      style={{ WebkitAppearance: "none", MozAppearance: "textfield" } as object}
-                    />
-                    <span className="pr-3 text-xl font-black text-muted-foreground pointer-events-none select-none">€</span>
-                  </div>
-
+                  {/* Top row: 2 selectable boxes */}
                   <div className="grid grid-cols-2 gap-2">
-                    <div className={`rounded-xl border py-2.5 px-3 flex flex-col items-center gap-0.5 transition-colors ${priceMode === "net" ? "border-primary/25 bg-primary/5" : "border-white/10 bg-card"}`}>
-                      <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/60">Χωρίς ΦΠΑ</span>
-                      <span className={`text-sm font-bold leading-tight ${priceMode === "net" ? "text-primary" : "text-foreground"}`}>
-                        {hasPrice ? fmt(netPrice) : "—"}
-                      </span>
-                    </div>
-                    <div className={`rounded-xl border py-2.5 px-3 flex flex-col items-center gap-0.5 transition-colors ${priceMode === "gross" ? "border-primary/25 bg-primary/5" : "border-white/10 bg-card"}`}>
-                      <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/60">Με ΦΠΑ 24%</span>
-                      <span className={`text-sm font-bold leading-tight ${priceMode === "gross" ? "text-primary" : "text-foreground"}`}>
-                        {hasPrice ? fmt(grossPrice) : "—"}
-                      </span>
-                    </div>
+
+                    {/* Box 1: Χωρίς ΦΠΑ — editable input */}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedBox("net")}
+                      data-testid="box-price-net"
+                      className={`rounded-xl border-2 py-3 px-3 flex flex-col items-center gap-1 transition-all cursor-pointer focus-within:ring-0 ${
+                        selectedBox === "net"
+                          ? "border-primary bg-primary/10 shadow-[0_0_16px_rgba(0,210,200,0.20)]"
+                          : "border-white/10 bg-card hover:border-white/25"
+                      }`}
+                    >
+                      <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/70 select-none">Χωρίς ΦΠΑ</span>
+                      <div className="flex items-center gap-1 w-full justify-center" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={priceInput}
+                          onChange={(e) => setPriceInput(e.target.value)}
+                          onFocus={() => setSelectedBox("net")}
+                          placeholder="0"
+                          data-testid="input-repair-price"
+                          className={`w-full bg-transparent text-center text-2xl font-black outline-none placeholder:text-muted-foreground/25 ${selectedBox === "net" ? "text-primary" : "text-foreground"}`}
+                          style={{ WebkitAppearance: "none", MozAppearance: "textfield" } as object}
+                        />
+                        <span className={`text-2xl font-black select-none ${selectedBox === "net" ? "text-primary" : "text-muted-foreground"}`}>€</span>
+                      </div>
+                    </button>
+
+                    {/* Box 2: Με ΦΠΑ — auto-calculated, selectable */}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedBox("gross")}
+                      data-testid="box-price-gross"
+                      className={`rounded-xl border-2 py-3 px-3 flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                        selectedBox === "gross"
+                          ? "border-primary bg-primary/10 shadow-[0_0_16px_rgba(0,210,200,0.20)]"
+                          : "border-white/10 bg-card hover:border-white/25"
+                      }`}
+                    >
+                      <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/70 select-none">Με ΦΠΑ (24%)</span>
+                      <div className="flex items-center gap-1 justify-center">
+                        <span className={`text-2xl font-black ${selectedBox === "gross" ? "text-primary" : "text-foreground"}`}>
+                          {hasPrice ? grossPrice.toLocaleString("el-GR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0"}
+                        </span>
+                        <span className={`text-2xl font-black select-none ${selectedBox === "gross" ? "text-primary" : "text-muted-foreground"}`}>€</span>
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* Bottom: read-only agreed price */}
+                  <div className="rounded-xl border border-white/10 bg-card/60 py-3 px-4 flex flex-col items-center gap-0.5">
+                    <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/50 select-none">
+                      Τελική Συμφωνηθείσα Τιμή
+                    </span>
+                    <span className={`text-xl font-black transition-colors ${hasPrice ? "text-primary" : "text-muted-foreground/30"}`}>
+                      {hasPrice ? fmt(agreedPrice) : "—"}
+                    </span>
+                    <span className="text-[9px] text-muted-foreground/40 select-none">
+                      {hasPrice ? (selectedBox === "net" ? "χωρίς ΦΠΑ" : "με ΦΠΑ 24%") : "επιλέξτε τιμή"}
+                    </span>
                   </div>
                 </div>
 
