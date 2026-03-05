@@ -225,9 +225,9 @@ export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" 
                 <div>
                   <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 mb-1.5 block">Τιμή Επισκευής (προαιρετικό)</label>
                   <div className="flex gap-2 items-stretch">
-                    {/* Price input — dark bg, red border */}
+                    {/* Price input */}
                     <div className="flex-1">
-                      <div className="h-11 rounded-xl border-2 border-red-500 bg-black flex items-center overflow-hidden">
+                      <div className="h-11 rounded-xl border border-white/10 bg-card flex items-center overflow-hidden focus-within:border-primary/40 transition-colors">
                         <input
                           type="number"
                           min="0"
@@ -236,22 +236,22 @@ export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" 
                           onChange={(e) => setPriceInput(e.target.value)}
                           placeholder="0"
                           data-testid="input-repair-price"
-                          className="flex-1 h-full bg-transparent text-center text-xl font-black text-white outline-none placeholder:text-white/30 px-2"
+                          className="flex-1 h-full bg-transparent text-center text-xl font-black text-foreground outline-none placeholder:text-muted-foreground/30 px-2"
                           style={{ WebkitAppearance: "none", MozAppearance: "textfield" } as object}
                         />
-                        <span className="pr-2.5 text-xl font-black text-white pointer-events-none select-none">€</span>
+                        <span className="pr-2.5 text-xl font-black text-muted-foreground pointer-events-none select-none">€</span>
                       </div>
                     </div>
 
                     {/* VAT result boxes */}
                     <div className="flex flex-col gap-1.5 flex-1">
-                      <div className="flex-1 rounded-lg border-2 border-red-500 bg-black/60 flex items-center justify-center px-2">
-                        <span className="text-xs font-bold text-white text-center leading-tight">
+                      <div className="flex-1 rounded-xl border border-white/10 bg-card flex items-center justify-center px-2">
+                        <span className="text-xs font-semibold text-muted-foreground text-center leading-tight">
                           {hasPrice ? `${fmt(priceNum)} χωρίς ΦΠΑ` : "— χωρίς ΦΠΑ"}
                         </span>
                       </div>
-                      <div className="flex-1 rounded-lg border-2 border-red-500 bg-black/60 flex items-center justify-center px-2">
-                        <span className="text-sm font-black text-white text-center leading-tight">
+                      <div className="flex-1 rounded-xl border border-primary/20 bg-primary/5 flex items-center justify-center px-2">
+                        <span className="text-sm font-bold text-primary text-center leading-tight">
                           {hasPrice ? `${fmt(totalWithVat)} με ΦΠΑ` : "— με ΦΠΑ"}
                         </span>
                       </div>
