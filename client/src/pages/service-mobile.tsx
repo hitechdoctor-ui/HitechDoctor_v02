@@ -17,7 +17,7 @@ const brands = [
     Icon: SiApple,
     tagline: "Εξειδικευμένες επισκευές για κάθε μοντέλο iPhone",
     image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&q=80&w=800",
-    imageAlt: "Επισκευή iPhone Apple οθόνη μπαταρία Θεσσαλονίκη",
+    imageAlt: "Επισκευή iPhone Apple οθόνη μπαταρία Αθήνα",
     repairs: [
       "Αλλαγή οθόνης (OLED/LCD)",
       "Αντικατάσταση μπαταρίας",
@@ -43,7 +43,7 @@ const brands = [
     Icon: SiSamsung,
     tagline: "Επισκευές για Galaxy S, A, M, Note & Z series",
     image: "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?auto=format&fit=crop&q=80&w=800",
-    imageAlt: "Επισκευή Samsung Galaxy οθόνη μπαταρία Θεσσαλονίκη",
+    imageAlt: "Επισκευή Samsung Galaxy οθόνη μπαταρία Αθήνα",
     repairs: [
       "Αλλαγή οθόνης AMOLED",
       "Αντικατάσταση μπαταρίας",
@@ -69,7 +69,7 @@ const brands = [
     Icon: SiXiaomi,
     tagline: "Επισκευές για Xiaomi, Redmi & POCO",
     image: "https://images.unsplash.com/photo-1614941030558-2e6a34f5d001?auto=format&fit=crop&q=80&w=800",
-    imageAlt: "Επισκευή Xiaomi Redmi οθόνη μπαταρία Θεσσαλονίκη",
+    imageAlt: "Επισκευή Xiaomi Redmi οθόνη μπαταρία Αθήνα",
     repairs: [
       "Αλλαγή οθόνης",
       "Αντικατάσταση μπαταρίας",
@@ -95,7 +95,7 @@ const brands = [
     Icon: SiHuawei,
     tagline: "Επισκευές για Huawei & Honor",
     image: "https://images.unsplash.com/photo-1544866092-1677b2928e6f?auto=format&fit=crop&q=80&w=800",
-    imageAlt: "Επισκευή Huawei Honor οθόνη μπαταρία Θεσσαλονίκη",
+    imageAlt: "Επισκευή Huawei Honor οθόνη μπαταρία Αθήνα",
     repairs: [
       "Αλλαγή οθόνης",
       "Αντικατάσταση μπαταρίας",
@@ -121,7 +121,7 @@ const brands = [
     Icon: SiOneplus,
     tagline: "Επισκευές για OnePlus — Never Settle",
     image: "https://images.unsplash.com/photo-1565849904461-04a58ad377e0?auto=format&fit=crop&q=80&w=800",
-    imageAlt: "Επισκευή OnePlus οθόνη μπαταρία Θεσσαλονίκη",
+    imageAlt: "Επισκευή OnePlus οθόνη μπαταρία Αθήνα",
     repairs: [
       "Αλλαγή οθόνης AMOLED",
       "Αντικατάσταση μπαταρίας",
@@ -160,7 +160,7 @@ const jsonLd = {
   },
   "description": "Εξειδικευμένες επισκευές κινητών τηλεφώνων iPhone, Samsung, Xiaomi, Huawei και OnePlus. Αλλαγή οθόνης, μπαταρίας και επισκευή πλακέτας με γνήσια ανταλλακτικά και γραπτή εγγύηση.",
   "serviceType": "Επισκευή Κινητών",
-  "areaServed": "Θεσσαλονίκη",
+  "areaServed": "Αθήνα",
   "offers": brands.map((b) => ({
     "@type": "Offer",
     "name": `Επισκευή ${b.name}`,
@@ -186,7 +186,7 @@ export default function ServiceMobile() {
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
         <meta
           name="keywords"
-          content="επισκευή κινητών, επισκευή iPhone, επισκευή Samsung, επισκευή Xiaomi, επισκευή Huawei, επισκευή OnePlus, αλλαγή οθόνης κινητό, αλλαγή μπαταρία κινητό, επισκευή κινητών Θεσσαλονίκη"
+          content="επισκευή κινητών, επισκευή iPhone, επισκευή Samsung, επισκευή Xiaomi, επισκευή Huawei, επισκευή OnePlus, αλλαγή οθόνης κινητό, αλλαγή μπαταρία κινητό, επισκευή κινητών Αθήνα"
         />
         <link rel="canonical" href="https://hitechdoctor.com/services/episkeui-kiniton" />
       </Helmet>

@@ -60,12 +60,12 @@ export default function Home() {
     <div className="min-h-screen bg-background circuit-bg relative overflow-hidden">
       <Seo
         title="Αρχική"
-        description="Ο τεχνολογικός σας γιατρός. Επισκευές κινητών, tablet, laptop, IT Support και αγορά αξεσουάρ στο Θεσσαλονίκη."
+        description="Ο τεχνολογικός σας γιατρός. Επισκευές κινητών, tablet, laptop, IT Support και αγορά αξεσουάρ στο Αθήνα."
         url="https://hitechdoctor.com"
       />
       <Helmet>
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
-        <meta name="keywords" content="επισκευή κινητών Θεσσαλονίκη, IT support, επισκευή laptop, επισκευή tablet, ανάκτηση δεδομένων, HiTech Doctor" />
+        <meta name="keywords" content="επισκευή κινητών Αθήνα, IT support, επισκευή laptop, επισκευή tablet, ανάκτηση δεδομένων, HiTech Doctor" />
         <link rel="canonical" href="https://hitechdoctor.com" />
       </Helmet>
 

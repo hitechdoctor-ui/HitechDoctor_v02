@@ -163,12 +163,12 @@ const jsonLd = {
     "@type": "LocalBusiness",
     "name": "HiTech Doctor",
     "url": "https://hitechdoctor.com",
-    "address": { "@type": "PostalAddress", "addressLocality": "Θεσσαλονίκη", "addressCountry": "GR" },
+    "address": { "@type": "PostalAddress", "addressLocality": "Αθήνα", "addressCountry": "GR" },
     "telephone": "+30-000-000-0000",
   },
   "description": "Επισκευή iPhone 7, 8, X, XS, XR, 11, 12, 13, 14, 15, 16 και 17. Αλλαγή οθόνης, μπαταρίας, κάμερας, θύρας Lightning/USB-C. Γνήσια ανταλλακτικά, γραπτή εγγύηση, αποτέλεσμα από 30 λεπτά.",
   "serviceType": "Επισκευή iPhone",
-  "areaServed": "Θεσσαλονίκη",
+  "areaServed": "Αθήνα",
   "hasOfferCatalog": {
     "@type": "OfferCatalog",
     "name": "Επισκευές iPhone",
@@ -201,7 +201,7 @@ export default function ServiceIphone() {
   return (
     <div className="min-h-screen bg-background circuit-bg">
       <Seo
-        title="Επισκευή iPhone — Όλα τα Μοντέλα iPhone 7–17 Pro Max | HiTech Doctor Θεσσαλονίκη"
+        title="Επισκευή iPhone — Όλα τα Μοντέλα iPhone 7–17 Pro Max | HiTech Doctor Αθήνα"
         description="Επισκευή iPhone σε όλα τα μοντέλα: iPhone 7, 8, X, XR, XS, 11, 12, 13, 14, 15, 16, 17. Αλλαγή οθόνης από €35, μπαταρία από €25. Γνήσια ανταλλακτικά, γραπτή εγγύηση, εξυπηρέτηση από 30 λεπτά."
         url="https://hitechdoctor.com/services/episkeui-iphone"
       />
@@ -209,7 +209,7 @@ export default function ServiceIphone() {
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
         <meta
           name="keywords"
-          content="επισκευή iPhone, αλλαγή οθόνης iPhone, αλλαγή μπαταρία iPhone, επισκευή iPhone Θεσσαλονίκη, επισκευή iPhone 15 Pro Max, επισκευή iPhone 14, επισκευή iPhone 13, service iPhone"
+          content="επισκευή iPhone, αλλαγή οθόνης iPhone, αλλαγή μπαταρία iPhone, επισκευή iPhone Αθήνα, επισκευή iPhone 15 Pro Max, επισκευή iPhone 14, επισκευή iPhone 13, service iPhone"
         />
         <link rel="canonical" href="https://hitechdoctor.com/services/episkeui-iphone" />
       </Helmet>

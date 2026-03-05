@@ -36,7 +36,7 @@ const allServices = [
       "Αντικατάσταση οθόνης, μπαταρίας, κάμερας και επισκευή πλακέτας. Χρησιμοποιούμε μόνο γνήσια ανταλλακτικά με εγγύηση.",
     features: ["Αλλαγή οθόνης & αφής", "Αντικατάσταση μπαταρίας", "Επισκευή μετά από βρέξιμο", "Επισκευή πλακέτας"],
     image: "https://images.unsplash.com/photo-1601784551446-20c9e07cd8d3?auto=format&fit=crop&q=80&w=900",
-    imageAlt: "Επισκευή κινητών smartphone iPhone Samsung Θεσσαλονίκη",
+    imageAlt: "Επισκευή κινητών smartphone iPhone Samsung Αθήνα",
     priceFrom: "€20",
     timeFrom: "30 λεπτά",
     tag: "Δημοφιλές",
@@ -51,7 +51,7 @@ const allServices = [
       "Επισκευή οθόνης, αντικατάσταση μπαταρίας και επισκευή πλακέτας tablet. Γρήγορη διάγνωση, αξιόπιστη λύση.",
     features: ["Αλλαγή οθόνης tablet", "Αντικατάσταση μπαταρίας", "Επισκευή θύρας φόρτισης", "Επισκευή πλακέτας"],
     image: "https://images.unsplash.com/photo-1589739900243-4b52cd9b104e?auto=format&fit=crop&q=80&w=900",
-    imageAlt: "Επισκευή tablet iPad Samsung Θεσσαλονίκη",
+    imageAlt: "Επισκευή tablet iPad Samsung Αθήνα",
     priceFrom: "€30",
     timeFrom: "1 ώρα",
     tag: null,
@@ -65,7 +65,7 @@ const allServices = [
       "Επισκευή οθόνης, αναβάθμιση RAM/SSD, αντικατάσταση μπαταρίας, ανανέωση thermal paste και γενική συντήρηση.",
     features: ["Αλλαγή οθόνης laptop", "Αναβάθμιση RAM & SSD", "Αντικατάσταση μπαταρίας", "Καθαρισμός & thermal paste"],
     image: "https://images.unsplash.com/photo-1544099858-75fd73aa1e28?auto=format&fit=crop&q=80&w=900",
-    imageAlt: "Επισκευή laptop notebook Θεσσαλονίκη",
+    imageAlt: "Επισκευή laptop notebook Αθήνα",
     priceFrom: "€35",
     timeFrom: "2 ώρες",
     tag: null,
@@ -79,7 +79,7 @@ const allServices = [
       "Αναβάθμιση εξαρτημάτων, επισκευή τροφοδοτικού, αντικατάσταση σκληρού δίσκου και πλήρης γενική συντήρηση.",
     features: ["Αντικατάσταση τροφοδοτικού", "Αναβάθμιση RAM & SSD", "Επισκευή κάρτας γραφικών", "Καθαρισμός & συντήρηση"],
     image: "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?auto=format&fit=crop&q=80&w=900",
-    imageAlt: "Επισκευή desktop υπολογιστής Θεσσαλονίκη",
+    imageAlt: "Επισκευή desktop υπολογιστής Αθήνα",
     priceFrom: "€40",
     timeFrom: "2 ώρες",
     tag: null,
@@ -93,7 +93,7 @@ const allServices = [
       "Format, εγκατάσταση Windows/macOS/Linux, αντιική προστασία, ρύθμιση email και πλήρης IT υποστήριξη για ιδιώτες και επιχειρήσεις.",
     features: ["Format & εγκατάσταση OS", "Αφαίρεση ιών & malware", "Ρύθμιση email & Office", "Απομακρυσμένη υποστήριξη"],
     image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&q=80&w=900",
-    imageAlt: "IT Support υπολογιστών εξ αποστάσεως Θεσσαλονίκη",
+    imageAlt: "IT Support υπολογιστών εξ αποστάσεως Αθήνα",
     priceFrom: "€40",
     timeFrom: "1 ώρα",
     tag: "Επιχειρήσεις",
@@ -107,7 +107,7 @@ const allServices = [
       "Σχεδιασμός και εγκατάσταση ενσύρματων και ασύρματων δικτύων. Ρύθμιση router, access points, VPN και firewall.",
     features: ["Εγκατάσταση Wi-Fi & mesh", "Ρύθμιση router & access point", "Εγκατάσταση VPN", "Ασφάλεια δικτύου"],
     image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&q=80&w=900",
-    imageAlt: "Εγκατάσταση δίκτυο Wi-Fi router Θεσσαλονίκη",
+    imageAlt: "Εγκατάσταση δίκτυο Wi-Fi router Αθήνα",
     priceFrom: "€50",
     timeFrom: "2 ώρες",
     tag: null,
@@ -121,7 +121,7 @@ const allServices = [
       "Ανάκτηση αρχείων από κατεστραμμένους, χαλασμένους ή μορφοποιημένους δίσκους. Δωρεάν αξιολόγηση — δεν χρεωνόμαστε αν δεν επιτύχουμε.",
     features: ["Ανάκτηση από HDD/SSD", "Ανάκτηση από USB & κάρτα", "Ανάκτηση μετά από format", "Ανάκτηση από RAID"],
     image: "https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?auto=format&fit=crop&q=80&w=900",
-    imageAlt: "Ανάκτηση δεδομένων σκληρός δίσκος SSD USB Θεσσαλονίκη",
+    imageAlt: "Ανάκτηση δεδομένων σκληρός δίσκος SSD USB Αθήνα",
     priceFrom: "€60",
     timeFrom: "24 ώρες",
     tag: "Δωρεάν αξιολόγηση",
@@ -135,7 +135,7 @@ const allServices = [
       "Γρήγορη αντικατάσταση μπαταρίας σε κινητά, tablet και laptop. Χρησιμοποιούμε γνήσιες ή πιστοποιημένες μπαταρίες υψηλής χωρητικότητας.",
     features: ["Μπαταρία κινητού", "Μπαταρία tablet", "Μπαταρία laptop", "Μπαταρία smartwatch"],
     image: "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&q=80&w=900",
-    imageAlt: "Αλλαγή μπαταρία κινητό tablet laptop Θεσσαλονίκη",
+    imageAlt: "Αλλαγή μπαταρία κινητό tablet laptop Αθήνα",
     priceFrom: "€15",
     timeFrom: "20 λεπτά",
     tag: "Εξπρές",
@@ -149,7 +149,7 @@ const allServices = [
       "Πλήρης σάρωση και αφαίρεση κακόβουλου λογισμικού. Εγκατάσταση και ρύθμιση αξιόπιστου antivirus για μακροχρόνια προστασία.",
     features: ["Σάρωση & αφαίρεση ιών", "Αφαίρεση ransomware", "Εγκατάσταση antivirus", "Ρύθμιση τείχους προστασίας"],
     image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&q=80&w=900",
-    imageAlt: "Αφαίρεση ιών antivirus υπολογιστής Θεσσαλονίκη",
+    imageAlt: "Αφαίρεση ιών antivirus υπολογιστής Αθήνα",
     priceFrom: "€30",
     timeFrom: "1 ώρα",
     tag: null,
@@ -163,7 +163,7 @@ const allServices = [
       "Λεπτομερής διαγνωστικός έλεγχος οποιασδήποτε συσκευής. Θα λάβετε αναλυτική έκθεση με τα προβλήματα και τις λύσεις, χωρίς υποχρέωση επισκευής.",
     features: ["Έλεγχος hardware", "Έλεγχος software", "Αναλυτική έκθεση", "Δωρεάν για επισκευές"],
     image: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=900",
-    imageAlt: "Διαγνωστικός έλεγχος τεχνικός υπολογιστής κινητό Θεσσαλονίκη",
+    imageAlt: "Διαγνωστικός έλεγχος τεχνικός υπολογιστής κινητό Αθήνα",
     priceFrom: "€10",
     timeFrom: "30 λεπτά",
     tag: null,
@@ -205,12 +205,12 @@ export default function Services() {
     <div className="min-h-screen bg-background circuit-bg">
       <Seo
         title="Υπηρεσίες Επισκευών"
-        description="Επισκευές κινητών iPhone & Samsung, tablet, laptop, IT Support, ανάκτηση δεδομένων, δίκτυα Wi-Fi. Γρήγορη εξυπηρέτηση με εγγύηση. HiTech Doctor Θεσσαλονίκη."
+        description="Επισκευές κινητών iPhone & Samsung, tablet, laptop, IT Support, ανάκτηση δεδομένων, δίκτυα Wi-Fi. Γρήγορη εξυπηρέτηση με εγγύηση. HiTech Doctor Αθήνα."
         url="https://hitechdoctor.com/services"
       />
       <Helmet>
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
-        <meta name="keywords" content="επισκευή κινητών Θεσσαλονίκη, επισκευή iPhone, επισκευή Samsung, επισκευή tablet, επισκευή laptop, IT support, ανάκτηση δεδομένων, δίκτυα Wi-Fi, αλλαγή οθόνης κινητό, αλλαγή μπαταρία" />
+        <meta name="keywords" content="επισκευή κινητών Αθήνα, επισκευή iPhone, επισκευή Samsung, επισκευή tablet, επισκευή laptop, IT support, ανάκτηση δεδομένων, δίκτυα Wi-Fi, αλλαγή οθόνης κινητό, αλλαγή μπαταρία" />
         <link rel="canonical" href="https://hitechdoctor.com/services" />
       </Helmet>
 

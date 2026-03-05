@@ -127,63 +127,63 @@ function buildImageAlt(imageUrl: string, productName: string): string {
 
   // iPhone 17 Pro Max product photos
   if (url.includes("iphone-17-pro-max") && url.includes("back-front")) {
-    return `Apple iPhone 17 Pro Max 256GB Deep Blue — πίσω και εμπρός όψη, τριπλή κάμερα 48MP, chip A19 Pro — HiTech Doctor Θεσσαλονίκη`;
+    return `Apple iPhone 17 Pro Max 256GB Deep Blue — πίσω και εμπρός όψη, τριπλή κάμερα 48MP, chip A19 Pro — HiTech Doctor Αθήνα`;
   }
   if (url.includes("iphone-17-pro-max") && url.includes("display-front")) {
-    return `Apple iPhone 17 Pro Max 256GB Deep Blue — εμπρός όψη Super Retina XDR OLED 6.9 ιντσών ProMotion 120Hz — HiTech Doctor Θεσσαλονίκη`;
+    return `Apple iPhone 17 Pro Max 256GB Deep Blue — εμπρός όψη Super Retina XDR OLED 6.9 ιντσών ProMotion 120Hz — HiTech Doctor Αθήνα`;
   }
   if (url.includes("iphone-17-pro-max") && url.includes("triple-camera")) {
-    return `Apple iPhone 17 Pro Max τριπλό σύστημα κάμερας 48MP closeup — κύρια, ultrawide και 8× τηλεφακός — HiTech Doctor Θεσσαλονίκη`;
+    return `Apple iPhone 17 Pro Max τριπλό σύστημα κάμερας 48MP closeup — κύρια, ultrawide και 8× τηλεφακός — HiTech Doctor Αθήνα`;
   }
   if (url.includes("iphone-17-pro-max") && url.includes("side-profile")) {
-    return `Apple iPhone 17 Pro Max 256GB Deep Blue — πλαϊνή όψη aluminum unibody USB-C και κουμπιά — HiTech Doctor Θεσσαλονίκη`;
+    return `Apple iPhone 17 Pro Max 256GB Deep Blue — πλαϊνή όψη aluminum unibody USB-C και κουμπιά — HiTech Doctor Αθήνα`;
   }
   if (url.includes("iphone-17-pro-max") && url.includes("what-is-in-the-box")) {
-    return `Apple iPhone 17 Pro Max 256GB Deep Blue — Τι υπάρχει στο κουτί: iPhone και USB-C Charge Cable — HiTech Doctor Θεσσαλονίκη`;
+    return `Apple iPhone 17 Pro Max 256GB Deep Blue — Τι υπάρχει στο κουτί: iPhone και USB-C Charge Cable — HiTech Doctor Αθήνα`;
   }
   // Screen protectors
   if (url.includes("aplo") || url.includes("kit")) {
-    return `${productName} — Κιτ εγκατάστασης Tempered Glass 9H Aurora Glisch: γυαλί προστασίας iPhone, πανάκι μικροϊνών, αλκοόλ καθαρισμού και sticker σκόνης — HiTech Doctor Θεσσαλονίκη`;
+    return `${productName} — Κιτ εγκατάστασης Tempered Glass 9H Aurora Glisch: γυαλί προστασίας iPhone, πανάκι μικροϊνών, αλκοόλ καθαρισμού και sticker σκόνης — HiTech Doctor Αθήνα`;
   }
   if (url.includes("privacy")) {
-    return `${productName} — Συσκευασία Aurora Glisch Privacy Screen Protector 9H δίπλα σε iPhone 17 Pro Max: λευκό studio φόντο, τζάμι τοποθετημένο με dark privacy τεχνολογία — HiTech Doctor Θεσσαλονίκη`;
+    return `${productName} — Συσκευασία Aurora Glisch Privacy Screen Protector 9H δίπλα σε iPhone 17 Pro Max: λευκό studio φόντο, τζάμι τοποθετημένο με dark privacy τεχνολογία — HiTech Doctor Αθήνα`;
   }
   if (url.includes("keramiko")) {
-    return `${productName} — Συσκευασία Aurora Glisch Κεραμικό Premium δίπλα σε iPhone 17 Pro Max, lifestyle φωτογραφία με σκούρο ambient φόντο — HiTech Doctor Θεσσαλονίκη`;
+    return `${productName} — Συσκευασία Aurora Glisch Κεραμικό Premium δίπλα σε iPhone 17 Pro Max, lifestyle φωτογραφία με σκούρο ambient φόντο — HiTech Doctor Αθήνα`;
   }
   // Cases
   if (url.includes("terra-cotta-back")) {
-    return `${productName} — Apple Silicone Case MagSafe Terra Cotta πορτοκαλί πίσω όψη για iPhone 17 Pro Max — HiTech Doctor Θεσσαλονίκη`;
+    return `${productName} — Apple Silicone Case MagSafe Terra Cotta πορτοκαλί πίσω όψη για iPhone 17 Pro Max — HiTech Doctor Αθήνα`;
   }
   if (url.includes("terra-cotta-side")) {
-    return `${productName} — Apple Silicone Case MagSafe Terra Cotta πλαϊνή όψη με οθόνη iPhone 17 Pro Max — HiTech Doctor Θεσσαλονίκη`;
+    return `${productName} — Apple Silicone Case MagSafe Terra Cotta πλαϊνή όψη με οθόνη iPhone 17 Pro Max — HiTech Doctor Αθήνα`;
   }
   if (url.includes("midnight-back")) {
-    return `${productName} — Apple Silicone Case MagSafe Midnight σκούρο ναυτικό μπλε πίσω όψη iPhone 17 Pro Max — HiTech Doctor Θεσσαλονίκη`;
+    return `${productName} — Apple Silicone Case MagSafe Midnight σκούρο ναυτικό μπλε πίσω όψη iPhone 17 Pro Max — HiTech Doctor Αθήνα`;
   }
   if (url.includes("midnight-side")) {
-    return `${productName} — Apple Silicone Case MagSafe Midnight πλαϊνή όψη iPhone 17 Pro Max — HiTech Doctor Θεσσαλονίκη`;
+    return `${productName} — Apple Silicone Case MagSafe Midnight πλαϊνή όψη iPhone 17 Pro Max — HiTech Doctor Αθήνα`;
   }
   if (url.includes("purple-fog-back")) {
-    return `${productName} — Apple Silicone Case MagSafe Purple Fog μωβ σιλικόνη για iPhone 17 Pro Max — HiTech Doctor Θεσσαλονίκη`;
+    return `${productName} — Apple Silicone Case MagSafe Purple Fog μωβ σιλικόνη για iPhone 17 Pro Max — HiTech Doctor Αθήνα`;
   }
   if (url.includes("purple-fog-alt")) {
-    return `${productName} — Apple Silicone Case MagSafe Purple Fog εναλλακτική γωνία iPhone 17 — HiTech Doctor Θεσσαλονίκη`;
+    return `${productName} — Apple Silicone Case MagSafe Purple Fog εναλλακτική γωνία iPhone 17 — HiTech Doctor Αθήνα`;
   }
   if (url.includes("mavro-back")) {
-    return `${productName} — Apple Silicone Case MagSafe Μαύρο ματ σιλικόνη πίσω όψη iPhone 17 Pro Max — HiTech Doctor Θεσσαλονίκη`;
+    return `${productName} — Apple Silicone Case MagSafe Μαύρο ματ σιλικόνη πίσω όψη iPhone 17 Pro Max — HiTech Doctor Αθήνα`;
   }
   if (url.includes("mavro-side")) {
-    return `${productName} — Apple Silicone Case MagSafe Μαύρο πλαϊνή όψη iPhone 17 Pro Max — HiTech Doctor Θεσσαλονίκη`;
+    return `${productName} — Apple Silicone Case MagSafe Μαύρο πλαϊνή όψη iPhone 17 Pro Max — HiTech Doctor Αθήνα`;
   }
   // Chargers & cables
   if (url.includes("kalodio") && url.includes("cable")) {
-    return `${productName} — Γνήσιο Apple USB-C to Lightning καλώδιο 1m λευκό για iPhone, studio φωτογραφία — HiTech Doctor Θεσσαλονίκη`;
+    return `${productName} — Γνήσιο Apple USB-C to Lightning καλώδιο 1m λευκό για iPhone, studio φωτογραφία — HiTech Doctor Αθήνα`;
   }
   if (url.includes("kalodio") && url.includes("box")) {
-    return `${productName} — Γνήσια συσκευασία Apple USB-C to Lightning Cable 1m MM0A3ZM/A — HiTech Doctor Θεσσαλονίκη`;
+    return `${productName} — Γνήσια συσκευασία Apple USB-C to Lightning Cable 1m MM0A3ZM/A — HiTech Doctor Αθήνα`;
   }
-  return `${productName} — αξεσουάρ iPhone — HiTech Doctor Θεσσαλονίκη`;
+  return `${productName} — αξεσουάρ iPhone — HiTech Doctor Αθήνα`;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -276,10 +276,10 @@ export default function ProductDetail() {
   const isMobile = product.category === "mobile";
   const subcatLabel = product.subcategory ? SUBCATEGORY_LABELS[product.subcategory] : isMobile ? "Κινητό Τηλέφωνο" : product.category;
   const metaTitle = isMobile
-    ? `${product.name} — Τιμή, Χαρακτηριστικά | HiTech Doctor Θεσσαλονίκη`
-    : `${product.name} | HiTech Doctor — Αξεσουάρ iPhone Θεσσαλονίκη`;
+    ? `${product.name} — Τιμή, Χαρακτηριστικά | HiTech Doctor Αθήνα`
+    : `${product.name} | HiTech Doctor — Αξεσουάρ iPhone Αθήνα`;
   const metaDesc = isMobile
-    ? `Αγοράστε ${product.name} από το HiTech Doctor Θεσσαλονίκη. ${product.description.slice(0, 110)} Τιμή: ${formatPrice(product.price)}. Εγγύηση 12 μήνες.`
+    ? `Αγοράστε ${product.name} από το HiTech Doctor Αθήνα. ${product.description.slice(0, 110)} Τιμή: ${formatPrice(product.price)}. Εγγύηση 12 μήνες.`
     : `${product.description} Τιμή: ${formatPrice(product.price)}. Άμεση αποστολή. HiTech Doctor.`;
 
   return (
@@ -299,7 +299,7 @@ export default function ProductDetail() {
         <meta property="product:price:currency" content="EUR" />
         <meta
           name="keywords"
-          content={`${product.name}, ${subcatLabel}, iPhone αξεσουάρ, αγορά online, Θεσσαλονίκη, HiTech Doctor`}
+          content={`${product.name}, ${subcatLabel}, iPhone αξεσουάρ, αγορά online, Αθήνα, HiTech Doctor`}
         />
         {jsonLdData?.map((schema, i) => (
           <script key={i} type="application/ld+json">
@@ -554,7 +554,7 @@ export default function ProductDetail() {
                   <p className="text-sm text-muted-foreground">
                     Χρειάζεστε επισκευή;{" "}
                     <Link href="/services/episkeui-iphone" className="text-primary font-semibold hover:underline">
-                      Επισκευή iPhone στη Θεσσαλονίκη
+                      Επισκευή iPhone στην Αθήνα
                     </Link>{" "}
                     — γνήσια ανταλλακτικά, εγγύηση 12 μήνες.
                   </p>
