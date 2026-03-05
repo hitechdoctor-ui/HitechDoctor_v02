@@ -63,7 +63,7 @@ export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" 
     mutationFn: (data: FormValues) =>
       apiRequest("POST", "/api/repair-requests", {
         ...data,
-        ...(hasPrice ? { price: netPrice.toFixed(2), agreedPrice: agreedPrice.toFixed(2) } : {}),
+        ...(hasPrice ? { price: netPrice.toFixed(2), priceIncludesVat: selectedBox === "gross" } : {}),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/repair-requests"] });

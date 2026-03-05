@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp, numeric } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, numeric, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -58,6 +58,7 @@ export const repairRequests = pgTable("repair_requests", {
   notes: text("notes"),
   status: text("status").notNull().default("pending"),
   price: numeric("price"),
+  priceIncludesVat: boolean("price_includes_vat").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

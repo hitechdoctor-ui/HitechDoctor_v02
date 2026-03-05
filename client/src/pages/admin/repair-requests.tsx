@@ -427,7 +427,14 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
               {/* Summary (items OR manual price) */}
               {displayNet !== null && (
                 <div className="bg-primary/5 border border-primary/15 rounded-2xl p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-primary/70 mb-3">Σύνοψη Κόστους</p>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-primary/70">Σύνοψη Κόστους</p>
+                    {items.length === 0 && req.priceIncludesVat !== null && req.priceIncludesVat !== undefined && (
+                      <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border ${req.priceIncludesVat ? "bg-primary/10 border-primary/30 text-primary" : "bg-white/5 border-white/15 text-muted-foreground"}`}>
+                        Συμφωνήθηκε {req.priceIncludesVat ? "με ΦΠΑ" : "χωρίς ΦΠΑ"}
+                      </span>
+                    )}
+                  </div>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Σύνολο χωρίς ΦΠΑ</span>
@@ -441,6 +448,12 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
                       <span className="text-sm font-bold">Σύνολο με ΦΠΑ</span>
                       <span className="text-lg font-bold text-primary">{fmt(displayTotal!)}</span>
                     </div>
+                    {items.length === 0 && req.priceIncludesVat && displayTotal && (
+                      <div className="flex justify-between text-[10px] text-primary font-semibold pt-1">
+                        <span>✓ Τελική τιμή πελάτη (με ΦΠΑ)</span>
+                        <span>{fmt(displayTotal)}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -659,12 +672,24 @@ export default function AdminRepairRequests() {
                             </div>
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap">
-                            {req.price ? (
-                              <div className="space-y-0.5">
-                                <div className="text-xs font-medium text-foreground">{fmt(parseFloat(req.price))}</div>
-                                <div className="text-[10px] text-primary font-semibold">{fmt(parseFloat(req.price) * (1 + VAT_RATE))} <span className="text-muted-foreground/60 font-normal">μεΦΠΑ</span></div>
-                              </div>
-                            ) : (
+                            {req.price ? (() => {
+                              const net = parseFloat(req.price);
+                              const gross = net * (1 + VAT_RATE);
+                              const agreedIsGross = req.priceIncludesVat === true;
+                              return (
+                                <div className="space-y-0.5">
+                                  <div className="text-xs font-medium text-foreground">
+                                    {agreedIsGross ? fmt(gross) : fmt(net)}
+                                  </div>
+                                  <div className="text-[10px] text-muted-foreground/50 font-normal">
+                                    {agreedIsGross ? "με ΦΠΑ" : "χωρίς ΦΠΑ"}
+                                  </div>
+                                  <div className="text-[10px] text-primary/70">
+                                    {agreedIsGross ? `(net: ${fmt(net)})` : `(+ΦΠΑ: ${fmt(gross)})`}
+                                  </div>
+                                </div>
+                              );
+                            })() : (
                               <span className="text-xs text-muted-foreground/40">—</span>
                             )}
                           </td>

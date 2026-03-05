@@ -182,8 +182,12 @@ export async function registerRoutes(
       const schema = z.object({
         status: z.string().optional(),
         price: z.string().nullable().optional(),
+        priceIncludesVat: z.boolean().optional(),
       });
       const data = schema.parse(req.body);
+      if (data.price !== undefined && data.priceIncludesVat === undefined) {
+        (data as typeof data & { priceIncludesVat?: boolean }).priceIncludesVat = false;
+      }
       const request = await storage.updateRepairRequest(id, data);
       res.json(request);
     } catch (err) {
