@@ -5,16 +5,98 @@
 @tailwind utilities;
 
 @layer base {
+  /* ═══════════════════════════════════════════════
+     LIGHT MODE (default — day)
+     Clean white with cyan brand accents
+  ═══════════════════════════════════════════════ */
   :root {
     --font-sans: 'Inter', sans-serif;
     --font-display: 'Outfit', sans-serif;
 
-    /* === ASUS PCB / HiTech Dark Theme === */
-    /* Deep dark navy — like a motherboard background */
+    --background: 210 20% 98%;
+    --foreground: 220 50% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 50% 10%;
+    --card-border: 220 15% 88%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 50% 10%;
+    --popover-border: 220 15% 88%;
+
+    /* === ASUS Cyan — stays the same brand colour === */
+    --primary: 185 100% 36%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 15% 93%;
+    --secondary-foreground: 220 50% 18%;
+
+    --muted: 220 15% 93%;
+    --muted-foreground: 220 14% 46%;
+
+    --accent: 185 100% 36%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 15% 88%;
+    --input: 220 15% 88%;
+    --ring: 185 100% 36%;
+
+    --radius: 0.75rem;
+
+    --sidebar: 0 0% 100%;
+    --sidebar-foreground: 220 50% 10%;
+    --sidebar-border: 220 15% 88%;
+    --sidebar-primary: 185 100% 36%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 15% 93%;
+    --sidebar-accent-foreground: 220 50% 18%;
+    --sidebar-ring: 185 100% 36%;
+
+    --chart-1: 185 100% 36%;
+    --chart-2: 160 80% 36%;
+    --chart-3: 200 90% 45%;
+    --chart-4: 270 60% 55%;
+    --chart-5: 30 90% 50%;
+
+    --shadow-2xs: 0px 1px 2px 0px hsl(220 15% 60% / 0.08);
+    --shadow-xs: 0px 2px 4px 0px hsl(220 15% 60% / 0.10);
+    --shadow-sm: 0px 2px 6px 0px hsl(220 15% 60% / 0.12), 0px 1px 2px -1px hsl(220 15% 60% / 0.06);
+    --shadow: 0px 4px 10px 0px hsl(220 15% 60% / 0.12), 0px 2px 4px -1px hsl(220 15% 60% / 0.06);
+    --shadow-md: 0px 6px 16px 0px hsl(220 15% 60% / 0.14), 0px 2px 4px -1px hsl(220 15% 60% / 0.06);
+    --shadow-lg: 0px 8px 24px 0px hsl(220 15% 60% / 0.16), 0px 4px 6px -1px hsl(220 15% 60% / 0.08);
+    --shadow-xl: 0px 12px 32px 0px hsl(220 15% 60% / 0.18), 0px 8px 10px -1px hsl(220 15% 60% / 0.10);
+    --shadow-2xl: 0px 20px 48px 0px hsl(220 15% 60% / 0.22);
+
+    --elevate-1: rgba(0, 0, 0, 0.03);
+    --elevate-2: rgba(0, 0, 0, 0.06);
+    --button-outline: rgba(0, 165, 160, 0.20);
+    --badge-outline: rgba(0, 165, 160, 0.12);
+    --opaque-button-border-intensity: -10;
+
+    --primary-border: hsl(185 100% 30%);
+    --secondary-border: hsl(220 15% 82%);
+    --muted-border: hsl(220 15% 84%);
+    --accent-border: hsl(185 100% 30%);
+    --destructive-border: hsl(0 84% 54%);
+
+    --sidebar-primary-border: hsl(185 100% 30%);
+    --sidebar-accent-border: hsl(220 15% 82%);
+
+    --tracking-normal: 0em;
+    --spacing: 0.25rem;
+  }
+
+  /* ═══════════════════════════════════════════════
+     DARK MODE — ASUS PCB / HiTech
+     Applied automatically at night via JS
+  ═══════════════════════════════════════════════ */
+  .dark {
     --background: 220 50% 5%;
     --foreground: 195 80% 95%;
 
-    /* Slightly lighter card surface */
     --card: 220 45% 8%;
     --card-foreground: 195 80% 95%;
     --card-border: 195 60% 18%;
@@ -23,7 +105,6 @@
     --popover-foreground: 195 80% 95%;
     --popover-border: 195 60% 18%;
 
-    /* === ASUS Cyan — circuit-trace teal === */
     --primary: 185 100% 42%;
     --primary-foreground: 220 50% 5%;
 
@@ -43,8 +124,6 @@
     --input: 220 40% 14%;
     --ring: 185 100% 42%;
 
-    --radius: 0.75rem;
-
     --sidebar: 220 50% 5%;
     --sidebar-foreground: 195 80% 95%;
     --sidebar-border: 220 40% 14%;
@@ -54,14 +133,12 @@
     --sidebar-accent-foreground: 195 80% 95%;
     --sidebar-ring: 185 100% 42%;
 
-    /* Chart colors — neon techy palette */
     --chart-1: 185 100% 42%;
     --chart-2: 160 80% 40%;
     --chart-3: 200 90% 55%;
     --chart-4: 270 60% 60%;
     --chart-5: 30 90% 55%;
 
-    /* Shadows */
     --shadow-2xs: 0px 1px 2px 0px hsl(185 100% 42% / 0.04);
     --shadow-xs: 0px 2px 4px 0px hsl(185 100% 42% / 0.06);
     --shadow-sm: 0px 2px 6px 0px hsl(185 100% 42% / 0.08), 0px 1px 2px -1px hsl(185 100% 42% / 0.04);
@@ -71,14 +148,12 @@
     --shadow-xl: 0px 12px 32px 0px hsl(185 100% 42% / 0.16), 0px 8px 10px -1px hsl(185 100% 42% / 0.10);
     --shadow-2xl: 0px 20px 48px 0px hsl(185 100% 42% / 0.20);
 
-    /* Elevation overlays */
     --elevate-1: rgba(0, 230, 220, 0.04);
     --elevate-2: rgba(0, 230, 220, 0.09);
     --button-outline: rgba(0, 230, 220, 0.15);
     --badge-outline: rgba(0, 230, 220, 0.08);
-    --opaque-button-border-intensity: -10;
+    --opaque-button-border-intensity: 10;
 
-    /* Auto-computed borders */
     --primary-border: hsl(185 100% 36%);
     --secondary-border: hsl(220 40% 18%);
     --muted-border: hsl(220 40% 16%);
@@ -87,18 +162,6 @@
 
     --sidebar-primary-border: hsl(185 100% 36%);
     --sidebar-accent-border: hsl(220 40% 18%);
-
-    --tracking-normal: 0em;
-    --spacing: 0.25rem;
-  }
-
-  .dark {
-    /* Same — app is always dark (PCB theme) */
-    --elevate-1: rgba(0, 230, 220, 0.05);
-    --elevate-2: rgba(0, 230, 220, 0.10);
-    --button-outline: rgba(0, 230, 220, 0.15);
-    --badge-outline: rgba(0, 230, 220, 0.08);
-    --opaque-button-border-intensity: 10;
   }
 
   * {
@@ -108,8 +171,8 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans);
-    selection-color: hsl(var(--primary));
     -webkit-font-smoothing: antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -119,28 +182,45 @@
 }
 
 @layer utilities {
-  /* Glassmorphism panel */
+  /* Glassmorphism panel — adapts to light/dark */
   .glass-panel {
-    background: rgba(5, 12, 25, 0.75);
+    background: rgba(255, 255, 255, 0.80);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 165, 160, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(0, 165, 160, 0.08);
+  }
+  .dark .glass-panel {
+    background: rgba(5, 12, 25, 0.75);
     border: 1px solid rgba(0, 210, 200, 0.12);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(0, 210, 200, 0.08);
   }
 
   /* Neon glow on primary elements */
   .tech-glow {
-    box-shadow: 0 0 20px rgba(0, 210, 200, 0.12), 0 0 40px rgba(0, 210, 200, 0.05);
-    border-color: rgba(0, 210, 200, 0.25);
+    box-shadow: 0 0 20px rgba(0, 165, 160, 0.10), 0 0 40px rgba(0, 165, 160, 0.04);
+    border-color: rgba(0, 165, 160, 0.20);
     transition: box-shadow 0.3s ease, border-color 0.3s ease;
   }
   .tech-glow:hover {
+    box-shadow: 0 0 30px rgba(0, 165, 160, 0.18), 0 0 60px rgba(0, 165, 160, 0.08);
+    border-color: rgba(0, 165, 160, 0.40);
+  }
+  .dark .tech-glow {
+    box-shadow: 0 0 20px rgba(0, 210, 200, 0.12), 0 0 40px rgba(0, 210, 200, 0.05);
+    border-color: rgba(0, 210, 200, 0.25);
+  }
+  .dark .tech-glow:hover {
     box-shadow: 0 0 30px rgba(0, 210, 200, 0.22), 0 0 60px rgba(0, 210, 200, 0.10);
     border-color: rgba(0, 210, 200, 0.50);
   }
 
   /* PCB circuit-trace decorative lines */
   .pcb-border {
+    border: 1px solid rgba(0, 165, 160, 0.15);
+    box-shadow: inset 0 0 0 1px rgba(0, 165, 160, 0.04);
+  }
+  .dark .pcb-border {
     border: 1px solid rgba(0, 210, 200, 0.18);
     box-shadow: inset 0 0 0 1px rgba(0, 210, 200, 0.04);
   }
@@ -148,11 +228,20 @@
   /* Gradient text — ASUS cyan */
   .gradient-text {
     @apply text-transparent bg-clip-text;
+    background-image: linear-gradient(135deg, hsl(185 100% 40%) 0%, hsl(185 100% 32%) 50%, hsl(200 90% 45%) 100%);
+  }
+  .dark .gradient-text {
     background-image: linear-gradient(135deg, hsl(185 100% 55%) 0%, hsl(185 100% 42%) 50%, hsl(200 90% 60%) 100%);
   }
 
   /* Subtle circuit board background pattern */
   .circuit-bg {
+    background-image:
+      linear-gradient(rgba(0, 165, 160, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 165, 160, 0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .dark .circuit-bg {
     background-image:
       linear-gradient(rgba(0, 210, 200, 0.03) 1px, transparent 1px),
       linear-gradient(90deg, rgba(0, 210, 200, 0.03) 1px, transparent 1px);
@@ -161,6 +250,9 @@
 
   /* Glow for icon containers */
   .icon-glow {
+    box-shadow: 0 0 16px rgba(0, 165, 160, 0.18), inset 0 0 8px rgba(0, 165, 160, 0.06);
+  }
+  .dark .icon-glow {
     box-shadow: 0 0 16px rgba(0, 210, 200, 0.25), inset 0 0 8px rgba(0, 210, 200, 0.08);
   }
 

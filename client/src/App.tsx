@@ -40,6 +40,19 @@ import AdminCustomerDetail from "./pages/admin/customer-detail";
 import AdminRepairRequests from "./pages/admin/repair-requests";
 import AdminOikonomika from "./pages/admin/oikonomika";
 
+function useAutoTheme() {
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const apply = (dark: boolean) => {
+      document.documentElement.classList.toggle("dark", dark);
+    };
+    apply(mq.matches);
+    const handler = (e: MediaQueryListEvent) => apply(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+}
+
 function ScrollToTop() {
   const [location] = useLocation();
   useEffect(() => {
@@ -98,6 +111,7 @@ function Router() {
 }
 
 function App() {
+  useAutoTheme();
   return (
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
