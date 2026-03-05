@@ -90,6 +90,11 @@ function MobileCard({ product }: { product: Product }) {
           {p.brand && (
             <Badge className="absolute top-3 left-3 bg-primary/20 border border-primary/40 text-primary text-xs">{p.brand}</Badge>
           )}
+          {p.preOrder && (
+            <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/25 border border-orange-500/50 text-orange-300">
+              Προ-Παραγγελία
+            </span>
+          )}
           <div className="absolute bottom-3 right-3 bg-background/80 backdrop-blur border border-primary/30 px-2.5 py-1 rounded-lg">
             <span className="text-primary font-bold text-sm">{formatPrice(product.price)}</span>
           </div>
@@ -123,7 +128,7 @@ function MobileCard({ product }: { product: Product }) {
           data-testid={`button-addcart-${product.id}`}
         >
           <ShoppingCart className="w-4 h-4 mr-2" />
-          Προσθήκη στο Καλάθι
+          {p.preOrder ? "Προ-Παραγγελία — Κράτηση" : "Προσθήκη στο Καλάθι"}
         </Button>
       </div>
     </div>

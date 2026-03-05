@@ -17,6 +17,8 @@ export const products = pgTable("products", {
   brand: text("brand"),
   color: text("color"),
   storage: text("storage"),
+  preOrder: boolean("pre_order").default(false),
+  variantGroup: text("variant_group"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

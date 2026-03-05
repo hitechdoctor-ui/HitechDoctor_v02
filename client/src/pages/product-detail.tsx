@@ -209,6 +209,11 @@ export default function ProductDetail() {
   const features = product?.subcategory ? FEATURE_BULLETS[product.subcategory] ?? [] : [];
   const jsonLdData = product ? buildJsonLd(product) : null;
 
+  const variantProducts = (products ?? []).filter(
+    (p) => p.variantGroup && product?.variantGroup && p.variantGroup === product.variantGroup
+  ).sort((a, b) => Number(a.price) - Number(b.price));
+  const isPreOrder = !!(product as any)?.preOrder;
+
   const gallery: string[] = product?.images?.length
     ? product.images
     : product?.imageUrl
@@ -527,16 +532,22 @@ export default function ProductDetail() {
               </h1>
 
               {/* Rating row */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-0.5">
                   {[1,2,3,4,5].map((s) => (
                     <Star key={s} className="w-4 h-4 fill-amber-400 text-amber-400" />
                   ))}
                 </div>
                 <span className="text-sm text-muted-foreground">4.9 (47 αξιολογήσεις)</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/25 font-medium">
-                  Σε απόθεμα
-                </span>
+                {isPreOrder ? (
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-orange-500/15 text-orange-400 border border-orange-500/30 font-bold tracking-wide animate-pulse">
+                    ⏳ Προ-Παραγγελία
+                  </span>
+                ) : (
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/25 font-medium">
+                    Σε απόθεμα
+                  </span>
+                )}
               </div>
 
               {/* Price */}
@@ -546,6 +557,59 @@ export default function ProductDetail() {
 
               {/* Description */}
               <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+
+              {/* ── Color variants (same variantGroup) ── */}
+              {variantProducts.length > 1 && (
+                <div>
+                  <p className="text-sm font-semibold text-foreground mb-3">
+                    Χρώμα:{" "}
+                    <span className="text-primary font-bold">{product.color}</span>
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    {variantProducts.map((v) => {
+                      const isSelected = v.id === product.id;
+                      return (
+                        <Link key={v.id} href={v.slug ? `/eshop/${v.slug}` : "#"}>
+                          <div
+                            className={`relative flex flex-col items-center gap-1.5 cursor-pointer group ${isSelected ? "" : "opacity-75 hover:opacity-100"}`}
+                            data-testid={`variant-color-${v.id}`}
+                          >
+                            <div className={`w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${
+                              isSelected
+                                ? "border-primary shadow-[0_0_12px_rgba(0,210,200,0.4)]"
+                                : "border-border group-hover:border-primary/50"
+                            }`}>
+                              {v.imageUrl ? (
+                                <img
+                                  src={v.imageUrl}
+                                  alt={`${v.name} — ${v.color}`}
+                                  className="w-full h-full object-cover"
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-card flex items-center justify-center">
+                                  <Smartphone className="w-6 h-6 text-primary/30" />
+                                </div>
+                              )}
+                              {isSelected && (
+                                <div className="absolute inset-0 top-0 left-0 w-20 h-20 rounded-xl flex items-center justify-center bg-primary/20">
+                                  <CheckCircle2 className="w-6 h-6 text-primary drop-shadow" />
+                                </div>
+                              )}
+                            </div>
+                            <span className="text-[10px] font-semibold text-center text-muted-foreground group-hover:text-foreground transition-colors max-w-[80px] leading-tight">
+                              {v.color}
+                            </span>
+                            <span className="text-[11px] font-bold text-primary">
+                              {formatPrice(v.price)}
+                            </span>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Repair service CTA for mobiles */}
               {isMobile && (
@@ -606,7 +670,11 @@ export default function ProductDetail() {
                 data-testid="button-add-to-cart"
               >
                 <ShoppingCart className="w-5 h-5 mr-2" />
-                {needsModel && !selectedModel ? "Επιλέξτε μοντέλο πρώτα" : "Προσθήκη στο Καλάθι"}
+                {needsModel && !selectedModel
+                  ? "Επιλέξτε μοντέλο πρώτα"
+                  : isPreOrder
+                  ? "Προ-Παραγγελία — Κράτηση Τώρα"
+                  : "Προσθήκη στο Καλάθι"}
               </Button>
 
               {/* H2: Features */}
