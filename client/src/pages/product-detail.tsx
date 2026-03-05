@@ -15,7 +15,8 @@ import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui
 import { useState } from "react";
 import {
   ShoppingCart, CheckCircle2, ChevronRight, ChevronLeft, Shield,
-  Clock, Star, ArrowLeft, Package, Truck, ZoomIn, X,
+  Clock, Star, ArrowLeft, Package, Truck, ZoomIn, X, Smartphone,
+  HardDrive, Palette, Award, Wrench,
 } from "lucide-react";
 import type { Product } from "@shared/schema";
 
@@ -86,7 +87,7 @@ function buildJsonLd(product: Product) {
     "image": product.images?.length ? product.images : product.imageUrl ? [product.imageUrl] : [],
     "brand": {
       "@type": "Brand",
-      "name": "HiTech Doctor",
+      "name": product.brand ?? "HiTech Doctor",
     },
     "offers": {
       "@type": "Offer",
@@ -123,6 +124,23 @@ function buildJsonLd(product: Product) {
 // ── SEO image alt text builder ──────────────────────────────────────────────
 function buildImageAlt(imageUrl: string, productName: string): string {
   const url = imageUrl || "";
+
+  // iPhone 17 Pro Max product photos
+  if (url.includes("iphone-17-pro-max") && url.includes("back-front")) {
+    return `Apple iPhone 17 Pro Max 256GB Deep Blue — πίσω και εμπρός όψη, τριπλή κάμερα 48MP, chip A19 Pro — HiTech Doctor Θεσσαλονίκη`;
+  }
+  if (url.includes("iphone-17-pro-max") && url.includes("display-front")) {
+    return `Apple iPhone 17 Pro Max 256GB Deep Blue — εμπρός όψη Super Retina XDR OLED 6.9 ιντσών ProMotion 120Hz — HiTech Doctor Θεσσαλονίκη`;
+  }
+  if (url.includes("iphone-17-pro-max") && url.includes("triple-camera")) {
+    return `Apple iPhone 17 Pro Max τριπλό σύστημα κάμερας 48MP closeup — κύρια, ultrawide και 8× τηλεφακός — HiTech Doctor Θεσσαλονίκη`;
+  }
+  if (url.includes("iphone-17-pro-max") && url.includes("side-profile")) {
+    return `Apple iPhone 17 Pro Max 256GB Deep Blue — πλαϊνή όψη aluminum unibody USB-C και κουμπιά — HiTech Doctor Θεσσαλονίκη`;
+  }
+  if (url.includes("iphone-17-pro-max") && url.includes("what-is-in-the-box")) {
+    return `Apple iPhone 17 Pro Max 256GB Deep Blue — Τι υπάρχει στο κουτί: iPhone και USB-C Charge Cable — HiTech Doctor Θεσσαλονίκη`;
+  }
   // Screen protectors
   if (url.includes("aplo") || url.includes("kit")) {
     return `${productName} — Κιτ εγκατάστασης Tempered Glass 9H Aurora Glisch: γυαλί προστασίας iPhone, πανάκι μικροϊνών, αλκοόλ καθαρισμού και sticker σκόνης — HiTech Doctor Θεσσαλονίκη`;
@@ -255,9 +273,14 @@ export default function ProductDetail() {
   }
 
   const canonicalUrl = `https://hitechdoctor.com/eshop/${product.slug}`;
-  const subcatLabel = product.subcategory ? SUBCATEGORY_LABELS[product.subcategory] : product.category;
-  const metaTitle = `${product.name} | HiTech Doctor — Αξεσουάρ iPhone Θεσσαλονίκη`;
-  const metaDesc = `${product.description} Τιμή: ${formatPrice(product.price)}. Άμεση αποστολή. HiTech Doctor.`;
+  const isMobile = product.category === "mobile";
+  const subcatLabel = product.subcategory ? SUBCATEGORY_LABELS[product.subcategory] : isMobile ? "Κινητό Τηλέφωνο" : product.category;
+  const metaTitle = isMobile
+    ? `${product.name} — Τιμή, Χαρακτηριστικά | HiTech Doctor Θεσσαλονίκη`
+    : `${product.name} | HiTech Doctor — Αξεσουάρ iPhone Θεσσαλονίκη`;
+  const metaDesc = isMobile
+    ? `Αγοράστε ${product.name} από το HiTech Doctor Θεσσαλονίκη. ${product.description.slice(0, 110)} Τιμή: ${formatPrice(product.price)}. Εγγύηση 12 μήνες.`
+    : `${product.description} Τιμή: ${formatPrice(product.price)}. Άμεση αποστολή. HiTech Doctor.`;
 
   return (
     <div className="min-h-screen bg-background circuit-bg">
@@ -467,15 +490,36 @@ export default function ProductDetail() {
 
             {/* ── Right: Info ── */}
             <div className="flex flex-col gap-6">
-              {/* Category badge */}
-              {subcatLabel && (
-                <Badge
-                  variant="outline"
-                  className="w-fit border-primary/30 bg-primary/10 text-primary px-3 py-1 text-xs font-semibold"
-                >
-                  {subcatLabel}
-                </Badge>
-              )}
+              {/* Category + filter tags */}
+              <div className="flex flex-wrap gap-2">
+                {subcatLabel && (
+                  <Badge
+                    variant="outline"
+                    className="border-primary/30 bg-primary/10 text-primary px-3 py-1 text-xs font-semibold"
+                  >
+                    {isMobile ? <Smartphone className="w-3 h-3 mr-1" /> : null}
+                    {subcatLabel}
+                  </Badge>
+                )}
+                {product.brand && (
+                  <Badge variant="outline" className="border-border bg-card text-foreground px-3 py-1 text-xs font-semibold gap-1">
+                    <Award className="w-3 h-3 text-primary" />
+                    {product.brand}
+                  </Badge>
+                )}
+                {product.color && (
+                  <Badge variant="outline" className="border-border bg-card text-foreground px-3 py-1 text-xs font-semibold gap-1">
+                    <Palette className="w-3 h-3 text-primary" />
+                    {product.color}
+                  </Badge>
+                )}
+                {product.storage && (
+                  <Badge variant="outline" className="border-border bg-card text-foreground px-3 py-1 text-xs font-semibold gap-1">
+                    <HardDrive className="w-3 h-3 text-primary" />
+                    {product.storage}
+                  </Badge>
+                )}
+              </div>
 
               {/* H1 */}
               <h1 className="text-3xl lg:text-4xl font-display font-extrabold text-foreground leading-tight">
@@ -502,6 +546,20 @@ export default function ProductDetail() {
 
               {/* Description */}
               <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+
+              {/* Repair service CTA for mobiles */}
+              {isMobile && (
+                <div className="flex items-center gap-3 p-4 rounded-xl border border-amber-500/25 bg-amber-500/5">
+                  <Wrench className="w-5 h-5 text-amber-500 shrink-0" />
+                  <p className="text-sm text-muted-foreground">
+                    Χρειάζεστε επισκευή;{" "}
+                    <Link href="/services/episkeui-iphone" className="text-primary font-semibold hover:underline">
+                      Επισκευή iPhone στη Θεσσαλονίκη
+                    </Link>{" "}
+                    — γνήσια ανταλλακτικά, εγγύηση 12 μήνες.
+                  </p>
+                </div>
+              )}
 
               {/* H2: Model selector (screen protectors only) */}
               {needsModel && (
@@ -591,23 +649,51 @@ export default function ProductDetail() {
           </div>
         </section>
 
+        {/* ── Full Specs / Description HTML (mobiles + any product with fullDescription) ── */}
+        {product.fullDescription && (
+          <section className="container mx-auto px-4 pb-16">
+            <div className="border-t border-border pt-10">
+              <div
+                className="prose prose-sm lg:prose-base max-w-none
+                  prose-headings:font-display prose-headings:text-foreground
+                  prose-h2:text-2xl prose-h2:font-bold prose-h2:mt-8 prose-h2:mb-3
+                  prose-h3:text-lg prose-h3:font-semibold prose-h3:mt-5 prose-h3:mb-2
+                  prose-p:text-muted-foreground prose-p:leading-relaxed
+                  prose-li:text-muted-foreground
+                  prose-strong:text-foreground prose-strong:font-semibold
+                  prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+                  prose-ul:space-y-1
+                  dark:prose-invert"
+                dangerouslySetInnerHTML={{ __html: product.fullDescription }}
+              />
+            </div>
+          </section>
+        )}
+
         {/* ── Related Products ── */}
         {(() => {
           if (!products) return null;
-          const relatedSubcats: Record<string, string[]> = {
-            "screen-protectors": ["cases", "chargers"],
-            cases: ["screen-protectors", "chargers"],
-            chargers: ["screen-protectors", "cases"],
-          };
-          const targets = product.subcategory ? relatedSubcats[product.subcategory] ?? [] : [];
-          const related = products
-            .filter(
-              (p) =>
-                p.id !== product.id &&
-                p.category === "accessory" &&
-                (targets.length === 0 || targets.includes(p.subcategory ?? ""))
-            )
-            .slice(0, 4);
+          let related: Product[];
+          if (isMobile) {
+            related = products
+              .filter((p) => p.category === "accessory" && p.subcategory && ["cases", "screen-protectors", "chargers"].includes(p.subcategory))
+              .slice(0, 4);
+          } else {
+            const relatedSubcats: Record<string, string[]> = {
+              "screen-protectors": ["cases", "chargers"],
+              cases: ["screen-protectors", "chargers"],
+              chargers: ["screen-protectors", "cases"],
+            };
+            const targets = product.subcategory ? relatedSubcats[product.subcategory] ?? [] : [];
+            related = products
+              .filter(
+                (p) =>
+                  p.id !== product.id &&
+                  p.category === "accessory" &&
+                  (targets.length === 0 || targets.includes(p.subcategory ?? ""))
+              )
+              .slice(0, 4);
+          }
           if (related.length === 0) return null;
 
           const subcatBadgeLabel: Record<string, string> = {
@@ -620,10 +706,12 @@ export default function ProductDetail() {
             <section className="container mx-auto px-4 pb-20">
               <div className="border-t border-border pt-10">
                 <h2 className="text-2xl font-display font-bold text-foreground mb-2">
-                  Συνδύασέ το με…
+                  {isMobile ? "Αξεσουάρ για το iPhone σου" : "Συνδύασέ το με…"}
                 </h2>
                 <p className="text-sm text-muted-foreground mb-7">
-                  Πλήρης προστασία για το iPhone σου — προστατέψτο από κάθε γωνία.
+                  {isMobile
+                    ? "Θήκες, τζάμια προστασίας και καλώδια φόρτισης για το iPhone 17 Pro Max σου."
+                    : "Πλήρης προστασία για το iPhone σου — προστατέψτο από κάθε γωνία."}
                 </p>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {related.map((rel) => (
