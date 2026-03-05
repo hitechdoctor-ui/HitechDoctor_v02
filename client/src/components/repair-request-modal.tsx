@@ -31,13 +31,14 @@ export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" 
   const [gdprConsent, setGdprConsent] = useState(false);
   const [gdprError, setGdprError] = useState(false);
   const [priceInput, setPriceInput] = useState("");
+  const [priceMode, setPriceMode] = useState<"net" | "gross">("net");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const priceNum = parseFloat(priceInput);
   const hasPrice = priceInput !== "" && !isNaN(priceNum) && priceNum > 0;
-  const vatAmount = hasPrice ? priceNum * 0.24 : 0;
-  const totalWithVat = hasPrice ? priceNum * 1.24 : 0;
+  const netPrice = hasPrice ? (priceMode === "net" ? priceNum : priceNum / 1.24) : 0;
+  const grossPrice = hasPrice ? (priceMode === "net" ? priceNum * 1.24 : priceNum) : 0;
 
   const fmt = (n: number) =>
     n.toLocaleString("el-GR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
@@ -61,7 +62,7 @@ export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" 
     mutationFn: (data: FormValues) =>
       apiRequest("POST", "/api/repair-requests", {
         ...data,
-        ...(hasPrice ? { price: priceNum.toFixed(2) } : {}),
+        ...(hasPrice ? { price: netPrice.toFixed(2) } : {}),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/repair-requests"] });
@@ -78,6 +79,7 @@ export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" 
       setGdprConsent(false);
       setGdprError(false);
       setPriceInput("");
+      setPriceMode("net");
       form.reset({ ...form.getValues(), deviceName: defaultDeviceName });
     }
     onOpenChange(open);
@@ -222,39 +224,59 @@ export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" 
                 </div>
 
                 {/* ── Price + VAT box ── */}
-                <div>
-                  <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 mb-1.5 block">Τιμή Επισκευής (προαιρετικό)</label>
-                  <div className="flex gap-2 items-stretch">
-                    {/* Price input */}
-                    <div className="flex-1">
-                      <div className="h-11 rounded-xl border border-white/10 bg-card flex items-center overflow-hidden focus-within:border-primary/40 transition-colors">
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={priceInput}
-                          onChange={(e) => setPriceInput(e.target.value)}
-                          placeholder="0"
-                          data-testid="input-repair-price"
-                          className="flex-1 h-full bg-transparent text-center text-xl font-black text-foreground outline-none placeholder:text-muted-foreground/30 px-2"
-                          style={{ WebkitAppearance: "none", MozAppearance: "textfield" } as object}
-                        />
-                        <span className="pr-2.5 text-xl font-black text-muted-foreground pointer-events-none select-none">€</span>
-                      </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50">Τιμή Επισκευής (προαιρετικό)</label>
+                    <div className="flex rounded-lg border border-white/10 overflow-hidden text-[10px] font-semibold">
+                      <button
+                        type="button"
+                        onClick={() => { setPriceMode("net"); setPriceInput(""); }}
+                        data-testid="toggle-price-net"
+                        className={`px-2.5 py-1 transition-colors ${priceMode === "net" ? "bg-primary text-black" : "bg-card text-muted-foreground hover:text-foreground"}`}
+                      >
+                        χωρίς ΦΠΑ
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setPriceMode("gross"); setPriceInput(""); }}
+                        data-testid="toggle-price-gross"
+                        className={`px-2.5 py-1 border-l border-white/10 transition-colors ${priceMode === "gross" ? "bg-primary text-black" : "bg-card text-muted-foreground hover:text-foreground"}`}
+                      >
+                        με ΦΠΑ
+                      </button>
                     </div>
+                  </div>
 
-                    {/* VAT result boxes */}
-                    <div className="flex flex-col gap-1.5 flex-1">
-                      <div className="flex-1 rounded-xl border border-white/10 bg-card flex items-center justify-center px-2">
-                        <span className="text-xs font-semibold text-muted-foreground text-center leading-tight">
-                          {hasPrice ? `${fmt(priceNum)} χωρίς ΦΠΑ` : "— χωρίς ΦΠΑ"}
-                        </span>
-                      </div>
-                      <div className="flex-1 rounded-xl border border-primary/20 bg-primary/5 flex items-center justify-center px-2">
-                        <span className="text-sm font-bold text-primary text-center leading-tight">
-                          {hasPrice ? `${fmt(totalWithVat)} με ΦΠΑ` : "— με ΦΠΑ"}
-                        </span>
-                      </div>
+                  <div className="h-11 rounded-xl border border-white/10 bg-card flex items-center overflow-hidden focus-within:border-primary/40 transition-colors">
+                    <span className="pl-3 text-xs text-muted-foreground/60 pointer-events-none select-none whitespace-nowrap">
+                      {priceMode === "net" ? "χωρίς ΦΠΑ" : "με ΦΠΑ"}
+                    </span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={priceInput}
+                      onChange={(e) => setPriceInput(e.target.value)}
+                      placeholder="0.00"
+                      data-testid="input-repair-price"
+                      className="flex-1 h-full bg-transparent text-center text-xl font-black text-foreground outline-none placeholder:text-muted-foreground/30 px-2"
+                      style={{ WebkitAppearance: "none", MozAppearance: "textfield" } as object}
+                    />
+                    <span className="pr-3 text-xl font-black text-muted-foreground pointer-events-none select-none">€</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className={`rounded-xl border py-2.5 px-3 flex flex-col items-center gap-0.5 transition-colors ${priceMode === "net" ? "border-primary/25 bg-primary/5" : "border-white/10 bg-card"}`}>
+                      <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/60">Χωρίς ΦΠΑ</span>
+                      <span className={`text-sm font-bold leading-tight ${priceMode === "net" ? "text-primary" : "text-foreground"}`}>
+                        {hasPrice ? fmt(netPrice) : "—"}
+                      </span>
+                    </div>
+                    <div className={`rounded-xl border py-2.5 px-3 flex flex-col items-center gap-0.5 transition-colors ${priceMode === "gross" ? "border-primary/25 bg-primary/5" : "border-white/10 bg-card"}`}>
+                      <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/60">Με ΦΠΑ 24%</span>
+                      <span className={`text-sm font-bold leading-tight ${priceMode === "gross" ? "text-primary" : "text-foreground"}`}>
+                        {hasPrice ? fmt(grossPrice) : "—"}
+                      </span>
                     </div>
                   </div>
                 </div>
