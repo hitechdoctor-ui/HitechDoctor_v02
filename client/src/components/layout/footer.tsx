@@ -60,7 +60,7 @@ export function Footer() {
             {/* ΓΕΜΗ */}
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 mb-4">
               <span className="text-[10px] text-muted-foreground/60">Αρ. ΓΕΜΗ:</span>
-              <span className="text-[10px] font-mono font-semibold text-primary/80">000000000000</span>
+              <span className="text-[10px] font-mono font-semibold text-primary/80">56870309000</span>
             </div>
 
             {/* Contact */}
