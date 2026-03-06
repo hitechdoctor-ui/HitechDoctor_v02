@@ -25,6 +25,8 @@ import ServiceSamsung from "./pages/service-samsung";
 import SamsungRepairDetail from "./pages/samsung-repair-detail";
 import ServiceXiaomi from "./pages/service-xiaomi";
 import XiaomiRepairDetail from "./pages/xiaomi-repair-detail";
+import ServiceHuawei from "./pages/service-huawei";
+import HuaweiRepairDetail from "./pages/huawei-repair-detail";
 import EShop from "./pages/eshop";
 import ProductDetail from "./pages/product-detail";
 import Checkout from "./pages/checkout";
@@ -99,6 +101,8 @@ function Router() {
         <Route path="/episkevi-samsung/:slug" component={SamsungRepairDetail} />
         <Route path="/services/episkeui-xiaomi" component={ServiceXiaomi} />
         <Route path="/episkevi-xiaomi/:slug" component={XiaomiRepairDetail} />
+        <Route path="/services/episkeui-huawei" component={ServiceHuawei} />
+        <Route path="/episkevi-huawei/:slug" component={HuaweiRepairDetail} />
         <Route path="/eshop" component={EShop} />
         <Route path="/eshop/:slug" component={ProductDetail} />
         <Route path="/checkout" component={Checkout} />
