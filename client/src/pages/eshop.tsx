@@ -153,24 +153,24 @@ function ScreenProtectorCard({ product }: { product: Product }) {
       data-testid={`card-product-${product.id}`}
     >
       <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
-        <div className="relative h-64 bg-[#0a0e14] overflow-hidden cursor-pointer flex items-center justify-center">
+        <div className="relative h-64 bg-white overflow-hidden cursor-pointer flex items-center justify-center">
           {product.imageUrl ? (
             <img
               src={product.imageUrl}
               alt={`${product.name} — Τζάμι Προστασίας iPhone — HiTech Doctor`}
-              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 p-4"
+              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 p-3"
               loading="lazy"
             />
           ) : (
             <Shield className="w-14 h-14 text-primary/30" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-card/70 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
           {product.subcategory && (
             <Badge className="absolute top-3 left-3 bg-primary/20 border border-primary/40 text-primary text-xs">
               {SUBCATEGORY_LABELS[product.subcategory] ?? product.subcategory}
             </Badge>
           )}
-          <div className="absolute bottom-3 right-3 bg-background/80 backdrop-blur border border-primary/30 px-2.5 py-1 rounded-lg">
+          <div className="absolute bottom-3 right-3 bg-black/70 backdrop-blur border border-primary/40 px-2.5 py-1 rounded-lg">
             <span className="text-primary font-bold text-sm">{formatPrice(product.price)}</span>
           </div>
         </div>
@@ -229,24 +229,24 @@ function ProductCard({ product }: { product: Product }) {
       data-testid={`card-product-${product.id}`}
     >
       <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
-        <div className="relative h-64 bg-[#0a0e14] overflow-hidden cursor-pointer flex items-center justify-center">
+        <div className="relative h-64 bg-white overflow-hidden cursor-pointer flex items-center justify-center">
           {product.imageUrl ? (
             <img
               src={product.imageUrl}
               alt={`${product.name} — ${product.subcategory ? SUBCATEGORY_LABELS[product.subcategory] : ""} — HiTech Doctor`}
-              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 p-4"
+              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 p-3"
               loading="lazy"
             />
           ) : (
             <Package className="w-14 h-14 text-primary/30" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-card/70 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
           {product.subcategory && (
             <Badge className="absolute top-3 left-3 bg-primary/20 border border-primary/40 text-primary text-xs">
               {SUBCATEGORY_LABELS[product.subcategory] ?? product.subcategory}
             </Badge>
           )}
-          <div className="absolute bottom-3 right-3 bg-background/80 backdrop-blur border border-primary/30 px-2.5 py-1 rounded-lg">
+          <div className="absolute bottom-3 right-3 bg-black/70 backdrop-blur border border-primary/40 px-2.5 py-1 rounded-lg">
             <span className="text-primary font-bold text-sm">{formatPrice(product.price)}</span>
           </div>
         </div>
