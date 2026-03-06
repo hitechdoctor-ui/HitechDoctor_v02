@@ -639,6 +639,8 @@ export default function EShop() {
           <h1 className="text-4xl lg:text-5xl font-display font-extrabold text-foreground mb-2">
             {isMobileTab ? (
               <>Κινητά <span className="gradient-text">Τηλέφωνα</span></>
+            ) : isLaptopTab ? (
+              <>Refurbished <span className="gradient-text">Laptops</span></>
             ) : (
               <>Αξεσουάρ <span className="gradient-text">iPhone</span></>
             )}
@@ -646,6 +648,8 @@ export default function EShop() {
           <p className="text-muted-foreground max-w-xl">
             {isMobileTab
               ? "Βρείτε κινητά τηλέφωνα Apple, Samsung, Xiaomi και άλλες μάρκες. Φιλτράρετε ανά μάρκα, χρώμα και μνήμη."
+              : isLaptopTab
+              ? "Μεταχειρισμένα laptop με εγγύηση 1 έτους. Lenovo ThinkPad, Microsoft Surface και άλλα μοντέλα επαγγελματικής κλάσης."
               : "Τζάμια προστασίας, θήκες και φορτιστές για κάθε μοντέλο iPhone από 8 έως 17."}
           </p>
         </div>
