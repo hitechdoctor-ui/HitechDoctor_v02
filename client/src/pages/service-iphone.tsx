@@ -7,144 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   CheckCircle2, Shield, Clock, Wrench, ChevronRight, Phone,
-  Zap, Wifi, Camera, Battery, Monitor, ArrowRight, CalendarCheck,
+  Zap, Wifi, Camera, Battery, Monitor, ArrowRight,
 } from "lucide-react";
 import { SiApple } from "react-icons/si";
 import { Link } from "wouter";
 import { useState } from "react";
-import { RepairRequestModal } from "@/components/repair-request-modal";
+import { IPHONE_SERIES } from "@/data/iphone-devices";
 
-// ── iPhone model data ────────────────────────────────────────────────────────
-const IPHONE_SERIES = [
-  {
-    id: "17",
-    label: "iPhone 17",
-    color: "#94a3b8",
-    accentClass: "border-slate-500/30 bg-slate-500/8",
-    badgeClass: "bg-slate-500/15 border-slate-500/30 text-slate-300",
-    models: [
-      { name: "iPhone 17 Pro Max", screen: "6.9″ LTPO OLED ProMotion 120Hz", port: "USB-C", screenPrice: "€280", batteryPrice: "€99", tag: "NEW" },
-      { name: "iPhone 17 Pro", screen: "6.3″ LTPO OLED ProMotion 120Hz", port: "USB-C", screenPrice: "€260", batteryPrice: "€89", tag: "NEW" },
-      { name: "iPhone 17 Plus", screen: "6.9″ OLED 60Hz", port: "USB-C", screenPrice: "€180", batteryPrice: "€89", tag: "NEW" },
-      { name: "iPhone 17", screen: "6.1″ OLED 60Hz", port: "USB-C", screenPrice: "€160", batteryPrice: "€79", tag: "NEW" },
-    ],
-  },
-  {
-    id: "16",
-    label: "iPhone 16",
-    color: "#60a5fa",
-    accentClass: "border-blue-500/30 bg-blue-500/8",
-    badgeClass: "bg-blue-500/15 border-blue-500/30 text-blue-300",
-    models: [
-      { name: "iPhone 16 Pro Max", screen: "6.9″ LTPO OLED ProMotion 120Hz", port: "USB-C", screenPrice: "€250", batteryPrice: "€89", tag: "" },
-      { name: "iPhone 16 Pro", screen: "6.3″ LTPO OLED ProMotion 120Hz", port: "USB-C", screenPrice: "€230", batteryPrice: "€79", tag: "" },
-      { name: "iPhone 16 Plus", screen: "6.7″ OLED 60Hz", port: "USB-C", screenPrice: "€165", batteryPrice: "€79", tag: "" },
-      { name: "iPhone 16", screen: "6.1″ OLED 60Hz", port: "USB-C", screenPrice: "€145", batteryPrice: "€69", tag: "" },
-    ],
-  },
-  {
-    id: "15",
-    label: "iPhone 15",
-    color: "#34d399",
-    accentClass: "border-emerald-500/30 bg-emerald-500/8",
-    badgeClass: "bg-emerald-500/15 border-emerald-500/30 text-emerald-300",
-    models: [
-      { name: "iPhone 15 Pro Max", screen: "6.7″ LTPO OLED ProMotion 120Hz", port: "USB-C", screenPrice: "€220", batteryPrice: "€79", tag: "" },
-      { name: "iPhone 15 Pro", screen: "6.1″ LTPO OLED ProMotion 120Hz", port: "USB-C", screenPrice: "€200", batteryPrice: "€69", tag: "" },
-      { name: "iPhone 15 Plus", screen: "6.7″ OLED 60Hz", port: "USB-C", screenPrice: "€140", batteryPrice: "€69", tag: "" },
-      { name: "iPhone 15", screen: "6.1″ OLED 60Hz", port: "USB-C", screenPrice: "€120", batteryPrice: "€59", tag: "" },
-    ],
-  },
-  {
-    id: "14",
-    label: "iPhone 14",
-    color: "#f472b6",
-    accentClass: "border-pink-500/30 bg-pink-500/8",
-    badgeClass: "bg-pink-500/15 border-pink-500/30 text-pink-300",
-    models: [
-      { name: "iPhone 14 Pro Max", screen: "6.7″ LTPO OLED ProMotion 120Hz", port: "Lightning", screenPrice: "€190", batteryPrice: "€69", tag: "" },
-      { name: "iPhone 14 Pro", screen: "6.1″ LTPO OLED ProMotion 120Hz", port: "Lightning", screenPrice: "€175", batteryPrice: "€59", tag: "" },
-      { name: "iPhone 14 Plus", screen: "6.7″ OLED 60Hz", port: "Lightning", screenPrice: "€120", batteryPrice: "€59", tag: "" },
-      { name: "iPhone 14", screen: "6.1″ OLED 60Hz", port: "Lightning", screenPrice: "€100", batteryPrice: "€49", tag: "" },
-    ],
-  },
-  {
-    id: "13",
-    label: "iPhone 13",
-    color: "#a78bfa",
-    accentClass: "border-violet-500/30 bg-violet-500/8",
-    badgeClass: "bg-violet-500/15 border-violet-500/30 text-violet-300",
-    models: [
-      { name: "iPhone 13 Pro Max", screen: "6.7″ LTPO OLED ProMotion 120Hz", port: "Lightning", screenPrice: "€150", batteryPrice: "€59", tag: "" },
-      { name: "iPhone 13 Pro", screen: "6.1″ LTPO OLED ProMotion 120Hz", port: "Lightning", screenPrice: "€135", batteryPrice: "€49", tag: "" },
-      { name: "iPhone 13", screen: "6.1″ OLED 60Hz", port: "Lightning", screenPrice: "€90", batteryPrice: "€39", tag: "" },
-      { name: "iPhone 13 Mini", screen: "5.4″ OLED 60Hz", port: "Lightning", screenPrice: "€85", batteryPrice: "€39", tag: "" },
-    ],
-  },
-  {
-    id: "12",
-    label: "iPhone 12",
-    color: "#fb923c",
-    accentClass: "border-orange-500/30 bg-orange-500/8",
-    badgeClass: "bg-orange-500/15 border-orange-500/30 text-orange-300",
-    models: [
-      { name: "iPhone 12 Pro Max", screen: "6.7″ OLED 60Hz", port: "Lightning", screenPrice: "€120", batteryPrice: "€55", tag: "" },
-      { name: "iPhone 12 Pro", screen: "6.1″ OLED 60Hz", port: "Lightning", screenPrice: "€110", batteryPrice: "€49", tag: "" },
-      { name: "iPhone 12", screen: "6.1″ OLED 60Hz", port: "Lightning", screenPrice: "€80", batteryPrice: "€39", tag: "" },
-      { name: "iPhone 12 Mini", screen: "5.4″ OLED 60Hz", port: "Lightning", screenPrice: "€75", batteryPrice: "€39", tag: "" },
-    ],
-  },
-  {
-    id: "11",
-    label: "iPhone 11",
-    color: "#facc15",
-    accentClass: "border-yellow-500/30 bg-yellow-500/8",
-    badgeClass: "bg-yellow-500/15 border-yellow-500/30 text-yellow-300",
-    models: [
-      { name: "iPhone 11 Pro Max", screen: "6.5″ OLED 60Hz", port: "Lightning", screenPrice: "€90", batteryPrice: "€45", tag: "" },
-      { name: "iPhone 11 Pro", screen: "5.8″ OLED 60Hz", port: "Lightning", screenPrice: "€80", batteryPrice: "€40", tag: "" },
-      { name: "iPhone 11", screen: "6.1″ LCD 60Hz", port: "Lightning", screenPrice: "€55", batteryPrice: "€35", tag: "" },
-    ],
-  },
-  {
-    id: "x",
-    label: "iPhone X / XS / XR",
-    color: "#22d3ee",
-    accentClass: "border-cyan-500/30 bg-cyan-500/8",
-    badgeClass: "bg-cyan-500/15 border-cyan-500/30 text-cyan-300",
-    models: [
-      { name: "iPhone XS Max", screen: "6.5″ OLED 60Hz", port: "Lightning", screenPrice: "€80", batteryPrice: "€45", tag: "" },
-      { name: "iPhone XS", screen: "5.8″ OLED 60Hz", port: "Lightning", screenPrice: "€75", batteryPrice: "€40", tag: "" },
-      { name: "iPhone XR", screen: "6.1″ LCD 60Hz", port: "Lightning", screenPrice: "€55", batteryPrice: "€35", tag: "" },
-      { name: "iPhone X", screen: "5.8″ OLED 60Hz", port: "Lightning", screenPrice: "€70", batteryPrice: "€40", tag: "" },
-    ],
-  },
-  {
-    id: "se",
-    label: "iPhone SE",
-    color: "#4ade80",
-    accentClass: "border-green-500/30 bg-green-500/8",
-    badgeClass: "bg-green-500/15 border-green-500/30 text-green-300",
-    models: [
-      { name: "iPhone SE (3η Γενιά)", screen: "4.7″ LCD 60Hz", port: "Lightning", screenPrice: "€50", batteryPrice: "€35", tag: "" },
-      { name: "iPhone SE (2η Γενιά)", screen: "4.7″ LCD 60Hz", port: "Lightning", screenPrice: "€45", batteryPrice: "€30", tag: "" },
-      { name: "iPhone SE (1η Γενιά)", screen: "4.0″ LCD 60Hz", port: "Lightning", screenPrice: "€35", batteryPrice: "€25", tag: "" },
-    ],
-  },
-  {
-    id: "8",
-    label: "iPhone 8 / 7",
-    color: "#e2e8f0",
-    accentClass: "border-gray-500/30 bg-gray-500/8",
-    badgeClass: "bg-gray-500/15 border-gray-500/30 text-gray-400",
-    models: [
-      { name: "iPhone 8 Plus", screen: "5.5″ LCD 60Hz", port: "Lightning", screenPrice: "€50", batteryPrice: "€35", tag: "" },
-      { name: "iPhone 8", screen: "4.7″ LCD 60Hz", port: "Lightning", screenPrice: "€45", batteryPrice: "€30", tag: "" },
-      { name: "iPhone 7 Plus", screen: "5.5″ LCD 60Hz", port: "Lightning", screenPrice: "€40", batteryPrice: "€30", tag: "" },
-      { name: "iPhone 7", screen: "4.7″ LCD 60Hz", port: "Lightning", screenPrice: "€35", batteryPrice: "€25", tag: "" },
-    ],
-  },
-];
 
 const COMMON_REPAIRS = [
   { icon: Monitor, label: "Αλλαγή Οθόνης", desc: "OLED/LCD γνήσια ή premium ποιότητας" },
@@ -180,7 +49,7 @@ const jsonLd = {
         "priceCurrency": "EUR",
         "priceSpecification": {
           "@type": "PriceSpecification",
-          "minPrice": m.batteryPrice.replace("€", ""),
+          "minPrice": m.batteryTiers[2].price,
           "priceCurrency": "EUR",
         },
       }))
@@ -190,8 +59,6 @@ const jsonLd = {
 
 export default function ServiceIphone() {
   const [activeSeries, setActiveSeries] = useState<string>("all");
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedModel, setSelectedModel] = useState("");
 
   const visibleSeries =
     activeSeries === "all"
@@ -374,25 +241,26 @@ export default function ServiceIphone() {
                     <div className="grid grid-cols-2 gap-2">
                       <div className="bg-background/50 rounded-lg p-2 text-center border border-white/5">
                         <p className="text-[9px] text-muted-foreground mb-0.5">Οθόνη</p>
-                        <p className="text-sm font-extrabold text-primary">{model.screenPrice}</p>
+                        <p className="text-sm font-extrabold text-primary">από €{model.screenTiers[2].price}</p>
                       </div>
                       <div className="bg-background/50 rounded-lg p-2 text-center border border-white/5">
                         <p className="text-[9px] text-muted-foreground mb-0.5">Μπαταρία</p>
-                        <p className="text-sm font-extrabold text-primary">{model.batteryPrice}</p>
+                        <p className="text-sm font-extrabold text-primary">από €{model.batteryTiers[2].price}</p>
                       </div>
                     </div>
 
-                    {/* CTA — opens repair request modal */}
-                    <Button
-                      size="sm"
-                      onClick={() => { setSelectedModel(model.name); setModalOpen(true); }}
-                      className="mt-auto w-full h-8 text-xs font-semibold border-0 group-hover:opacity-90 transition-all"
-                      style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
-                      data-testid={`button-repair-${model.name.toLowerCase().replace(/\s+/g, "-")}`}
-                    >
-                      <CalendarCheck className="w-3 h-3 mr-1.5" />
-                      Αίτημα Επισκευής
-                    </Button>
+                    {/* CTA — link to detail page */}
+                    <Link href={`/episkevi-iphone-${model.slug}`}>
+                      <Button
+                        size="sm"
+                        className="mt-auto w-full h-8 text-xs font-semibold border-0 group-hover:opacity-90 transition-all"
+                        style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
+                        data-testid={`button-repair-${model.name.toLowerCase().replace(/\s+/g, "-")}`}
+                      >
+                        <ArrowRight className="w-3 h-3 mr-1.5" />
+                        Δείτε Τιμές & Πληροφορίες
+                      </Button>
+                    </Link>
                   </article>
                 ))}
               </div>
@@ -440,13 +308,7 @@ export default function ServiceIphone() {
         <ReviewsSection />
       </main>
 
-      {/* Repair Request Modal */}
       <Footer />
-      <RepairRequestModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        defaultDeviceName={selectedModel}
-      />
     </div>
   );
 }
