@@ -73,16 +73,19 @@ function MobileCard({ product }: { product: Product }) {
       data-testid={`card-product-${product.id}`}
     >
       <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
-        <div className="relative h-64 bg-[#07080d] overflow-hidden cursor-pointer flex items-center justify-center">
+        <div className="relative h-64 bg-[#07080d] overflow-hidden cursor-pointer">
           {product.imageUrl ? (
             <img
               src={product.imageUrl}
               alt={`${product.name} — HiTech Doctor`}
-              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 p-2"
+              className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+              style={{ objectPosition: "center 20%" }}
               loading="lazy"
             />
           ) : (
-            <Smartphone className="w-12 h-12 text-primary/30" />
+            <div className="w-full h-full flex items-center justify-center">
+              <Smartphone className="w-12 h-12 text-primary/30" />
+            </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
           {p.brand && (
