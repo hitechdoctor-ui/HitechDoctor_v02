@@ -16,7 +16,7 @@ import { useState } from "react";
 import {
   ShoppingCart, CheckCircle2, ChevronRight, ChevronLeft, Shield,
   Clock, Star, ArrowLeft, Package, Truck, ZoomIn, X, Smartphone,
-  HardDrive, Palette, Award, Wrench,
+  HardDrive, Palette, Award, Wrench, BadgeCheck, RotateCcw, HeadphonesIcon,
 } from "lucide-react";
 import type { Product } from "@shared/schema";
 
@@ -676,6 +676,25 @@ export default function ProductDetail() {
                   ? "Προ-Παραγγελία — Κράτηση Τώρα"
                   : "Προσθήκη στο Καλάθι"}
               </Button>
+
+              {/* Trust strip */}
+              <div className="grid grid-cols-3 divide-x divide-border/40 border border-border/40 rounded-xl bg-card/30 overflow-hidden">
+                <div className="flex flex-col items-center gap-1.5 p-3 text-center">
+                  <BadgeCheck className="w-5 h-5 text-primary shrink-0" />
+                  <span className="text-[11px] font-bold text-foreground leading-tight">Γνήσιο Προϊόν</span>
+                  <span className="text-[10px] text-muted-foreground leading-tight">100% Αυθεντικό</span>
+                </div>
+                <div className="flex flex-col items-center gap-1.5 p-3 text-center">
+                  <Truck className="w-5 h-5 text-primary shrink-0" />
+                  <span className="text-[11px] font-bold text-foreground leading-tight">Γρήγορη Αποστολή</span>
+                  <span className="text-[10px] text-muted-foreground leading-tight">1-2 εργάσιμες</span>
+                </div>
+                <div className="flex flex-col items-center gap-1.5 p-3 text-center">
+                  <RotateCcw className="w-5 h-5 text-primary shrink-0" />
+                  <span className="text-[11px] font-bold text-foreground leading-tight">Επιστροφή</span>
+                  <span className="text-[10px] text-muted-foreground leading-tight">14 ημέρες, χωρίς λόγο</span>
+                </div>
+              </div>
 
               {/* H2: Features */}
               {features.length > 0 && (
