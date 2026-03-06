@@ -11,6 +11,7 @@ import { SAMSUNG_SERIES } from "@/data/samsung-devices";
 import { IPHONE_SERIES } from "@/data/iphone-devices";
 import { XIAOMI_SERIES } from "@/data/xiaomi-devices";
 import { HUAWEI_SERIES } from "@/data/huawei-devices";
+import { ONEPLUS_SERIES } from "@/data/oneplus-devices";
 import { BLOG_POSTS } from "@/data/blog-posts";
 
 interface SearchEntry {
@@ -18,7 +19,7 @@ interface SearchEntry {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   sub: string;
-  category: "service" | "iphone" | "samsung" | "xiaomi" | "huawei" | "page" | "blog";
+  category: "service" | "iphone" | "samsung" | "xiaomi" | "huawei" | "oneplus" | "page" | "blog";
   keywords?: string;
 }
 
@@ -31,6 +32,7 @@ function buildIndex(): SearchEntry[] {
     { name: "Επισκευή Samsung Galaxy", href: "/services/episkeui-samsung", icon: Smartphone, sub: "A · S · Z Series", category: "service", keywords: "samsung galaxy" },
     { name: "Επισκευή Xiaomi / Redmi / Poco", href: "/services/episkeui-xiaomi", icon: Smartphone, sub: "Redmi Note · Redmi · Xiaomi · Poco", category: "service", keywords: "xiaomi redmi poco" },
     { name: "Επισκευή Huawei", href: "/services/episkeui-huawei", icon: Smartphone, sub: "P · Mate · Nova · Y Series", category: "service", keywords: "huawei p mate nova" },
+    { name: "Επισκευή OnePlus", href: "/services/episkeui-oneplus", icon: Smartphone, sub: "Flagship · Nord Series", category: "service", keywords: "oneplus nord" },
     { name: "Επισκευή Κινητών", href: "/services/episkeui-kiniton", icon: Smartphone, sub: "iPhone · Samsung · Xiaomi", category: "service" },
     { name: "Επισκευή Laptop", href: "/services", icon: Laptop, sub: "Υπηρεσία", category: "service" },
     { name: "Επισκευή Tablet", href: "/services", icon: Tablet, sub: "Υπηρεσία", category: "service" },
@@ -112,6 +114,22 @@ function buildIndex(): SearchEntry[] {
     }
   }
 
+  // ── OnePlus model pages (dynamic from data) ───────────────────────────
+  for (const series of ONEPLUS_SERIES) {
+    for (const model of series.models) {
+      entries.push({
+        name: `Επισκευή ${model.name}`,
+        href: `/episkevi-oneplus/${model.slug}`,
+        icon: Smartphone,
+        sub: model.screenPriceOEM
+          ? `Οθόνη από €${model.screenPriceOEM} · Μπαταρία €${model.batteryPrice}`
+          : `Οθόνη €${model.screenPrice} · Μπαταρία €${model.batteryPrice}`,
+        category: "oneplus",
+        keywords: `oneplus ${model.name.toLowerCase()} επισκευή αλλαγη οθονη μπαταρια`,
+      });
+    }
+  }
+
   // ── Blog posts (dynamic from data) ────────────────────────────────────
   for (const post of BLOG_POSTS) {
     entries.push({
@@ -148,6 +166,7 @@ const CATEGORY_LABELS: Record<string, { label: string; icon: typeof Wrench }> = 
   samsung: { label: "Επισκευή Samsung", icon: Smartphone },
   xiaomi:  { label: "Επισκευή Xiaomi / Redmi / Poco", icon: Smartphone },
   huawei:  { label: "Επισκευή Huawei", icon: Smartphone },
+  oneplus: { label: "Επισκευή OnePlus", icon: Smartphone },
   page:    { label: "Σελίδες", icon: Info },
   blog:    { label: "Blog", icon: FileText },
 };

@@ -137,8 +137,8 @@ const brands = [
     color: "from-red-700/25 to-rose-600/15",
     glowColor: "rgba(220,38,38,0.12)",
     borderColor: "border-red-600/25",
-    pageUrl: null,
-    btnLabel: "Επικοινωνία",
+    pageUrl: "/services/episkeui-oneplus",
+    btnLabel: "Επισκευή OnePlus",
   },
 ];
 

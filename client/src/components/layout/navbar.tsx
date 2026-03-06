@@ -49,7 +49,7 @@ const PHONE_BRANDS = [
   { name: "Samsung",    href: "/services/episkeui-samsung", icon: SiSamsung, color: "text-blue-400", bg: "bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/20" },
   { name: "Xiaomi",     href: "/services/episkeui-xiaomi",  icon: SiXiaomi,  color: "text-orange-400", bg: "bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/20" },
   { name: "Huawei",     href: "/services/episkeui-huawei",  icon: SiHuawei,  color: "text-red-400", bg: "bg-red-500/10 hover:bg-red-500/20 border-red-500/20" },
-  { name: "OnePlus",    href: "/services/episkeui-kiniton", icon: SiOneplus, color: "text-rose-400", bg: "bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/20" },
+  { name: "OnePlus",    href: "/services/episkeui-oneplus",  icon: SiOneplus, color: "text-rose-400", bg: "bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/20" },
   { name: "Άλλη Μάρκα", href: "/services/episkeui-kiniton", icon: Smartphone, color: "text-primary", bg: "bg-primary/10 hover:bg-primary/20 border-primary/20" },
 ];
 
