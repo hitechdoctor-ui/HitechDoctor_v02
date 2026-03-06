@@ -119,7 +119,7 @@ export function AccessibilityButton() {
         onClick={() => setOpen((v) => !v)}
         aria-label="Επιλογές Προσβασιμότητας"
         data-testid="btn-accessibility"
-        className="fixed right-4 top-1/2 -translate-y-1/2 z-[160] w-11 h-11 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+        className="fixed right-4 bottom-20 z-[160] w-11 h-11 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
       >
         <Accessibility className="w-5 h-5" />
       </button>
@@ -128,7 +128,7 @@ export function AccessibilityButton() {
       {open && (
         <Fragment>
           <div className="fixed inset-0 z-[161]" onClick={() => setOpen(false)} />
-          <div className="fixed right-16 top-1/2 -translate-y-1/2 z-[162] w-72 bg-card border border-white/15 rounded-2xl shadow-2xl overflow-hidden">
+          <div className="fixed right-16 bottom-6 z-[162] w-72 bg-card border border-white/15 rounded-2xl shadow-2xl overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-white/8 bg-white/3">
               <div className="flex items-center gap-2">
