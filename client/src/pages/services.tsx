@@ -24,6 +24,7 @@ import {
   ScanLine,
 } from "lucide-react";
 import { Link } from "wouter";
+import { SiApple, SiSamsung, SiXiaomi, SiHuawei, SiOneplus } from "react-icons/si";
 
 // === Individual services — split one per entry ===
 const allServices = [
@@ -329,6 +330,46 @@ export default function Services() {
           </div>
         </section>
 
+        {/* ── Brand quick links ── */}
+        <section className="container mx-auto px-4 pb-14 max-w-5xl">
+          <div className="bg-card pcb-border rounded-2xl p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-5">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold mb-0.5">Επισκευή Κινητών ανά Μάρκα</p>
+                <h2 className="text-lg font-display font-bold text-foreground">Διαλέξτε τη μάρκα του κινητού σας</h2>
+              </div>
+              <Link href="/services/episkeui-kiniton" className="sm:ml-auto shrink-0">
+                <span className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline cursor-pointer whitespace-nowrap">
+                  Όλα τα μοντέλα <ArrowRight className="w-3 h-3" />
+                </span>
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+              {[
+                { name: "iPhone",  href: "/services/episkeui-iphone",   Icon: SiApple,   color: "text-gray-300",   bg: "bg-gray-500/10 border-gray-500/20 hover:border-gray-400/40",   sub: "Όλα τα μοντέλα" },
+                { name: "Samsung", href: "/services/episkeui-samsung",  Icon: SiSamsung, color: "text-blue-400",   bg: "bg-blue-500/10 border-blue-500/20 hover:border-blue-400/40",   sub: "A · S · Z Series" },
+                { name: "Xiaomi",  href: "/services/episkeui-xiaomi",   Icon: SiXiaomi,  color: "text-orange-400", bg: "bg-orange-500/10 border-orange-500/20 hover:border-orange-400/40", sub: "Redmi · Poco" },
+                { name: "Huawei",  href: "/services/episkeui-huawei",   Icon: SiHuawei,  color: "text-red-400",    bg: "bg-red-500/10 border-red-500/20 hover:border-red-400/40",       sub: "P · Mate · Nova" },
+                { name: "OnePlus", href: "/services/episkeui-oneplus",  Icon: SiOneplus, color: "text-rose-400",   bg: "bg-rose-500/10 border-rose-500/20 hover:border-rose-400/40",    sub: "Flagship · Nord" },
+              ].map((brand) => (
+                <Link key={brand.name} href={brand.href}>
+                  <div className={`group flex flex-col items-center text-center gap-2 p-4 rounded-xl border transition-all cursor-pointer hover:-translate-y-0.5 hover:shadow-md ${brand.bg}`}
+                    data-testid={`link-brand-${brand.name.toLowerCase()}`}>
+                    <brand.Icon className={`w-7 h-7 ${brand.color} group-hover:scale-110 transition-transform`} />
+                    <div>
+                      <p className="text-sm font-bold text-foreground leading-tight">{brand.name}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{brand.sub}</p>
+                    </div>
+                    <span className="text-[10px] font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
+                      Τιμές <ArrowRight className="w-2.5 h-2.5" />
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* ── Why Us ── */}
         <section className="bg-card/50 border-y border-primary/10 py-16" aria-label="Γιατί HiTech Doctor">
           <div className="container mx-auto px-4">
@@ -377,10 +418,10 @@ export default function Services() {
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
-              <a href="tel:+30-000-000-0000">
+              <a href="tel:+306981882005">
                 <Button size="lg" variant="outline" className="h-12 px-8 border-primary/30 text-primary" data-testid="button-cta-phone">
                   <Phone className="w-4 h-4 mr-2" />
-                  Τηλεφωνική Επικοινωνία
+                  6981 882 005
                 </Button>
               </a>
             </div>
