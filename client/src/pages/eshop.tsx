@@ -73,20 +73,18 @@ function MobileCard({ product }: { product: Product }) {
       data-testid={`card-product-${product.id}`}
     >
       <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
-        <div className="relative h-64 bg-black/60 overflow-hidden cursor-pointer">
+        <div className="relative h-64 bg-[#07080d] overflow-hidden cursor-pointer flex items-center justify-center">
           {product.imageUrl ? (
             <img
               src={product.imageUrl}
               alt={`${product.name} — HiTech Doctor`}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 p-2"
               loading="lazy"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Smartphone className="w-12 h-12 text-primary/30" />
-            </div>
+            <Smartphone className="w-12 h-12 text-primary/30" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-card/70 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
           {p.brand && (
             <Badge className="absolute top-3 left-3 bg-primary/20 border border-primary/40 text-primary text-xs">{p.brand}</Badge>
           )}
