@@ -194,24 +194,47 @@ export default function AdminProducts() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
+  const [filterCategory, setFilterCategory] = useState("");
+  const [filterBrand, setFilterBrand] = useState("");
+  const [filterPreOrder, setFilterPreOrder] = useState("");
   const [richContent, setRichContent] = useState("");
   const [extraImages, setExtraImages] = useState<string[]>([]);
   const { toast } = useToast();
 
+  const availableBrands = useMemo(() => {
+    if (!products) return [];
+    const set = new Set<string>();
+    products.forEach((p) => { const b = (p as any).brand; if (b) set.add(b); });
+    return Array.from(set).sort();
+  }, [products]);
+
   const filteredProducts = useMemo(() => {
     if (!products) return [];
-    const q = search.trim().toLowerCase();
-    if (!q) return products;
-    return products.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q) ||
-        (p.subcategory ?? "").toLowerCase().includes(q) ||
-        ((p as any).brand ?? "").toLowerCase().includes(q) ||
-        ((p as any).color ?? "").toLowerCase().includes(q) ||
-        String(p.price).includes(q)
-    );
-  }, [products, search]);
+    return products.filter((p) => {
+      const q = search.trim().toLowerCase();
+      if (q) {
+        const matches =
+          p.name.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q) ||
+          (p.subcategory ?? "").toLowerCase().includes(q) ||
+          ((p as any).brand ?? "").toLowerCase().includes(q) ||
+          ((p as any).color ?? "").toLowerCase().includes(q) ||
+          String(p.price).includes(q);
+        if (!matches) return false;
+      }
+      if (filterCategory && filterCategory !== "all-categories" && p.category !== filterCategory) return false;
+      if (filterBrand && filterBrand !== "all-brands" && (p as any).brand !== filterBrand) return false;
+      if (filterPreOrder === "yes" && !(p as any).preOrder) return false;
+      if (filterPreOrder === "no" && (p as any).preOrder) return false;
+      return true;
+    });
+  }, [products, search, filterCategory, filterBrand, filterPreOrder]);
+
+  const activeFilterCount = [
+    filterCategory && filterCategory !== "all-categories",
+    filterBrand && filterBrand !== "all-brands",
+    filterPreOrder && filterPreOrder !== "all-preorder",
+  ].filter(Boolean).length;
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(formSchema),
@@ -406,11 +429,75 @@ export default function AdminProducts() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Search ── */}
-      <div className="mb-4 flex items-center gap-2 px-3 h-10 rounded-xl border border-white/10 bg-card hover:border-white/20 focus-within:border-primary/40 focus-within:shadow-[0_0_0_2px_rgba(0,210,200,0.1)] transition-all max-w-sm">
-        <Search className="w-4 h-4 text-muted-foreground shrink-0" />
-        <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Αναζήτηση προϊόντος, κατηγορίας, μάρκας…" className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/50" data-testid="input-product-search" />
-        {search && <button onClick={() => setSearch("")} className="text-muted-foreground hover:text-foreground"><X className="w-3.5 h-3.5" /></button>}
+      {/* ── Search + Filters ── */}
+      <div className="mb-4 space-y-3">
+        {/* Search bar */}
+        <div className="flex items-center gap-2 px-3 h-10 rounded-xl border border-white/10 bg-card hover:border-white/20 focus-within:border-primary/40 focus-within:shadow-[0_0_0_2px_rgba(0,210,200,0.1)] transition-all max-w-lg">
+          <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Αναζήτηση ονόματος, κατηγορίας, μάρκας, τιμής…" className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/50" data-testid="input-product-search" />
+          {search && <button onClick={() => setSearch("")} className="text-muted-foreground hover:text-foreground"><X className="w-3.5 h-3.5" /></button>}
+        </div>
+
+        {/* Filter dropdowns */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Category */}
+          <Select value={filterCategory} onValueChange={setFilterCategory}>
+            <SelectTrigger className="h-9 w-44 bg-card border-white/10 text-sm" data-testid="select-filter-category">
+              <SelectValue placeholder="Όλες οι κατηγορίες" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all-categories">Όλες οι κατηγορίες</SelectItem>
+              <SelectItem value="mobile">Κινητά (mobile)</SelectItem>
+              <SelectItem value="accessory">Αξεσουάρ (accessory)</SelectItem>
+              <SelectItem value="laptop">Laptop</SelectItem>
+              <SelectItem value="desktop">Desktop PC</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Brand */}
+          {availableBrands.length > 0 && (
+            <Select value={filterBrand} onValueChange={setFilterBrand}>
+              <SelectTrigger className="h-9 w-40 bg-card border-white/10 text-sm" data-testid="select-filter-brand">
+                <SelectValue placeholder="Όλες οι μάρκες" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all-brands">Όλες οι μάρκες</SelectItem>
+                {availableBrands.map((b) => (
+                  <SelectItem key={b} value={b}>{b}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {/* Pre-order */}
+          <Select value={filterPreOrder} onValueChange={setFilterPreOrder}>
+            <SelectTrigger className="h-9 w-40 bg-card border-white/10 text-sm" data-testid="select-filter-preorder">
+              <SelectValue placeholder="Προ-Παραγγελία" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all-preorder">Όλα</SelectItem>
+              <SelectItem value="yes">Μόνο Προ-Παραγγελία</SelectItem>
+              <SelectItem value="no">Κανονικά Αποθέματα</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Clear filters */}
+          {(activeFilterCount > 0 || search) && (
+            <button
+              onClick={() => { setSearch(""); setFilterCategory(""); setFilterBrand(""); setFilterPreOrder(""); }}
+              className="h-9 px-3 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-semibold hover:bg-red-500/20 transition-colors flex items-center gap-1.5"
+              data-testid="button-clear-filters"
+            >
+              <X className="w-3.5 h-3.5" />
+              Καθαρισμός
+            </button>
+          )}
+
+          {/* Count badge */}
+          <span className="ml-auto text-xs text-muted-foreground">
+            {filteredProducts.length} από {products?.length ?? 0} προϊόντα
+          </span>
+        </div>
       </div>
 
       {/* ── Table ── */}
