@@ -23,18 +23,21 @@ import { GlobalSearch } from "@/components/global-search";
 
 // ── Category meta: subcategory (or "mobile") → display info ──────────────────
 const CATEGORY_META: Record<string, { label: string; icon: React.ElementType; color: string; bg: string; tab: string }> = {
-  mobile:            { label: "Κινητά Τηλέφωνα",     icon: Smartphone, color: "text-primary",    bg: "bg-primary/10 hover:bg-primary/20 border-primary/20",     tab: "mobile" },
-  "screen-protectors":{ label: "Τζάμια Προστασίας",  icon: Shield,     color: "text-sky-400",    bg: "bg-sky-500/10 hover:bg-sky-500/20 border-sky-500/20",       tab: "screen-protectors" },
-  cases:             { label: "Θήκες Κινητών",        icon: Package,    color: "text-violet-400", bg: "bg-violet-500/10 hover:bg-violet-500/20 border-violet-500/20",tab: "cases" },
-  chargers:          { label: "Φορτιστές & Καλώδια",  icon: Cable,      color: "text-orange-400", bg: "bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/20",tab: "chargers" },
+  mobile:            { label: "Κινητά Τηλέφωνα",     icon: Smartphone, color: "text-primary",      bg: "bg-primary/10 hover:bg-primary/20 border-primary/20",         tab: "mobile" },
+  "screen-protectors":{ label: "Τζάμια Προστασίας",  icon: Shield,     color: "text-sky-400",      bg: "bg-sky-500/10 hover:bg-sky-500/20 border-sky-500/20",         tab: "screen-protectors" },
+  cases:             { label: "Θήκες Κινητών",        icon: Package,    color: "text-violet-400",   bg: "bg-violet-500/10 hover:bg-violet-500/20 border-violet-500/20", tab: "cases" },
+  chargers:          { label: "Φορτιστές & Καλώδια",  icon: Cable,      color: "text-orange-400",   bg: "bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/20", tab: "chargers" },
+  laptop:            { label: "Μεταχειρισμένα Laptop", icon: Laptop,    color: "text-emerald-400",  bg: "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20", tab: "laptop" },
 };
 
 // ── eShop brands (static — brands don't change structurally) ──────────────────
 const ESHOP_BRANDS = [
-  { name: "Apple",        href: "/eshop?tab=mobile&brand=Apple",   icon: SiApple,   color: "text-gray-300" },
-  { name: "Samsung",      href: "/eshop?tab=mobile&brand=Samsung", icon: SiSamsung, color: "text-blue-400" },
-  { name: "Redmi/Xiaomi", href: "/eshop?tab=mobile&brand=Redmi",   icon: SiXiaomi,  color: "text-orange-400" },
-  { name: "POCO",         href: "/eshop?tab=mobile&brand=POCO",    icon: SiXiaomi,  color: "text-yellow-400" },
+  { name: "Apple",        href: "/eshop?tab=mobile&brand=Apple",      icon: SiApple,     color: "text-gray-300" },
+  { name: "Samsung",      href: "/eshop?tab=mobile&brand=Samsung",    icon: SiSamsung,   color: "text-blue-400" },
+  { name: "Redmi/Xiaomi", href: "/eshop?tab=mobile&brand=Redmi",      icon: SiXiaomi,    color: "text-orange-400" },
+  { name: "POCO",         href: "/eshop?tab=mobile&brand=POCO",       icon: SiXiaomi,    color: "text-yellow-400" },
+  { name: "Lenovo",       href: "/eshop?tab=laptop&brand=Lenovo",     icon: Laptop,      color: "text-red-400" },
+  { name: "Microsoft",    href: "/eshop?tab=laptop&brand=Microsoft",  icon: Monitor,     color: "text-sky-400" },
 ];
 
 // ── Phone brands (services menu) ──────────────────────────────────────────────

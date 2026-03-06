@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo, useEffect } from "react";
 import { useSearch } from "wouter";
-import { ShoppingCart, Package, Shield, Smartphone, Cable, Tag, X, SlidersHorizontal, HardDrive, Palette, SlidersVertical, ChevronRight } from "lucide-react";
+import { ShoppingCart, Package, Shield, Smartphone, Cable, Tag, X, SlidersHorizontal, HardDrive, Palette, SlidersVertical, ChevronRight, Laptop } from "lucide-react";
 import { Link } from "wouter";
 import type { Product } from "@shared/schema";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -112,7 +112,7 @@ const IPHONE_MODELS = [
 ];
 
 // ── Category tabs ──────────────────────────────────────────────────────────
-type TabId = "mobile" | "screen-protectors" | "cases" | "chargers" | "";
+type TabId = "mobile" | "screen-protectors" | "cases" | "chargers" | "laptop" | "";
 
 interface Tab {
   id: TabId;
@@ -126,6 +126,7 @@ const TABS: Tab[] = [
   { id: "screen-protectors", label: "Τζάμια Προστασίας", icon: Shield },
   { id: "cases", label: "Θήκες", icon: Smartphone },
   { id: "chargers", label: "Φορτιστές & Καλώδια", icon: Cable },
+  { id: "laptop", label: "Laptop", icon: Laptop },
 ];
 
 const SUBCATEGORY_LABELS: Record<string, string> = {
@@ -555,24 +556,25 @@ export default function EShop() {
   }, [search]);
 
   const isMobileTab = activeTab === "mobile";
+  const isLaptopTab = activeTab === "laptop";
   const isSubcategoryTab = activeTab === "screen-protectors" || activeTab === "cases" || activeTab === "chargers";
 
-  const fetchCategory = isMobileTab ? "mobile" : (isSubcategoryTab ? "accessory" : undefined);
+  const fetchCategory = isMobileTab ? "mobile" : isLaptopTab ? "laptop" : (isSubcategoryTab ? "accessory" : undefined);
   const fetchSubcategory = isSubcategoryTab ? activeTab : undefined;
 
   const { data: allProducts, isLoading } = useProducts(fetchCategory, fetchSubcategory);
 
   const products = useMemo(() => {
     if (!allProducts) return [];
-    if (!isMobileTab) return allProducts;
+    if (!isMobileTab && !isLaptopTab) return allProducts;
     return allProducts.filter((p) => {
       const pp = p as any;
       if (filterBrand && pp.brand !== filterBrand) return false;
-      if (filterColor && pp.color !== filterColor) return false;
-      if (filterStorage && pp.storage !== filterStorage) return false;
+      if (isMobileTab && filterColor && pp.color !== filterColor) return false;
+      if (isMobileTab && filterStorage && pp.storage !== filterStorage) return false;
       return true;
     });
-  }, [allProducts, isMobileTab, filterBrand, filterColor, filterStorage]);
+  }, [allProducts, isMobileTab, isLaptopTab, filterBrand, filterColor, filterStorage]);
 
   const isScreenProtector = (p: Product) => p.subcategory === "screen-protectors";
 
