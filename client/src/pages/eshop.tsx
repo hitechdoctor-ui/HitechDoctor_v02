@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, Fragment } from "react";
 import { useSearch } from "wouter";
 import { ShoppingCart, Package, Shield, Smartphone, Cable, Tag, X, SlidersHorizontal, HardDrive, Palette, SlidersVertical, ChevronRight, Laptop } from "lucide-react";
 import { Link } from "wouter";
@@ -61,6 +61,54 @@ const BRAND_BG: Record<string, string> = {
 
 function getBrandBg(brand?: string): string {
   return (brand && BRAND_BG[brand]) ?? "linear-gradient(145deg, #07080d 0%, #111318 50%, #07080d 100%)";
+}
+
+// ── Laptop attribute parsers ─────────────────────────────────────────────────
+function getLaptopGrade(name: string): string | null {
+  if (/GRADE\s+A-/i.test(name)) return "A-";
+  if (/GRADE\s+A\b/i.test(name)) return "A";
+  if (/GRADE\s+B/i.test(name)) return "B";
+  return null;
+}
+
+function getLaptopCpuFamily(name: string): string | null {
+  if (/Pentium Gold/i.test(name)) return "Pentium Gold";
+  if (/Ryzen\s+7/i.test(name)) return "Ryzen 7";
+  if (/Ryzen\s+5/i.test(name)) return "Ryzen 5";
+  if (/i7-/i.test(name)) return "Intel Core i7";
+  if (/i5-/i.test(name)) return "Intel Core i5";
+  if (/i3-/i.test(name)) return "Intel Core i3";
+  return null;
+}
+
+function getLaptopCpuGen(name: string): string | null {
+  const coreMatch = name.match(/i[357]-(\d)(\d{3})/i);
+  if (coreMatch) return `${coreMatch[1]}η Γενιά`;
+  const ryzenMatch = name.match(/Ryzen\s+\d+\s+(\d)\d{3}/i);
+  if (ryzenMatch) return `${ryzenMatch[1]}η Γενιά`;
+  if (/Pentium Gold 6500Y/i.test(name)) return "8η Γενιά";
+  return null;
+}
+
+function getLaptopScreenSize(name: string): string | null {
+  if (/Surface Go/i.test(name)) return '10.5"';
+  if (/Surface Laptop/i.test(name)) return '13.5"';
+  if (/X1 Carbon/i.test(name)) return '14.0"';
+  if (/E14|V330-14/i.test(name)) return '14.0"';
+  if (/L540|T540/i.test(name)) return '15.6"';
+  return null;
+}
+
+function getLaptopRamType(desc: string): string | null {
+  if (/DDR3L/i.test(desc)) return "DDR3L";
+  if (/DDR4/i.test(desc)) return "DDR4";
+  if (/DDR3/i.test(desc)) return "DDR3";
+  return null;
+}
+
+function getLaptopRamSize(desc: string): string | null {
+  const m = desc.match(/(\d+)GB\s+DDR/i);
+  return m ? `${m[1]}GB` : null;
 }
 
 function extractModelName(name: string, brand?: string, storage?: string, color?: string): string {
@@ -532,6 +580,48 @@ function MobileFilterBar({
   );
 }
 
+// ── Laptop filter section component ─────────────────────────────────────────
+function LaptopFilterSection({
+  label, options, active, onToggle, hideCount,
+}: {
+  label: string;
+  options: { value: string; count: number }[];
+  active: string;
+  onToggle: (v: string) => void;
+  hideCount?: boolean;
+}) {
+  return (
+    <div>
+      <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-2 border-b border-white/8 pb-1.5">{label}</p>
+      <div className="space-y-1 pt-1">
+        {options.map(({ value, count }) => (
+          <button
+            key={value}
+            onClick={() => onToggle(value)}
+            className={`w-full flex items-center justify-between text-sm px-2 py-1.5 rounded-lg transition-all duration-150 ${
+              active === value
+                ? "bg-primary/15 text-primary font-semibold"
+                : "text-foreground hover:bg-white/5 hover:text-primary"
+            }`}
+          >
+            <span className="flex items-center gap-2">
+              <span className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-all ${
+                active === value ? "border-primary bg-primary" : "border-white/30 bg-transparent"
+              }`}>
+                {active === value && <span className="text-black text-[10px] font-black">✓</span>}
+              </span>
+              {value}
+            </span>
+            {!hideCount && count > 0 && (
+              <span className="text-[11px] text-muted-foreground bg-white/8 rounded-full px-2 py-0.5">{count}</span>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Main eShop page ────────────────────────────────────────────────────────
 export default function EShop() {
   const search = useSearch();
@@ -543,6 +633,24 @@ export default function EShop() {
   const [filterBrand, setFilterBrand] = useState(brandParam);
   const [filterColor, setFilterColor] = useState("");
   const [filterStorage, setFilterStorage] = useState("");
+  const [filterGrade, setFilterGrade] = useState("");
+  const [filterCpuFamily, setFilterCpuFamily] = useState("");
+  const [filterCpuGen, setFilterCpuGen] = useState("");
+  const [filterScreenSize, setFilterScreenSize] = useState("");
+  const [filterRamType, setFilterRamType] = useState("");
+  const [filterRamSize, setFilterRamSize] = useState("");
+
+  const clearAllFilters = () => {
+    setFilterBrand("");
+    setFilterColor("");
+    setFilterStorage("");
+    setFilterGrade("");
+    setFilterCpuFamily("");
+    setFilterCpuGen("");
+    setFilterScreenSize("");
+    setFilterRamType("");
+    setFilterRamSize("");
+  };
 
   // Sync URL params → state when user navigates from navbar mega-menu
   useEffect(() => {
@@ -553,6 +661,12 @@ export default function EShop() {
     setFilterBrand(b);
     setFilterColor("");
     setFilterStorage("");
+    setFilterGrade("");
+    setFilterCpuFamily("");
+    setFilterCpuGen("");
+    setFilterScreenSize("");
+    setFilterRamType("");
+    setFilterRamSize("");
   }, [search]);
 
   const isMobileTab = activeTab === "mobile";
@@ -566,15 +680,20 @@ export default function EShop() {
 
   const products = useMemo(() => {
     if (!allProducts) return [];
-    if (!filterBrand && !filterColor && !filterStorage) return allProducts;
     return allProducts.filter((p) => {
       const pp = p as any;
       if (filterBrand && pp.brand !== filterBrand) return false;
       if (filterColor && pp.color !== filterColor) return false;
       if (filterStorage && pp.storage !== filterStorage) return false;
+      if (filterGrade && getLaptopGrade(p.name + " " + (p.description ?? "")) !== filterGrade) return false;
+      if (filterCpuFamily && getLaptopCpuFamily(p.name) !== filterCpuFamily) return false;
+      if (filterCpuGen && getLaptopCpuGen(p.name) !== filterCpuGen) return false;
+      if (filterScreenSize && getLaptopScreenSize(p.name) !== filterScreenSize) return false;
+      if (filterRamType && getLaptopRamType(p.description ?? "") !== filterRamType) return false;
+      if (filterRamSize && getLaptopRamSize(p.description ?? "") !== filterRamSize) return false;
       return true;
     });
-  }, [allProducts, filterBrand, filterColor, filterStorage]);
+  }, [allProducts, filterBrand, filterColor, filterStorage, filterGrade, filterCpuFamily, filterCpuGen, filterScreenSize, filterRamType, filterRamSize]);
 
   const isScreenProtector = (p: Product) => p.subcategory === "screen-protectors";
 
@@ -582,9 +701,7 @@ export default function EShop() {
 
   const handleTabChange = (tab: TabId) => {
     setActiveTab(tab);
-    setFilterBrand("");
-    setFilterColor("");
-    setFilterStorage("");
+    clearAllFilters();
   };
 
   // Filter drawer values derived from allProducts
@@ -610,7 +727,40 @@ export default function EShop() {
     return order.filter((s) => set.has(s));
   }, [allProducts]);
 
-  const activeFiltersCount = [filterBrand, filterColor, filterStorage].filter(Boolean).length;
+  const laptopFilterOptions = useMemo(() => {
+    if (!allProducts) return { grades: [], cpuFamilies: [], cpuGens: [], screenSizes: [], ramTypes: [], ramSizes: [] };
+    const grades: Record<string, number> = {};
+    const cpuFamilies: Record<string, number> = {};
+    const cpuGens: Record<string, number> = {};
+    const screenSizes: Record<string, number> = {};
+    const ramTypes: Record<string, number> = {};
+    const ramSizes: Record<string, number> = {};
+    allProducts.forEach((p) => {
+      const combined = p.name + " " + (p.description ?? "");
+      const g = getLaptopGrade(combined); if (g) grades[g] = (grades[g] ?? 0) + 1;
+      const cf = getLaptopCpuFamily(p.name); if (cf) cpuFamilies[cf] = (cpuFamilies[cf] ?? 0) + 1;
+      const cg = getLaptopCpuGen(p.name); if (cg) cpuGens[cg] = (cpuGens[cg] ?? 0) + 1;
+      const ss = getLaptopScreenSize(p.name); if (ss) screenSizes[ss] = (screenSizes[ss] ?? 0) + 1;
+      const rt = getLaptopRamType(p.description ?? ""); if (rt) ramTypes[rt] = (ramTypes[rt] ?? 0) + 1;
+      const rs = getLaptopRamSize(p.description ?? ""); if (rs) ramSizes[rs] = (ramSizes[rs] ?? 0) + 1;
+    });
+    const gradeOrder = ["A", "A-", "B"];
+    const cpuFamilyOrder = ["Intel Core i3", "Intel Core i5", "Intel Core i7", "Ryzen 5", "Ryzen 7", "Pentium Gold"];
+    const cpuGenOrder = ["4η Γενιά", "5η Γενιά", "6η Γενιά", "7η Γενιά", "8η Γενιά", "10η Γενιά"];
+    const screenSizeOrder = ['10.5"', '13.5"', '14.0"', '15.6"'];
+    const ramTypeOrder = ["DDR3", "DDR3L", "DDR4"];
+    const ramSizeOrder = ["4GB", "8GB", "16GB", "32GB"];
+    return {
+      grades: gradeOrder.filter((k) => grades[k]).map((k) => ({ value: k, count: grades[k] })),
+      cpuFamilies: cpuFamilyOrder.filter((k) => cpuFamilies[k]).map((k) => ({ value: k, count: cpuFamilies[k] })),
+      cpuGens: cpuGenOrder.filter((k) => cpuGens[k]).map((k) => ({ value: k, count: cpuGens[k] })),
+      screenSizes: screenSizeOrder.filter((k) => screenSizes[k]).map((k) => ({ value: k, count: screenSizes[k] })),
+      ramTypes: ramTypeOrder.filter((k) => ramTypes[k]).map((k) => ({ value: k, count: ramTypes[k] })),
+      ramSizes: ramSizeOrder.filter((k) => ramSizes[k]).map((k) => ({ value: k, count: ramSizes[k] })),
+    };
+  }, [allProducts]);
+
+  const activeFiltersCount = [filterBrand, filterColor, filterStorage, filterGrade, filterCpuFamily, filterCpuGen, filterScreenSize, filterRamType, filterRamSize].filter(Boolean).length;
 
   return (
     <div className="min-h-screen bg-background circuit-bg">
@@ -780,7 +930,7 @@ export default function EShop() {
           {/* Clear all */}
           {activeFiltersCount > 0 && (
             <button
-              onClick={() => { setFilterBrand(""); setFilterColor(""); setFilterStorage(""); }}
+              onClick={clearAllFilters}
               className="w-full mb-5 py-2 px-4 rounded-xl border border-red-500/40 bg-red-500/10 text-red-400 text-sm font-semibold hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2"
             >
               <X className="w-4 h-4" />
@@ -788,78 +938,152 @@ export default function EShop() {
             </button>
           )}
 
-          {/* Brand */}
-          {drawerBrands.length > 0 && (
-            <div className="mb-6">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Μάρκα</p>
-              <div className="flex flex-wrap gap-2">
-                {drawerBrands.map((b) => (
-                  <button
-                    key={b}
-                    onClick={() => setFilterBrand(filterBrand === b ? "" : b)}
-                    className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-all duration-200 ${
-                      filterBrand === b
-                        ? "bg-primary text-black border-primary shadow-[0_0_12px_rgba(0,210,200,0.35)]"
-                        : "bg-white/5 border-white/15 text-foreground hover:border-primary/50 hover:bg-primary/10"
-                    }`}
-                  >
-                    {b}
-                  </button>
-                ))}
-              </div>
+          {/* ── LAPTOP FILTERS ── */}
+          {isLaptopTab && (
+            <div className="space-y-5">
+              {/* Grade */}
+              {laptopFilterOptions.grades.length > 0 && (
+                <LaptopFilterSection
+                  label="Grade"
+                  options={laptopFilterOptions.grades}
+                  active={filterGrade}
+                  onToggle={(v) => setFilterGrade(filterGrade === v ? "" : v)}
+                />
+              )}
+              {/* Κατασκευαστής */}
+              {drawerBrands.length > 0 && (
+                <LaptopFilterSection
+                  label="Κατασκευαστής"
+                  options={drawerBrands.map((b) => ({ value: b, count: 0 }))}
+                  active={filterBrand}
+                  onToggle={(v) => setFilterBrand(filterBrand === v ? "" : v)}
+                  hideCount
+                />
+              )}
+              {/* Οικογένεια επεξεργαστή */}
+              {laptopFilterOptions.cpuFamilies.length > 0 && (
+                <LaptopFilterSection
+                  label="Οικογένεια Επεξεργαστή"
+                  options={laptopFilterOptions.cpuFamilies}
+                  active={filterCpuFamily}
+                  onToggle={(v) => setFilterCpuFamily(filterCpuFamily === v ? "" : v)}
+                />
+              )}
+              {/* Γενιά επεξεργαστή */}
+              {laptopFilterOptions.cpuGens.length > 0 && (
+                <LaptopFilterSection
+                  label="Γενιά Επεξεργαστή"
+                  options={laptopFilterOptions.cpuGens}
+                  active={filterCpuGen}
+                  onToggle={(v) => setFilterCpuGen(filterCpuGen === v ? "" : v)}
+                />
+              )}
+              {/* Διάσταση οθόνης */}
+              {laptopFilterOptions.screenSizes.length > 0 && (
+                <LaptopFilterSection
+                  label="Διάσταση Οθόνης"
+                  options={laptopFilterOptions.screenSizes}
+                  active={filterScreenSize}
+                  onToggle={(v) => setFilterScreenSize(filterScreenSize === v ? "" : v)}
+                />
+              )}
+              {/* Τύπος μνήμης */}
+              {laptopFilterOptions.ramTypes.length > 0 && (
+                <LaptopFilterSection
+                  label="Τύπος Μνήμης"
+                  options={laptopFilterOptions.ramTypes}
+                  active={filterRamType}
+                  onToggle={(v) => setFilterRamType(filterRamType === v ? "" : v)}
+                />
+              )}
+              {/* Μέγεθος μνήμης */}
+              {laptopFilterOptions.ramSizes.length > 0 && (
+                <LaptopFilterSection
+                  label="Μέγεθος Μνήμης"
+                  options={laptopFilterOptions.ramSizes}
+                  active={filterRamSize}
+                  onToggle={(v) => setFilterRamSize(filterRamSize === v ? "" : v)}
+                />
+              )}
             </div>
           )}
 
-          {/* Storage */}
-          {drawerStorages.length > 0 && (
-            <div className="mb-6">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                <HardDrive className="w-3.5 h-3.5" /> Αποθηκευτικός Χώρος
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {drawerStorages.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setFilterStorage(filterStorage === s ? "" : s)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-semibold border transition-all duration-200 ${
-                      filterStorage === s
-                        ? "bg-primary text-black border-primary"
-                        : "bg-white/5 border-white/15 text-foreground hover:border-primary/40"
-                    }`}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* ── NON-LAPTOP FILTERS ── */}
+          {!isLaptopTab && (
+            <Fragment>
+              {/* Brand */}
+              {drawerBrands.length > 0 && (
+                <div className="mb-6">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Μάρκα</p>
+                  <div className="flex flex-wrap gap-2">
+                    {drawerBrands.map((b) => (
+                      <button
+                        key={b}
+                        onClick={() => setFilterBrand(filterBrand === b ? "" : b)}
+                        className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-all duration-200 ${
+                          filterBrand === b
+                            ? "bg-primary text-black border-primary shadow-[0_0_12px_rgba(0,210,200,0.35)]"
+                            : "bg-white/5 border-white/15 text-foreground hover:border-primary/50 hover:bg-primary/10"
+                        }`}
+                      >
+                        {b}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          {/* Color */}
-          {drawerColors.length > 0 && (
-            <div className="mb-6">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                <Palette className="w-3.5 h-3.5" /> Χρώμα
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {drawerColors.map((c) => {
-                  const hex = COLOR_HEX[c.toLowerCase()] ?? "#94a3b8";
-                  return (
-                    <button
-                      key={c}
-                      onClick={() => setFilterColor(filterColor === c ? "" : c)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-200 ${
-                        filterColor === c
-                          ? "border-primary bg-primary/15 text-primary"
-                          : "border-white/15 bg-white/5 text-muted-foreground hover:border-primary/40"
-                      }`}
-                    >
-                      <span className="w-3 h-3 rounded-full border border-white/20 shrink-0" style={{ background: hex }} />
-                      {c}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+              {/* Storage */}
+              {drawerStorages.length > 0 && (
+                <div className="mb-6">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                    <HardDrive className="w-3.5 h-3.5" /> Αποθηκευτικός Χώρος
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {drawerStorages.map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setFilterStorage(filterStorage === s ? "" : s)}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-semibold border transition-all duration-200 ${
+                          filterStorage === s
+                            ? "bg-primary text-black border-primary"
+                            : "bg-white/5 border-white/15 text-foreground hover:border-primary/40"
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* Color */}
+              {drawerColors.length > 0 && (
+                <div className="mb-6">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                    <Palette className="w-3.5 h-3.5" /> Χρώμα
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {drawerColors.map((c) => {
+                      const hex = COLOR_HEX[c.toLowerCase()] ?? "#94a3b8";
+                      return (
+                        <button
+                          key={c}
+                          onClick={() => setFilterColor(filterColor === c ? "" : c)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-200 ${
+                            filterColor === c
+                              ? "border-primary bg-primary/15 text-primary"
+                              : "border-white/15 bg-white/5 text-muted-foreground hover:border-primary/40"
+                          }`}
+                        >
+                          <span className="w-3 h-3 rounded-full border border-white/20 shrink-0" style={{ background: hex }} />
+                          {c}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </Fragment>
           )}
 
           {/* Results count */}
