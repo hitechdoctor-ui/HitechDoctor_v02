@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import {
   ShoppingCart, Wrench, Package, ShieldCheck, Menu, Zap,
   Smartphone, ChevronRight, Hammer, Laptop, Monitor, Watch,
-  Gamepad2, Tablet, LogIn, MapPin,
+  Gamepad2, Tablet, LogIn, MapPin, Shield, Cable, Tag,
 } from "lucide-react";
 import { useState } from "react";
 import { useCartStore } from "@/store/cart";
@@ -18,6 +18,22 @@ import {
 } from "@/components/ui/navigation-menu";
 import { SiApple, SiSamsung, SiXiaomi, SiHuawei, SiOneplus } from "react-icons/si";
 import { GlobalSearch } from "@/components/global-search";
+
+// ── eShop categories ──────────────────────────────────────────────────────────
+const ESHOP_CATEGORIES = [
+  { name: "Κινητά Τηλέφωνα", href: "/eshop?tab=mobile", icon: Smartphone, color: "text-primary", bg: "bg-primary/10 hover:bg-primary/20 border-primary/20" },
+  { name: "Τζάμια Προστασίας", href: "/eshop?tab=screen-protectors", icon: Shield, color: "text-sky-400", bg: "bg-sky-500/10 hover:bg-sky-500/20 border-sky-500/20" },
+  { name: "Θήκες Κινητών", href: "/eshop?tab=cases", icon: Package, color: "text-violet-400", bg: "bg-violet-500/10 hover:bg-violet-500/20 border-violet-500/20" },
+  { name: "Φορτιστές & Καλώδια", href: "/eshop?tab=chargers", icon: Cable, color: "text-orange-400", bg: "bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/20" },
+];
+
+// ── eShop brands ──────────────────────────────────────────────────────────────
+const ESHOP_BRANDS = [
+  { name: "Apple", href: "/eshop?tab=mobile&brand=Apple", icon: SiApple, color: "text-gray-300" },
+  { name: "Samsung", href: "/eshop?tab=mobile&brand=Samsung", icon: SiSamsung, color: "text-blue-400" },
+  { name: "Redmi / Xiaomi", href: "/eshop?tab=mobile&brand=Redmi", icon: SiXiaomi, color: "text-orange-400" },
+  { name: "POCO", href: "/eshop?tab=mobile&brand=POCO", icon: SiXiaomi, color: "text-yellow-400" },
+];
 
 // ── Phone brands ─────────────────────────────────────────────────────────────
 const PHONE_BRANDS = [
@@ -74,7 +90,7 @@ export function Navbar() {
             Αρχική
           </Link>
 
-          {/* Υπηρεσίες — NavigationMenu with mega dropdown */}
+          {/* Υπηρεσίες + eShop — shared NavigationMenu for mutual exclusion */}
           <NavigationMenu>
             <NavigationMenuList>
               <NavigationMenuItem>
@@ -179,19 +195,113 @@ export function Navbar() {
                   </div>
                 </NavigationMenuContent>
               </NavigationMenuItem>
+
+              {/* ── eShop mega-menu ── */}
+              <NavigationMenuItem>
+                <NavigationMenuTrigger
+                  className={`text-sm font-medium bg-transparent hover:bg-transparent data-[state=open]:bg-transparent px-3 py-2 flex items-center gap-2 transition-colors ${
+                    isActive("/eshop") ? "text-primary" : "text-muted-foreground hover:text-primary"
+                  }`}
+                >
+                  <Package className="w-4 h-4" />
+                  eShop
+                </NavigationMenuTrigger>
+
+                <NavigationMenuContent>
+                  <div
+                    className="w-[620px] p-4 bg-background/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl"
+                    style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(0,210,200,0.06)" }}
+                  >
+                    <div className="flex gap-4">
+
+                      {/* ─── Left: Κατηγορίες ─── */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-3 pb-2.5 border-b border-white/8">
+                          <div className="w-6 h-6 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center shrink-0">
+                            <Tag className="w-3 h-3 text-primary" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-foreground">Κατηγορίες</p>
+                            <p className="text-[10px] text-muted-foreground">Επιλέξτε κατηγορία</p>
+                          </div>
+                          <Link
+                            href="/eshop"
+                            className="ml-auto shrink-0 text-[10px] text-primary hover:text-primary/80 flex items-center gap-0.5 transition-colors"
+                          >
+                            Δες Όλα <ChevronRight className="w-3 h-3" />
+                          </Link>
+                        </div>
+
+                        {/* 2×2 category grid */}
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {ESHOP_CATEGORIES.map((cat) => (
+                            <Link
+                              key={cat.name}
+                              href={cat.href}
+                              data-testid={`nav-eshop-cat-${cat.name.toLowerCase().replace(/\s+/g, "-")}`}
+                              className={`group flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all duration-200 ${cat.bg}`}
+                            >
+                              <cat.icon className={`w-6 h-6 ${cat.color} transition-transform duration-200 group-hover:scale-110`} />
+                              <span className="text-[10px] font-semibold text-foreground group-hover:text-primary transition-colors text-center leading-tight">
+                                {cat.name}
+                              </span>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="w-px bg-white/8 self-stretch" />
+
+                      {/* ─── Right: Μάρκες ─── */}
+                      <div className="w-[180px] shrink-0">
+                        <div className="flex items-center gap-2 mb-3 pb-2.5 border-b border-white/8">
+                          <div className="w-6 h-6 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center shrink-0">
+                            <Smartphone className="w-3 h-3 text-primary" />
+                          </div>
+                          <p className="text-xs font-bold text-foreground">Δημοφιλείς Μάρκες</p>
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          {ESHOP_BRANDS.map((brand) => (
+                            <Link
+                              key={brand.name}
+                              href={brand.href}
+                              data-testid={`nav-eshop-brand-${brand.name.toLowerCase().replace(/[\s/]+/g, "-")}`}
+                              className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-white/5 transition-colors group"
+                            >
+                              <brand.icon className={`w-4 h-4 shrink-0 ${brand.color} group-hover:scale-110 transition-transform`} />
+                              <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors leading-tight">
+                                {brand.name}
+                              </span>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="mt-3 pt-3 border-t border-white/8">
+                      <Link
+                        href="/eshop"
+                        className="flex items-center justify-between w-full px-3 py-2 rounded-xl hover:bg-primary/10 transition-colors group"
+                        data-testid="nav-eshop-all"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Package className="w-4 h-4 text-primary" />
+                          <span className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
+                            Όλο το eShop
+                          </span>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                      </Link>
+                    </div>
+                  </div>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+
             </NavigationMenuList>
           </NavigationMenu>
-
-          {/* eShop */}
-          <Link
-            href="/eshop"
-            className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors hover:text-primary flex items-center gap-2 ${
-              isActive("/eshop") ? "text-primary" : "text-muted-foreground"
-            }`}
-          >
-            <Package className="w-4 h-4" />
-            eShop
-          </Link>
 
           {/* Blog */}
           <Link

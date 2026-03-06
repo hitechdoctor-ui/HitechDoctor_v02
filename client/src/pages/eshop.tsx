@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearch } from "wouter";
 import { ShoppingCart, Package, Shield, Smartphone, Cable, Tag, X, SlidersHorizontal, HardDrive, Palette, SlidersVertical, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import type { Product } from "@shared/schema";
@@ -532,7 +533,26 @@ function MobileFilterBar({
 
 // ── Main eShop page ────────────────────────────────────────────────────────
 export default function EShop() {
-  const [activeTab, setActiveTab] = useState<TabId>("");
+  const search = useSearch();
+  const params = new URLSearchParams(search);
+  const tabParam = (params.get("tab") ?? "") as TabId;
+  const brandParam = params.get("brand") ?? "";
+
+  const [activeTab, setActiveTab] = useState<TabId>(tabParam);
+  const [filterBrand, setFilterBrand] = useState(brandParam);
+  const [filterColor, setFilterColor] = useState("");
+  const [filterStorage, setFilterStorage] = useState("");
+
+  // Sync URL params → state when user navigates from navbar mega-menu
+  useEffect(() => {
+    const p = new URLSearchParams(search);
+    const t = (p.get("tab") ?? "") as TabId;
+    const b = p.get("brand") ?? "";
+    setActiveTab(t);
+    setFilterBrand(b);
+    setFilterColor("");
+    setFilterStorage("");
+  }, [search]);
 
   const isMobileTab = activeTab === "mobile";
   const isSubcategoryTab = activeTab === "screen-protectors" || activeTab === "cases" || activeTab === "chargers";
@@ -541,11 +561,6 @@ export default function EShop() {
   const fetchSubcategory = isSubcategoryTab ? activeTab : undefined;
 
   const { data: allProducts, isLoading } = useProducts(fetchCategory, fetchSubcategory);
-
-  // Mobile-specific filters (client-side)
-  const [filterBrand, setFilterBrand] = useState("");
-  const [filterColor, setFilterColor] = useState("");
-  const [filterStorage, setFilterStorage] = useState("");
 
   const products = useMemo(() => {
     if (!allProducts) return [];
