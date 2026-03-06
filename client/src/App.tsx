@@ -23,6 +23,8 @@ import IPhoneRepairDetail from "./pages/iphone-repair-detail";
 import IPhoneRepairAlt from "./pages/iphone-repair-alt";
 import ServiceSamsung from "./pages/service-samsung";
 import SamsungRepairDetail from "./pages/samsung-repair-detail";
+import ServiceXiaomi from "./pages/service-xiaomi";
+import XiaomiRepairDetail from "./pages/xiaomi-repair-detail";
 import EShop from "./pages/eshop";
 import ProductDetail from "./pages/product-detail";
 import Checkout from "./pages/checkout";
@@ -95,6 +97,8 @@ function Router() {
         <Route path="/episkevi-v2-iphone/:slug" component={IPhoneRepairAlt} />
         <Route path="/services/episkeui-samsung" component={ServiceSamsung} />
         <Route path="/episkevi-samsung/:slug" component={SamsungRepairDetail} />
+        <Route path="/services/episkeui-xiaomi" component={ServiceXiaomi} />
+        <Route path="/episkevi-xiaomi/:slug" component={XiaomiRepairDetail} />
         <Route path="/eshop" component={EShop} />
         <Route path="/eshop/:slug" component={ProductDetail} />
         <Route path="/checkout" component={Checkout} />
