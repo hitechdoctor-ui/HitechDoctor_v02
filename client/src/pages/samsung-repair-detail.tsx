@@ -11,7 +11,7 @@ import { findSamsungBySlug, SAMSUNG_SERIES } from "@/data/samsung-devices";
 import { RepairRequestModal } from "@/components/repair-request-modal";
 import {
   CheckCircle2, Monitor, Battery, Zap, ChevronRight, Phone,
-  Shield, Star, Clock, Wrench, ShoppingCart, ArrowRight, Layers,
+  Shield, Star, Clock, Wrench, ShoppingCart, ArrowRight,
 } from "lucide-react";
 
 const repairScreenImg = "/images/repair-screen.webp";
@@ -158,7 +158,6 @@ export default function SamsungRepairDetail() {
         ? [{ "@type": "Offer", "name": `Αλλαγή Εσωτερικής Οθόνης ${model.name}`, "price": model.innerScreenPrice, "priceCurrency": "EUR" }]
         : []),
       { "@type": "Offer", "name": `Αλλαγή Μπαταρίας ${model.name}`, "price": model.batteryPrice, "priceCurrency": "EUR" },
-      { "@type": "Offer", "name": `Αλλαγή Πίσω Καλύμματος ${model.name}`, "price": model.backCoverPrice, "priceCurrency": "EUR" },
       { "@type": "Offer", "name": `Επισκευή Θύρας USB-C ${model.name}`, "price": model.portPrice, "priceCurrency": "EUR" },
     ],
   };
@@ -295,13 +294,6 @@ export default function SamsungRepairDetail() {
                   label="Αλλαγή Μπαταρίας"
                   price={model.batteryPrice}
                   note="Γνήσια ή premium ποιότητας"
-                  onBook={() => setModalOpen(true)}
-                />
-                <PriceRow
-                  icon={Layers}
-                  label="Αλλαγή Πίσω Καλύμματος"
-                  price={model.backCoverPrice}
-                  note="Γυαλί / πλαστικό πίσω πλευράς"
                   onBook={() => setModalOpen(true)}
                 />
                 <PriceRow
@@ -591,10 +583,6 @@ export default function SamsungRepairDetail() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Μπαταρία</span>
                     <span className="font-bold text-foreground">€{model.batteryPrice}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Πίσω κάλυμμα</span>
-                    <span className="font-bold text-foreground">€{model.backCoverPrice}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Θύρα USB-C</span>
