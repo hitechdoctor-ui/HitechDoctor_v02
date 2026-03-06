@@ -1,19 +1,95 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Search, Package, Wrench, Smartphone, X, Laptop, Gamepad2, Tablet, Watch, ArrowRight } from "lucide-react";
+import {
+  Search, Package, Wrench, Smartphone, X, Laptop, Gamepad2,
+  Tablet, Watch, ArrowRight, FileText, Info, Phone, HelpCircle,
+  ShoppingCart, Star,
+} from "lucide-react";
 import { type Product } from "@shared/schema";
+import { SAMSUNG_SERIES } from "@/data/samsung-devices";
+import { IPHONE_SERIES } from "@/data/iphone-devices";
+import { BLOG_POSTS } from "@/data/blog-posts";
 
-// ── Static service entries ───────────────────────────────────────────────────
-const SERVICES = [
-  { name: "Επισκευή iPhone", href: "/services/episkeui-iphone", icon: Smartphone, sub: "Όλα τα μοντέλα" },
-  { name: "Επισκευή Κινητών", href: "/services/episkeui-kiniton", icon: Smartphone, sub: "iPhone · Samsung · Xiaomi" },
-  { name: "Επισκευή Laptop", href: "/services", icon: Laptop, sub: "Υπηρεσία" },
-  { name: "Επισκευή Tablet", href: "/services", icon: Tablet, sub: "Υπηρεσία" },
-  { name: "Επισκευή PlayStation", href: "/services", icon: Gamepad2, sub: "Υπηρεσία" },
-  { name: "Επισκευή Υπολογιστή", href: "/services", icon: Laptop, sub: "Υπηρεσία" },
-  { name: "Επισκευή Apple Watch", href: "/services", icon: Watch, sub: "Υπηρεσία" },
-];
+interface SearchEntry {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  sub: string;
+  category: "service" | "iphone" | "samsung" | "page" | "blog";
+  keywords?: string;
+}
+
+function buildIndex(): SearchEntry[] {
+  const entries: SearchEntry[] = [];
+
+  // ── Static service pages ────────────────────────────────────────────────
+  entries.push(
+    { name: "Επισκευή iPhone", href: "/services/episkeui-iphone", icon: Smartphone, sub: "Όλα τα μοντέλα iPhone", category: "service" },
+    { name: "Επισκευή Samsung Galaxy", href: "/services/episkeui-samsung", icon: Smartphone, sub: "A · S · Z Series", category: "service", keywords: "samsung galaxy" },
+    { name: "Επισκευή Κινητών", href: "/services/episkeui-kiniton", icon: Smartphone, sub: "iPhone · Samsung · Xiaomi", category: "service" },
+    { name: "Επισκευή Laptop", href: "/services", icon: Laptop, sub: "Υπηρεσία", category: "service" },
+    { name: "Επισκευή Tablet", href: "/services", icon: Tablet, sub: "Υπηρεσία", category: "service" },
+    { name: "Επισκευή PlayStation", href: "/services", icon: Gamepad2, sub: "Υπηρεσία", category: "service" },
+    { name: "Επισκευή Υπολογιστή", href: "/services", icon: Laptop, sub: "Υπηρεσία", category: "service" },
+    { name: "Επισκευή Apple Watch", href: "/services", icon: Watch, sub: "Υπηρεσία", category: "service" },
+  );
+
+  // ── Static informational pages ──────────────────────────────────────────
+  entries.push(
+    { name: "Σχετικά με εμάς", href: "/about", icon: Info, sub: "Η ιστορία μας", category: "page" },
+    { name: "Επικοινωνία", href: "/contact", icon: Phone, sub: "Τηλέφωνο & Διεύθυνση", category: "page" },
+    { name: "Συχνές Ερωτήσεις (FAQ)", href: "/faq", icon: HelpCircle, sub: "Απαντήσεις σε ερωτήσεις", category: "page" },
+    { name: "eShop", href: "/eshop", icon: ShoppingCart, sub: "Αξεσουάρ · Κινητά · Laptops", category: "page" },
+    { name: "Blog — Συμβουλές & Οδηγοί", href: "/blog", icon: FileText, sub: "Άρθρα για κινητά & επισκευή", category: "page" },
+    { name: "Τρόποι Πληρωμής", href: "/payment-methods", icon: Star, sub: "Κάρτα · Μετρητά · Δόσεις", category: "page" },
+    { name: "Όροι Υπηρεσιών", href: "/oroi-episkeuis", icon: FileText, sub: "Πολιτική επισκευής", category: "page" },
+  );
+
+  // ── iPhone model pages (dynamic from data) ─────────────────────────────
+  for (const series of IPHONE_SERIES) {
+    for (const model of series.models) {
+      entries.push({
+        name: `Επισκευή ${model.name}`,
+        href: `/episkevi-iphone/${model.slug}`,
+        icon: Smartphone,
+        sub: `Οθόνη από €${model.screenTiers[2].price} · Μπαταρία από €${model.batteryTiers[2].price}`,
+        category: "iphone",
+        keywords: `iphone ${model.name.toLowerCase()} επισκευή αλλαγη οθονη μπαταρια`,
+      });
+    }
+  }
+
+  // ── Samsung model pages (dynamic from data) ────────────────────────────
+  for (const series of SAMSUNG_SERIES) {
+    for (const model of series.models) {
+      entries.push({
+        name: `Επισκευή ${model.name}`,
+        href: `/episkevi-samsung/${model.slug}`,
+        icon: Smartphone,
+        sub: `Οθόνη €${model.screenPrice} · Μπαταρία €${model.batteryPrice}`,
+        category: "samsung",
+        keywords: `samsung galaxy ${model.name.toLowerCase()} επισκευή αλλαγη οθονη μπαταρια`,
+      });
+    }
+  }
+
+  // ── Blog posts (dynamic from data) ────────────────────────────────────
+  for (const post of BLOG_POSTS) {
+    entries.push({
+      name: post.title,
+      href: `/blog/${post.slug}`,
+      icon: FileText,
+      sub: `Blog · ${post.category}`,
+      category: "blog",
+      keywords: post.title.toLowerCase(),
+    });
+  }
+
+  return entries;
+}
+
+const ALL_ENTRIES = buildIndex();
 
 function highlight(text: string, query: string) {
   if (!query.trim()) return <span>{text}</span>;
@@ -27,6 +103,14 @@ function highlight(text: string, query: string) {
     </span>
   );
 }
+
+const CATEGORY_LABELS: Record<string, { label: string; icon: typeof Wrench }> = {
+  service: { label: "Υπηρεσίες", icon: Wrench },
+  iphone:  { label: "Επισκευή iPhone", icon: Smartphone },
+  samsung: { label: "Επισκευή Samsung", icon: Smartphone },
+  page:    { label: "Σελίδες", icon: Info },
+  blog:    { label: "Blog", icon: FileText },
+};
 
 interface GlobalSearchProps {
   className?: string;
@@ -42,7 +126,6 @@ export function GlobalSearch({ className = "", placeholder = "Αναζήτηση
 
   const { data: products } = useQuery<Product[]>({ queryKey: ["/api/products"] });
 
-  // Close on outside click
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -53,7 +136,6 @@ export function GlobalSearch({ className = "", placeholder = "Αναζήτηση
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Keyboard shortcut: Ctrl+K / Cmd+K
   useEffect(() => {
     function handler(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -69,22 +151,36 @@ export function GlobalSearch({ className = "", placeholder = "Αναζήτηση
 
   const q = query.trim().toLowerCase();
 
-  const matchedProducts = q.length >= 1
-    ? (products ?? []).filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.description.toLowerCase().includes(q) ||
-          p.slug?.toLowerCase().includes(q) ||
-          (p.subcategory ?? "").toLowerCase().includes(q) ||
-          p.category.toLowerCase().includes(q)
-      ).slice(0, 5)
-    : [];
+  const matchedProducts = useMemo(() =>
+    q.length >= 1
+      ? (products ?? []).filter(
+          (p) =>
+            p.name.toLowerCase().includes(q) ||
+            p.description.toLowerCase().includes(q) ||
+            p.slug?.toLowerCase().includes(q) ||
+            (p.subcategory ?? "").toLowerCase().includes(q) ||
+            p.category.toLowerCase().includes(q)
+        ).slice(0, 5)
+      : [],
+    [q, products]
+  );
 
-  const matchedServices = q.length >= 1
-    ? SERVICES.filter((s) => s.name.toLowerCase().includes(q) || s.sub.toLowerCase().includes(q)).slice(0, 4)
-    : [];
+  const matchedEntries = useMemo(() => {
+    if (q.length < 1) return {};
+    const grouped: Record<string, SearchEntry[]> = {};
+    for (const entry of ALL_ENTRIES) {
+      const searchable = `${entry.name} ${entry.sub} ${entry.keywords ?? ""}`.toLowerCase();
+      if (!searchable.includes(q)) continue;
+      if (!grouped[entry.category]) grouped[entry.category] = [];
+      if (grouped[entry.category].length < 4) {
+        grouped[entry.category].push(entry);
+      }
+    }
+    return grouped;
+  }, [q]);
 
-  const hasResults = matchedProducts.length > 0 || matchedServices.length > 0;
+  const hasEntries = Object.keys(matchedEntries).length > 0;
+  const hasResults = matchedProducts.length > 0 || hasEntries;
 
   function go(href: string) {
     setQuery("");
@@ -92,9 +188,10 @@ export function GlobalSearch({ className = "", placeholder = "Αναζήτηση
     navigate(href);
   }
 
+  const categoryOrder: (keyof typeof CATEGORY_LABELS)[] = ["service", "iphone", "samsung", "page", "blog"];
+
   return (
     <div ref={containerRef} className={`relative ${className}`}>
-      {/* Search Input */}
       <div
         className={`flex items-center gap-2 px-3 h-9 rounded-xl border transition-all duration-200 ${
           open
@@ -126,7 +223,6 @@ export function GlobalSearch({ className = "", placeholder = "Αναζήτηση
         )}
       </div>
 
-      {/* Dropdown results */}
       {open && q.length >= 1 && (
         <div
           className="absolute top-full mt-2 left-0 right-0 z-[100] rounded-2xl border border-white/10 overflow-hidden"
@@ -134,6 +230,9 @@ export function GlobalSearch({ className = "", placeholder = "Αναζήτηση
             background: "rgba(5,12,25,0.96)",
             backdropFilter: "blur(24px)",
             boxShadow: "0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(0,210,200,0.06)",
+            minWidth: "340px",
+            maxHeight: "480px",
+            overflowY: "auto",
           }}
         >
           {!hasResults ? (
@@ -143,7 +242,8 @@ export function GlobalSearch({ className = "", placeholder = "Αναζήτηση
             </div>
           ) : (
             <div className="py-2">
-              {/* Products */}
+
+              {/* eShop Products */}
               {matchedProducts.length > 0 && (
                 <div>
                   <p className="px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground/60 flex items-center gap-1.5">
@@ -157,20 +257,14 @@ export function GlobalSearch({ className = "", placeholder = "Αναζήτηση
                       data-testid={`search-result-product-${p.id}`}
                     >
                       {p.imageUrl ? (
-                        <img
-                          src={p.imageUrl}
-                          alt=""
-                          className="w-9 h-9 rounded-lg object-cover border border-white/8 shrink-0"
-                        />
+                        <img src={p.imageUrl} alt="" className="w-9 h-9 rounded-lg object-cover border border-white/8 shrink-0" />
                       ) : (
                         <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
                           <Package className="w-4 h-4 text-primary" />
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-semibold text-foreground truncate">
-                          {highlight(p.name, query)}
-                        </p>
+                        <p className="text-xs font-semibold text-foreground truncate">{highlight(p.name, query)}</p>
                         <p className="text-[10px] text-muted-foreground">
                           {new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR" }).format(Number(p.price))}
                         </p>
@@ -181,38 +275,45 @@ export function GlobalSearch({ className = "", placeholder = "Αναζήτηση
                 </div>
               )}
 
-              {/* Services */}
-              {matchedServices.length > 0 && (
-                <div className={matchedProducts.length > 0 ? "border-t border-white/8 mt-1 pt-1" : ""}>
-                  <p className="px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground/60 flex items-center gap-1.5">
-                    <Wrench className="w-3 h-3" /> Υπηρεσίες
-                  </p>
-                  {matchedServices.map((s) => (
-                    <button
-                      key={s.name}
-                      onClick={() => go(s.href)}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 transition-colors text-left group"
-                      data-testid={`search-result-service-${s.name.toLowerCase().replace(/\s+/g, "-")}`}
-                    >
-                      <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                        <s.icon className="w-4 h-4 text-primary" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-semibold text-foreground truncate">
-                          {highlight(s.name, query)}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground">{s.sub}</p>
-                      </div>
-                      <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-primary transition-colors shrink-0" />
-                    </button>
-                  ))}
-                </div>
-              )}
+              {/* Grouped entries (services, iphone, samsung, pages, blog) */}
+              {categoryOrder.map((cat) => {
+                const entries = matchedEntries[cat];
+                if (!entries || entries.length === 0) return null;
+                const meta = CATEGORY_LABELS[cat];
+                const CatIcon = meta.icon;
+                const hasBorder = matchedProducts.length > 0 || categoryOrder.slice(0, categoryOrder.indexOf(cat)).some((c) => matchedEntries[c]?.length);
+                return (
+                  <div key={cat} className={hasBorder ? "border-t border-white/8 mt-1 pt-1" : ""}>
+                    <p className="px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground/60 flex items-center gap-1.5">
+                      <CatIcon className="w-3 h-3" /> {meta.label}
+                    </p>
+                    {entries.map((entry) => {
+                      const EntryIcon = entry.icon;
+                      return (
+                        <button
+                          key={entry.href + entry.name}
+                          onClick={() => go(entry.href)}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 transition-colors text-left group"
+                          data-testid={`search-result-${cat}-${entry.href.replace(/\//g, "-")}`}
+                        >
+                          <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                            <EntryIcon className="w-4 h-4 text-primary" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-semibold text-foreground truncate">{highlight(entry.name, query)}</p>
+                            <p className="text-[10px] text-muted-foreground truncate">{entry.sub}</p>
+                          </div>
+                          <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-primary transition-colors shrink-0" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })}
             </div>
           )}
 
-          {/* Footer hint */}
-          <div className="px-3 py-2 border-t border-white/8 flex items-center gap-4 bg-white/2">
+          <div className="px-3 py-2 border-t border-white/8 flex items-center gap-4 bg-white/2 sticky bottom-0">
             <span className="text-[9px] text-muted-foreground/50 flex items-center gap-1">
               <kbd className="px-1 rounded border border-white/10 font-mono">↵</kbd> Μετάβαση
             </span>
