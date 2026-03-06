@@ -24,6 +24,7 @@ export interface SamsungSeries {
 function slug(name: string): string {
   return name
     .toLowerCase()
+    .replace(/\+/g, "plus")
     .replace(/samsung\s+galaxy\s+/i, "")
     .replace(/samsung\s+/i, "")
     .replace(/[()]/g, "")

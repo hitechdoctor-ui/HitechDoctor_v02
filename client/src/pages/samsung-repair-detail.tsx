@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useRoute, Link } from "wouter";
 import { Helmet } from "react-helmet-async";
 import { Navbar } from "@/components/layout/navbar";
@@ -6,7 +7,8 @@ import { Seo } from "@/components/seo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
-import { findSamsungBySlug } from "@/data/samsung-devices";
+import { findSamsungBySlug, SAMSUNG_SERIES } from "@/data/samsung-devices";
+import { RepairRequestModal } from "@/components/repair-request-modal";
 import {
   CheckCircle2, Monitor, Battery, Zap, ChevronRight, Phone,
   Shield, Star, Clock, Wrench, ShoppingCart, ArrowRight, Layers,
@@ -58,32 +60,51 @@ function SidebarProducts({ subcategory, label }: { subcategory: string; label: s
   );
 }
 
-function PriceRow({ icon: Icon, label, price, note, highlight }: {
-  icon: typeof Monitor; label: string; price: number; note?: string; highlight?: boolean;
-}) {
+interface PriceRowProps {
+  icon: typeof Monitor;
+  label: string;
+  price: number;
+  note?: string;
+  highlight?: boolean;
+  onBook?: () => void;
+}
+
+function PriceRow({ icon: Icon, label, price, note, highlight, onBook }: PriceRowProps) {
   return (
     <div
-      id={`section-${label.toLowerCase().replace(/\s+/g, "-")}`}
       className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
         highlight
           ? "border-primary/40 bg-primary/8 shadow-[0_0_16px_rgba(0,210,200,0.1)]"
           : "border-white/10 bg-card hover:border-white/20"
       }`}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 min-w-0">
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
           highlight ? "bg-primary/20 border border-primary/30" : "bg-white/5 border border-white/10"
         }`}>
           <Icon className={`w-5 h-5 ${highlight ? "text-primary" : "text-muted-foreground"}`} />
         </div>
-        <div>
-          <p className={`font-display font-bold text-sm ${highlight ? "text-foreground" : "text-foreground"}`}>{label}</p>
+        <div className="min-w-0">
+          <p className="font-display font-bold text-sm text-foreground">{label}</p>
           {note && <p className="text-[10px] text-muted-foreground mt-0.5">{note}</p>}
         </div>
       </div>
-      <div className="text-right">
-        <p className={`text-2xl font-extrabold ${highlight ? "text-primary" : "text-foreground"}`}>€{price}</p>
-        <p className="text-[10px] text-muted-foreground">συμπ. ΦΠΑ</p>
+      <div className="flex items-center gap-3 shrink-0 ml-3">
+        <div className="text-right">
+          <p className={`text-2xl font-extrabold ${highlight ? "text-primary" : "text-foreground"}`}>€{price}</p>
+          <p className="text-[10px] text-muted-foreground">συμπ. ΦΠΑ</p>
+        </div>
+        {onBook && (
+          <Button
+            onClick={onBook}
+            size="sm"
+            className="h-9 px-4 font-semibold border-0 text-xs shrink-0"
+            style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
+            data-testid={`button-book-${label.toLowerCase().replace(/\s+/g, "-")}`}
+          >
+            Ραντεβού
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -93,6 +114,7 @@ export default function SamsungRepairDetail() {
   const [, params] = useRoute("/episkevi-samsung/:slug");
   const modelSlug = params?.slug ?? "";
   const model = findSamsungBySlug(modelSlug);
+  const [modalOpen, setModalOpen] = useState(false);
 
   if (!model) {
     return (
@@ -132,11 +154,13 @@ export default function SamsungRepairDetail() {
     "areaServed": "Αθήνα",
     "offers": [
       { "@type": "Offer", "name": `Αλλαγή Οθόνης ${model.name}`, "price": model.screenPrice, "priceCurrency": "EUR" },
-      model.hasInnerScreen && { "@type": "Offer", "name": `Αλλαγή Εσωτερικής Οθόνης ${model.name}`, "price": model.innerScreenPrice, "priceCurrency": "EUR" },
+      ...(model.hasInnerScreen && model.innerScreenPrice
+        ? [{ "@type": "Offer", "name": `Αλλαγή Εσωτερικής Οθόνης ${model.name}`, "price": model.innerScreenPrice, "priceCurrency": "EUR" }]
+        : []),
       { "@type": "Offer", "name": `Αλλαγή Μπαταρίας ${model.name}`, "price": model.batteryPrice, "priceCurrency": "EUR" },
       { "@type": "Offer", "name": `Αλλαγή Πίσω Καλύμματος ${model.name}`, "price": model.backCoverPrice, "priceCurrency": "EUR" },
       { "@type": "Offer", "name": `Επισκευή Θύρας USB-C ${model.name}`, "price": model.portPrice, "priceCurrency": "EUR" },
-    ].filter(Boolean),
+    ],
   };
 
   const breadcrumbLd = {
@@ -149,6 +173,11 @@ export default function SamsungRepairDetail() {
       { "@type": "ListItem", "position": 4, "name": model.name, "item": canonicalUrl },
     ],
   };
+
+  const otherModels = SAMSUNG_SERIES
+    .flatMap((s) => s.models)
+    .filter((m) => m.slug !== model.slug)
+    .slice(0, 10);
 
   return (
     <div className="min-h-screen bg-background circuit-bg">
@@ -165,7 +194,7 @@ export default function SamsungRepairDetail() {
 
       <Navbar />
 
-      <main className="container mx-auto px-4 pt-6 pb-20 max-w-6xl">
+      <main className="container mx-auto px-4 pt-6 pb-28 max-w-6xl">
         {/* Breadcrumb */}
         <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-muted-foreground mb-6 flex-wrap">
           <Link href="/" className="hover:text-primary transition-colors">Αρχική</Link>
@@ -214,11 +243,12 @@ export default function SamsungRepairDetail() {
         <div className="sticky top-16 z-30 -mx-4 px-4 bg-background/80 backdrop-blur border-b border-white/8 mb-6">
           <div className="flex gap-1 overflow-x-auto scrollbar-hide py-2">
             {[
-              { href: "#section-prices",    label: "Τιμές" },
-              { href: "#section-screen",    label: "Οθόνη" },
-              { href: "#section-battery",   label: "Μπαταρία" },
-              { href: "#section-port",      label: "Θύρα USB-C" },
-              { href: "#section-faq",       label: "FAQ" },
+              { href: "#section-prices",  label: "Τιμές" },
+              { href: "#section-screen",  label: "Οθόνη" },
+              { href: "#section-battery", label: "Μπαταρία" },
+              { href: "#section-port",    label: "Θύρα USB-C" },
+              { href: "#section-form",    label: "Αίτημα" },
+              { href: "#section-faq",     label: "FAQ" },
             ].map((a) => (
               <a
                 key={a.href}
@@ -234,10 +264,10 @@ export default function SamsungRepairDetail() {
 
         {/* Main layout */}
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
-          {/* Left: content */}
+          {/* Left column */}
           <div className="lg:col-span-2 space-y-10">
 
-            {/* Price summary */}
+            {/* Price table */}
             <section id="section-prices">
               <h2 className="text-xl font-display font-bold text-foreground mb-4">
                 Τιμοκατάλογος Επισκευής
@@ -249,6 +279,7 @@ export default function SamsungRepairDetail() {
                   price={model.screenPrice}
                   note={model.foldable ? "Εξωτερική οθόνη (cover display)" : `${model.screen}`}
                   highlight
+                  onBook={() => setModalOpen(true)}
                 />
                 {model.hasInnerScreen && model.innerScreenPrice && (
                   <PriceRow
@@ -256,6 +287,7 @@ export default function SamsungRepairDetail() {
                     label="Αλλαγή Εσωτερικής Οθόνης"
                     price={model.innerScreenPrice}
                     note="Κύρια αναδιπλούμενη οθόνη (main display)"
+                    onBook={() => setModalOpen(true)}
                   />
                 )}
                 <PriceRow
@@ -263,26 +295,29 @@ export default function SamsungRepairDetail() {
                   label="Αλλαγή Μπαταρίας"
                   price={model.batteryPrice}
                   note="Γνήσια ή premium ποιότητας"
+                  onBook={() => setModalOpen(true)}
                 />
                 <PriceRow
                   icon={Layers}
                   label="Αλλαγή Πίσω Καλύμματος"
                   price={model.backCoverPrice}
                   note="Γυαλί / πλαστικό πίσω πλευράς"
+                  onBook={() => setModalOpen(true)}
                 />
                 <PriceRow
                   icon={Zap}
                   label="Επισκευή Θύρας USB-C"
                   price={model.portPrice}
                   note="Αντικατάσταση ή καθαρισμός θύρας φόρτισης"
+                  onBook={() => setModalOpen(true)}
                 />
               </div>
 
               {/* Trust badges */}
               <div className="grid grid-cols-3 gap-3 mt-6">
                 {[
-                  { icon: Shield, label: "Εγγύηση", sub: "Γραπτή εγγύηση" },
-                  { icon: Clock,  label: "30 λεπτά", sub: "Γρήγορη επισκευή" },
+                  { icon: Shield, label: "Εγγύηση",     sub: "Γραπτή εγγύηση" },
+                  { icon: Clock,  label: "30 λεπτά",    sub: "Γρήγορη επισκευή" },
                   { icon: Star,   label: "Πιστοποιημένοι", sub: "Samsung τεχνικοί" },
                 ].map((b) => (
                   <div key={b.label} className="flex flex-col items-center text-center p-3 rounded-xl border border-white/8 bg-white/2">
@@ -310,9 +345,9 @@ export default function SamsungRepairDetail() {
               </h2>
               <div className="prose prose-sm prose-invert max-w-none text-muted-foreground leading-relaxed">
                 <p>
-                  Η αντικατάσταση της οθόνης {model.name} είναι μία από τις πιο συνηθισμένες επισκευές στο εργαστήριό μας.
-                  Το μοντέλο διαθέτει {model.screen} που παρέχει εξαιρετική ευκρίνεια και χρώματα —
-                  όμως ένα τυχαίο πέσιμο μπορεί να προκαλέσει ρωγμές ή δυσλειτουργίες.
+                  Η αντικατάσταση της οθόνης {model.name} είναι μία από τις πιο συνηθισμένες επισκευές
+                  στο εργαστήριό μας. Το μοντέλο διαθέτει {model.screen} που παρέχει εξαιρετική ευκρίνεια
+                  και χρώματα — όμως ένα τυχαίο πέσιμο μπορεί να προκαλέσει ρωγμές ή δυσλειτουργίες.
                 </p>
                 <p>
                   Χρησιμοποιούμε αποκλειστικά AMOLED πάνελ υψηλής ποιότητας που διατηρούν πλήρη
@@ -334,6 +369,24 @@ export default function SamsungRepairDetail() {
                     </li>
                   ))}
                 </ul>
+              </div>
+
+              <div className="mt-4 p-4 rounded-xl border border-primary/20 bg-primary/5 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Αλλαγή Οθόνης {model.name}</p>
+                  <p className="text-xs text-muted-foreground">{model.screen}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl font-extrabold text-primary">€{model.screenPrice}</span>
+                  <Button
+                    onClick={() => setModalOpen(true)}
+                    className="h-9 px-5 font-semibold border-0 text-sm"
+                    style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
+                    data-testid="button-book-screen"
+                  >
+                    Κλείσε Ραντεβού
+                  </Button>
+                </div>
               </div>
             </section>
 
@@ -374,6 +427,24 @@ export default function SamsungRepairDetail() {
                   ))}
                 </ul>
               </div>
+
+              <div className="mt-4 p-4 rounded-xl border border-primary/20 bg-primary/5 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Αλλαγή Μπαταρίας {model.name}</p>
+                  <p className="text-xs text-muted-foreground">Γνήσια ή premium ποιότητας</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl font-extrabold text-primary">€{model.batteryPrice}</span>
+                  <Button
+                    onClick={() => setModalOpen(true)}
+                    className="h-9 px-5 font-semibold border-0 text-sm"
+                    style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
+                    data-testid="button-book-battery"
+                  >
+                    Κλείσε Ραντεβού
+                  </Button>
+                </div>
+              </div>
             </section>
 
             {/* Port section */}
@@ -412,6 +483,49 @@ export default function SamsungRepairDetail() {
               </div>
             </section>
 
+            {/* Repair Request Form section */}
+            <section id="section-form" className="p-6 rounded-2xl border border-white/10 bg-card">
+              <h2 className="text-xl font-display font-bold text-foreground mb-1">
+                Αίτημα Επισκευής — {model.name}
+              </h2>
+              <p className="text-sm text-muted-foreground mb-5">
+                Συμπληρώστε τη φόρμα και θα επικοινωνήσουμε μαζί σας εντός 30 λεπτών.
+              </p>
+              <Button
+                onClick={() => setModalOpen(true)}
+                className="w-full sm:w-auto h-11 px-8 font-semibold border-0 text-base"
+                style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))", boxShadow: "0 0 24px rgba(0,210,200,0.25)" }}
+                data-testid="button-open-repair-form"
+              >
+                <Wrench className="w-4 h-4 mr-2" />
+                Άνοιξε τη Φόρμα Επισκευής
+              </Button>
+              <div className="mt-4 flex flex-wrap gap-4">
+                <a href="tel:+306981882005" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <Phone className="w-4 h-4 text-primary" />
+                  6981 882 005
+                </a>
+                <a href="mailto:info@hitechdoctor.com" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <ArrowRight className="w-4 h-4 text-primary" />
+                  info@hitechdoctor.com
+                </a>
+              </div>
+            </section>
+
+            {/* Other Samsung models */}
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70 mb-3">Άλλα Μοντέλα Samsung</p>
+              <div className="flex flex-wrap gap-2">
+                {otherModels.map((m) => (
+                  <Link key={m.slug} href={`/episkevi-samsung/${m.slug}`}>
+                    <span className="text-xs px-3 py-1.5 rounded-full border border-white/10 bg-card hover:border-primary/40 hover:text-primary text-muted-foreground transition-all cursor-pointer">
+                      {m.name}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
             {/* FAQ */}
             <section id="section-faq">
               <h2 className="text-xl font-display font-bold text-foreground mb-4">Συχνές Ερωτήσεις</h2>
@@ -431,7 +545,7 @@ export default function SamsungRepairDetail() {
                   },
                   {
                     q: "Χρειάζεται ραντεβού;",
-                    a: "Μπορείτε να έρθετε χωρίς ραντεβού, αλλά συνιστούμε να καλέσετε μπροστά για να βεβαιωθείτε ότι το ανταλλακτικό είναι διαθέσιμο.",
+                    a: "Μπορείτε να έρθετε χωρίς ραντεβού, αλλά συνιστούμε να καλέσετε ή να υποβάλετε αίτημα online για να βεβαιωθείτε ότι το ανταλλακτικό είναι διαθέσιμο.",
                   },
                   ...(model.foldable ? [{
                     q: "Τι ισχύει για την εσωτερική οθόνη του foldable;",
@@ -455,81 +569,107 @@ export default function SamsungRepairDetail() {
 
           </div>
 
-          {/* Right: Sidebar */}
-          <div className="hidden lg:block">
+          {/* Sticky Sidebar */}
+          <aside className="hidden lg:block">
             <div className="sticky top-28 space-y-6">
-              {/* CTA Card */}
+              {/* Summary card */}
               <div className="bg-card pcb-border rounded-2xl p-5 border border-primary/20">
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70 mb-3">
-                  Κλείστε Ραντεβού
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70 border-b border-white/8 pb-2 mb-3">
+                  Σύνοψη Τιμών
                 </p>
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Οθόνη</span>
-                    <span className="font-extrabold text-primary">€{model.screenPrice}</span>
+                    <span className="text-muted-foreground">Οθόνη{model.foldable ? " (εξωτ.)" : ""}</span>
+                    <span className="font-bold text-primary">€{model.screenPrice}</span>
                   </div>
                   {model.hasInnerScreen && model.innerScreenPrice && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Εσωτ. Οθόνη</span>
-                      <span className="font-extrabold text-primary">€{model.innerScreenPrice}</span>
+                      <span className="text-muted-foreground">Οθόνη (εσωτ.)</span>
+                      <span className="font-bold text-primary">€{model.innerScreenPrice}</span>
                     </div>
                   )}
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Μπαταρία</span>
-                    <span className="font-extrabold text-foreground">€{model.batteryPrice}</span>
+                    <span className="font-bold text-foreground">€{model.batteryPrice}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Πίσω κάλυμμα</span>
-                    <span className="font-extrabold text-foreground">€{model.backCoverPrice}</span>
+                    <span className="font-bold text-foreground">€{model.backCoverPrice}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Θύρα USB-C</span>
-                    <span className="font-extrabold text-foreground">€{model.portPrice}</span>
+                    <span className="font-bold text-foreground">€{model.portPrice}</span>
                   </div>
                 </div>
-                <a href="tel:+306981882005" className="block">
-                  <Button
-                    className="w-full h-11 font-semibold border-0"
-                    style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))", boxShadow: "0 0 20px rgba(0,210,200,0.25)" }}
-                    data-testid="button-sidebar-call"
-                  >
-                    <Phone className="w-4 h-4 mr-2" />
-                    698 188 2005
-                  </Button>
+
+                <Button
+                  onClick={() => setModalOpen(true)}
+                  className="w-full h-11 font-semibold border-0 mb-2"
+                  style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))", boxShadow: "0 0 20px rgba(0,210,200,0.25)" }}
+                  data-testid="button-sidebar-book"
+                >
+                  <Wrench className="w-4 h-4 mr-2" />
+                  Κλείσε Ραντεβού
+                </Button>
+                <a href="tel:+306981882005" className="flex items-center justify-center gap-2 text-sm text-primary hover:underline" data-testid="link-sidebar-phone">
+                  <Phone className="w-3.5 h-3.5" /> 6981 882 005
                 </a>
+
                 <div className="flex items-center gap-2 mt-3">
                   <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />
                   <p className="text-[11px] text-muted-foreground">Δωρεάν διάγνωση χωρίς δέσμευση</p>
                 </div>
               </div>
 
+              {/* Trust badges */}
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { icon: Shield, label: "Εγγύηση",      sub: "Γραπτή εγγύηση" },
+                  { icon: Clock,  label: "30 λεπτά",     sub: "Γρήγορη" },
+                  { icon: Star,   label: "Τεχνικοί",     sub: "Samsung experts" },
+                ].map((b) => (
+                  <div key={b.label} className="flex flex-col items-center text-center p-3 rounded-xl border border-white/8 bg-white/2">
+                    <b.icon className="w-5 h-5 text-primary mb-1.5" />
+                    <p className="text-xs font-bold text-foreground">{b.label}</p>
+                    <p className="text-[10px] text-muted-foreground">{b.sub}</p>
+                  </div>
+                ))}
+              </div>
+
               {/* Related products */}
-              <SidebarProducts subcategory="cases" label="Προτεινόμενες Θήκες Samsung" />
+              <div className="bg-card pcb-border rounded-2xl p-4 border border-white/10">
+                <SidebarProducts subcategory="cases" label="Προτεινόμενες Θήκες Samsung" />
+              </div>
             </div>
-          </div>
+          </aside>
         </div>
 
         {/* Mobile sticky CTA */}
         <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden border-t border-primary/20 bg-background/95 backdrop-blur p-3 flex gap-2">
-          <a href="tel:+306981882005" className="flex-1">
-            <Button
-              className="w-full h-11 font-semibold border-0 text-sm"
-              style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
-              data-testid="button-mobile-call"
-            >
-              <Phone className="w-4 h-4 mr-2" />
-              Τηλεφωνική Επικοινωνία
+          <Button
+            onClick={() => setModalOpen(true)}
+            className="flex-1 h-11 font-semibold border-0 text-sm"
+            style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
+            data-testid="button-mobile-book"
+          >
+            <Wrench className="w-4 h-4 mr-2" />
+            Αίτημα Επισκευής
+          </Button>
+          <a href="tel:+306981882005" className="shrink-0">
+            <Button variant="outline" className="h-11 px-4 border-primary/30 text-primary" data-testid="button-mobile-call">
+              <Phone className="w-4 h-4" />
             </Button>
           </a>
-          <Link href="/services/episkeui-samsung" className="shrink-0">
-            <Button variant="outline" className="h-11 px-4 border-primary/30 text-primary" data-testid="button-mobile-back">
-              <ArrowRight className="w-4 h-4 rotate-180" />
-            </Button>
-          </Link>
         </div>
       </main>
 
       <Footer />
+
+      <RepairRequestModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        defaultDeviceName={model.name}
+      />
     </div>
   );
 }
