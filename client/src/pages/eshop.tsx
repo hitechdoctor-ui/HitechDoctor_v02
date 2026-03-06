@@ -73,12 +73,12 @@ function MobileCard({ product }: { product: Product }) {
       data-testid={`card-product-${product.id}`}
     >
       <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
-        <div className="relative h-48 bg-black/40 overflow-hidden cursor-pointer">
+        <div className="relative h-64 bg-black/60 overflow-hidden cursor-pointer">
           {product.imageUrl ? (
             <img
               src={product.imageUrl}
               alt={`${product.name} — HiTech Doctor`}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               loading="lazy"
             />
           ) : (
@@ -86,7 +86,7 @@ function MobileCard({ product }: { product: Product }) {
               <Smartphone className="w-12 h-12 text-primary/30" />
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-card/70 via-transparent to-transparent" />
           {p.brand && (
             <Badge className="absolute top-3 left-3 bg-primary/20 border border-primary/40 text-primary text-xs">{p.brand}</Badge>
           )}
@@ -153,20 +153,18 @@ function ScreenProtectorCard({ product }: { product: Product }) {
       data-testid={`card-product-${product.id}`}
     >
       <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
-        <div className="relative h-48 bg-black/40 overflow-hidden cursor-pointer">
+        <div className="relative h-64 bg-[#0a0e14] overflow-hidden cursor-pointer flex items-center justify-center">
           {product.imageUrl ? (
             <img
               src={product.imageUrl}
               alt={`${product.name} — Τζάμι Προστασίας iPhone — HiTech Doctor`}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80"
+              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 p-4"
               loading="lazy"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Shield className="w-12 h-12 text-primary/30" />
-            </div>
+            <Shield className="w-14 h-14 text-primary/30" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-card/70 via-transparent to-transparent" />
           {product.subcategory && (
             <Badge className="absolute top-3 left-3 bg-primary/20 border border-primary/40 text-primary text-xs">
               {SUBCATEGORY_LABELS[product.subcategory] ?? product.subcategory}
@@ -231,20 +229,18 @@ function ProductCard({ product }: { product: Product }) {
       data-testid={`card-product-${product.id}`}
     >
       <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
-        <div className="relative h-48 bg-black/40 overflow-hidden cursor-pointer">
+        <div className="relative h-64 bg-[#0a0e14] overflow-hidden cursor-pointer flex items-center justify-center">
           {product.imageUrl ? (
             <img
               src={product.imageUrl}
               alt={`${product.name} — ${product.subcategory ? SUBCATEGORY_LABELS[product.subcategory] : ""} — HiTech Doctor`}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80"
+              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 p-4"
               loading="lazy"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Package className="w-12 h-12 text-primary/30" />
-            </div>
+            <Package className="w-14 h-14 text-primary/30" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-card/70 via-transparent to-transparent" />
           {product.subcategory && (
             <Badge className="absolute top-3 left-3 bg-primary/20 border border-primary/40 text-primary text-xs">
               {SUBCATEGORY_LABELS[product.subcategory] ?? product.subcategory}
@@ -288,7 +284,7 @@ function ProductCard({ product }: { product: Product }) {
 function ProductSkeleton() {
   return (
     <div className="bg-card pcb-border rounded-2xl overflow-hidden">
-      <Skeleton className="h-48 w-full bg-white/5" />
+      <Skeleton className="h-64 w-full bg-white/5" />
       <div className="p-4 space-y-3">
         <Skeleton className="h-5 w-3/4 bg-white/5" />
         <Skeleton className="h-3 w-full bg-white/5" />
