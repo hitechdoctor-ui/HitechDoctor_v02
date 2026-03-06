@@ -11,9 +11,24 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo } from "react";
-import { ShoppingCart, Package, Shield, Smartphone, Cable, Tag, X, SlidersHorizontal } from "lucide-react";
+import { ShoppingCart, Package, Shield, Smartphone, Cable, Tag, X, SlidersHorizontal, HardDrive, Palette } from "lucide-react";
 import { Link } from "wouter";
 import type { Product } from "@shared/schema";
+
+const BRAND_PLACEHOLDERS: Record<string, string> = {
+  Samsung: "/images/placeholder-samsung.png",
+  Redmi: "/images/placeholder-redmi.png",
+  POCO: "/images/placeholder-poco.png",
+  Apple: "/images/placeholder-apple.png",
+};
+
+function extractModelName(name: string, brand?: string, storage?: string, color?: string): string {
+  let model = name;
+  if (brand) model = model.replace(new RegExp("^" + brand + "\\s*", "i"), "");
+  if (storage) model = model.replace(new RegExp("\\s*" + storage + "\\s*"), " ");
+  if (color) model = model.replace(new RegExp("\\s*" + color + "\\s*$"), "");
+  return model.trim();
+}
 
 // ── iPhone models list (8 → 17, all variants) ──────────────────────────────
 const IPHONE_MODELS = [
@@ -67,18 +82,22 @@ function MobileCard({ product }: { product: Product }) {
     toast({ title: "Προστέθηκε στο καλάθι", description: product.name, duration: 3000 });
   };
 
+  const imgSrc = product.imageUrl || (p.brand && BRAND_PLACEHOLDERS[p.brand]) || null;
+  const modelName = extractModelName(product.name, p.brand, p.storage, p.color);
+
   return (
     <div
-      className="bg-card pcb-border rounded-2xl flex flex-col overflow-hidden group hover:-translate-y-1 hover:shadow-[0_0_28px_rgba(0,210,200,0.12)] transition-all duration-300"
+      className="bg-card pcb-border rounded-2xl flex flex-col overflow-hidden group hover:-translate-y-2 hover:shadow-[0_8px_40px_rgba(0,210,200,0.18)] transition-all duration-300 cursor-pointer"
       data-testid={`card-product-${product.id}`}
     >
+      {/* ── Image area ── */}
       <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
-        <div className="relative h-64 bg-[#07080d] overflow-hidden cursor-pointer">
-          {product.imageUrl ? (
+        <div className="relative h-64 bg-[#07080d] overflow-hidden">
+          {imgSrc ? (
             <img
-              src={product.imageUrl}
+              src={imgSrc}
               alt={`${product.name} — HiTech Doctor`}
-              className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+              className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500 ease-out"
               style={{ objectPosition: "center 20%" }}
               loading="lazy"
             />
@@ -87,49 +106,66 @@ function MobileCard({ product }: { product: Product }) {
               <Smartphone className="w-12 h-12 text-primary/30" />
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+          {/* gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+
+          {/* brand badge */}
           {p.brand && (
-            <Badge className="absolute top-3 left-3 bg-primary/20 border border-primary/40 text-primary text-xs">{p.brand}</Badge>
+            <Badge className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm border border-white/20 text-white text-xs font-semibold px-2.5">
+              {p.brand}
+            </Badge>
           )}
+
+          {/* pre-order badge */}
           {p.preOrder && (
             <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/25 border border-orange-500/50 text-orange-300">
               Προ-Παραγγελία
             </span>
           )}
-          <div className="absolute bottom-3 right-3 bg-background/80 backdrop-blur border border-primary/30 px-2.5 py-1 rounded-lg">
-            <span className="text-primary font-bold text-sm">{formatPrice(product.price)}</span>
+
+          {/* price in image */}
+          <div className="absolute bottom-3 right-3 bg-primary px-3 py-1 rounded-lg shadow-lg">
+            <span className="text-black font-bold text-sm">{formatPrice(product.price)}</span>
           </div>
         </div>
       </Link>
 
+      {/* ── Card body ── */}
       <div className="flex flex-col flex-1 p-4 gap-3">
         <div className="flex-1">
+          {/* Model name as main title */}
           <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
-            <h3 className="font-display font-bold text-foreground text-base leading-tight mb-1 hover:text-primary transition-colors cursor-pointer">{product.name}</h3>
+            <h3 className="font-display font-bold text-foreground text-[15px] leading-snug mb-0.5 hover:text-primary transition-colors">
+              {modelName}
+            </h3>
           </Link>
-          {/* Badges: color + storage */}
-          <div className="flex flex-wrap gap-1.5 mb-2">
+
+          {/* storage + color tags */}
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {p.storage && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-primary text-[11px] font-semibold">
+                <HardDrive className="w-3 h-3" />
+                {p.storage}
+              </span>
+            )}
             {p.color && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-xs text-muted-foreground">
-                <span className="w-2 h-2 rounded-full bg-primary/60 shrink-0" />
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/5 border border-white/15 text-muted-foreground text-[11px]">
+                <Palette className="w-3 h-3" />
                 {p.color}
               </span>
             )}
-            {p.storage && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 border border-primary/25 text-primary text-xs font-semibold">{p.storage}</span>
-            )}
           </div>
-          <p className="text-xs text-muted-foreground line-clamp-2">{product.description}</p>
         </div>
 
+        {/* Add to cart button */}
         <Button
           onClick={handleAdd}
-          className="mt-auto h-9 text-sm font-semibold"
-          style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))", boxShadow: "0 0 16px rgba(0,210,200,0.2)" }}
+          className="mt-auto h-9 text-sm font-semibold w-full"
+          style={{ background: "linear-gradient(135deg, hsl(185 100% 36%), hsl(200 90% 46%))", boxShadow: "0 0 18px rgba(0,210,200,0.22)" }}
           data-testid={`button-addcart-${product.id}`}
         >
           <ShoppingCart className="w-4 h-4 mr-2" />
-          {p.preOrder ? "Προ-Παραγγελία — Κράτηση" : "Προσθήκη στο Καλάθι"}
+          {p.preOrder ? "Κράτηση — Προ-Παραγγελία" : "Προσθήκη στο Καλάθι"}
         </Button>
       </div>
     </div>
