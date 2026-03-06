@@ -15,12 +15,51 @@ import { ShoppingCart, Package, Shield, Smartphone, Cable, Tag, X, SlidersHorizo
 import { Link } from "wouter";
 import type { Product } from "@shared/schema";
 
-const BRAND_PLACEHOLDERS: Record<string, string> = {
-  Samsung: "/images/placeholder-samsung.png",
-  Redmi: "/images/placeholder-redmi.png",
-  POCO: "/images/placeholder-poco.png",
-  Apple: "/images/placeholder-apple.png",
+// ── Color name → hex mapping ────────────────────────────────────────────────
+const COLOR_HEX: Record<string, string> = {
+  black: "#d1d5db",        // light gray so visible on dark bg
+  "jet black": "#d1d5db",
+  "awesome black": "#d1d5db",
+  white: "#f9fafb",
+  "awesome white": "#f9fafb",
+  silver: "#e2e8f0",
+  titanium: "#b0b8c4",
+  gray: "#9ca3af",
+  grey: "#9ca3af",
+  blue: "#60a5fa",
+  "deep blue": "#3b82f6",
+  ultramarine: "#818cf8",
+  teal: "#2dd4bf",
+  green: "#4ade80",
+  mint: "#6ee7b7",
+  sage: "#a3e635",
+  purple: "#c084fc",
+  lavender: "#ddd6fe",
+  pink: "#f472b6",
+  red: "#f87171",
+  orange: "#fb923c",
+  "cosmic orange": "#fb923c",
+  brown: "#d97706",
+  gold: "#fbbf24",
+  yellow: "#facc15",
 };
+
+function getColorHex(colorName?: string): string {
+  if (!colorName) return "#94a3b8";
+  return COLOR_HEX[colorName.toLowerCase()] ?? "#94a3b8";
+}
+
+// ── Brand → dark gradient background ────────────────────────────────────────
+const BRAND_BG: Record<string, string> = {
+  Samsung: "linear-gradient(145deg, #0a1628 0%, #0f2044 50%, #0a1628 100%)",
+  Apple:   "linear-gradient(145deg, #0d0d0d 0%, #1a1a1f 50%, #0d0d0d 100%)",
+  Redmi:   "linear-gradient(145deg, #1a0a0a 0%, #2a0f0f 50%, #1a0808 100%)",
+  POCO:    "linear-gradient(145deg, #0f0a1a 0%, #1e0f2e 50%, #0f0a1a 100%)",
+};
+
+function getBrandBg(brand?: string): string {
+  return (brand && BRAND_BG[brand]) ?? "linear-gradient(145deg, #07080d 0%, #111318 50%, #07080d 100%)";
+}
 
 function extractModelName(name: string, brand?: string, storage?: string, color?: string): string {
   let model = name;
@@ -28,6 +67,32 @@ function extractModelName(name: string, brand?: string, storage?: string, color?
   if (storage) model = model.replace(new RegExp("\\s*" + storage + "\\s*"), " ");
   if (color) model = model.replace(new RegExp("\\s*" + color + "\\s*$"), "");
   return model.trim();
+}
+
+// ── ColoredPhoneIcon: big Smartphone icon in product color + glow ────────────
+function ColoredPhoneIcon({ color, brand }: { color?: string; brand?: string }) {
+  const hex = getColorHex(color);
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-center gap-3 relative">
+      {/* glow circle behind icon */}
+      <div
+        className="absolute w-32 h-32 rounded-full opacity-20 blur-2xl"
+        style={{ background: hex }}
+      />
+      <Smartphone
+        className="relative z-10 drop-shadow-2xl"
+        style={{ color: hex, width: 88, height: 88, filter: `drop-shadow(0 0 18px ${hex}88)` }}
+      />
+      {color && (
+        <span
+          className="relative z-10 text-[11px] font-semibold tracking-widest uppercase opacity-80"
+          style={{ color: hex }}
+        >
+          {color}
+        </span>
+      )}
+    </div>
+  );
 }
 
 // ── iPhone models list (8 → 17, all variants) ──────────────────────────────
@@ -82,32 +147,36 @@ function MobileCard({ product }: { product: Product }) {
     toast({ title: "Προστέθηκε στο καλάθι", description: product.name, duration: 3000 });
   };
 
-  const imgSrc = product.imageUrl || (p.brand && BRAND_PLACEHOLDERS[p.brand]) || null;
   const modelName = extractModelName(product.name, p.brand, p.storage, p.color);
+  const brandBg = getBrandBg(p.brand);
+  const colorHex = getColorHex(p.color);
 
   return (
     <div
-      className="bg-card pcb-border rounded-2xl flex flex-col overflow-hidden group hover:-translate-y-2 hover:shadow-[0_8px_40px_rgba(0,210,200,0.18)] transition-all duration-300 cursor-pointer"
+      className="bg-card pcb-border rounded-2xl flex flex-col overflow-hidden group transition-all duration-300 cursor-pointer hover:-translate-y-2"
+      style={{ "--card-glow": colorHex } as React.CSSProperties}
+      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = `0 8px 40px ${colorHex}44`; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
       data-testid={`card-product-${product.id}`}
     >
       {/* ── Image area ── */}
       <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
-        <div className="relative h-64 bg-[#07080d] overflow-hidden">
-          {imgSrc ? (
+        <div className="relative h-64 overflow-hidden" style={{ background: brandBg }}>
+          {product.imageUrl ? (
             <img
-              src={imgSrc}
+              src={product.imageUrl}
               alt={`${product.name} — HiTech Doctor`}
               className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500 ease-out"
               style={{ objectPosition: "center 20%" }}
               loading="lazy"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Smartphone className="w-12 h-12 text-primary/30" />
+            <div className="w-full h-full group-hover:scale-105 transition-transform duration-500 ease-out">
+              <ColoredPhoneIcon color={p.color} brand={p.brand} />
             </div>
           )}
-          {/* gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+          {/* subtle gradient at bottom so price badge is readable */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
 
           {/* brand badge */}
           {p.brand && (
