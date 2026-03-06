@@ -67,7 +67,9 @@ function buildIndex(): SearchEntry[] {
         name: `Επισκευή ${model.name}`,
         href: `/episkevi-samsung/${model.slug}`,
         icon: Smartphone,
-        sub: `Οθόνη από €${model.screenPriceOEM} · Μπαταρία €${model.batteryPrice}`,
+        sub: model.screenPriceOEM
+          ? `Οθόνη από €${model.screenPriceOEM} · Μπαταρία €${model.batteryPrice}`
+          : `Οθόνη €${model.screenPrice} · Μπαταρία €${model.batteryPrice}`,
         category: "samsung",
         keywords: `samsung galaxy ${model.name.toLowerCase()} επισκευή αλλαγη οθονη μπαταρια`,
       });

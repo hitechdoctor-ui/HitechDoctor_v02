@@ -4,7 +4,7 @@ export interface SamsungModel {
   screen: string;
   tag?: string;
   screenPrice: number;
-  screenPriceOEM: number;
+  screenPriceOEM?: number;
   batteryPrice: number;
   portPrice: number;
   foldable?: boolean;
@@ -50,7 +50,7 @@ export const SAMSUNG_SERIES: SamsungSeries[] = [
       { name: "Samsung Galaxy A25 5G", slug: slug("Samsung Galaxy A25 5G"), screen: "6.5″ Super AMOLED 120Hz",           screenPrice: 78,  screenPriceOEM: 53,  batteryPrice: 50, portPrice: 45 },
       { name: "Samsung Galaxy A17 5G", slug: slug("Samsung Galaxy A17 5G"), screen: "6.7″ AMOLED 120Hz",          tag: "NEW", screenPrice: 70,  screenPriceOEM: 48,  batteryPrice: 48, portPrice: 40 },
       { name: "Samsung Galaxy A16 5G", slug: slug("Samsung Galaxy A16 5G"), screen: "6.7″ Super AMOLED 90Hz",            screenPrice: 65,  screenPriceOEM: 45,  batteryPrice: 45, portPrice: 40 },
-      { name: "Samsung Galaxy A15 5G", slug: slug("Samsung Galaxy A15 5G"), screen: "6.5″ Super AMOLED 90Hz",             screenPrice: 60,  screenPriceOEM: 40,  batteryPrice: 43, portPrice: 40 },
+      { name: "Samsung Galaxy A15 5G", slug: slug("Samsung Galaxy A15 5G"), screen: "6.5″ Super AMOLED 90Hz",             screenPrice: 85,  batteryPrice: 43, portPrice: 40 },
     ],
   },
   {

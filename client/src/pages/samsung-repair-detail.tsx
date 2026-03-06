@@ -157,10 +157,13 @@ export default function SamsungRepairDetail() {
     );
   }
 
-  const activeScreenPrice = selectedScreenTier === "genuine" ? model.screenPrice : model.screenPriceOEM;
+  const hasOEM = model.screenPriceOEM !== undefined;
+  const activeScreenPrice = (selectedScreenTier === "oem" && hasOEM) ? model.screenPriceOEM! : model.screenPrice;
 
   const pageTitle = `Επισκευή ${model.name} — Τιμές Αλλαγής Οθόνης, Μπαταρίας & Θύρας | HiTech Doctor Αθήνα`;
-  const pageDesc = `Επισκευή ${model.name} στην Αθήνα. Αλλαγή οθόνης από €${model.screenPriceOEM} (OEM) ή €${model.screenPrice} (Γνήσια), μπαταρία €${model.batteryPrice}. Εγγύηση, αποτέλεσμα 30 λεπτά.`;
+  const pageDesc = hasOEM
+    ? `Επισκευή ${model.name} στην Αθήνα. Αλλαγή οθόνης από €${model.screenPriceOEM} (OEM) ή €${model.screenPrice} (Γνήσια), μπαταρία €${model.batteryPrice}. Εγγύηση, αποτέλεσμα 30 λεπτά.`
+    : `Επισκευή ${model.name} στην Αθήνα. Αλλαγή οθόνης €${model.screenPrice}, μπαταρία €${model.batteryPrice}. Γνήσια ανταλλακτικά, εγγύηση, αποτέλεσμα 30 λεπτά.`;
   const canonicalUrl = `https://hitechdoctor.com/episkevi-samsung/${model.slug}`;
 
   const jsonLd = {
@@ -179,7 +182,7 @@ export default function SamsungRepairDetail() {
     "areaServed": "Αθήνα",
     "offers": [
       { "@type": "Offer", "name": `Αλλαγή Οθόνης ${model.name} (Γνήσια)`, "price": model.screenPrice, "priceCurrency": "EUR" },
-      { "@type": "Offer", "name": `Αλλαγή Οθόνης ${model.name} (OEM)`, "price": model.screenPriceOEM, "priceCurrency": "EUR" },
+      ...(hasOEM ? [{ "@type": "Offer", "name": `Αλλαγή Οθόνης ${model.name} (OEM)`, "price": model.screenPriceOEM, "priceCurrency": "EUR" }] : []),
       ...(model.hasInnerScreen && model.innerScreenPrice
         ? [{ "@type": "Offer", "name": `Αλλαγή Εσωτερικής Οθόνης ${model.name}`, "price": model.innerScreenPrice, "priceCurrency": "EUR" }]
         : []),
@@ -287,14 +290,16 @@ export default function SamsungRepairDetail() {
                   highlight
                   onBook={() => setModalOpen(true)}
                 />
-                {/* Screen - OEM */}
-                <PriceRow
-                  icon={Monitor}
-                  label="Αλλαγή Οθόνης — OEM"
-                  price={model.screenPriceOEM}
-                  note={model.foldable ? "OEM εξωτερική οθόνη (cover display)" : "OEM υψηλής ποιότητας · οικονομική επιλογή"}
-                  onBook={() => setModalOpen(true)}
-                />
+                {/* Screen - OEM (only if available) */}
+                {hasOEM && (
+                  <PriceRow
+                    icon={Monitor}
+                    label="Αλλαγή Οθόνης — OEM"
+                    price={model.screenPriceOEM!}
+                    note={model.foldable ? "OEM εξωτερική οθόνη (cover display)" : "OEM υψηλής ποιότητας · οικονομική επιλογή"}
+                    onBook={() => setModalOpen(true)}
+                  />
+                )}
                 {/* Inner screen for foldables */}
                 {model.hasInnerScreen && model.innerScreenPrice && (
                   <PriceRow
@@ -333,41 +338,64 @@ export default function SamsungRepairDetail() {
 
               <h2 className="text-xl font-display font-bold text-foreground mb-3">Αλλαγή Οθόνης {model.name} στην Αθήνα</h2>
               <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                Επιλέξτε ποιότητα ανταλλακτικού για την <strong className="text-foreground">Αλλαγή Οθόνης {model.name}</strong>:
+                {hasOEM
+                  ? <>Επιλέξτε ποιότητα ανταλλακτικού για την <strong className="text-foreground">Αλλαγή Οθόνης {model.name}</strong>:</>
+                  : <>Αλλαγή <strong className="text-foreground">Γνήσιας Οθόνης {model.name}</strong> με Samsung Original AMOLED panel:</>
+                }
               </p>
 
-              {/* Screen tier selection */}
-              <div className="grid sm:grid-cols-2 gap-4 mb-5">
-                <ScreenTierCard
-                  label="Γνήσια Οθόνη Samsung"
-                  sublabel="Original Samsung AMOLED panel"
-                  price={model.screenPrice}
-                  recommended
-                  selected={selectedScreenTier === "genuine"}
-                  onClick={() => setSelectedScreenTier("genuine")}
-                  testId="tier-screen-genuine"
-                  features={[
-                    "Γνήσιο Samsung AMOLED panel",
-                    "Πλήρης εγγύηση 12 μηνών",
-                    "Ίδια φωτεινότητα & χρώματα",
-                    "Πλήρης λειτουργικότητα touch",
-                  ]}
-                />
-                <ScreenTierCard
-                  label="OEM Οθόνη"
-                  sublabel="Συμβατό AMOLED υψηλής ποιότητας"
-                  price={model.screenPriceOEM}
-                  selected={selectedScreenTier === "oem"}
-                  onClick={() => setSelectedScreenTier("oem")}
-                  testId="tier-screen-oem"
-                  features={[
-                    "OEM AMOLED panel Α+ ποιότητας",
-                    "Εγγύηση 6 μηνών",
-                    "Πολύ καλή φωτεινότητα & χρώματα",
-                    "Πλήρης λειτουργικότητα touch",
-                  ]}
-                />
-              </div>
+              {/* Screen tier selection — only when OEM is available */}
+              {hasOEM ? (
+                <div className="grid sm:grid-cols-2 gap-4 mb-5">
+                  <ScreenTierCard
+                    label="Γνήσια Οθόνη Samsung"
+                    sublabel="Original Samsung AMOLED panel"
+                    price={model.screenPrice}
+                    recommended
+                    selected={selectedScreenTier === "genuine"}
+                    onClick={() => setSelectedScreenTier("genuine")}
+                    testId="tier-screen-genuine"
+                    features={[
+                      "Γνήσιο Samsung AMOLED panel",
+                      "Πλήρης εγγύηση 12 μηνών",
+                      "Ίδια φωτεινότητα & χρώματα",
+                      "Πλήρης λειτουργικότητα touch",
+                    ]}
+                  />
+                  <ScreenTierCard
+                    label="OEM Οθόνη"
+                    sublabel="Συμβατό AMOLED υψηλής ποιότητας"
+                    price={model.screenPriceOEM!}
+                    selected={selectedScreenTier === "oem"}
+                    onClick={() => setSelectedScreenTier("oem")}
+                    testId="tier-screen-oem"
+                    features={[
+                      "OEM AMOLED panel Α+ ποιότητας",
+                      "Εγγύηση 6 μηνών",
+                      "Πολύ καλή φωτεινότητα & χρώματα",
+                      "Πλήρης λειτουργικότητα touch",
+                    ]}
+                  />
+                </div>
+              ) : (
+                <div className="mb-5">
+                  <ScreenTierCard
+                    label="Γνήσια Οθόνη Samsung"
+                    sublabel="Original Samsung AMOLED panel — μόνο γνήσια διαθέσιμη"
+                    price={model.screenPrice}
+                    recommended
+                    selected
+                    onClick={() => {}}
+                    testId="tier-screen-genuine"
+                    features={[
+                      "Γνήσιο Samsung AMOLED panel",
+                      "Πλήρης εγγύηση 12 μηνών",
+                      "Ίδια φωτεινότητα & χρώματα",
+                      "Πλήρης λειτουργικότητα touch",
+                    ]}
+                  />
+                </div>
+              )}
 
               <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 flex flex-wrap items-center justify-between gap-3">
                 <div>
@@ -500,13 +528,15 @@ export default function SamsungRepairDetail() {
               <h2 className="text-xl font-display font-bold text-foreground mb-4">Συχνές Ερωτήσεις</h2>
               <div className="space-y-3">
                 {[
-                  {
+                  ...(hasOEM ? [{
                     q: `Ποια η διαφορά Γνήσιας και OEM οθόνης για ${model.name};`,
                     a: `Η γνήσια οθόνη (€${model.screenPrice}) είναι original Samsung panel με πλήρη εγγύηση 12 μηνών και ίδια ποιότητα με το εργοστάσιο. Η OEM (€${model.screenPriceOEM}) είναι συμβατό AMOLED Α+ ποιότητας, πολύ καλά χρώματα και αφή, με εγγύηση 6 μηνών — ιδανική οικονομική επιλογή.`,
-                  },
+                  }] : []),
                   {
                     q: `Πόσο κοστίζει η αλλαγή οθόνης ${model.name};`,
-                    a: `Η αλλαγή οθόνης ${model.name} κοστίζει €${model.screenPriceOEM} (OEM) ή €${model.screenPrice} (Γνήσια) με ΦΠΑ. Η τιμή περιλαμβάνει ανταλλακτικό και εργασία.`,
+                    a: hasOEM
+                      ? `Η αλλαγή οθόνης ${model.name} κοστίζει €${model.screenPriceOEM} (OEM) ή €${model.screenPrice} (Γνήσια) με ΦΠΑ. Η τιμή περιλαμβάνει ανταλλακτικό και εργασία.`
+                      : `Η αλλαγή οθόνης ${model.name} κοστίζει €${model.screenPrice} με ΦΠΑ (γνήσια οθόνη). Η τιμή περιλαμβάνει ανταλλακτικό και εργασία.`,
                   },
                   {
                     q: "Πόσο διαρκεί η επισκευή;",
@@ -547,10 +577,12 @@ export default function SamsungRepairDetail() {
                     <span className="text-muted-foreground">Οθόνη Γνήσια{model.foldable ? " (εξωτ.)" : ""}</span>
                     <span className="font-bold text-primary">€{model.screenPrice}</span>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Οθόνη OEM{model.foldable ? " (εξωτ.)" : ""}</span>
-                    <span className="font-bold text-foreground">€{model.screenPriceOEM}</span>
-                  </div>
+                  {hasOEM && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Οθόνη OEM{model.foldable ? " (εξωτ.)" : ""}</span>
+                      <span className="font-bold text-foreground">€{model.screenPriceOEM}</span>
+                    </div>
+                  )}
                   {model.hasInnerScreen && model.innerScreenPrice && (
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Οθόνη εσωτ. (main)</span>
