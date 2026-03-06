@@ -566,15 +566,15 @@ export default function EShop() {
 
   const products = useMemo(() => {
     if (!allProducts) return [];
-    if (!isMobileTab && !isLaptopTab) return allProducts;
+    if (!filterBrand && !filterColor && !filterStorage) return allProducts;
     return allProducts.filter((p) => {
       const pp = p as any;
       if (filterBrand && pp.brand !== filterBrand) return false;
-      if (isMobileTab && filterColor && pp.color !== filterColor) return false;
-      if (isMobileTab && filterStorage && pp.storage !== filterStorage) return false;
+      if (filterColor && pp.color !== filterColor) return false;
+      if (filterStorage && pp.storage !== filterStorage) return false;
       return true;
     });
-  }, [allProducts, isMobileTab, isLaptopTab, filterBrand, filterColor, filterStorage]);
+  }, [allProducts, filterBrand, filterColor, filterStorage]);
 
   const isScreenProtector = (p: Product) => p.subcategory === "screen-protectors";
 
@@ -737,8 +737,8 @@ export default function EShop() {
       </main>
       <Footer />
 
-      {/* ── Floating Filter Button (only on Κινητά tab) ── */}
-      {isMobileTab && (
+      {/* ── Floating Filter Button (all tabs) ── */}
+      {allProducts && allProducts.length > 0 && (
         <button
           onClick={() => setFilterDrawerOpen(true)}
           aria-label="Φίλτρα αναζήτησης"
