@@ -279,6 +279,7 @@ export default function ProductDetail() {
 
   const canonicalUrl = `https://hitechdoctor.com/eshop/${product.slug}`;
   const isMobile = product.category === "mobile";
+  const isLaptop = product.category === "laptop";
   const subcatLabel = product.subcategory ? SUBCATEGORY_LABELS[product.subcategory] : isMobile ? "Κινητό Τηλέφωνο" : product.category;
   const metaTitle = isMobile
     ? `${product.name} — Τιμή, Χαρακτηριστικά | HiTech Doctor Αθήνα`
@@ -765,6 +766,10 @@ export default function ProductDetail() {
             related = products
               .filter((p) => p.category === "accessory" && p.subcategory && ["cases", "screen-protectors", "chargers"].includes(p.subcategory))
               .slice(0, 4);
+          } else if (isLaptop) {
+            related = products
+              .filter((p) => p.id !== product.id && p.category === "laptop")
+              .slice(0, 4);
           } else {
             const relatedSubcats: Record<string, string[]> = {
               "screen-protectors": ["cases", "chargers"],
@@ -789,16 +794,26 @@ export default function ProductDetail() {
             chargers: "Φορτιστής",
           };
 
+          const relatedTitle = isMobile
+            ? "Αξεσουάρ για το iPhone σου"
+            : isLaptop
+            ? "Περισσότερα Refurbished Laptops"
+            : "Συνδύασέ το με…";
+
+          const relatedDesc = isMobile
+            ? "Θήκες, τζάμια προστασίας και καλώδια φόρτισης για το iPhone σου."
+            : isLaptop
+            ? "Μεταχειρισμένα laptop με εγγύηση 1 έτους — Lenovo, Microsoft και άλλα μοντέλα."
+            : "Πλήρης προστασία για το iPhone σου — προστατέψτο από κάθε γωνία.";
+
           return (
             <section className="container mx-auto px-4 pb-20">
               <div className="border-t border-border pt-10">
                 <h2 className="text-2xl font-display font-bold text-foreground mb-2">
-                  {isMobile ? "Αξεσουάρ για το iPhone σου" : "Συνδύασέ το με…"}
+                  {relatedTitle}
                 </h2>
                 <p className="text-sm text-muted-foreground mb-7">
-                  {isMobile
-                    ? "Θήκες, τζάμια προστασίας και καλώδια φόρτισης για το iPhone 17 Pro Max σου."
-                    : "Πλήρης προστασία για το iPhone σου — προστατέψτο από κάθε γωνία."}
+                  {relatedDesc}
                 </p>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {related.map((rel) => (
