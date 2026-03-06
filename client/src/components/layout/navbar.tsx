@@ -46,7 +46,7 @@ const ESHOP_BRANDS = [
 // ── Phone brands (services menu) ──────────────────────────────────────────────
 const PHONE_BRANDS = [
   { name: "iPhone",     href: "/services/episkeui-iphone",  icon: SiApple,   color: "text-gray-300", bg: "bg-gray-500/10 hover:bg-gray-500/20 border-gray-500/20" },
-  { name: "Samsung",    href: "/services/episkeui-kiniton", icon: SiSamsung, color: "text-blue-400", bg: "bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/20" },
+  { name: "Samsung",    href: "/services/episkeui-samsung", icon: SiSamsung, color: "text-blue-400", bg: "bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/20" },
   { name: "Xiaomi",     href: "/services/episkeui-kiniton", icon: SiXiaomi,  color: "text-orange-400", bg: "bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/20" },
   { name: "Huawei",     href: "/services/episkeui-kiniton", icon: SiHuawei,  color: "text-red-400", bg: "bg-red-500/10 hover:bg-red-500/20 border-red-500/20" },
   { name: "OnePlus",    href: "/services/episkeui-kiniton", icon: SiOneplus, color: "text-rose-400", bg: "bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/20" },
