@@ -374,17 +374,6 @@ export function Navbar() {
             </NavigationMenuList>
           </NavigationMenu>
 
-          {/* Blog */}
-          <Link
-            href="/blog"
-            className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors hover:text-primary flex items-center gap-2 ${
-              isActive("/blog") ? "text-primary" : "text-muted-foreground"
-            }`}
-            data-testid="nav-blog"
-          >
-            <Wrench className="w-4 h-4" />
-            Blog
-          </Link>
         </nav>
 
         {/* Right side — search + cart + mobile hamburger */}
