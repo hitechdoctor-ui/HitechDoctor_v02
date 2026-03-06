@@ -20,12 +20,13 @@ import {
   type InsertRepairItem,
   type CheckoutPayload
 } from "@shared/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Products
   getProducts(category?: string, subcategory?: string): Promise<Product[]>;
   getProduct(id: number): Promise<Product | undefined>;
+  getProductCategories(): Promise<{ category: string; subcategory: string | null; count: number }[]>;
   createProduct(product: InsertProduct): Promise<Product>;
   updateProduct(id: number, updates: Partial<InsertProduct>): Promise<Product>;
   deleteProduct(id: number): Promise<void>;
@@ -71,6 +72,18 @@ export class DatabaseStorage implements IStorage {
   async getProduct(id: number): Promise<Product | undefined> {
     const [product] = await db.select().from(products).where(eq(products.id, id));
     return product;
+  }
+
+  async getProductCategories(): Promise<{ category: string; subcategory: string | null; count: number }[]> {
+    const rows = await db
+      .select({
+        category: products.category,
+        subcategory: products.subcategory,
+        count: sql<number>`cast(count(*) as integer)`,
+      })
+      .from(products)
+      .groupBy(products.category, products.subcategory);
+    return rows;
   }
 
   async createProduct(product: InsertProduct): Promise<Product> {

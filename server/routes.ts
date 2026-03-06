@@ -12,6 +12,15 @@ export async function registerRoutes(
 ): Promise<Server> {
 
   // --- Products API ---
+  app.get("/api/products/categories", async (req, res) => {
+    try {
+      const categories = await storage.getProductCategories();
+      res.json(categories);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch categories" });
+    }
+  });
+
   app.get(api.products.list.path, async (req, res) => {
     try {
       const category = req.query.category as string | undefined;

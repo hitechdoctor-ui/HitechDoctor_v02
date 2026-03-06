@@ -99,6 +99,15 @@ Zod schemas are auto-generated from the Drizzle table definitions using `drizzle
 - `/admin/customers/:id` — Customer detail page (order history, contact info)
 - `/admin/oikonomika` — Financial reports (revenue charts via Recharts, VAT 24%)
 
+### Navigation Features
+
+- **Unified NavigationMenu**: Υπηρεσίες, eShop, and Info are all in one shared NavigationMenu (mutual exclusion — only one dropdown open at a time)
+- **eShop mega-menu**: Dynamic category cards fetched from `/api/products/categories` — updates automatically when new product categories are added to the DB
+- **Info mega-menu**: Contains "Σχετικά με εμάς" card, quick links (Blog, Επικοινωνία, FAQ), and Σύνδεση button
+- **Dynamic footer eShop column**: Same `/api/products/categories` API powers the footer's eShop links column
+- **Cart button**: Icon-only (ShoppingCart in primary/cyan color), no text label
+- **URL deep-linking**: eShop supports `?tab=mobile&brand=Samsung` URL params for direct navigation from mega-menu
+
 ### Cart Flow
 
 1. User browses eShop → clicks "Add to cart" → Zustand store updates
