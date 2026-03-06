@@ -11,9 +11,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo } from "react";
-import { ShoppingCart, Package, Shield, Smartphone, Cable, Tag, X, SlidersHorizontal, HardDrive, Palette } from "lucide-react";
+import { ShoppingCart, Package, Shield, Smartphone, Cable, Tag, X, SlidersHorizontal, HardDrive, Palette, SlidersVertical, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import type { Product } from "@shared/schema";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 // ── Color name → hex mapping ────────────────────────────────────────────────
 const COLOR_HEX: Record<string, string> = {
@@ -560,12 +561,39 @@ export default function EShop() {
 
   const isScreenProtector = (p: Product) => p.subcategory === "screen-protectors";
 
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+
   const handleTabChange = (tab: TabId) => {
     setActiveTab(tab);
     setFilterBrand("");
     setFilterColor("");
     setFilterStorage("");
   };
+
+  // Filter drawer values derived from allProducts
+  const drawerBrands = useMemo(() => {
+    if (!allProducts) return [];
+    const set = new Set<string>();
+    allProducts.forEach((p) => { const b = (p as any).brand; if (b) set.add(b); });
+    return Array.from(set).sort();
+  }, [allProducts]);
+
+  const drawerColors = useMemo(() => {
+    if (!allProducts) return [];
+    const set = new Set<string>();
+    allProducts.forEach((p) => { const c = (p as any).color; if (c) set.add(c); });
+    return Array.from(set).sort();
+  }, [allProducts]);
+
+  const drawerStorages = useMemo(() => {
+    if (!allProducts) return [];
+    const order = ["16GB", "32GB", "64GB", "128GB", "256GB", "512GB", "1TB"];
+    const set = new Set<string>();
+    allProducts.forEach((p) => { const s = (p as any).storage; if (s) set.add(s); });
+    return order.filter((s) => set.has(s));
+  }, [allProducts]);
+
+  const activeFiltersCount = [filterBrand, filterColor, filterStorage].filter(Boolean).length;
 
   return (
     <div className="min-h-screen bg-background circuit-bg">
@@ -687,6 +715,148 @@ export default function EShop() {
         <ReviewsSection />
       </main>
       <Footer />
+
+      {/* ── Floating Filter Button (only on Κινητά tab) ── */}
+      {isMobileTab && (
+        <button
+          onClick={() => setFilterDrawerOpen(true)}
+          aria-label="Φίλτρα αναζήτησης"
+          data-testid="button-filter-drawer"
+          className="fixed right-4 bottom-[4.75rem] z-[154] w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform duration-200 hover:scale-110 active:scale-95 group"
+          style={{
+            background: activeFiltersCount > 0
+              ? "linear-gradient(135deg, hsl(185 100% 36%), hsl(200 90% 46%))"
+              : "linear-gradient(135deg, #1f2937, #374151)",
+            boxShadow: activeFiltersCount > 0
+              ? "0 4px 20px rgba(0,210,200,0.4)"
+              : "0 4px 16px rgba(0,0,0,0.5)",
+          }}
+        >
+          <SlidersVertical className="w-5 h-5 text-white" />
+          {activeFiltersCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-black text-[10px] font-bold flex items-center justify-center">
+              {activeFiltersCount}
+            </span>
+          )}
+          {/* Tooltip */}
+          <span className="pointer-events-none absolute right-14 bg-gray-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-xl">
+            Φίλτρα
+            <span className="absolute right-[-5px] top-1/2 -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-transparent border-l-gray-900" />
+          </span>
+        </button>
+      )}
+
+      {/* ── Filter Drawer Sheet ── */}
+      <Sheet open={filterDrawerOpen} onOpenChange={setFilterDrawerOpen}>
+        <SheetContent side="right" className="w-full sm:w-[380px] bg-card border-l border-white/10 overflow-y-auto">
+          <SheetHeader className="mb-6">
+            <SheetTitle className="flex items-center gap-2 text-foreground">
+              <SlidersVertical className="w-5 h-5 text-primary" />
+              Φίλτρα Αναζήτησης
+            </SheetTitle>
+          </SheetHeader>
+
+          {/* Clear all */}
+          {activeFiltersCount > 0 && (
+            <button
+              onClick={() => { setFilterBrand(""); setFilterColor(""); setFilterStorage(""); }}
+              className="w-full mb-5 py-2 px-4 rounded-xl border border-red-500/40 bg-red-500/10 text-red-400 text-sm font-semibold hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2"
+            >
+              <X className="w-4 h-4" />
+              Καθαρισμός {activeFiltersCount} φίλτρων
+            </button>
+          )}
+
+          {/* Brand */}
+          {drawerBrands.length > 0 && (
+            <div className="mb-6">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Μάρκα</p>
+              <div className="flex flex-wrap gap-2">
+                {drawerBrands.map((b) => (
+                  <button
+                    key={b}
+                    onClick={() => setFilterBrand(filterBrand === b ? "" : b)}
+                    className={`px-4 py-2 rounded-xl text-sm font-semibold border transition-all duration-200 ${
+                      filterBrand === b
+                        ? "bg-primary text-black border-primary shadow-[0_0_12px_rgba(0,210,200,0.35)]"
+                        : "bg-white/5 border-white/15 text-foreground hover:border-primary/50 hover:bg-primary/10"
+                    }`}
+                  >
+                    {b}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Storage */}
+          {drawerStorages.length > 0 && (
+            <div className="mb-6">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                <HardDrive className="w-3.5 h-3.5" /> Αποθηκευτικός Χώρος
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {drawerStorages.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setFilterStorage(filterStorage === s ? "" : s)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-semibold border transition-all duration-200 ${
+                      filterStorage === s
+                        ? "bg-primary text-black border-primary"
+                        : "bg-white/5 border-white/15 text-foreground hover:border-primary/40"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Color */}
+          {drawerColors.length > 0 && (
+            <div className="mb-6">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                <Palette className="w-3.5 h-3.5" /> Χρώμα
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {drawerColors.map((c) => {
+                  const hex = COLOR_HEX[c.toLowerCase()] ?? "#94a3b8";
+                  return (
+                    <button
+                      key={c}
+                      onClick={() => setFilterColor(filterColor === c ? "" : c)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-200 ${
+                        filterColor === c
+                          ? "border-primary bg-primary/15 text-primary"
+                          : "border-white/15 bg-white/5 text-muted-foreground hover:border-primary/40"
+                      }`}
+                    >
+                      <span className="w-3 h-3 rounded-full border border-white/20 shrink-0" style={{ background: hex }} />
+                      {c}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Results count */}
+          <div className="mt-4 pt-4 border-t border-white/10 text-center">
+            <p className="text-sm text-muted-foreground">
+              <span className="text-primary font-bold text-lg">{products.length}</span>{" "}
+              προϊόντα βρέθηκαν
+            </p>
+            <button
+              onClick={() => setFilterDrawerOpen(false)}
+              className="mt-4 w-full py-2.5 rounded-xl font-semibold text-sm text-black transition-all"
+              style={{ background: "linear-gradient(135deg, hsl(185 100% 36%), hsl(200 90% 46%))", boxShadow: "0 0 18px rgba(0,210,200,0.25)" }}
+            >
+              Εμφάνιση {products.length} αποτελεσμάτων
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

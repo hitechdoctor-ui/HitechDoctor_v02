@@ -12,6 +12,7 @@ import { ScrollProgressBar } from "@/components/scroll-progress-bar";
 import { CookieBanner } from "@/components/cookie-banner";
 import { AccessibilityButton } from "@/components/accessibility-button";
 import { ExitIntentPopup } from "@/components/exit-intent-popup";
+import { SosButton } from "@/components/sos-button";
 
 // Public Pages
 import Home from "./pages/home";
@@ -71,6 +72,7 @@ function GlobalComponents() {
       <CookieBanner />
       <AccessibilityButton />
       <ExitIntentPopup />
+      <SosButton />
     </Fragment>
   );
 }
