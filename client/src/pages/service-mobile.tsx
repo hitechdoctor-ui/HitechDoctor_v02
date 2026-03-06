@@ -85,8 +85,8 @@ const brands = [
     color: "from-orange-600/25 to-orange-500/15",
     glowColor: "rgba(249,115,22,0.12)",
     borderColor: "border-orange-500/25",
-    pageUrl: null,
-    btnLabel: "Επικοινωνία",
+    pageUrl: "/services/episkeui-xiaomi",
+    btnLabel: "Επισκευή Xiaomi",
   },
   {
     id: "huawei",
@@ -111,8 +111,8 @@ const brands = [
     color: "from-red-600/25 to-red-500/15",
     glowColor: "rgba(239,68,68,0.12)",
     borderColor: "border-red-500/25",
-    pageUrl: null,
-    btnLabel: "Επικοινωνία",
+    pageUrl: "/services/episkeui-huawei",
+    btnLabel: "Επισκευή Huawei",
   },
   {
     id: "oneplus",
