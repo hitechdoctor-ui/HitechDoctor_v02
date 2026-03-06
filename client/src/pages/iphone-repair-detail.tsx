@@ -245,7 +245,7 @@ function TrustBadges() {
 }
 
 export default function IPhoneRepairDetail() {
-  const [, params] = useRoute("/episkevi-iphone-:slug");
+  const [, params] = useRoute("/episkevi-iphone/:slug");
   const modelSlug = params?.slug ?? "";
   const model = findModelBySlug(modelSlug);
 
@@ -272,7 +272,7 @@ export default function IPhoneRepairDetail() {
 
   const pageTitle = `Επισκευή ${model.name} — Τιμές Αλλαγής Οθόνης, Μπαταρίας & Θύρας | HiTech Doctor Αθήνα`;
   const pageDesc = `Επισκευή ${model.name} στην Αθήνα. Αλλαγή οθόνης από €${model.screenTiers[2].price}, μπαταρία €${model.batteryTiers[2].price}, θύρα φόρτισης €${model.chargingPortPrice}. Γνήσια & premium ανταλλακτικά, εγγύηση, αποτέλεσμα 30 λεπτά.`;
-  const canonicalUrl = `https://hitechdoctor.com/episkevi-iphone-${model.slug}`;
+  const canonicalUrl = `https://hitechdoctor.com/episkevi-iphone/${model.slug}`;
 
   const selectedTier = activeTab === "screen"
     ? model.screenTiers[selectedScreenTier]
@@ -567,7 +567,7 @@ export default function IPhoneRepairDetail() {
                   .filter((m) => m.slug !== model.slug)
                   .slice(0, 8)
                   .map((m) => (
-                    <Link key={m.slug} href={`/episkevi-iphone-${m.slug}`}>
+                    <Link key={m.slug} href={`/episkevi-iphone/${m.slug}`}>
                       <span className="text-xs px-3 py-1.5 rounded-full border border-white/10 bg-card hover:border-primary/40 hover:text-primary text-muted-foreground transition-all cursor-pointer">
                         {m.name}
                       </span>

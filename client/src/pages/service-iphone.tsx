@@ -250,7 +250,7 @@ export default function ServiceIphone() {
                     </div>
 
                     {/* CTA — link to detail page */}
-                    <Link href={`/episkevi-iphone-${model.slug}`}>
+                    <Link href={`/episkevi-iphone/${model.slug}`}>
                       <Button
                         size="sm"
                         className="mt-auto w-full h-8 text-xs font-semibold border-0 group-hover:opacity-90 transition-all"

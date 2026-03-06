@@ -88,7 +88,7 @@ function Router() {
         <Route path="/services" component={Services} />
         <Route path="/services/episkeui-kiniton" component={ServiceMobile} />
         <Route path="/services/episkeui-iphone" component={ServiceIphone} />
-        <Route path="/episkevi-iphone-:slug" component={IPhoneRepairDetail} />
+        <Route path="/episkevi-iphone/:slug" component={IPhoneRepairDetail} />
         <Route path="/eshop" component={EShop} />
         <Route path="/eshop/:slug" component={ProductDetail} />
         <Route path="/checkout" component={Checkout} />
