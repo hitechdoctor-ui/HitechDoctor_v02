@@ -280,6 +280,7 @@ export default function ProductDetail() {
   const canonicalUrl = `https://hitechdoctor.com/eshop/${product.slug}`;
   const isMobile = product.category === "mobile";
   const isLaptop = product.category === "laptop";
+  const isDesktop = product.category === "desktop";
   const subcatLabel = product.subcategory ? SUBCATEGORY_LABELS[product.subcategory] : isMobile ? "Κινητό Τηλέφωνο" : product.category;
   const metaTitle = isMobile
     ? `${product.name} — Τιμή, Χαρακτηριστικά | HiTech Doctor Αθήνα`
@@ -770,6 +771,10 @@ export default function ProductDetail() {
             related = products
               .filter((p) => p.id !== product.id && p.category === "laptop")
               .slice(0, 4);
+          } else if (isDesktop) {
+            related = products
+              .filter((p) => p.id !== product.id && p.category === "desktop")
+              .slice(0, 4);
           } else {
             const relatedSubcats: Record<string, string[]> = {
               "screen-protectors": ["cases", "chargers"],
@@ -798,12 +803,16 @@ export default function ProductDetail() {
             ? "Αξεσουάρ για το iPhone σου"
             : isLaptop
             ? "Περισσότερα Refurbished Laptops"
+            : isDesktop
+            ? "Περισσότεροι Μεταχειρισμένοι Υπολογιστές"
             : "Συνδύασέ το με…";
 
           const relatedDesc = isMobile
             ? "Θήκες, τζάμια προστασίας και καλώδια φόρτισης για το iPhone σου."
             : isLaptop
             ? "Μεταχειρισμένα laptop με εγγύηση 1 έτους — Lenovo, Microsoft και άλλα μοντέλα."
+            : isDesktop
+            ? "Μεταχειρισμένοι υπολογιστές DELL, HP, Lenovo, Apple με εγγύηση 1 έτους."
             : "Πλήρης προστασία για το iPhone σου — προστατέψτο από κάθε γωνία.";
 
           return (

@@ -75,7 +75,7 @@ Zod schemas are auto-generated from the Drizzle table definitions using `drizzle
 - `/` — Home (hero, services overview)
 - `/services` — Detailed services page (10 service cards; each can link to a dedicated subpage)
 - `/services/episkeui-kiniton` — Dedicated mobile repair page with 5 brand cards (iPhone, Samsung, Xiaomi, Huawei, OnePlus) + "Άλλη Μάρκα" CTA
-- `/eshop` — Product catalog with category tabs (Τζάμια, Θήκες, Φορτιστές); screen protectors have per-card model selector
+- `/eshop` — Product catalog with category tabs: Κινητά, Τζάμια Προστασίας, Θήκες, Φορτιστές & Καλώδια, Laptop (IDs 101–113), Desktop PC (IDs 120–143); screen protectors have per-card model selector; Laptop/Desktop have advanced filters (Grade, CPU Family, CPU Gen, Screen Size / Form Factor, RAM Type/Size)
 - `/eshop/:slug` — Individual SEO-optimized product detail page (JSON-LD Product + BreadcrumbList schema, H1/H2 hierarchy, Open Graph tags, canonical URL); screen protectors show model picker before add-to-cart
 - `/checkout` — Cart checkout form
 

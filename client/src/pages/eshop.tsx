@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo, useEffect, Fragment } from "react";
 import { useSearch } from "wouter";
-import { ShoppingCart, Package, Shield, Smartphone, Cable, Tag, X, SlidersHorizontal, HardDrive, Palette, SlidersVertical, ChevronRight, Laptop } from "lucide-react";
+import { ShoppingCart, Package, Shield, Smartphone, Cable, Tag, X, SlidersHorizontal, HardDrive, Palette, SlidersVertical, ChevronRight, Laptop, Monitor } from "lucide-react";
 import { Link } from "wouter";
 import type { Product } from "@shared/schema";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -72,7 +72,10 @@ function getLaptopGrade(name: string): string | null {
 }
 
 function getLaptopCpuFamily(name: string): string | null {
+  if (/Atom\s+\d/i.test(name)) return "Intel Atom";
+  if (/Core\s+2\s+Duo|C2D/i.test(name)) return "Intel Core 2 Duo";
   if (/Pentium Gold/i.test(name)) return "Pentium Gold";
+  if (/Pentium\s+[GE]\d/i.test(name)) return "Intel Pentium";
   if (/Ryzen\s+7/i.test(name)) return "Ryzen 7";
   if (/Ryzen\s+5/i.test(name)) return "Ryzen 5";
   if (/i7-/i.test(name)) return "Intel Core i7";
@@ -82,11 +85,25 @@ function getLaptopCpuFamily(name: string): string | null {
 }
 
 function getLaptopCpuGen(name: string): string | null {
-  const coreMatch = name.match(/i[357]-(\d)(\d{3})/i);
+  if (/i[3579]-10\d{3}/i.test(name)) return "10η Γενιά";
+  if (/i[3579]-11\d{3}/i.test(name)) return "11η Γενιά";
+  if (/i[3579]-12\d{3}/i.test(name)) return "12η Γενιά";
+  const coreMatch = name.match(/i[357]-(\d)\d{3}/i);
   if (coreMatch) return `${coreMatch[1]}η Γενιά`;
   const ryzenMatch = name.match(/Ryzen\s+\d+\s+(\d)\d{3}/i);
   if (ryzenMatch) return `${ryzenMatch[1]}η Γενιά`;
   if (/Pentium Gold 6500Y/i.test(name)) return "8η Γενιά";
+  if (/Pentium G\d+/i.test(name)) return "6η Γενιά";
+  return null;
+}
+
+function getDesktopFormFactor(name: string): string | null {
+  if (/\bUSFF\b/i.test(name)) return "USFF";
+  if (/\bMICRO\b|\bMicro\b/i.test(name)) return "Micro";
+  if (/\bMini\b/i.test(name)) return "Mini";
+  if (/\bBOX\s+PC\b|\bBOX\b/i.test(name)) return "BOX PC";
+  if (/\bAIO\b|iMac/i.test(name)) return "All-in-One";
+  if (/\bSFF\b/i.test(name)) return "SFF";
   return null;
 }
 
@@ -160,7 +177,7 @@ const IPHONE_MODELS = [
 ];
 
 // ── Category tabs ──────────────────────────────────────────────────────────
-type TabId = "mobile" | "screen-protectors" | "cases" | "chargers" | "laptop" | "";
+type TabId = "mobile" | "screen-protectors" | "cases" | "chargers" | "laptop" | "desktop" | "";
 
 interface Tab {
   id: TabId;
@@ -175,6 +192,7 @@ const TABS: Tab[] = [
   { id: "cases", label: "Θήκες", icon: Smartphone },
   { id: "chargers", label: "Φορτιστές & Καλώδια", icon: Cable },
   { id: "laptop", label: "Laptop", icon: Laptop },
+  { id: "desktop", label: "Desktop PC", icon: Monitor },
 ];
 
 const SUBCATEGORY_LABELS: Record<string, string> = {
@@ -639,6 +657,7 @@ export default function EShop() {
   const [filterScreenSize, setFilterScreenSize] = useState("");
   const [filterRamType, setFilterRamType] = useState("");
   const [filterRamSize, setFilterRamSize] = useState("");
+  const [filterFormFactor, setFilterFormFactor] = useState("");
 
   const clearAllFilters = () => {
     setFilterBrand("");
@@ -650,6 +669,7 @@ export default function EShop() {
     setFilterScreenSize("");
     setFilterRamType("");
     setFilterRamSize("");
+    setFilterFormFactor("");
   };
 
   // Sync URL params → state when user navigates from navbar mega-menu
@@ -667,13 +687,16 @@ export default function EShop() {
     setFilterScreenSize("");
     setFilterRamType("");
     setFilterRamSize("");
+    setFilterFormFactor("");
   }, [search]);
 
   const isMobileTab = activeTab === "mobile";
   const isLaptopTab = activeTab === "laptop";
+  const isDesktopTab = activeTab === "desktop";
+  const isComputerTab = isLaptopTab || isDesktopTab;
   const isSubcategoryTab = activeTab === "screen-protectors" || activeTab === "cases" || activeTab === "chargers";
 
-  const fetchCategory = isMobileTab ? "mobile" : isLaptopTab ? "laptop" : (isSubcategoryTab ? "accessory" : undefined);
+  const fetchCategory = isMobileTab ? "mobile" : isLaptopTab ? "laptop" : isDesktopTab ? "desktop" : (isSubcategoryTab ? "accessory" : undefined);
   const fetchSubcategory = isSubcategoryTab ? activeTab : undefined;
 
   const { data: allProducts, isLoading } = useProducts(fetchCategory, fetchSubcategory);
@@ -691,9 +714,10 @@ export default function EShop() {
       if (filterScreenSize && getLaptopScreenSize(p.name) !== filterScreenSize) return false;
       if (filterRamType && getLaptopRamType(p.description ?? "") !== filterRamType) return false;
       if (filterRamSize && getLaptopRamSize(p.description ?? "") !== filterRamSize) return false;
+      if (filterFormFactor && getDesktopFormFactor(p.name) !== filterFormFactor) return false;
       return true;
     });
-  }, [allProducts, filterBrand, filterColor, filterStorage, filterGrade, filterCpuFamily, filterCpuGen, filterScreenSize, filterRamType, filterRamSize]);
+  }, [allProducts, filterBrand, filterColor, filterStorage, filterGrade, filterCpuFamily, filterCpuGen, filterScreenSize, filterRamType, filterRamSize, filterFormFactor]);
 
   const isScreenProtector = (p: Product) => p.subcategory === "screen-protectors";
 
@@ -727,14 +751,15 @@ export default function EShop() {
     return order.filter((s) => set.has(s));
   }, [allProducts]);
 
-  const laptopFilterOptions = useMemo(() => {
-    if (!allProducts) return { grades: [], cpuFamilies: [], cpuGens: [], screenSizes: [], ramTypes: [], ramSizes: [] };
+  const computerFilterOptions = useMemo(() => {
+    if (!allProducts) return { grades: [], cpuFamilies: [], cpuGens: [], screenSizes: [], ramTypes: [], ramSizes: [], formFactors: [] };
     const grades: Record<string, number> = {};
     const cpuFamilies: Record<string, number> = {};
     const cpuGens: Record<string, number> = {};
     const screenSizes: Record<string, number> = {};
     const ramTypes: Record<string, number> = {};
     const ramSizes: Record<string, number> = {};
+    const formFactors: Record<string, number> = {};
     allProducts.forEach((p) => {
       const combined = p.name + " " + (p.description ?? "");
       const g = getLaptopGrade(combined); if (g) grades[g] = (grades[g] ?? 0) + 1;
@@ -743,13 +768,15 @@ export default function EShop() {
       const ss = getLaptopScreenSize(p.name); if (ss) screenSizes[ss] = (screenSizes[ss] ?? 0) + 1;
       const rt = getLaptopRamType(p.description ?? ""); if (rt) ramTypes[rt] = (ramTypes[rt] ?? 0) + 1;
       const rs = getLaptopRamSize(p.description ?? ""); if (rs) ramSizes[rs] = (ramSizes[rs] ?? 0) + 1;
+      const ff = getDesktopFormFactor(p.name); if (ff) formFactors[ff] = (formFactors[ff] ?? 0) + 1;
     });
     const gradeOrder = ["A", "A-", "B"];
-    const cpuFamilyOrder = ["Intel Core i3", "Intel Core i5", "Intel Core i7", "Ryzen 5", "Ryzen 7", "Pentium Gold"];
-    const cpuGenOrder = ["4η Γενιά", "5η Γενιά", "6η Γενιά", "7η Γενιά", "8η Γενιά", "10η Γενιά"];
+    const cpuFamilyOrder = ["Intel Core i3", "Intel Core i5", "Intel Core i7", "Intel Core 2 Duo", "Intel Pentium", "Intel Atom", "Ryzen 5", "Ryzen 7", "Pentium Gold"];
+    const cpuGenOrder = ["2η Γενιά", "4η Γενιά", "5η Γενιά", "6η Γενιά", "7η Γενιά", "8η Γενιά", "9η Γενιά", "10η Γενιά", "11η Γενιά", "12η Γενιά"];
     const screenSizeOrder = ['10.5"', '13.5"', '14.0"', '15.6"'];
-    const ramTypeOrder = ["DDR3", "DDR3L", "DDR4"];
+    const ramTypeOrder = ["DDR2", "DDR3", "DDR3L", "DDR4"];
     const ramSizeOrder = ["4GB", "8GB", "16GB", "32GB"];
+    const formFactorOrder = ["SFF", "USFF", "Micro", "Mini", "BOX PC", "All-in-One"];
     return {
       grades: gradeOrder.filter((k) => grades[k]).map((k) => ({ value: k, count: grades[k] })),
       cpuFamilies: cpuFamilyOrder.filter((k) => cpuFamilies[k]).map((k) => ({ value: k, count: cpuFamilies[k] })),
@@ -757,10 +784,11 @@ export default function EShop() {
       screenSizes: screenSizeOrder.filter((k) => screenSizes[k]).map((k) => ({ value: k, count: screenSizes[k] })),
       ramTypes: ramTypeOrder.filter((k) => ramTypes[k]).map((k) => ({ value: k, count: ramTypes[k] })),
       ramSizes: ramSizeOrder.filter((k) => ramSizes[k]).map((k) => ({ value: k, count: ramSizes[k] })),
+      formFactors: formFactorOrder.filter((k) => formFactors[k]).map((k) => ({ value: k, count: formFactors[k] })),
     };
   }, [allProducts]);
 
-  const activeFiltersCount = [filterBrand, filterColor, filterStorage, filterGrade, filterCpuFamily, filterCpuGen, filterScreenSize, filterRamType, filterRamSize].filter(Boolean).length;
+  const activeFiltersCount = [filterBrand, filterColor, filterStorage, filterGrade, filterCpuFamily, filterCpuGen, filterScreenSize, filterRamType, filterRamSize, filterFormFactor].filter(Boolean).length;
 
   return (
     <div className="min-h-screen bg-background circuit-bg">
@@ -791,6 +819,8 @@ export default function EShop() {
               <>Κινητά <span className="gradient-text">Τηλέφωνα</span></>
             ) : isLaptopTab ? (
               <>Refurbished <span className="gradient-text">Laptops</span></>
+            ) : isDesktopTab ? (
+              <>Μεταχειρισμένοι <span className="gradient-text">Υπολογιστές</span></>
             ) : (
               <>Αξεσουάρ <span className="gradient-text">iPhone</span></>
             )}
@@ -800,6 +830,8 @@ export default function EShop() {
               ? "Βρείτε κινητά τηλέφωνα Apple, Samsung, Xiaomi και άλλες μάρκες. Φιλτράρετε ανά μάρκα, χρώμα και μνήμη."
               : isLaptopTab
               ? "Μεταχειρισμένα laptop με εγγύηση 1 έτους. Lenovo ThinkPad, Microsoft Surface και άλλα μοντέλα επαγγελματικής κλάσης."
+              : isDesktopTab
+              ? "Μεταχειρισμένοι επιτραπέζιοι υπολογιστές DELL, HP, Lenovo, Apple και άλλα. Εγγύηση 1 έτους. Φίλτρα ανά επεξεργαστή, μορφή και μνήμη."
               : "Τζάμια προστασίας, θήκες και φορτιστές για κάθε μοντέλο iPhone από 8 έως 17."}
           </p>
         </div>
@@ -938,14 +970,14 @@ export default function EShop() {
             </button>
           )}
 
-          {/* ── LAPTOP FILTERS ── */}
-          {isLaptopTab && (
+          {/* ── COMPUTER (LAPTOP / DESKTOP) FILTERS ── */}
+          {isComputerTab && (
             <div className="space-y-5">
               {/* Grade */}
-              {laptopFilterOptions.grades.length > 0 && (
+              {computerFilterOptions.grades.length > 0 && (
                 <LaptopFilterSection
                   label="Grade"
-                  options={laptopFilterOptions.grades}
+                  options={computerFilterOptions.grades}
                   active={filterGrade}
                   onToggle={(v) => setFilterGrade(filterGrade === v ? "" : v)}
                 />
@@ -961,46 +993,55 @@ export default function EShop() {
                 />
               )}
               {/* Οικογένεια επεξεργαστή */}
-              {laptopFilterOptions.cpuFamilies.length > 0 && (
+              {computerFilterOptions.cpuFamilies.length > 0 && (
                 <LaptopFilterSection
                   label="Οικογένεια Επεξεργαστή"
-                  options={laptopFilterOptions.cpuFamilies}
+                  options={computerFilterOptions.cpuFamilies}
                   active={filterCpuFamily}
                   onToggle={(v) => setFilterCpuFamily(filterCpuFamily === v ? "" : v)}
                 />
               )}
               {/* Γενιά επεξεργαστή */}
-              {laptopFilterOptions.cpuGens.length > 0 && (
+              {computerFilterOptions.cpuGens.length > 0 && (
                 <LaptopFilterSection
                   label="Γενιά Επεξεργαστή"
-                  options={laptopFilterOptions.cpuGens}
+                  options={computerFilterOptions.cpuGens}
                   active={filterCpuGen}
                   onToggle={(v) => setFilterCpuGen(filterCpuGen === v ? "" : v)}
                 />
               )}
-              {/* Διάσταση οθόνης */}
-              {laptopFilterOptions.screenSizes.length > 0 && (
+              {/* Διάσταση οθόνης — laptops only */}
+              {isLaptopTab && computerFilterOptions.screenSizes.length > 0 && (
                 <LaptopFilterSection
                   label="Διάσταση Οθόνης"
-                  options={laptopFilterOptions.screenSizes}
+                  options={computerFilterOptions.screenSizes}
                   active={filterScreenSize}
                   onToggle={(v) => setFilterScreenSize(filterScreenSize === v ? "" : v)}
                 />
               )}
+              {/* Μορφή — desktops only */}
+              {isDesktopTab && computerFilterOptions.formFactors.length > 0 && (
+                <LaptopFilterSection
+                  label="Μορφή (Form Factor)"
+                  options={computerFilterOptions.formFactors}
+                  active={filterFormFactor}
+                  onToggle={(v) => setFilterFormFactor(filterFormFactor === v ? "" : v)}
+                />
+              )}
               {/* Τύπος μνήμης */}
-              {laptopFilterOptions.ramTypes.length > 0 && (
+              {computerFilterOptions.ramTypes.length > 0 && (
                 <LaptopFilterSection
                   label="Τύπος Μνήμης"
-                  options={laptopFilterOptions.ramTypes}
+                  options={computerFilterOptions.ramTypes}
                   active={filterRamType}
                   onToggle={(v) => setFilterRamType(filterRamType === v ? "" : v)}
                 />
               )}
               {/* Μέγεθος μνήμης */}
-              {laptopFilterOptions.ramSizes.length > 0 && (
+              {computerFilterOptions.ramSizes.length > 0 && (
                 <LaptopFilterSection
                   label="Μέγεθος Μνήμης"
-                  options={laptopFilterOptions.ramSizes}
+                  options={computerFilterOptions.ramSizes}
                   active={filterRamSize}
                   onToggle={(v) => setFilterRamSize(filterRamSize === v ? "" : v)}
                 />
@@ -1008,8 +1049,8 @@ export default function EShop() {
             </div>
           )}
 
-          {/* ── NON-LAPTOP FILTERS ── */}
-          {!isLaptopTab && (
+          {/* ── NON-COMPUTER FILTERS ── */}
+          {!isComputerTab && (
             <Fragment>
               {/* Brand */}
               {drawerBrands.length > 0 && (

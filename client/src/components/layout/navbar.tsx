@@ -27,7 +27,8 @@ const CATEGORY_META: Record<string, { label: string; icon: React.ElementType; co
   "screen-protectors":{ label: "Τζάμια Προστασίας",  icon: Shield,     color: "text-sky-400",      bg: "bg-sky-500/10 hover:bg-sky-500/20 border-sky-500/20",         tab: "screen-protectors" },
   cases:             { label: "Θήκες Κινητών",        icon: Package,    color: "text-violet-400",   bg: "bg-violet-500/10 hover:bg-violet-500/20 border-violet-500/20", tab: "cases" },
   chargers:          { label: "Φορτιστές & Καλώδια",  icon: Cable,      color: "text-orange-400",   bg: "bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/20", tab: "chargers" },
-  laptop:            { label: "Μεταχειρισμένα Laptop", icon: Laptop,    color: "text-emerald-400",  bg: "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20", tab: "laptop" },
+  laptop:            { label: "Μεταχειρισμένα Laptop",    icon: Laptop,   color: "text-emerald-400",  bg: "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20", tab: "laptop" },
+  desktop:           { label: "Μεταχειρισμένοι Υπολογιστές", icon: Monitor, color: "text-violet-400", bg: "bg-violet-500/10 hover:bg-violet-500/20 border-violet-500/20", tab: "desktop" },
 };
 
 // ── eShop brands (static — brands don't change structurally) ──────────────────
@@ -38,6 +39,8 @@ const ESHOP_BRANDS = [
   { name: "POCO",         href: "/eshop?tab=mobile&brand=POCO",       icon: SiXiaomi,    color: "text-yellow-400" },
   { name: "Lenovo",       href: "/eshop?tab=laptop&brand=Lenovo",     icon: Laptop,      color: "text-red-400" },
   { name: "Microsoft",    href: "/eshop?tab=laptop&brand=Microsoft",  icon: Monitor,     color: "text-sky-400" },
+  { name: "DELL",         href: "/eshop?tab=desktop&brand=DELL",      icon: Monitor,     color: "text-blue-400" },
+  { name: "HP",           href: "/eshop?tab=desktop&brand=HP",        icon: Monitor,     color: "text-indigo-400" },
 ];
 
 // ── Phone brands (services menu) ──────────────────────────────────────────────
