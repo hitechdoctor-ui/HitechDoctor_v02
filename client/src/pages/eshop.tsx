@@ -737,7 +737,7 @@ export default function EShop() {
           onClick={() => setFilterDrawerOpen(true)}
           aria-label="Φίλτρα αναζήτησης"
           data-testid="button-filter-drawer"
-          className="fixed right-4 bottom-[4.75rem] z-[154] w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform duration-200 hover:scale-110 active:scale-95 group"
+          className="fixed right-4 bottom-36 z-[154] w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform duration-200 hover:scale-110 active:scale-95 group"
           style={{
             background: activeFiltersCount > 0
               ? "linear-gradient(135deg, hsl(185 100% 36%), hsl(200 90% 46%))"
