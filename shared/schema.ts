@@ -36,6 +36,7 @@ export const orders = pgTable("orders", {
   customerId: integer("customer_id").notNull(),
   status: text("status").notNull().default("pending"),
   totalAmount: numeric("total_amount").notNull(),
+  paymentMethod: text("payment_method").default("cod"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -114,7 +115,8 @@ export const checkoutPayloadSchema = z.object({
   items: z.array(z.object({
     productId: z.number(),
     quantity: z.number(),
-  }))
+  })),
+  paymentMethod: z.enum(["cod", "bank", "card", "store"]).default("cod"),
 });
 
 export type CheckoutPayload = z.infer<typeof checkoutPayloadSchema>;

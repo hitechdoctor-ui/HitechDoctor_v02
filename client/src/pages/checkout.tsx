@@ -12,8 +12,38 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
-import { CheckCircle2, ArrowLeft, Loader2 } from "lucide-react";
+import { CheckCircle2, ArrowLeft, Loader2, Truck, Building2, CreditCard, Store } from "lucide-react";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
+
+const PAYMENT_METHODS = [
+  {
+    id: "cod",
+    label: "Αντικαταβολή",
+    desc: "Πληρώνετε μετρητά στον courier",
+    icon: Truck,
+  },
+  {
+    id: "bank",
+    label: "Τραπεζική Κατάθεση",
+    desc: "Κατάθεση σε τράπεζα",
+    icon: Building2,
+  },
+  {
+    id: "card",
+    label: "Πληρωμή με Κάρτα",
+    desc: "Visa, Mastercard, AMEX",
+    icon: CreditCard,
+  },
+  {
+    id: "store",
+    label: "Πληρωμή στο Κατάστημα",
+    desc: "Μετρητά ή κάρτα on-site",
+    icon: Store,
+  },
+] as const;
+
+type PaymentMethodId = typeof PAYMENT_METHODS[number]["id"];
 
 const checkoutFormSchema = z.object({
   name: z.string().min(2, "Το όνομα είναι υποχρεωτικό"),
@@ -30,6 +60,7 @@ export default function Checkout() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [isSuccess, setIsSuccess] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodId>("cod");
 
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutFormSchema),
@@ -48,7 +79,8 @@ export default function Checkout() {
         items: items.map(item => ({
           productId: item.product.id,
           quantity: item.quantity
-        }))
+        })),
+        paymentMethod,
       });
       setIsSuccess(true);
       clearCart();
@@ -62,6 +94,7 @@ export default function Checkout() {
   };
 
   if (isSuccess) {
+    const selected = PAYMENT_METHODS.find(m => m.id === paymentMethod);
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
@@ -70,9 +103,14 @@ export default function Checkout() {
             <CheckCircle2 className="w-12 h-12 text-green-500" />
           </div>
           <h1 className="text-4xl font-display font-bold mb-4">Ευχαριστούμε!</h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-md">
+          <p className="text-xl text-muted-foreground mb-3 max-w-md">
             Η παραγγελία σας καταχωρήθηκε επιτυχώς. Θα επικοινωνήσουμε μαζί σας σύντομα.
           </p>
+          {selected && (
+            <p className="text-sm text-muted-foreground mb-8">
+              Τρόπος πληρωμής: <span className="text-primary font-semibold">{selected.label}</span>
+            </p>
+          )}
           <Link href="/">
             <Button size="lg" className="rounded-xl px-8">Επιστροφή στην Αρχική</Button>
           </Link>
@@ -104,48 +142,124 @@ export default function Checkout() {
         ) : (
           <div className="grid lg:grid-cols-12 gap-8">
             {/* Form */}
-            <div className="lg:col-span-7 glass-panel p-6 sm:p-8 rounded-3xl">
-              <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                <span className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-sm">1</span>
-                Στοιχεία Αποστολής
-              </h2>
-              
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-                <div className="grid sm:grid-cols-2 gap-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Ονοματεπώνυμο</Label>
-                    <Input id="name" placeholder="Γιώργος Παπαδόπουλος" className="bg-black/20" {...form.register("name")} />
-                    {form.formState.errors.name && <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Τηλέφωνο</Label>
-                    <Input id="phone" placeholder="6912345678" className="bg-black/20" {...form.register("phone")} />
-                    {form.formState.errors.phone && <p className="text-xs text-destructive">{form.formState.errors.phone.message}</p>}
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="giorgos@example.com" className="bg-black/20" {...form.register("email")} />
-                  {form.formState.errors.email && <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>}
-                </div>
+            <div className="lg:col-span-7 space-y-6">
 
-                <div className="space-y-2">
-                  <Label htmlFor="address">Πλήρης Διεύθυνση</Label>
-                  <Textarea id="address" placeholder="Οδός, Αριθμός, Τ.Κ., Πόλη" className="bg-black/20 resize-none" {...form.register("address")} />
-                  {form.formState.errors.address && <p className="text-xs text-destructive">{form.formState.errors.address.message}</p>}
+              {/* Step 1: Shipping details */}
+              <div className="glass-panel p-6 sm:p-8 rounded-3xl">
+                <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-sm font-bold">1</span>
+                  Στοιχεία Αποστολής
+                </h2>
+                
+                <form id="checkout-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                  <div className="grid sm:grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Ονοματεπώνυμο</Label>
+                      <Input
+                        id="name"
+                        data-testid="input-name"
+                        placeholder="Γιώργος Παπαδόπουλος"
+                        className="bg-black/20"
+                        {...form.register("name")}
+                      />
+                      {form.formState.errors.name && <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Τηλέφωνο</Label>
+                      <Input
+                        id="phone"
+                        data-testid="input-phone"
+                        placeholder="6912345678"
+                        className="bg-black/20"
+                        {...form.register("phone")}
+                      />
+                      {form.formState.errors.phone && <p className="text-xs text-destructive">{form.formState.errors.phone.message}</p>}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      data-testid="input-email"
+                      placeholder="giorgos@example.com"
+                      className="bg-black/20"
+                      {...form.register("email")}
+                    />
+                    {form.formState.errors.email && <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Πλήρης Διεύθυνση</Label>
+                    <Textarea
+                      id="address"
+                      data-testid="input-address"
+                      placeholder="Οδός, Αριθμός, Τ.Κ., Πόλη"
+                      className="bg-black/20 resize-none"
+                      {...form.register("address")}
+                    />
+                    {form.formState.errors.address && <p className="text-xs text-destructive">{form.formState.errors.address.message}</p>}
+                  </div>
+                </form>
+              </div>
+
+              {/* Step 2: Payment method */}
+              <div className="glass-panel p-6 sm:p-8 rounded-3xl">
+                <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center text-sm font-bold">2</span>
+                  Τρόπος Πληρωμής
+                </h2>
+
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {PAYMENT_METHODS.map(method => {
+                    const Icon = method.icon;
+                    const isSelected = paymentMethod === method.id;
+                    return (
+                      <button
+                        key={method.id}
+                        type="button"
+                        data-testid={`payment-${method.id}`}
+                        onClick={() => setPaymentMethod(method.id)}
+                        className={cn(
+                          "flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-all duration-200",
+                          isSelected
+                            ? "border-primary bg-primary/10"
+                            : "border-white/10 hover:border-white/20 bg-white/5"
+                        )}
+                      >
+                        <div className={cn(
+                          "w-10 h-10 rounded-lg flex items-center justify-center shrink-0 mt-0.5",
+                          isSelected ? "bg-primary/20 text-primary" : "bg-white/10 text-muted-foreground"
+                        )}>
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className={cn("font-semibold text-sm", isSelected ? "text-primary" : "text-foreground")}>
+                            {method.label}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{method.desc}</p>
+                        </div>
+                        {isSelected && (
+                          <CheckCircle2 className="w-4 h-4 text-primary ml-auto shrink-0 mt-0.5" />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 <Button 
-                  type="submit" 
+                  type="submit"
+                  form="checkout-form"
                   size="lg" 
-                  className="w-full mt-8 h-14 text-lg bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 rounded-xl"
+                  className="w-full mt-6 h-14 text-lg bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 rounded-xl"
                   disabled={isPending}
+                  data-testid="button-submit-order"
                 >
                   {isPending ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
                   Ολοκλήρωση Παραγγελίας
                 </Button>
-              </form>
+              </div>
             </div>
 
             {/* Summary */}
@@ -176,6 +290,12 @@ export default function Checkout() {
                   <div className="flex justify-between text-sm text-muted-foreground">
                     <span>Μεταφορικά</span>
                     <span>Δωρεάν</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>Τρόπος πληρωμής</span>
+                    <span className="text-foreground font-medium">
+                      {PAYMENT_METHODS.find(m => m.id === paymentMethod)?.label}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center pt-3 border-t border-white/10">
                     <span className="font-bold">Τελικό Σύνολο</span>

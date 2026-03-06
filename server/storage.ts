@@ -192,7 +192,8 @@ export class DatabaseStorage implements IStorage {
     const [order] = await db.insert(orders).values({
       customerId,
       totalAmount: totalAmount.toString(),
-      status: "pending"
+      status: "pending",
+      paymentMethod: payload.paymentMethod ?? "cod",
     }).returning();
 
     for (const item of itemsToInsert) {
