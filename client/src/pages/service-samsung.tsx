@@ -229,8 +229,8 @@ export default function ServiceSamsung() {
 
                     <div className="grid grid-cols-2 gap-2">
                       <div className="bg-background/50 rounded-lg p-2 text-center border border-white/5">
-                        <p className="text-[9px] text-muted-foreground mb-0.5">Οθόνη</p>
-                        <p className="text-sm font-extrabold text-primary">€{model.screenPrice}</p>
+                        <p className="text-[9px] text-muted-foreground mb-0.5">Οθόνη από</p>
+                        <p className="text-sm font-extrabold text-primary">€{model.screenPriceOEM}</p>
                       </div>
                       <div className="bg-background/50 rounded-lg p-2 text-center border border-white/5">
                         <p className="text-[9px] text-muted-foreground mb-0.5">Μπαταρία</p>
