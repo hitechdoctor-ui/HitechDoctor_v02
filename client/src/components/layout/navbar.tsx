@@ -512,10 +512,6 @@ export function Navbar() {
                   )}
                 </div>
 
-                <Link href="/blog" className={`flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium ${isActive("/blog") ? "text-primary bg-primary/10" : "text-foreground"}`}>
-                  <Wrench className="w-5 h-5" />
-                  Blog
-                </Link>
               </nav>
             </SheetContent>
           </Sheet>
