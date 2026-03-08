@@ -83,9 +83,10 @@ const allServices = [
     features: ["Αντικατάσταση τροφοδοτικού", "Αναβάθμιση RAM & SSD", "Επισκευή κάρτας γραφικών", "Καθαρισμός & συντήρηση"],
     image: "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?auto=format&fit=crop&q=80&w=900",
     imageAlt: "Επισκευή desktop υπολογιστής Αθήνα",
-    priceFrom: "€40",
-    timeFrom: "2 ώρες",
+    priceFrom: "€25",
+    timeFrom: "1-3 ώρες",
     tag: null,
+    href: "/services/episkeui-desktop",
   },
   {
     id: "it-support",

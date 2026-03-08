@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import {
   Search, Package, Wrench, Smartphone, X, Laptop, Gamepad2,
   Tablet, Watch, ArrowRight, FileText, Info, Phone, HelpCircle,
-  ShoppingCart, Star,
+  ShoppingCart, Star, Monitor,
 } from "lucide-react";
 import { type Product } from "@shared/schema";
 import { SAMSUNG_SERIES } from "@/data/samsung-devices";
@@ -14,6 +14,7 @@ import { HUAWEI_SERIES } from "@/data/huawei-devices";
 import { ONEPLUS_SERIES } from "@/data/oneplus-devices";
 import { LAPTOP_BRANDS } from "@/data/laptop-brands";
 import { TABLET_BRANDS } from "@/data/tablet-brands";
+import { DESKTOP_BRANDS } from "@/data/desktop-brands";
 import { BLOG_POSTS } from "@/data/blog-posts";
 
 interface SearchEntry {
@@ -21,7 +22,7 @@ interface SearchEntry {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   sub: string;
-  category: "service" | "iphone" | "samsung" | "xiaomi" | "huawei" | "oneplus" | "tablet" | "laptop" | "page" | "blog";
+  category: "service" | "iphone" | "samsung" | "xiaomi" | "huawei" | "oneplus" | "tablet" | "laptop" | "desktop" | "page" | "blog";
   keywords?: string;
 }
 
@@ -170,6 +171,26 @@ function buildIndex(): SearchEntry[] {
     sub: "Laptop · MacBook, Dell, HP, Lenovo, ASUS, Acer",
     category: "laptop",
     keywords: "laptop επισκευη macbook dell hp lenovo asus acer αλλαγη οθονη μπαταρια πληκτρολογιο",
+  });
+
+  // ── Desktop brands ────────────────────────────────────────────────────
+  for (const brand of DESKTOP_BRANDS) {
+    entries.push({
+      name: `Επισκευή ${brand.name}`,
+      href: `/episkevi-desktop/${brand.slug}`,
+      icon: Monitor,
+      sub: `Desktop · ${brand.seriesLabel}`,
+      category: "desktop",
+      keywords: `desktop pc υπολογιστης ${brand.name.toLowerCase()} επισκευη αναβαθμιση ram ssd τροφοδοτικο windows`,
+    });
+  }
+  entries.push({
+    name: "Επισκευή Desktop — Όλες οι Κατηγορίες",
+    href: "/services/episkeui-desktop",
+    icon: Monitor,
+    sub: "Desktop · Dell, HP, Lenovo, iMac, Custom PC",
+    category: "desktop",
+    keywords: "desktop υπολογιστης επισκευη αναβαθμιση ram ssd psu τροφοδοτικο windows imac gaming pc",
   });
 
   // ── Blog posts (dynamic from data) ────────────────────────────────────

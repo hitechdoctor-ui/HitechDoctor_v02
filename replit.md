@@ -75,6 +75,12 @@ Zod schemas are auto-generated from the Drizzle table definitions using `drizzle
 - `/` — Home (hero, services overview)
 - `/services` — Detailed services page (10 service cards; each can link to a dedicated subpage)
 - `/services/episkeui-kiniton` — Dedicated mobile repair page with 5 brand cards (iPhone, Samsung, Xiaomi, Huawei, OnePlus) + "Άλλη Μάρκα" CTA
+- `/services/episkeui-laptop` — Laptop repair listing page (6 brands: MacBook, Dell, HP, Lenovo, ASUS, Acer) with realistic pricing (MacBook: screen €350+, battery €150+, keyboard/top-case €250+)
+- `/episkevi-laptop/:slug` — Laptop brand detail page (screen/battery/keyboard/port/thermal/RAM-SSD sections); MacBook has top-case keyboard note + M-series RAM/SSD warning
+- `/services/episkeui-tablet` — Tablet repair listing (iPad, Samsung Tab, Lenovo Tab, Huawei MatePad) with screen/battery/port/back-glass pricing
+- `/episkevi-tablet/:slug` — Tablet brand detail page with OEM tier pricing + FAQ
+- `/services/episkeui-desktop` — Desktop/PC repair listing (Dell, HP, Lenovo, Apple iMac, Custom/Gaming PC) with RAM/SSD/PSU/thermal/OS/virus pricing
+- `/episkevi-desktop/:slug` — Desktop brand detail page (RAM, SSD, PSU, thermal, OS install, virus removal, motherboard diag; iMac has screen section; Gaming PC has GPU section)
 - `/eshop` — Product catalog with category tabs: Κινητά, Τζάμια Προστασίας, Θήκες, Φορτιστές & Καλώδια, Laptop (IDs 101–113), Desktop PC (IDs 120–143); screen protectors have per-card model selector; Laptop/Desktop have advanced filters (Grade, CPU Family, CPU Gen, Screen Size / Form Factor, RAM Type/Size)
 - `/eshop/:slug` — Individual SEO-optimized product detail page (JSON-LD Product + BreadcrumbList schema, H1/H2 hierarchy, Open Graph tags, canonical URL); screen protectors show model picker before add-to-cart
 - `/checkout` — Cart checkout form
