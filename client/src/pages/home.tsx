@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { BLOG_POSTS, formatBlogDate } from "@/data/blog-posts";
+import { SpecialOffers } from "@/components/special-offers";
 
 const homeServices = [
   { icon: Smartphone, title: "Επισκευή Κινητών", href: "/services/episkeui-kiniton" },
@@ -252,6 +253,8 @@ export default function Home() {
             </Link>
           </div>
         </section>
+        <SpecialOffers />
+
         {/* Blog Latest News Section */}
         <section className="py-16 border-t border-white/6">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
