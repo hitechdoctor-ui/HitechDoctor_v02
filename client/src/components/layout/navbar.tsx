@@ -57,7 +57,7 @@ const PHONE_BRANDS = [
 const OTHER_SERVICES = [
   { name: "Επισκευή Tablet",      href: "/services", icon: Tablet,   color: "text-sky-400" },
   { name: "Επισκευή PlayStation", href: "/services", icon: Gamepad2, color: "text-blue-400" },
-  { name: "Επισκευή Laptop",      href: "/services", icon: Laptop,   color: "text-emerald-400" },
+  { name: "Επισκευή Laptop",      href: "/services/episkeui-laptop", icon: Laptop,   color: "text-emerald-400" },
   { name: "Επισκευή Υπολογιστή",  href: "/services", icon: Monitor,  color: "text-violet-400" },
   { name: "Επισκευή Apple Watch", href: "/services", icon: Watch,    color: "text-gray-300" },
 ];

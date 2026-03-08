@@ -70,6 +70,7 @@ const allServices = [
     priceFrom: "€35",
     timeFrom: "2 ώρες",
     tag: null,
+    href: "/services/episkeui-laptop",
   },
   {
     id: "episkeui-desktop",

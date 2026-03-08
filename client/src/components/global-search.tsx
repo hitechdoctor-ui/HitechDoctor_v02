@@ -12,6 +12,7 @@ import { IPHONE_SERIES } from "@/data/iphone-devices";
 import { XIAOMI_SERIES } from "@/data/xiaomi-devices";
 import { HUAWEI_SERIES } from "@/data/huawei-devices";
 import { ONEPLUS_SERIES } from "@/data/oneplus-devices";
+import { LAPTOP_BRANDS } from "@/data/laptop-brands";
 import { BLOG_POSTS } from "@/data/blog-posts";
 
 interface SearchEntry {
@@ -129,6 +130,26 @@ function buildIndex(): SearchEntry[] {
       });
     }
   }
+
+  // ── Laptop brands ─────────────────────────────────────────────────────
+  for (const brand of LAPTOP_BRANDS) {
+    entries.push({
+      name: `Επισκευή ${brand.name}`,
+      href: `/episkevi-laptop/${brand.slug}`,
+      icon: Laptop,
+      sub: `Laptop · ${brand.seriesLabel}`,
+      category: "laptop",
+      keywords: `laptop ${brand.name.toLowerCase()} επισκευη αλλαγη οθονη μπαταρια πληκτρολογιο`,
+    });
+  }
+  entries.push({
+    name: "Επισκευή Laptop — Όλες οι Μάρκες",
+    href: "/services/episkeui-laptop",
+    icon: Laptop,
+    sub: "Laptop · MacBook, Dell, HP, Lenovo, ASUS, Acer",
+    category: "laptop",
+    keywords: "laptop επισκευη macbook dell hp lenovo asus acer αλλαγη οθονη μπαταρια πληκτρολογιο",
+  });
 
   // ── Blog posts (dynamic from data) ────────────────────────────────────
   for (const post of BLOG_POSTS) {
