@@ -59,7 +59,7 @@ const OTHER_SERVICES = [
   { name: "Επισκευή PlayStation", href: "/services", icon: Gamepad2, color: "text-blue-400" },
   { name: "Επισκευή Laptop",      href: "/services/episkeui-laptop", icon: Laptop,   color: "text-emerald-400" },
   { name: "Επισκευή Υπολογιστή",  href: "/services/episkeui-desktop", icon: Monitor,  color: "text-violet-400" },
-  { name: "Επισκευή Apple Watch", href: "/services", icon: Watch,    color: "text-gray-300" },
+  { name: "Επισκευή Apple Watch", href: "/services/episkeui-apple-watch", icon: Watch, color: "text-gray-300" },
 ];
 
 // ── Info quick links ───────────────────────────────────────────────────────────

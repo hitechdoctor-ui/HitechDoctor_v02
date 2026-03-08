@@ -79,6 +79,7 @@ Zod schemas are auto-generated from the Drizzle table definitions using `drizzle
 - `/episkevi-laptop/:slug` — Laptop brand detail page (screen/battery/keyboard/port/thermal/RAM-SSD sections); MacBook has top-case keyboard note + M-series RAM/SSD warning
 - `/services/episkeui-tablet` — Tablet repair listing (iPad, Samsung Tab, Lenovo Tab, Huawei MatePad) with screen/battery/port/back-glass pricing
 - `/episkevi-tablet/:slug` — Tablet brand detail page with OEM tier pricing + FAQ
+- `/services/episkeui-apple-watch` — Apple Watch repair page (single page, no sub-pages); Series 3–Ultra 2 from newest to oldest; touch replacement from €80 (starting, not final) and battery from €40; explicitly does NOT do OLED/panel replacement; price table with all 12 models; Touch vs OLED explanation section
 - `/services/episkeui-desktop` — Desktop/PC repair listing (Dell, HP, Lenovo, Apple iMac, Custom/Gaming PC) with RAM/SSD/PSU/thermal/OS/virus pricing
 - `/episkevi-desktop/:slug` — Desktop brand detail page (RAM, SSD, PSU, thermal, OS install, virus removal, motherboard diag; iMac has screen section; Gaming PC has GPU section)
 - `/eshop` — Product catalog with category tabs: Κινητά, Τζάμια Προστασίας, Θήκες, Φορτιστές & Καλώδια, Laptop (IDs 101–113), Desktop PC (IDs 120–143); screen protectors have per-card model selector; Laptop/Desktop have advanced filters (Grade, CPU Family, CPU Gen, Screen Size / Form Factor, RAM Type/Size)

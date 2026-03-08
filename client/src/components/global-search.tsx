@@ -15,6 +15,7 @@ import { ONEPLUS_SERIES } from "@/data/oneplus-devices";
 import { LAPTOP_BRANDS } from "@/data/laptop-brands";
 import { TABLET_BRANDS } from "@/data/tablet-brands";
 import { DESKTOP_BRANDS } from "@/data/desktop-brands";
+import { APPLE_WATCH_MODELS } from "@/data/apple-watch-models";
 import { BLOG_POSTS } from "@/data/blog-posts";
 
 interface SearchEntry {
@@ -22,7 +23,7 @@ interface SearchEntry {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   sub: string;
-  category: "service" | "iphone" | "samsung" | "xiaomi" | "huawei" | "oneplus" | "tablet" | "laptop" | "desktop" | "page" | "blog";
+  category: "service" | "iphone" | "samsung" | "xiaomi" | "huawei" | "oneplus" | "tablet" | "laptop" | "desktop" | "watch" | "page" | "blog";
   keywords?: string;
 }
 
@@ -41,7 +42,7 @@ function buildIndex(): SearchEntry[] {
     { name: "Επισκευή Tablet", href: "/services", icon: Tablet, sub: "Υπηρεσία", category: "service" },
     { name: "Επισκευή PlayStation", href: "/services", icon: Gamepad2, sub: "Υπηρεσία", category: "service" },
     { name: "Επισκευή Υπολογιστή", href: "/services", icon: Laptop, sub: "Υπηρεσία", category: "service" },
-    { name: "Επισκευή Apple Watch", href: "/services", icon: Watch, sub: "Υπηρεσία", category: "service" },
+    { name: "Επισκευή Apple Watch", href: "/services/episkeui-apple-watch", icon: Watch, sub: "Touch & Μπαταρία · Series 3-Ultra 2", category: "watch" },
   );
 
   // ── Static informational pages ──────────────────────────────────────────
@@ -192,6 +193,18 @@ function buildIndex(): SearchEntry[] {
     category: "desktop",
     keywords: "desktop υπολογιστης επισκευη αναβαθμιση ram ssd psu τροφοδοτικο windows imac gaming pc",
   });
+
+  // ── Apple Watch models ────────────────────────────────────────────────
+  for (const model of APPLE_WATCH_MODELS) {
+    entries.push({
+      name: `Επισκευή ${model.name}`,
+      href: "/services/episkeui-apple-watch",
+      icon: Watch,
+      sub: `Apple Watch · ${model.sizes} · Touch από €${model.touchPriceFrom} · Μπαταρία €${model.batteryPriceFrom}`,
+      category: "watch",
+      keywords: `apple watch ${model.name.toLowerCase()} επισκευη touch μπαταρια αλλαγη τζαμι`,
+    });
+  }
 
   // ── Blog posts (dynamic from data) ────────────────────────────────────
   for (const post of BLOG_POSTS) {
