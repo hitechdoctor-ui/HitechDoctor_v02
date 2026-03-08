@@ -221,7 +221,7 @@ export default function LaptopRepairDetail() {
               <div className="space-y-3">
                 <PriceRow icon={Monitor}   label="Αλλαγή Οθόνης"           price={brand.screenPriceFrom}   note={`LCD/IPS/OLED · ${brand.seriesLabel}`} highlight onBook={() => setModalOpen(true)} />
                 <PriceRow icon={Battery}   label="Αλλαγή Μπαταρίας"        price={brand.batteryPriceFrom}  note="Γνήσια ή premium ποιότητας" onBook={() => setModalOpen(true)} />
-                <PriceRow icon={Keyboard}  label="Αλλαγή Πληκτρολογίου"    price={brand.keyboardPriceFrom} note="Αντικατάσταση πληκτρολογίου" onBook={() => setModalOpen(true)} />
+                <PriceRow icon={Keyboard}  label="Αλλαγή Πληκτρολογίου"    price={brand.keyboardPriceFrom} note={brand.slug === "apple-macbook" ? "Αντικατάσταση top-case (περιλαμβάνει πληκτρολόγιο + trackpad)" : "Αντικατάσταση πληκτρολογίου"} onBook={() => setModalOpen(true)} />
                 <PriceRow icon={Zap}       label="Θύρα Φόρτισης"            price={brand.portPriceFrom}     note="DC Jack ή USB-C — επισκευή/αντικατάσταση" onBook={() => setModalOpen(true)} />
                 <PriceRow icon={Cpu}       label="Thermal Paste & Καθαρισμός" price={brand.thermalPrice} suffix="" note="Θερμοαγώγιμη πάστα + καθαρισμός ανεμιστήρων" onBook={() => setModalOpen(true)} />
                 {brand.upgradeLabor > 0 && (
@@ -300,11 +300,25 @@ export default function LaptopRepairDetail() {
             {/* Keyboard */}
             <section id="section-keyboard">
               <h2 className="text-xl font-display font-bold text-foreground mb-3">Αλλαγή Πληκτρολογίου {brand.name}</h2>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                Σπασμένα, κολλημένα ή μη ανταποκρινόμενα πλήκτρα; Αντικαθιστούμε το πληκτρολόγιο με <strong className="text-foreground">συμβατό ανταλλακτικό</strong> που διατηρεί layout, backlight και γλωσσική ρύθμιση.
-              </p>
+              {brand.slug === "apple-macbook" ? (
+                <>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                    Σε MacBook, το πληκτρολόγιο αποτελεί <strong className="text-foreground">ενιαία μονάδα top-case</strong> με το trackpad και το πλαίσιο. Η αντικατάσταση γίνεται ολόκληρο το top-case assembly, γι' αυτό και το κόστος ξεκινά από <strong className="text-foreground">€{brand.keyboardPriceFrom}</strong>.
+                  </p>
+                  <div className="p-3 rounded-lg border border-amber-500/20 bg-amber-500/8 text-xs text-amber-300 mb-3">
+                    Το top-case περιλαμβάνει: πληκτρολόγιο, trackpad, καλωδιώσεις & μπαταρία (σε ορισμένα μοντέλα). Η τελική τιμή εξαρτάται από το μοντέλο MacBook.
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                  Σπασμένα, κολλημένα ή μη ανταποκρινόμενα πλήκτρα; Αντικαθιστούμε το πληκτρολόγιο με <strong className="text-foreground">συμβατό ανταλλακτικό</strong> που διατηρεί layout, backlight και γλωσσική ρύθμιση.
+                </p>
+              )}
               <ul className="list-none space-y-1.5">
-                {["Αντικατάσταση με συμβατό πληκτρολόγιο ίδιου layout", "Διατήρηση backlight (αν υπάρχει στο αρχικό)", "Δοκιμή κάθε πλήκτρου μετά την τοποθέτηση", "Γραπτή εγγύηση εργασίας & ανταλλακτικού"].map((i) => (
+                {(brand.slug === "apple-macbook"
+                  ? ["Αντικατάσταση ολόκληρου top-case assembly", "Διατήρηση trackpad & Force Touch (όπου υπάρχει)", "Δοκιμή κάθε πλήκτρου μετά την τοποθέτηση", "Γραπτή εγγύηση εργασίας & ανταλλακτικού"]
+                  : ["Αντικατάσταση με συμβατό πληκτρολόγιο ίδιου layout", "Διατήρηση backlight (αν υπάρχει στο αρχικό)", "Δοκιμή κάθε πλήκτρου μετά την τοποθέτηση", "Γραπτή εγγύηση εργασίας & ανταλλακτικού"]
+                ).map((i) => (
                   <li key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
                     <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />{i}
                   </li>
@@ -404,7 +418,10 @@ export default function LaptopRepairDetail() {
                   { q: "Πόσο χρόνο κάνει η επισκευή;", a: "Αλλαγή οθόνης: 2-4 ώρες. Μπαταρία/Πληκτρολόγιο: 1-3 ώρες. Thermal paste: 1-2 ώρες. Αναβάθμιση RAM/SSD: 1-2 ώρες. Σύνθετες επισκευές: 24-48 ώρες." },
                   { q: "Δίνετε εγγύηση;", a: "Ναι, κάθε επισκευή καλύπτεται από γραπτή εγγύηση. Γνήσια ανταλλακτικά: 12 μήνες. Συμβατά/OEM: 6 μήνες. Εργασία: 3 μήνες." },
                   { q: "Χρειάζεται ραντεβού;", a: "Μπορείτε να έρθετε χωρίς ραντεβού για βασικές επισκευές, αλλά συνιστούμε να καλέσετε πρώτα για να εξασφαλίσετε διαθεσιμότητα ανταλλακτικού." },
-                  ...(brand.slug === "apple-macbook" ? [{ q: "Επισκευάζετε MacBook M1/M2/M3;", a: "Ναι! Αλλαγή μπαταρίας, οθόνης, πληκτρολογίου και thermal paste για MacBook M1, M2, M3 και M4. Η αναβάθμιση RAM/SSD δεν είναι εφικτή στα Apple Silicon μοντέλα." }] : []),
+                  ...(brand.slug === "apple-macbook" ? [
+                    { q: "Επισκευάζετε MacBook M1/M2/M3;", a: "Ναι! Αλλαγή μπαταρίας, οθόνης, top-case (πληκτρολόγιο) και thermal paste για MacBook M1, M2, M3 και M4. Η αναβάθμιση RAM/SSD δεν είναι εφικτή στα Apple Silicon μοντέλα." },
+                    { q: "Γιατί η αλλαγή πληκτρολογίου MacBook είναι τόσο ακριβή;", a: `Στο MacBook, το πληκτρολόγιο είναι ενσωματωμένο στο top-case assembly — ένα ενιαίο τμήμα που περιλαμβάνει trackpad, καλωδιώσεις και πολλές φορές τη μπαταρία. Η αντικατάσταση γίνεται ολόκληρη η μονάδα. Κόστος από €${brand.keyboardPriceFrom} ανάλογα το μοντέλο.` },
+                  ] : []),
                 ].map(({ q, a }) => (
                   <details key={q} className="group bg-card pcb-border rounded-xl p-4 cursor-pointer" data-testid={`faq-${q.substring(0, 20).replace(/\s+/g, "-").toLowerCase()}`}>
                     <summary className="flex items-center justify-between font-display font-bold text-sm text-foreground select-none list-none">
