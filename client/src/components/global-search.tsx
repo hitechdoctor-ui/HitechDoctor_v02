@@ -13,6 +13,7 @@ import { XIAOMI_SERIES } from "@/data/xiaomi-devices";
 import { HUAWEI_SERIES } from "@/data/huawei-devices";
 import { ONEPLUS_SERIES } from "@/data/oneplus-devices";
 import { LAPTOP_BRANDS } from "@/data/laptop-brands";
+import { TABLET_BRANDS } from "@/data/tablet-brands";
 import { BLOG_POSTS } from "@/data/blog-posts";
 
 interface SearchEntry {
@@ -20,7 +21,7 @@ interface SearchEntry {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   sub: string;
-  category: "service" | "iphone" | "samsung" | "xiaomi" | "huawei" | "oneplus" | "page" | "blog";
+  category: "service" | "iphone" | "samsung" | "xiaomi" | "huawei" | "oneplus" | "tablet" | "laptop" | "page" | "blog";
   keywords?: string;
 }
 
@@ -130,6 +131,26 @@ function buildIndex(): SearchEntry[] {
       });
     }
   }
+
+  // ── Tablet brands ─────────────────────────────────────────────────────
+  for (const brand of TABLET_BRANDS) {
+    entries.push({
+      name: `Επισκευή ${brand.name}`,
+      href: `/episkevi-tablet/${brand.slug}`,
+      icon: Tablet,
+      sub: `Tablet · ${brand.seriesLabel}`,
+      category: "tablet",
+      keywords: `tablet ${brand.name.toLowerCase()} επισκευη αλλαγη οθονη μπαταρια φορτιση`,
+    });
+  }
+  entries.push({
+    name: "Επισκευή Tablet — Όλες οι Μάρκες",
+    href: "/services/episkeui-tablet",
+    icon: Tablet,
+    sub: "Tablet · iPad, Samsung Tab, Lenovo, Huawei",
+    category: "tablet",
+    keywords: "tablet επισκευη ipad samsung tab lenovo huawei αλλαγη οθονη μπαταρια",
+  });
 
   // ── Laptop brands ─────────────────────────────────────────────────────
   for (const brand of LAPTOP_BRANDS) {

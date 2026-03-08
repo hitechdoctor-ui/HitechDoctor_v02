@@ -55,7 +55,7 @@ const PHONE_BRANDS = [
 
 // ── Other repair services ──────────────────────────────────────────────────────
 const OTHER_SERVICES = [
-  { name: "Επισκευή Tablet",      href: "/services", icon: Tablet,   color: "text-sky-400" },
+  { name: "Επισκευή Tablet",      href: "/services/episkeui-tablet", icon: Tablet,   color: "text-sky-400" },
   { name: "Επισκευή PlayStation", href: "/services", icon: Gamepad2, color: "text-blue-400" },
   { name: "Επισκευή Laptop",      href: "/services/episkeui-laptop", icon: Laptop,   color: "text-emerald-400" },
   { name: "Επισκευή Υπολογιστή",  href: "/services", icon: Monitor,  color: "text-violet-400" },

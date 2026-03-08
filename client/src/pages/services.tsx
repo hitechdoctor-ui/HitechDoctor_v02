@@ -51,6 +51,7 @@ const allServices = [
     description:
       "Επισκευή οθόνης, αντικατάσταση μπαταρίας και επισκευή πλακέτας tablet. Γρήγορη διάγνωση, αξιόπιστη λύση.",
     features: ["Αλλαγή οθόνης tablet", "Αντικατάσταση μπαταρίας", "Επισκευή θύρας φόρτισης", "Επισκευή πλακέτας"],
+    href: "/services/episkeui-tablet",
     image: "https://images.unsplash.com/photo-1589739900243-4b52cd9b104e?auto=format&fit=crop&q=80&w=900",
     imageAlt: "Επισκευή tablet iPad Samsung Αθήνα",
     priceFrom: "€30",

@@ -31,6 +31,8 @@ import ServiceOnePlus from "./pages/service-oneplus";
 import OnePlusRepairDetail from "./pages/oneplus-repair-detail";
 import ServiceLaptop from "./pages/service-laptop";
 import LaptopRepairDetail from "./pages/laptop-repair-detail";
+import ServiceTablet from "./pages/service-tablet";
+import TabletRepairDetail from "./pages/tablet-repair-detail";
 import EShop from "./pages/eshop";
 import ProductDetail from "./pages/product-detail";
 import Checkout from "./pages/checkout";
@@ -111,6 +113,8 @@ function Router() {
         <Route path="/episkevi-oneplus/:slug" component={OnePlusRepairDetail} />
         <Route path="/services/episkeui-laptop" component={ServiceLaptop} />
         <Route path="/episkevi-laptop/:slug" component={LaptopRepairDetail} />
+        <Route path="/services/episkeui-tablet" component={ServiceTablet} />
+        <Route path="/episkevi-tablet/:slug" component={TabletRepairDetail} />
         <Route path="/eshop" component={EShop} />
         <Route path="/eshop/:slug" component={ProductDetail} />
         <Route path="/checkout" component={Checkout} />
