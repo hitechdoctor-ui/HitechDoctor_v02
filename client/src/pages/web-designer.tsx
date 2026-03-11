@@ -9,8 +9,9 @@ import { Fragment } from "react";
 import {
   Globe, Code2, Smartphone, Zap, Search, ShoppingCart,
   ArrowRight, ExternalLink, CheckCircle2, Star, Palette,
-  Monitor, Phone, Mail, ChevronRight, Layers,
+  Monitor, Phone, Mail, ChevronRight, Layers, Shield, Gauge,
 } from "lucide-react";
+import screenshotHydrofix from "@assets/Screenshot_2026-03-11_at_13.11.57_1773227593503.png";
 
 // ── Portfolio projects ───────────────────────────────────────────────────────
 const PROJECTS = [
@@ -343,7 +344,78 @@ export default function WebDesigner() {
 
       <main className="container mx-auto px-4 max-w-6xl py-14 space-y-20">
 
-        {/* Portfolio grid */}
+        {/* ── Real clients section ────────────────────────────────────── */}
+        <div>
+          <div className="mb-8">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-400 mb-2">Πραγματικά Έργα</p>
+            <h2 className="text-3xl font-display font-extrabold text-foreground mb-2">Δουλειές Πελατών μας</h2>
+            <p className="text-sm text-muted-foreground max-w-xl">
+              Live sites σε λειτουργία — φτιαγμένα από εμάς με πλήρες SEO, ασφάλεια και βελτιστοποίηση ταχύτητας.
+            </p>
+          </div>
+
+          {/* HydroFix card */}
+          <Link href="/portfolio/hydrofix-gr" data-testid="card-real-project-hydrofix">
+            <div className="group relative rounded-3xl border border-emerald-500/25 overflow-hidden cursor-pointer hover:border-emerald-400/50 transition-all hover:-translate-y-0.5 duration-200"
+              style={{ background: "linear-gradient(145deg, #060f0a 0%, #0a1a10 60%, #050e07 100%)" }}>
+              <div className="grid md:grid-cols-2 gap-0">
+                {/* Screenshot */}
+                <div className="relative overflow-hidden">
+                  <img
+                    src={screenshotHydrofix}
+                    alt="HydroFix.gr — Εταιρικό site υδραυλικών"
+                    className="w-full h-full object-cover object-top group-hover:scale-[1.03] transition-transform duration-500"
+                    style={{ minHeight: "220px", maxHeight: "280px" }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#060f0a] md:block hidden" />
+                  <div className="absolute top-3 left-3">
+                    <Badge className="bg-emerald-500 text-black font-extrabold text-[9px] px-2 py-1">LIVE</Badge>
+                  </div>
+                </div>
+
+                {/* Info */}
+                <div className="p-7 flex flex-col justify-center">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-[10px] font-mono text-emerald-400/70 flex items-center gap-1">
+                      hydrofix.gr <ExternalLink className="w-2.5 h-2.5" />
+                    </span>
+                  </div>
+                  <h3 className="text-2xl font-display font-extrabold text-white mb-2 group-hover:text-emerald-300 transition-colors">
+                    HydroFix.gr
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                    Εταιρικό site για υδραυλικές εργασίες στην Αττική. Δίγλωσσο (ΕΛ/EN), 24/7 emergency section, Google Reviews, LocalBusiness schema.
+                  </p>
+
+                  {/* Scores */}
+                  <div className="grid grid-cols-2 gap-2 mb-5">
+                    {[
+                      { icon: Gauge,  label: "Performance", value: "91/100", color: "text-emerald-400" },
+                      { icon: Search, label: "SEO",          value: "98/100", color: "text-emerald-400" },
+                      { icon: Shield, label: "Ασφάλεια",     value: "A+",     color: "text-emerald-400" },
+                      { icon: Zap,    label: "FCP",           value: "1.1s",   color: "text-emerald-400" },
+                    ].map((s) => (
+                      <div key={s.label} className="flex items-center gap-2 p-2.5 rounded-xl border border-emerald-500/15 bg-emerald-500/5">
+                        <s.icon className={`w-3.5 h-3.5 ${s.color} shrink-0`} />
+                        <div>
+                          <p className="text-[9px] text-muted-foreground">{s.label}</p>
+                          <p className={`text-xs font-extrabold ${s.color}`}>{s.value}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-2 text-sm font-bold text-emerald-400 group-hover:gap-3 transition-all">
+                    Δείτε πλήρες Case Study
+                    <ArrowRight className="w-4 h-4" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Link>
+        </div>
+
+        {/* Portfolio grid (demo) */}
         <div>
           <div className="text-center mb-10">
             <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-2">Portfolio</p>
