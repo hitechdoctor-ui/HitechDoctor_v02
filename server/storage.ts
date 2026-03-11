@@ -42,6 +42,9 @@ export interface IStorage {
   getCustomer(id: number): Promise<Customer | undefined>;
   getCustomerByEmail(email: string): Promise<Customer | undefined>;
   getCustomerOrders(customerId: number): Promise<any[]>;
+  upsertCustomerByEmail(name: string, email: string, phone?: string | null): Promise<Customer>;
+  getCustomerSubscriptions(email: string): Promise<Subscription[]>;
+  getCustomerInquiries(email: string): Promise<WebsiteInquiry[]>;
 
   // Orders
   getOrders(): Promise<any[]>;
@@ -74,7 +77,10 @@ export interface IStorage {
   getWebsiteInquiries(): Promise<WebsiteInquiry[]>;
   getWebsiteInquiry(id: number): Promise<WebsiteInquiry | undefined>;
   createWebsiteInquiry(data: InsertWebsiteInquiry): Promise<WebsiteInquiry>;
-  updateWebsiteInquiry(id: number, data: { status?: string; notes?: string }): Promise<WebsiteInquiry>;
+  updateWebsiteInquiry(id: number, data: Partial<{
+    status: string; notes: string; firstName: string; lastName: string;
+    phone: string; email: string; prepayment: string | null; prepaymentIncludesVat: boolean;
+  }>): Promise<WebsiteInquiry>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -140,7 +146,47 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCustomerOrders(customerId: number): Promise<any[]> {
-    return await db.select().from(orders).where(eq(orders.customerId, customerId)).orderBy(desc(orders.createdAt));
+    const rows = await db.select({
+      id: orders.id,
+      customerId: orders.customerId,
+      totalAmount: orders.totalAmount,
+      status: orders.status,
+      paymentMethod: orders.paymentMethod,
+      createdAt: orders.createdAt,
+    }).from(orders).where(eq(orders.customerId, customerId)).orderBy(desc(orders.createdAt));
+
+    // Attach items for each order
+    const result = [];
+    for (const order of rows) {
+      const items = await this.getOrderItems(order.id);
+      result.push({ ...order, items });
+    }
+    return result;
+  }
+
+  async upsertCustomerByEmail(name: string, email: string, phone?: string | null): Promise<Customer> {
+    const existing = await this.getCustomerByEmail(email);
+    if (existing) {
+      if (phone && !existing.phone) {
+        await db.update(customers).set({ phone }).where(eq(customers.id, existing.id));
+        return { ...existing, phone };
+      }
+      return existing;
+    }
+    const [created] = await db.insert(customers).values({ name, email, phone: phone || null }).returning();
+    return created;
+  }
+
+  async getCustomerSubscriptions(email: string): Promise<Subscription[]> {
+    return await db.select().from(subscriptions)
+      .where(eq(subscriptions.email, email))
+      .orderBy(desc(subscriptions.createdAt));
+  }
+
+  async getCustomerInquiries(email: string): Promise<WebsiteInquiry[]> {
+    return await db.select().from(websiteInquiries)
+      .where(eq(websiteInquiries.email, email))
+      .orderBy(desc(websiteInquiries.createdAt));
   }
 
   // --- Orders ---
@@ -351,9 +397,12 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
-  async updateWebsiteInquiry(id: number, data: { status?: string; notes?: string }): Promise<WebsiteInquiry> {
+  async updateWebsiteInquiry(id: number, data: Partial<{
+    status: string; notes: string; firstName: string; lastName: string;
+    phone: string; email: string; prepayment: string | null; prepaymentIncludesVat: boolean;
+  }>): Promise<WebsiteInquiry> {
     const [updated] = await db.update(websiteInquiries)
-      .set(data)
+      .set(data as any)
       .where(eq(websiteInquiries.id, id))
       .returning();
     if (!updated) throw new Error("Website inquiry not found");

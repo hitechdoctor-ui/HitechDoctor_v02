@@ -72,13 +72,13 @@ function printOrderWindow(order: any, items: any[]) {
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Inter', Arial, sans-serif; background: #fff; color: #1a1a2e; font-size: 13px; }
     
-    .header { background: #050C19; padding: 28px 36px; display: flex; justify-content: space-between; align-items: flex-start; }
-    .brand-name { font-size: 24px; font-weight: 900; color: #00D2C8; letter-spacing: -0.5px; margin-bottom: 6px; }
-    .brand-sub { color: #8890aa; font-size: 11px; line-height: 1.7; }
+    .header { background: #f0f4ff; border-bottom: 3px solid #00aaa5; padding: 28px 36px; display: flex; justify-content: space-between; align-items: flex-start; }
+    .brand-name { font-size: 24px; font-weight: 900; color: #00888a; letter-spacing: -0.5px; margin-bottom: 6px; }
+    .brand-sub { color: #6670aa; font-size: 11px; line-height: 1.7; }
     .order-badge { text-align: right; }
-    .order-label { font-size: 22px; font-weight: 900; color: #fff; letter-spacing: 2px; }
-    .order-num { color: #00D2C8; font-size: 13px; font-weight: 700; margin-top: 4px; }
-    .order-date { color: #8890aa; font-size: 11px; margin-top: 2px; }
+    .order-label { font-size: 22px; font-weight: 900; color: #1a1a2e; letter-spacing: 2px; }
+    .order-num { color: #00888a; font-size: 13px; font-weight: 700; margin-top: 4px; }
+    .order-date { color: #6670aa; font-size: 11px; margin-top: 2px; }
     
     .accent-bar { height: 3px; background: linear-gradient(90deg, #00D2C8, #0099ff); }
     
@@ -94,8 +94,8 @@ function printOrderWindow(order: any, items: any[]) {
     .section-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #8890aa; margin-bottom: 10px; }
     
     table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-    thead tr { background: #050C19; }
-    thead th { padding: 10px 14px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #00D2C8; }
+    thead tr { background: #e6f7f7; }
+    thead th { padding: 10px 14px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #007b7d; }
     tbody tr { border-bottom: 1px solid #eee; }
     tbody tr:last-child { border-bottom: none; }
     tbody td { padding: 10px 14px; color: #1a1a2e; vertical-align: middle; }
@@ -105,16 +105,16 @@ function printOrderWindow(order: any, items: any[]) {
     .bold { font-weight: 700; }
     
     .totals { display: flex; justify-content: flex-end; margin-top: 4px; }
-    .totals-box { background: #050C19; border-radius: 10px; padding: 18px 24px; min-width: 240px; }
+    .totals-box { background: #f0f4ff; border: 1px solid #c5d0ef; border-radius: 10px; padding: 18px 24px; min-width: 240px; }
     .totals-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .totals-row:last-child { margin-bottom: 0; padding-top: 10px; border-top: 1px solid #1e2a45; }
-    .totals-label { font-size: 11px; color: #8890aa; }
-    .totals-amount { font-size: 12px; font-weight: 600; color: #ccd0e0; }
-    .totals-total-label { font-size: 13px; font-weight: 800; color: #fff; }
-    .totals-total-amount { font-size: 18px; font-weight: 900; color: #00D2C8; }
+    .totals-row:last-child { margin-bottom: 0; padding-top: 10px; border-top: 1px solid #c5d0ef; }
+    .totals-label { font-size: 11px; color: #666; }
+    .totals-amount { font-size: 12px; font-weight: 600; color: #333; }
+    .totals-total-label { font-size: 13px; font-weight: 800; color: #1a1a2e; }
+    .totals-total-amount { font-size: 18px; font-weight: 900; color: #007b7d; }
     
-    .footer { margin-top: 40px; padding: 16px 36px; background: #050C19; text-align: center; }
-    .footer p { font-size: 10px; color: #8890aa; line-height: 1.8; }
+    .footer { margin-top: 40px; padding: 16px 36px; background: #f0f4ff; border-top: 1px solid #c5d0ef; text-align: center; }
+    .footer p { font-size: 10px; color: #666; line-height: 1.8; }
     
     @media print {
       body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }

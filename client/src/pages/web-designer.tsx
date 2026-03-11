@@ -124,9 +124,34 @@ const inlineFormSchema = z.object({
 
 type InlineFormValues = z.infer<typeof inlineFormSchema>;
 
+function scrollToInquiry() {
+  const el = document.getElementById("inquiry");
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+const PORTFOLIO_CATEGORIES = [
+  { value: "all",       label: "Όλα" },
+  { value: "corporate", label: "Εταιρικό Site" },
+  { value: "eshop",     label: "eShop" },
+  { value: "portfolio", label: "Portfolio" },
+  { value: "beauty",    label: "Beauty" },
+];
+
+const PORTFOLIO_CATEGORY_MAP: Record<string, string> = {
+  "hydrofix-gr":          "corporate",
+  "regalo-gr":            "eshop",
+  "louloudotopos":        "eshop",
+  "bsnaomi-gr":           "beauty",
+  "theatrehood-gr":       "portfolio",
+  "ath-ecs-gr":           "corporate",
+  "nikosapost-gr":        "portfolio",
+  "metamorfosi-moschato-gr": "corporate",
+};
+
 export default function WebDesigner() {
   const [inquiryOpen, setInquiryOpen] = useState(false);
   const [inlineSubmitted, setInlineSubmitted] = useState(false);
+  const [portfolioFilter, setPortfolioFilter] = useState("all");
   const { toast } = useToast();
 
   const inlineForm = useForm<InlineFormValues>({
@@ -211,16 +236,15 @@ export default function WebDesigner() {
               με σύγχρονες τεχνολογίες. Από την ιδέα ως την on-line παρουσία — με πλήρη SEO βελτιστοποίηση.
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
-              <a href="mailto:info@hitechdoctor.com">
-                <Button
-                  className="h-12 px-8 font-bold border-0 text-base"
-                  style={{ background: "linear-gradient(135deg, hsl(185 100% 36%), hsl(200 90% 44%))", boxShadow: "0 0 24px rgba(0,210,200,0.3)" }}
-                  data-testid="button-webdesign-contact"
-                >
-                  <Mail className="w-4 h-4 mr-2" />
-                  Ζητήστε Προσφορά
-                </Button>
-              </a>
+              <Button
+                onClick={scrollToInquiry}
+                className="h-12 px-8 font-bold border-0 text-base"
+                style={{ background: "linear-gradient(135deg, hsl(185 100% 36%), hsl(200 90% 44%))", boxShadow: "0 0 24px rgba(0,210,200,0.3)" }}
+                data-testid="button-webdesign-contact"
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                Ζητήστε Προσφορά
+              </Button>
               <a href="tel:6981882005">
                 <Button variant="outline" className="h-12 px-6 border-white/20 hover:border-primary/40 gap-2">
                   <Phone className="w-4 h-4" />
@@ -407,7 +431,26 @@ export default function WebDesigner() {
             </p>
           </div>
 
+          {/* Category filter */}
+          <div className="flex flex-wrap gap-2 mb-8" data-testid="portfolio-filters">
+            {PORTFOLIO_CATEGORIES.map((cat) => (
+              <button
+                key={cat.value}
+                onClick={() => setPortfolioFilter(cat.value)}
+                data-testid={`filter-${cat.value}`}
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all ${
+                  portfolioFilter === cat.value
+                    ? "bg-primary text-black border-primary"
+                    : "bg-transparent text-muted-foreground border-white/15 hover:border-primary/40 hover:text-foreground"
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
           {/* HydroFix card */}
+          <div className={PORTFOLIO_CATEGORY_MAP["hydrofix-gr"] === portfolioFilter || portfolioFilter === "all" ? "" : "hidden"}>
           <Link href="/portfolio/hydrofix-gr" data-testid="card-real-project-hydrofix">
             <div className="group relative rounded-3xl border border-emerald-500/25 overflow-hidden cursor-pointer hover:border-emerald-400/50 transition-all hover:-translate-y-0.5 duration-200"
               style={{ background: "linear-gradient(145deg, #060f0a 0%, #0a1a10 60%, #050e07 100%)" }}>
@@ -466,8 +509,10 @@ export default function WebDesigner() {
               </div>
             </div>
           </Link>
+          </div>
 
           {/* e-regalo.gr card */}
+          <div className={PORTFOLIO_CATEGORY_MAP["regalo-gr"] === portfolioFilter || portfolioFilter === "all" ? "" : "hidden"}>
           <Link href="/portfolio/regalo-gr" data-testid="card-real-project-regalo" className="mt-5 block">
             <div className="group relative rounded-3xl border border-amber-500/20 overflow-hidden cursor-pointer hover:border-amber-400/45 transition-all hover:-translate-y-0.5 duration-200"
               style={{ background: "linear-gradient(145deg, #110b01 0%, #1a1002 60%, #0e0901 100%)" }}>
@@ -527,8 +572,10 @@ export default function WebDesigner() {
               </div>
             </div>
           </Link>
+          </div>
 
           {/* louloudotopos.com.gr card */}
+          <div className={PORTFOLIO_CATEGORY_MAP["louloudotopos"] === portfolioFilter || portfolioFilter === "all" ? "" : "hidden"}>
           <Link href="/portfolio/louloudotopos" data-testid="card-real-project-louloudotopos" className="mt-5 block">
             <div
               className="group relative rounded-3xl border border-green-500/20 overflow-hidden cursor-pointer hover:border-green-400/45 transition-all hover:-translate-y-0.5 duration-200"
@@ -588,8 +635,10 @@ export default function WebDesigner() {
               </div>
             </div>
           </Link>
+          </div>
 
           {/* BsNaomi.gr card */}
+          <div className={PORTFOLIO_CATEGORY_MAP["bsnaomi-gr"] === portfolioFilter || portfolioFilter === "all" ? "" : "hidden"}>
           <Link href="/portfolio/bsnaomi-gr" data-testid="card-real-project-bsnaomi" className="mt-5 block">
             <div
               className="group relative rounded-3xl border border-pink-500/20 overflow-hidden cursor-pointer hover:border-pink-400/45 transition-all hover:-translate-y-0.5 duration-200"
@@ -649,8 +698,10 @@ export default function WebDesigner() {
               </div>
             </div>
           </Link>
+          </div>
 
           {/* TheatreHood.gr card */}
+          <div className={PORTFOLIO_CATEGORY_MAP["theatrehood-gr"] === portfolioFilter || portfolioFilter === "all" ? "" : "hidden"}>
           <Link href="/portfolio/theatrehood-gr" data-testid="card-real-project-theatrehood" className="mt-5 block">
             <div
               className="group relative rounded-3xl border border-orange-500/20 overflow-hidden cursor-pointer hover:border-orange-400/45 transition-all hover:-translate-y-0.5 duration-200"
@@ -710,8 +761,10 @@ export default function WebDesigner() {
               </div>
             </div>
           </Link>
+          </div>
 
           {/* ath-ecs.gr card */}
+          <div className={PORTFOLIO_CATEGORY_MAP["ath-ecs-gr"] === portfolioFilter || portfolioFilter === "all" ? "" : "hidden"}>
           <Link href="/portfolio/ath-ecs-gr" data-testid="card-real-project-athecs" className="mt-5 block">
             <div
               className="group relative rounded-3xl border border-amber-500/25 overflow-hidden cursor-pointer hover:border-amber-400/50 transition-all hover:-translate-y-0.5 duration-200"
@@ -771,8 +824,10 @@ export default function WebDesigner() {
               </div>
             </div>
           </Link>
+          </div>
 
           {/* nikosapost.gr card */}
+          <div className={PORTFOLIO_CATEGORY_MAP["nikosapost-gr"] === portfolioFilter || portfolioFilter === "all" ? "" : "hidden"}>
           <Link href="/portfolio/nikosapost-gr" data-testid="card-real-project-nikosapost" className="mt-5 block">
             <div
               className="group relative rounded-3xl border border-orange-500/25 overflow-hidden cursor-pointer hover:border-orange-400/50 transition-all hover:-translate-y-0.5 duration-200"
@@ -828,8 +883,10 @@ export default function WebDesigner() {
               </div>
             </div>
           </Link>
+          </div>
 
           {/* metamorfosi-moschato.gr card */}
+          <div className={PORTFOLIO_CATEGORY_MAP["metamorfosi-moschato-gr"] === portfolioFilter || portfolioFilter === "all" ? "" : "hidden"}>
           <Link href="/portfolio/metamorfosi-moschato-gr" data-testid="card-real-project-metamorfosi" className="mt-5 block">
             <div
               className="group relative rounded-3xl border overflow-hidden cursor-pointer transition-all hover:-translate-y-0.5 duration-200"
@@ -885,6 +942,7 @@ export default function WebDesigner() {
               </div>
             </div>
           </Link>
+          </div>
         </div>
 
         {/* Services included */}
@@ -927,7 +985,7 @@ export default function WebDesigner() {
         </div>
 
         {/* Inline Inquiry Form */}
-        <div data-testid="section-inline-inquiry">
+        <div id="inquiry" data-testid="section-inline-inquiry">
           <div
             className="relative rounded-3xl border border-amber-500/30 overflow-hidden"
             style={{ background: "linear-gradient(145deg, #1a1200 0%, #120d00 50%, #0e0900 100%)", boxShadow: "0 0 40px rgba(251,191,36,0.06)" }}

@@ -254,3 +254,43 @@ export async function sendWebsiteInquiryEmail(inq: WebsiteInquiry): Promise<void
     console.error("[email] Failed to send website inquiry email:", err);
   }
 }
+
+export async function sendWebsiteInquiryClientEmail(inq: WebsiteInquiry): Promise<void> {
+  const resend = getClient();
+  if (!resend) {
+    console.log("[email] RESEND_API_KEY not set — skipping client inquiry email");
+    return;
+  }
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: [inq.email],
+      bcc: [ADMIN_EMAIL],
+      subject: `Το αίτημά σας για κατασκευή ιστοσελίδας — HiTech Doctor`,
+      html: `<!DOCTYPE html>
+<html lang="el"><head><meta charset="UTF-8"><title>Αίτημα Ιστοσελίδας</title></head>
+<body style="margin:0;padding:0;background:#0d1117;font-family:Arial,Helvetica,sans-serif;color:#e0e0e0;">
+  <div style="max-width:560px;margin:0 auto;padding:20px;">
+    <div style="background:linear-gradient(135deg,#050C19,#0a1628);border:1px solid rgba(0,210,200,0.15);border-radius:16px;padding:28px 32px;margin-bottom:16px;text-align:center;">
+      <div style="font-size:28px;font-weight:900;margin-bottom:4px;"><span style="color:#00D2C8;">HiTech</span><span style="color:#fff;">Doctor</span></div>
+      <div style="font-size:12px;color:#666;">Κατασκευή Ιστοσελίδων — Αθήνα</div>
+    </div>
+    <div style="background:#0a1628;border:1px solid rgba(0,210,200,0.1);border-radius:16px;padding:28px 32px;">
+      <h1 style="margin:0 0 16px 0;font-size:20px;font-weight:800;color:#fff;">Λάβαμε το αίτημά σας!</h1>
+      <p style="margin:0 0 16px 0;font-size:14px;color:#aaa;">Αγαπητέ/ή <strong style="color:#fff;">${inq.firstName} ${inq.lastName}</strong>,</p>
+      <p style="margin:0 0 16px 0;font-size:14px;color:#aaa;">Σας ευχαριστούμε για το ενδιαφέρον σας για κατασκευή ιστοσελίδας. Θα επικοινωνήσουμε μαζί σας το συντομότερο για να συζητήσουμε τις ανάγκες σας.</p>
+      ${inq.notes ? `<div style="background:#050C19;border-radius:10px;padding:16px;margin-bottom:16px;"><p style="margin:0 0 8px 0;font-size:11px;color:#00D2C8;font-weight:700;text-transform:uppercase;">Σχόλιά σας:</p><p style="margin:0;font-size:13px;color:#ccc;">${inq.notes}</p></div>` : ""}
+      <div style="background:#050C19;border-radius:10px;padding:16px;">
+        <p style="margin:0 0 8px 0;font-size:11px;color:#00D2C8;font-weight:700;text-transform:uppercase;">Επικοινωνήστε μαζί μας:</p>
+        <p style="margin:0;font-size:13px;color:#ccc;">📞 698 188 2005 | ✉️ info@hitechdoctor.com</p>
+      </div>
+    </div>
+  </div>
+</body></html>`,
+    });
+    if (error) console.error("[email] Client inquiry email error:", error);
+    else console.log(`[email] Client inquiry email sent to ${inq.email}`);
+  } catch (err) {
+    console.error("[email] Failed to send client inquiry email:", err);
+  }
+}

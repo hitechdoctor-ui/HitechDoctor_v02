@@ -4,12 +4,40 @@ import { storage } from "./storage";
 import { api, errorSchemas } from "@shared/routes";
 import { insertRepairRequestSchema, insertRepairItemSchema, insertSubscriptionSchema, insertWebsiteInquirySchema } from "@shared/schema";
 import { z } from "zod";
-import { sendRepairConfirmationEmail, sendWebsiteInquiryEmail } from "./email";
+import { sendRepairConfirmationEmail, sendWebsiteInquiryEmail, sendWebsiteInquiryClientEmail } from "./email";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+
+  // --- Admin Auth ---
+  app.post("/api/admin/login", (req, res) => {
+    const { email, password } = req.body || {};
+    const adminEmail = process.env.ADMIN_EMAIL || "info@hitechdoctor.com";
+    const adminPass = process.env.ADMIN_PASSWORD || "hitech2026!";
+    if (email === adminEmail && password === adminPass) {
+      const token = Buffer.from(`${email}:${adminPass}:${Date.now()}`).toString("base64");
+      res.json({ ok: true, token });
+    } else {
+      res.status(401).json({ ok: false, message: "Λάθος email ή κωδικός" });
+    }
+  });
+
+  app.get("/api/admin/me", (req, res) => {
+    const auth = req.headers.authorization || "";
+    const token = auth.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ ok: false });
+    try {
+      const decoded = Buffer.from(token, "base64").toString("utf8");
+      const adminEmail = process.env.ADMIN_EMAIL || "info@hitechdoctor.com";
+      const adminPass = process.env.ADMIN_PASSWORD || "hitech2026!";
+      if (decoded.startsWith(`${adminEmail}:${adminPass}:`)) {
+        return res.json({ ok: true, email: adminEmail });
+      }
+    } catch {}
+    res.status(401).json({ ok: false });
+  });
 
   // --- Products API ---
   app.get("/api/products/categories", async (req, res) => {
@@ -111,6 +139,30 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/customers/:id/subscriptions", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const customer = await storage.getCustomer(id);
+      if (!customer) return res.status(404).json({ message: "Customer not found" });
+      const subs = await storage.getCustomerSubscriptions(customer.email);
+      res.json(subs);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch customer subscriptions" });
+    }
+  });
+
+  app.get("/api/customers/:id/inquiries", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const customer = await storage.getCustomer(id);
+      if (!customer) return res.status(404).json({ message: "Customer not found" });
+      const inqs = await storage.getCustomerInquiries(customer.email);
+      res.json(inqs);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch customer inquiries" });
+    }
+  });
+
   // --- Orders & Checkout API ---
   app.get(api.orders.list.path, async (req, res) => {
     try {
@@ -177,6 +229,11 @@ export async function registerRoutes(
       const request = await storage.createRepairRequest(input);
       res.status(201).json(request);
       sendRepairConfirmationEmail(request).catch((e) => console.error("[email] background send failed:", e));
+      // Auto-upsert customer in CRM
+      const fullName = `${input.firstName} ${input.lastName}`.trim();
+      storage.upsertCustomerByEmail(fullName, input.email, input.phone).catch((e) =>
+        console.error("[crm] repair upsert failed:", e)
+      );
     } catch (err) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: err.errors[0].message, field: err.errors[0].path.join('.') });
@@ -296,6 +353,10 @@ export async function registerRoutes(
       const input = insertSubscriptionSchema.parse(req.body);
       const sub = await storage.createSubscription(input);
       res.status(201).json(sub);
+      // Auto-upsert customer in CRM
+      storage.upsertCustomerByEmail(sub.customerName, sub.email, sub.phone).catch((e) =>
+        console.error("[crm] subscription upsert failed:", e)
+      );
     } catch (err) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: err.errors[0].message, field: err.errors[0].path.join('.') });
@@ -313,6 +374,7 @@ export async function registerRoutes(
         phone: z.string().optional(),
         status: z.string().optional(),
         notes: z.string().optional(),
+        antivirusName: z.string().optional(),
         renewalDate: z.coerce.date().optional(),
         notifiedMonthBefore: z.boolean().optional(),
         notifiedTenDaysBefore: z.boolean().optional(),
@@ -354,6 +416,10 @@ export async function registerRoutes(
       const inquiry = await storage.createWebsiteInquiry(input);
       res.status(201).json(inquiry);
       sendWebsiteInquiryEmail(inquiry).catch((e) => console.error("[email] inquiry send failed:", e));
+      // Auto-upsert customer in CRM
+      storage.upsertCustomerByEmail(`${input.firstName} ${input.lastName}`.trim(), input.email, input.phone).catch((e) =>
+        console.error("[crm] inquiry upsert failed:", e)
+      );
     } catch (err) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: err.errors[0].message, field: err.errors[0].path.join('.') });
@@ -368,10 +434,21 @@ export async function registerRoutes(
       const schema = z.object({
         status: z.string().optional(),
         notes: z.string().optional(),
+        firstName: z.string().optional(),
+        lastName: z.string().optional(),
+        phone: z.string().optional(),
+        email: z.string().email().optional(),
+        prepayment: z.string().nullable().optional(),
+        prepaymentIncludesVat: z.boolean().optional(),
+        sendClientEmail: z.boolean().optional(),
       });
       const data = schema.parse(req.body);
-      const inquiry = await storage.updateWebsiteInquiry(id, data);
+      const { sendClientEmail, ...updateData } = data;
+      const inquiry = await storage.updateWebsiteInquiry(id, updateData);
       res.json(inquiry);
+      if (sendClientEmail) {
+        sendWebsiteInquiryClientEmail(inquiry).catch((e) => console.error("[email] client inquiry send failed:", e));
+      }
     } catch (err) {
       res.status(404).json({ message: "Website inquiry not found" });
     }

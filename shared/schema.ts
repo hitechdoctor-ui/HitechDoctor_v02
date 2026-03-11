@@ -85,6 +85,7 @@ export const subscriptions = pgTable("subscriptions", {
   renewalDate: timestamp("renewal_date").notNull(),
   price: numeric("price").notNull(),
   status: text("status").notNull().default("active"), // "active" | "expired" | "cancelled"
+  antivirusName: text("antivirus_name"),
   notes: text("notes"),
   notifiedMonthBefore: boolean("notified_month_before").default(false),
   notifiedTenDaysBefore: boolean("notified_ten_days_before").default(false),

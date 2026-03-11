@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ArrowLeft, User, Mail, Phone, MapPin, ShoppingBag, Wrench,
   Package, CheckCircle2, Clock, AlertCircle, XCircle, Printer, Euro, List,
+  Shield, Globe, MessageSquare,
 } from "lucide-react";
-import { type Customer, type RepairRequest, type RepairItem } from "@shared/schema";
+import { type Customer, type RepairRequest, type RepairItem, type Subscription, type WebsiteInquiry } from "@shared/schema";
 
 const VAT_RATE = 0.24;
 const fmt = (n: number) => n.toFixed(2).replace(".", ",") + " €";
@@ -266,6 +267,18 @@ export default function AdminCustomerDetail() {
     enabled: !!customer?.email,
   });
 
+  const { data: subscriptions = [], isLoading: loadingSubscriptions } = useQuery<Subscription[]>({
+    queryKey: ["/api/customers", customerId, "subscriptions"],
+    queryFn: () => fetch(`/api/customers/${customerId}/subscriptions`).then(r => r.json()),
+    enabled: !!customer,
+  });
+
+  const { data: inquiries = [], isLoading: loadingInquiries } = useQuery<WebsiteInquiry[]>({
+    queryKey: ["/api/customers", customerId, "inquiries"],
+    queryFn: () => fetch(`/api/customers/${customerId}/inquiries`).then(r => r.json()),
+    enabled: !!customer,
+  });
+
   if (loadingCustomer) {
     return (
       <AdminLayout>
@@ -358,6 +371,84 @@ export default function AdminCustomerDetail() {
           </div>
         </CardContent>
       </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
+        {/* Subscriptions Summary */}
+        <Card className="bg-card border-white/8">
+          <CardContent className="pt-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center">
+                <Shield className="w-4 h-4 text-sky-400" />
+              </div>
+              <p className="text-sm font-bold">Συνδρομές</p>
+            </div>
+            {loadingSubscriptions ? <p className="text-xs text-muted-foreground">Φόρτωση...</p> : subscriptions.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Καμία συνδρομή</p>
+            ) : (
+              <div className="space-y-2">
+                {subscriptions.map(s => (
+                  <div key={s.id} className="flex items-center justify-between text-xs">
+                    <span className="text-foreground">{s.type === "antivirus" ? "Antivirus" : "Ιστοσελίδα"}</span>
+                    <span className={s.status === "active" ? "text-emerald-400 font-bold" : "text-red-400"}>{s.status === "active" ? "Ενεργή" : s.status === "expired" ? "Έληξε" : "Ακυρώθηκε"}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Inquiries Summary */}
+        <Card className="bg-card border-white/8">
+          <CardContent className="pt-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
+                <MessageSquare className="w-4 h-4 text-amber-400" />
+              </div>
+              <p className="text-sm font-bold">Αιτήματα Ιστοσελίδας</p>
+            </div>
+            {loadingInquiries ? <p className="text-xs text-muted-foreground">Φόρτωση...</p> : inquiries.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Κανένα αίτημα</p>
+            ) : (
+              <div className="space-y-2">
+                {inquiries.map(inq => (
+                  <div key={inq.id} className="flex items-center justify-between text-xs">
+                    <span className="text-foreground">{formatDate(inq.createdAt)}</span>
+                    <span className={inq.status === "won" ? "text-emerald-400 font-bold" : inq.status === "lost" ? "text-red-400" : "text-amber-400"}>{inq.status === "won" ? "Κλείστηκε" : inq.status === "lost" ? "Χάθηκε" : inq.status === "contacted" ? "Επικοινωνία" : "Αναμένει"}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Stats */}
+        <Card className="bg-card border-white/8">
+          <CardContent className="pt-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center">
+                <Euro className="w-4 h-4 text-primary" />
+              </div>
+              <p className="text-sm font-bold">Αγορές eShop</p>
+            </div>
+            <p className="text-2xl font-extrabold text-primary">{fmt(orders?.reduce((s, o) => s + parseFloat(o.totalAmount || "0"), 0) ?? 0)}</p>
+            <p className="text-xs text-muted-foreground mt-1">{orders?.length ?? 0} παραγγελίες</p>
+          </CardContent>
+        </Card>
+
+        {/* Repairs Count */}
+        <Card className="bg-card border-white/8">
+          <CardContent className="pt-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 rounded-xl bg-violet-500/15 border border-violet-500/30 flex items-center justify-center">
+                <Wrench className="w-4 h-4 text-violet-400" />
+              </div>
+              <p className="text-sm font-bold">Επισκευές</p>
+            </div>
+            <p className="text-2xl font-extrabold text-violet-400">{repairs?.length ?? 0}</p>
+            <p className="text-xs text-muted-foreground mt-1">συνολικά αιτήματα</p>
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Orders */}

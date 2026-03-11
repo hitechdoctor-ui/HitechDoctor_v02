@@ -5,9 +5,13 @@
 HiTech Doctor is a Greek-language tech repair shop and e-commerce platform. It provides:
 
 - **Public storefront**: Home page, services showcase, product shop (eShop), and checkout flow
-- **Admin panel**: Dashboard, product management, order management, and customer management
+- **Admin panel**: Dashboard, product management, order management, CRM, financial reports, and subscriptions
 - **Shopping cart**: Persistent cart using Zustand with localStorage
 - **Order processing**: Full checkout flow creating customers and orders in the database
+- **Web Designer Portfolio**: 8 real client case study pages with category filter tags and inquiry form
+- **Subscription Management**: Antivirus (€55/yr) and Website (€150/yr) subscriptions with admin management
+- **Website Inquiries**: Admin page with edit dialog, email alerts, PDF print, and status management
+- **CRM auto-upsert**: All form submissions auto-create/update customer records in CRM
 
 The app is designed for a Greek tech repair business offering mobile/tablet repairs, IT support, networking services, and data recovery, alongside an online store for accessories and parts.
 

@@ -111,13 +111,13 @@ function ExtraImagesManager({
 }
 
 // ── Mobile-specific fields ────────────────────────────────────────────────────
-function MobileFields({ control }: { control: any }) {
+function ProductExtraFields({ control }: { control: any }) {
   return (
-    <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 space-y-4">
-      <div className="flex items-center gap-2 pb-1 border-b border-primary/15">
-        <Smartphone className="w-4 h-4 text-primary" />
-        <h3 className="text-sm font-semibold text-primary">Χαρακτηριστικά Κινητού</h3>
-        <span className="text-[10px] bg-primary/15 border border-primary/25 rounded px-1.5 py-0.5 text-primary/80">εμφανίζεται στα φίλτρα eShop</span>
+    <div className="rounded-2xl border border-white/10 bg-white/2 p-4 space-y-4">
+      <div className="flex items-center gap-2 pb-1 border-b border-white/8">
+        <Package className="w-4 h-4 text-primary" />
+        <h3 className="text-sm font-semibold">Χαρακτηριστικά Προϊόντος</h3>
+        <span className="text-[10px] bg-primary/10 border border-primary/20 rounded px-1.5 py-0.5 text-primary/80">εμφανίζεται στα φίλτρα eShop</span>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Brand */}
@@ -127,16 +127,13 @@ function MobileFields({ control }: { control: any }) {
             control={control}
             name="brand"
             render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value ?? ""}>
-                <SelectTrigger className="bg-background h-9 text-sm" data-testid="select-product-brand">
-                  <SelectValue placeholder="Επιλέξτε μάρκα" />
-                </SelectTrigger>
-                <SelectContent>
-                  {BRANDS.map((b) => (
-                    <SelectItem key={b} value={b}>{b}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                className="bg-background h-9 text-sm"
+                placeholder="π.χ. Apple, Samsung, HP"
+                value={field.value ?? ""}
+                onChange={field.onChange}
+                data-testid="input-product-brand"
+              />
             )}
           />
         </div>
@@ -157,26 +154,22 @@ function MobileFields({ control }: { control: any }) {
               />
             )}
           />
-          <p className="text-[10px] text-muted-foreground/50">Ελεύθερο κείμενο — όπως φαίνεται στη συσκευή</p>
         </div>
 
         {/* Storage / Memory */}
         <div className="space-y-1.5">
-          <Label className="text-xs font-semibold">Μνήμη (Storage)</Label>
+          <Label className="text-xs font-semibold">Μνήμη / Storage</Label>
           <Controller
             control={control}
             name="storage"
             render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value ?? ""}>
-                <SelectTrigger className="bg-background h-9 text-sm" data-testid="select-product-storage">
-                  <SelectValue placeholder="Επιλέξτε μνήμη" />
-                </SelectTrigger>
-                <SelectContent>
-                  {STORAGE_OPTIONS.map((s) => (
-                    <SelectItem key={s} value={s}>{s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                className="bg-background h-9 text-sm"
+                placeholder="π.χ. 128GB, 256GB, 16GB DDR4"
+                value={field.value ?? ""}
+                onChange={field.onChange}
+                data-testid="input-product-storage"
+              />
             )}
           />
         </div>
@@ -239,16 +232,14 @@ export default function AdminProducts() {
 
   const form = useForm<ProductFormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: "", description: "", fullDescription: "", price: "", imageUrl: "", category: "mobile", brand: null, color: null, storage: null },
+    defaultValues: { name: "", description: "", fullDescription: "", price: "", imageUrl: "", category: "mobile", subcategory: "", brand: null, color: null, storage: null },
   });
-
-  const watchedCategory = form.watch("category");
 
   const openNew = () => {
     setEditingId(null);
     setRichContent("");
     setExtraImages([]);
-    form.reset({ name: "", description: "", fullDescription: "", price: "", imageUrl: "", category: "mobile", brand: null, color: null, storage: null });
+    form.reset({ name: "", description: "", fullDescription: "", price: "", imageUrl: "", category: "mobile", subcategory: "", brand: null, color: null, storage: null });
     setIsDialogOpen(true);
   };
 
@@ -264,6 +255,7 @@ export default function AdminProducts() {
       price: String(product.price),
       imageUrl: product.imageUrl || "",
       category: product.category,
+      subcategory: product.subcategory ?? "",
       brand: product.brand ?? null,
       color: product.color ?? null,
       storage: product.storage ?? null,
@@ -284,9 +276,10 @@ export default function AdminProducts() {
         ...data,
         fullDescription: richContent,
         images: extraImages.length > 0 ? extraImages : null,
-        brand: data.category === "mobile" ? (data.brand ?? null) : null,
-        color: data.category === "mobile" ? (data.color ?? null) : null,
-        storage: data.category === "mobile" ? (data.storage ?? null) : null,
+        subcategory: data.subcategory || null,
+        brand: data.brand || null,
+        color: data.color || null,
+        storage: data.storage || null,
       };
       if (editingId) {
         await updateProduct({ id: editingId, ...payload });
@@ -363,32 +356,26 @@ export default function AdminProducts() {
               </div>
               <div className="space-y-1.5">
                 <Label>Κατηγορία</Label>
-                <Controller
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="bg-background" data-testid="select-product-category">
-                        <SelectValue placeholder="Επιλογή" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="mobile">Κινητά</SelectItem>
-                        <SelectItem value="accessory">Αξεσουάρ</SelectItem>
-                        <SelectItem value="repair">Επισκευή</SelectItem>
-                        <SelectItem value="part">Ανταλλακτικά</SelectItem>
-                        <SelectItem value="service">Υπηρεσία</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
+                <Input
+                  className="bg-background"
+                  placeholder="π.χ. mobile, desktop, laptop, accessory"
+                  {...form.register("category")}
+                  data-testid="input-product-category"
                 />
               </div>
-              <div className="sm:col-span-1" />
+              <div className="space-y-1.5">
+                <Label>Subcategory / Tag</Label>
+                <Input
+                  className="bg-background"
+                  placeholder="π.χ. chargers, screen-protectors"
+                  {...form.register("subcategory")}
+                  data-testid="input-product-subcategory"
+                />
+              </div>
             </div>
 
-            {/* ── Mobile-specific fields (brand, color, storage) ── */}
-            {watchedCategory === "mobile" && (
-              <MobileFields control={form.control} />
-            )}
+            {/* ── Product extra fields (brand, color, storage) ── */}
+            <ProductExtraFields control={form.control} />
 
             {/* ── Images Section ── */}
             <div className="rounded-2xl border border-white/10 bg-white/2 p-4 space-y-4">
