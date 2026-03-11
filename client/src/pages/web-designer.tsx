@@ -1,18 +1,27 @@
 import { Helmet } from "react-helmet-async";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { z } from "zod";
 import { Link } from "wouter";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Seo } from "@/components/seo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { Fragment } from "react";
 import { WebsiteInquiryModal } from "@/components/website-inquiry-modal";
 import {
   Globe, Code2, Smartphone, Zap, Search, ShoppingCart,
   ArrowRight, ExternalLink, CheckCircle2, Star, Palette,
   Monitor, Phone, Mail, ChevronRight, Layers, Shield, Gauge,
-  Lock, Server,
+  Lock, Server, User,
 } from "lucide-react";
 import screenshotHydrofix from "@assets/Screenshot_2026-03-11_at_13.11.57_1773227593503.png";
 import screenshotRegalo        from "@assets/Screenshot_2026-03-11_at_13.18.39_1773228083914.png";
@@ -105,8 +114,43 @@ const PRICING = [
   },
 ];
 
+const inlineFormSchema = z.object({
+  firstName: z.string().min(2, "Εισάγετε το όνομά σας"),
+  lastName: z.string().min(2, "Εισάγετε το επίθετό σας"),
+  phone: z.string().min(10, "Εισάγετε έγκυρο αριθμό τηλεφώνου"),
+  email: z.string().email("Μη έγκυρο email"),
+  notes: z.string().optional(),
+});
+
+type InlineFormValues = z.infer<typeof inlineFormSchema>;
+
 export default function WebDesigner() {
   const [inquiryOpen, setInquiryOpen] = useState(false);
+  const [inlineSubmitted, setInlineSubmitted] = useState(false);
+  const { toast } = useToast();
+
+  const inlineForm = useForm<InlineFormValues>({
+    resolver: zodResolver(inlineFormSchema),
+    defaultValues: { firstName: "", lastName: "", phone: "", email: "", notes: "" },
+  });
+
+  const inlineMutation = useMutation({
+    mutationFn: async (values: InlineFormValues) => {
+      return apiRequest("POST", "/api/website-inquiries", {
+        firstName: values.firstName,
+        lastName: values.lastName,
+        phone: values.phone,
+        email: values.email,
+        prepaymentIncludesVat: true,
+        notes: values.notes || null,
+        status: "pending",
+      });
+    },
+    onSuccess: () => setInlineSubmitted(true),
+    onError: () => {
+      toast({ title: "Σφάλμα", description: "Παρακαλώ προσπαθήστε ξανά.", variant: "destructive" });
+    },
+  });
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -879,6 +923,146 @@ export default function WebDesigner() {
                 <p className="text-[10px] text-muted-foreground">{s.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Inline Inquiry Form */}
+        <div data-testid="section-inline-inquiry">
+          <div
+            className="relative rounded-3xl border border-amber-500/30 overflow-hidden"
+            style={{ background: "linear-gradient(145deg, #1a1200 0%, #120d00 50%, #0e0900 100%)", boxShadow: "0 0 40px rgba(251,191,36,0.06)" }}
+          >
+            <div className="p-8 md:p-10">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
+                  <Globe className="w-5 h-5 text-amber-400" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-amber-400/60">Φόρμα Επικοινωνίας</p>
+                  <h2 className="text-xl font-extrabold text-white">Αιτήματα κατασκευής Ιστοσελίδων</h2>
+                </div>
+              </div>
+
+              {inlineSubmitted ? (
+                <div className="py-10 text-center">
+                  <div className="w-16 h-16 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+                  </div>
+                  <h3 className="text-lg font-extrabold text-foreground mb-2" data-testid="text-inline-success">Το αίτημά σας στάλθηκε!</h3>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    Θα επικοινωνήσουμε μαζί σας το συντομότερο για να συζητήσουμε το project σας.
+                  </p>
+                  <Button
+                    onClick={() => { setInlineSubmitted(false); inlineForm.reset(); }}
+                    className="bg-amber-500 hover:bg-amber-600 text-black font-bold"
+                    data-testid="button-inline-new-request"
+                  >
+                    Νέο Αίτημα
+                  </Button>
+                </div>
+              ) : (
+                <Form {...inlineForm}>
+                  <form onSubmit={inlineForm.handleSubmit((v) => inlineMutation.mutate(v))} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <FormField
+                        control={inlineForm.control}
+                        name="firstName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs font-bold text-amber-300/70 uppercase tracking-widest">Όνομα</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                <Input {...field} placeholder="π.χ. Γιώργος" className="pl-9 border-amber-500/20 bg-amber-500/5 focus:border-amber-400/50" data-testid="input-inline-firstname" />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={inlineForm.control}
+                        name="lastName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs font-bold text-amber-300/70 uppercase tracking-widest">Επίθετο</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="π.χ. Παπαδόπουλος" className="border-amber-500/20 bg-amber-500/5 focus:border-amber-400/50" data-testid="input-inline-lastname" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <FormField
+                        control={inlineForm.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs font-bold text-amber-300/70 uppercase tracking-widest">Τηλέφωνο</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                <Input {...field} placeholder="69XXXXXXXX" className="pl-9 border-amber-500/20 bg-amber-500/5 focus:border-amber-400/50" data-testid="input-inline-phone" />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={inlineForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs font-bold text-amber-300/70 uppercase tracking-widest">Email</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                                <Input {...field} type="email" placeholder="yourname@example.com" className="pl-9 border-amber-500/20 bg-amber-500/5 focus:border-amber-400/50" data-testid="input-inline-email" />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <FormField
+                      control={inlineForm.control}
+                      name="notes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-bold text-amber-300/70 uppercase tracking-widest">Περιγραφή Project</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              {...field}
+                              placeholder="Περιγράψτε τι θέλετε να φτιάξουμε..."
+                              className="resize-none border-amber-500/20 bg-amber-500/5 focus:border-amber-400/50"
+                              rows={4}
+                              data-testid="textarea-inline-notes"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button
+                      type="submit"
+                      disabled={inlineMutation.isPending}
+                      className="w-full sm:w-auto h-12 px-10 font-extrabold text-black border-0"
+                      style={{ background: "linear-gradient(135deg, #fbbf24, #f59e0b)", boxShadow: "0 0 20px rgba(251,191,36,0.3)" }}
+                      data-testid="button-inline-submit"
+                    >
+                      {inlineMutation.isPending ? "Αποστολή..." : "Αποστολή Αιτήματος →"}
+                    </Button>
+                  </form>
+                </Form>
+              )}
+            </div>
           </div>
         </div>
 
