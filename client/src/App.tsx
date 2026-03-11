@@ -42,6 +42,7 @@ import PortfolioHydrofix from "./pages/portfolio-hydrofix";
 import PortfolioRegalo from "./pages/portfolio-regalo";
 import PortfolioLouloudotopos from "./pages/portfolio-louloudotopos";
 import PortfolioBsNaomi from "./pages/portfolio-bsnaomi";
+import PortfolioTheatreHood from "./pages/portfolio-theatrehood";
 import EShop from "./pages/eshop";
 import ProductDetail from "./pages/product-detail";
 import Checkout from "./pages/checkout";
@@ -129,6 +130,7 @@ function Router() {
         <Route path="/portfolio/regalo-gr" component={PortfolioRegalo} />
         <Route path="/portfolio/louloudotopos" component={PortfolioLouloudotopos} />
         <Route path="/portfolio/bsnaomi-gr" component={PortfolioBsNaomi} />
+        <Route path="/portfolio/theatrehood-gr" component={PortfolioTheatreHood} />
         <Route path="/services/episkeui-desktop" component={ServiceDesktop} />
         <Route path="/episkevi-desktop/:slug" component={DesktopRepairDetail} />
         <Route path="/services/episkeui-tablet" component={ServiceTablet} />
