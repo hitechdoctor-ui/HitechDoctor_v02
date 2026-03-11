@@ -45,6 +45,7 @@ import PortfolioBsNaomi from "./pages/portfolio-bsnaomi";
 import PortfolioTheatreHood from "./pages/portfolio-theatrehood";
 import PortfolioAthEcs from "./pages/portfolio-athecs";
 import PortfolioNikosapost from "./pages/portfolio-nikosapost";
+import PortfolioMetamorfosi from "./pages/portfolio-metamorfosi";
 import EShop from "./pages/eshop";
 import ProductDetail from "./pages/product-detail";
 import Checkout from "./pages/checkout";
@@ -135,6 +136,7 @@ function Router() {
         <Route path="/portfolio/theatrehood-gr" component={PortfolioTheatreHood} />
         <Route path="/portfolio/ath-ecs-gr" component={PortfolioAthEcs} />
         <Route path="/portfolio/nikosapost-gr" component={PortfolioNikosapost} />
+        <Route path="/portfolio/metamorfosi-moschato-gr" component={PortfolioMetamorfosi} />
         <Route path="/services/episkeui-desktop" component={ServiceDesktop} />
         <Route path="/episkevi-desktop/:slug" component={DesktopRepairDetail} />
         <Route path="/services/episkeui-tablet" component={ServiceTablet} />

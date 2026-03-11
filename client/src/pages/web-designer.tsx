@@ -19,6 +19,7 @@ import screenshotBsNaomi       from "@assets/Screenshot_2026-03-11_at_13.36.28_1
 import screenshotTheatreHood   from "@assets/Screenshot_2026-03-11_at_13.38.01_1773229141428.png";
 import screenshotAthEcs        from "@assets/Screenshot_2026-03-11_at_13.39.32_1773229234685.png";
 import screenshotNikosapost    from "@assets/Screenshot_2026-03-11_at_13.41.03_1773229304723.png";
+import screenshotMetamorfosi   from "@assets/Screenshot_2026-03-11_at_13.43.59_1773229485038.png";
 
 // ── Skills / stack ────────────────────────────────────────────────────────────
 const STACK = [
@@ -774,6 +775,63 @@ export default function WebDesigner() {
                     ))}
                   </div>
                   <div className="flex items-center gap-2 text-sm font-bold text-orange-400 group-hover:gap-3 transition-all">
+                    Δείτε πλήρες Case Study
+                    <ArrowRight className="w-4 h-4" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Link>
+
+          {/* metamorfosi-moschato.gr card */}
+          <Link href="/portfolio/metamorfosi-moschato-gr" data-testid="card-real-project-metamorfosi" className="mt-5 block">
+            <div
+              className="group relative rounded-3xl border overflow-hidden cursor-pointer transition-all hover:-translate-y-0.5 duration-200"
+              style={{ background: "linear-gradient(145deg, #0d1929 0%, #1a2e4a 60%, #0d1929 100%)", borderColor: "rgba(192,133,106,0.25)" }}
+            >
+              <div className="grid md:grid-cols-2 gap-0">
+                <div className="relative overflow-hidden">
+                  <img
+                    src={screenshotMetamorfosi}
+                    alt="metamorfosi-moschato.gr — Ιερός Ναός Μεταμορφώσεως Μοσχάτου"
+                    className="w-full h-full object-cover object-top group-hover:scale-[1.03] transition-transform duration-500"
+                    style={{ minHeight: "200px", maxHeight: "260px" }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#0d1929] md:block hidden" />
+                  <div className="absolute top-3 left-3 flex gap-2">
+                    <Badge className="bg-emerald-500 text-black font-extrabold text-[9px] px-2 py-1">LIVE</Badge>
+                    <Badge className="font-extrabold text-[9px] px-2 py-1" style={{ background: "rgba(192,133,106,0.85)", color: "#fff" }}>Ιερός Ναός</Badge>
+                  </div>
+                </div>
+                <div className="p-7 flex flex-col justify-center">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-[10px] font-mono flex items-center gap-1" style={{ color: "rgba(192,133,106,0.6)" }}>
+                      metamorfosi-moschato.gr <ExternalLink className="w-2.5 h-2.5" />
+                    </span>
+                  </div>
+                  <h3 className="text-2xl font-display font-extrabold text-white mb-2 transition-colors" style={{ color: "white" }}>
+                    <span className="group-hover:text-amber-200 transition-colors">Μεταμόρφωση Μοσχάτου</span>
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                    Ιερός Ναός Μεταμορφώσεως Σωτήρος — cream/navy design, serif fonts, αεροφωτογραφία hero, Place of Worship Schema.
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 mb-5">
+                    {[
+                      { icon: Gauge,  label: "Performance", value: "94/100" },
+                      { icon: Search, label: "SEO",          value: "96/100" },
+                      { icon: Shield, label: "Ασφάλεια",     value: "A+" },
+                      { icon: Layers, label: "Design",       value: "Light" },
+                    ].map((s) => (
+                      <div key={s.label} className="flex items-center gap-2 p-2.5 rounded-xl" style={{ border: "1px solid rgba(192,133,106,0.20)", background: "rgba(192,133,106,0.06)" }}>
+                        <s.icon className="w-3.5 h-3.5 shrink-0" style={{ color: "#c0856a" }} />
+                        <div>
+                          <p className="text-[9px] text-muted-foreground">{s.label}</p>
+                          <p className="text-xs font-extrabold" style={{ color: "#c0856a" }}>{s.value}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm font-bold group-hover:gap-3 transition-all" style={{ color: "#c0856a" }}>
                     Δείτε πλήρες Case Study
                     <ArrowRight className="w-4 h-4" />
                   </div>
