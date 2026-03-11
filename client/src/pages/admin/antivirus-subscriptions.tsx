@@ -13,7 +13,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Plus, Pencil, Trash2, AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
+import { Shield, Plus, Pencil, Trash2, AlertTriangle, CheckCircle2, XCircle, Download } from "lucide-react";
+import { exportToCsv, formatDateEl } from "@/lib/csv-export";
 import type { Subscription } from "@shared/schema";
 
 const PRICE = "55.00";
@@ -156,10 +157,36 @@ export default function AdminAntivirusSubscriptions() {
             </div>
             <p className="text-sm text-muted-foreground ml-12">€55 / χρόνο — ανανέωση κάθε 12 μήνες</p>
           </div>
-          <Button onClick={openCreate} className="gap-2" data-testid="button-add-antivirus">
-            <Plus className="w-4 h-4" />
-            Νέα Συνδρομή
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 border-white/15 hover:border-primary/40"
+              disabled={!subs || subs.length === 0}
+              onClick={() => {
+                const rows = (subs ?? []).map((s: Subscription) => ({
+                  "ID": s.id,
+                  "Πελάτης": s.customerName,
+                  "Email": s.email,
+                  "Τηλέφωνο": s.phone || "",
+                  "Τιμή (€)": Number(s.price).toFixed(2),
+                  "Έναρξη": formatDateEl(s.startDate),
+                  "Ανανέωση": formatDateEl(s.renewalDate),
+                  "Κατάσταση": s.status,
+                  "Σημειώσεις": s.notes || "",
+                }));
+                exportToCsv(`syndromites_antivirus_${new Date().toISOString().slice(0,10)}.csv`, rows);
+              }}
+              data-testid="button-export-antivirus"
+            >
+              <Download className="w-4 h-4" />
+              Εξαγωγή CSV
+            </Button>
+            <Button onClick={openCreate} className="gap-2" data-testid="button-add-antivirus">
+              <Plus className="w-4 h-4" />
+              Νέα Συνδρομή
+            </Button>
+          </div>
         </div>
 
         {expiringCount > 0 && (

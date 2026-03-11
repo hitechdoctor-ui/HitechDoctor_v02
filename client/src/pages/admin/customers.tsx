@@ -2,8 +2,10 @@ import { AdminLayout } from "@/components/layout/admin-layout";
 import { Seo } from "@/components/seo";
 import { useCustomers } from "@/hooks/use-customers";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Mail, Phone, MapPin, ChevronRight } from "lucide-react";
+import { Mail, Phone, MapPin, ChevronRight, Download } from "lucide-react";
 import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
+import { exportToCsv, formatDateEl } from "@/lib/csv-export";
 
 export default function AdminCustomers() {
   const { data: customers, isLoading } = useCustomers();
@@ -18,9 +20,32 @@ export default function AdminCustomers() {
     <AdminLayout>
       <Seo title="CRM Πελατών" description="Admin" />
       
-      <div className="mb-8">
-        <h1 className="text-3xl font-display font-bold">Πελατολόγιο (CRM)</h1>
-        <p className="text-muted-foreground">Αρχείο πελατών και στοιχεία επικοινωνίας — κλικ για Καρτέλα</p>
+      <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-3xl font-display font-bold">Πελατολόγιο (CRM)</h1>
+          <p className="text-muted-foreground">Αρχείο πελατών και στοιχεία επικοινωνίας — κλικ για Καρτέλα</p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2 border-white/15 hover:border-primary/40"
+          disabled={!customers || customers.length === 0}
+          onClick={() => {
+            const rows = (customers ?? []).map(c => ({
+              "ID": c.id,
+              "Ονοματεπώνυμο": c.name,
+              "Email": c.email,
+              "Τηλέφωνο": c.phone || "",
+              "Διεύθυνση": c.address || "",
+              "Εγγραφή": formatDateEl(c.createdAt),
+            }));
+            exportToCsv(`pelates_${new Date().toISOString().slice(0,10)}.csv`, rows);
+          }}
+          data-testid="button-export-customers"
+        >
+          <Download className="w-4 h-4" />
+          Εξαγωγή CSV
+        </Button>
       </div>
 
       <div className="bg-card rounded-2xl border border-white/5 overflow-hidden">

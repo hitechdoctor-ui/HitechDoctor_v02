@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertProductSchema } from "@shared/schema";
-import { Plus, Edit, Trash2, Package, Search, X, FileText, AlignLeft, ImagePlus, GripVertical, Star, Smartphone } from "lucide-react";
+import { Plus, Edit, Trash2, Package, Search, X, FileText, AlignLeft, ImagePlus, GripVertical, Star, Smartphone, Download } from "lucide-react";
+import { exportToCsv } from "@/lib/csv-export";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { RichTextEditor } from "@/components/rich-text-editor";
@@ -309,10 +310,37 @@ export default function AdminProducts() {
           <h1 className="text-3xl font-display font-bold">Προϊόντα</h1>
           <p className="text-muted-foreground">Διαχειριστείτε τον κατάλογο προϊόντων σας</p>
         </div>
-        <Button onClick={openNew} className="bg-primary text-primary-foreground" data-testid="btn-new-product">
-          <Plus className="w-4 h-4 mr-2" />
-          Νέο Προϊόν
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 border-white/15 hover:border-primary/40"
+            disabled={!products || products.length === 0}
+            onClick={() => {
+              const rows = (products ?? []).map((p: any) => ({
+                "ID": p.id,
+                "Όνομα": p.name,
+                "Κατηγορία": p.category,
+                "Υποκατηγορία": p.subcategory || "",
+                "Μάρκα": p.brand || "",
+                "Χρώμα": p.color || "",
+                "Αποθηκευτικό": p.storage || "",
+                "Τιμή (€)": Number(p.price).toFixed(2),
+                "Pre-Order": p.isPreOrder ? "Ναι" : "Όχι",
+                "Περιγραφή": p.description || "",
+              }));
+              exportToCsv(`proionta_${new Date().toISOString().slice(0,10)}.csv`, rows);
+            }}
+            data-testid="button-export-products"
+          >
+            <Download className="w-4 h-4" />
+            Εξαγωγή CSV
+          </Button>
+          <Button onClick={openNew} className="bg-primary text-primary-foreground" data-testid="btn-new-product">
+            <Plus className="w-4 h-4 mr-2" />
+            Νέο Προϊόν
+          </Button>
+        </div>
       </div>
 
       {/* ── Dialog ── */}

@@ -5,7 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Globe, Mail, Phone } from "lucide-react";
+import { Globe, Mail, Phone, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { exportToCsv, formatDateEl } from "@/lib/csv-export";
 import type { WebsiteInquiry } from "@shared/schema";
 
 const VAT = 0.24;
@@ -43,14 +45,40 @@ export default function AdminWebsiteInquiries() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
-            <Globe className="w-5 h-5 text-amber-400" />
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
+              <Globe className="w-5 h-5 text-amber-400" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-display font-extrabold text-foreground">Αιτήματα Ιστοσελίδων</h1>
+              <p className="text-sm text-muted-foreground">Φόρμες επικοινωνίας από τη σελίδα Web Designer</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-display font-extrabold text-foreground">Αιτήματα Ιστοσελίδων</h1>
-            <p className="text-sm text-muted-foreground">Φόρμες επικοινωνίας από τη σελίδα Web Designer</p>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 border-white/15 hover:border-primary/40"
+            disabled={!inquiries || inquiries.length === 0}
+            onClick={() => {
+              const rows = inquiries.map((inq: WebsiteInquiry) => ({
+                "ID": inq.id,
+                "Επώνυμο": inq.lastName,
+                "Όνομα": inq.firstName,
+                "Τηλέφωνο": inq.phone,
+                "Email": inq.email,
+                "Προκαταβολή (καθαρό €)": inq.prepayment ? Number(inq.prepayment).toFixed(2) : "",
+                "Προκαταβολή (με ΦΠΑ €)": inq.prepayment ? (Number(inq.prepayment) * 1.24).toFixed(2) : "",
+                "Κατάσταση": STATUS_OPTIONS.find(o => o.value === inq.status)?.label ?? inq.status,
+                "Ημερομηνία": formatDateEl(inq.createdAt),
+              }));
+              exportToCsv(`aitimata_istoselidas_${new Date().toISOString().slice(0,10)}.csv`, rows);
+            }}
+            data-testid="button-export-inquiries"
+          >
+            <Download className="w-4 h-4" />
+            Εξαγωγή CSV
+          </Button>
         </div>
 
         {isLoading ? (

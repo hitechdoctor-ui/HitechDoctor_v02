@@ -11,9 +11,10 @@ import { useState, useMemo } from "react";
 import {
   ShoppingCart, Euro, CheckCircle2, XCircle, Clock, AlertCircle,
   ChevronDown, ChevronRight, Mail, Package, Search, X,
-  User, Printer,
+  User, Printer, Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { exportToCsv, formatDateEl } from "@/lib/csv-export";
 
 // ── Status config ────────────────────────────────────────────────────────────
 const ORDER_STATUSES = [
@@ -452,9 +453,34 @@ export default function AdminOrders() {
     <AdminLayout>
       <Seo title="Παραγγελίες — Admin" description="Διαχείριση παραγγελιών eShop" />
 
-      <div className="mb-6">
-        <h1 className="text-3xl font-display font-bold">Παραγγελίες</h1>
-        <p className="text-muted-foreground mt-1">Παρακολούθηση, αναζήτηση και διεκπεραίωση παραγγελιών eShop</p>
+      <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-3xl font-display font-bold">Παραγγελίες</h1>
+          <p className="text-muted-foreground mt-1">Παρακολούθηση, αναζήτηση και διεκπεραίωση παραγγελιών eShop</p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2 border-white/15 hover:border-primary/40"
+          disabled={!orders || orders.length === 0}
+          onClick={() => {
+            const rows = (orders ?? []).map((o: any) => ({
+              "ID": o.id,
+              "Πελάτης": o.customerName || "",
+              "Email": o.customerEmail || "",
+              "Τηλέφωνο": o.customerPhone || "",
+              "Ημερομηνία": formatDateEl(o.createdAt),
+              "Σύνολο (€)": Number(o.totalAmount).toFixed(2),
+              "Τρόπος Πληρωμής": o.paymentMethod || "",
+              "Κατάσταση": ORDER_STATUSES.find(s => s.value === o.status)?.label ?? o.status,
+            }));
+            exportToCsv(`paraggelies_${new Date().toISOString().slice(0,10)}.csv`, rows);
+          }}
+          data-testid="button-export-orders"
+        >
+          <Download className="w-4 h-4" />
+          Εξαγωγή CSV
+        </Button>
       </div>
 
       {/* ── Stats cards ── */}

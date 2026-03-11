@@ -8,8 +8,9 @@ import {
 import {
   Wrench, AlertCircle, Clock, CheckCircle2, XCircle,
   Search, X, Phone, Mail, Smartphone, Hash, Lock, Printer, Euro,
-  ChevronDown, ChevronUp, Plus, Trash2, Package,
+  ChevronDown, ChevronUp, Plus, Trash2, Package, Download,
 } from "lucide-react";
+import { exportToCsv, formatDateEl } from "@/lib/csv-export";
 import { apiRequest } from "@/lib/queryClient";
 import { type RepairRequest, type RepairItem } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
@@ -533,9 +534,38 @@ export default function AdminRepairRequests() {
     <AdminLayout>
       <Seo title="Αιτήματα Επισκευής — Admin" description="CRM αιτημάτων επισκευής" />
 
-      <div className="mb-6">
-        <h1 className="text-3xl font-display font-bold">Αιτήματα Επισκευής</h1>
-        <p className="text-muted-foreground mt-1">Διαχείριση και παρακολούθηση αιτημάτων επισκευής</p>
+      <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-3xl font-display font-bold">Αιτήματα Επισκευής</h1>
+          <p className="text-muted-foreground mt-1">Διαχείριση και παρακολούθηση αιτημάτων επισκευής</p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2 border-white/15 hover:border-primary/40"
+          disabled={!requests || requests.length === 0}
+          onClick={() => {
+            const rows = (requests ?? []).map((r: RepairRequest) => ({
+              "ID": r.id,
+              "Επώνυμο": r.lastName,
+              "Όνομα": r.firstName,
+              "Τηλέφωνο": r.phone,
+              "Email": r.email || "",
+              "Συσκευή": r.deviceName,
+              "Serial": r.serialNumber || "",
+              "Κωδικός": r.deviceCode || "",
+              "Βλάβη": r.notes || "",
+              "Τιμή (€)": r.price ? Number(r.price).toFixed(2) : "",
+              "Κατάσταση": STATUSES.find(s => s.value === r.status)?.label ?? r.status,
+              "Ημερομηνία": formatDateEl(r.createdAt),
+            }));
+            exportToCsv(`epithefseis_${new Date().toISOString().slice(0,10)}.csv`, rows);
+          }}
+          data-testid="button-export-repairs"
+        >
+          <Download className="w-4 h-4" />
+          Εξαγωγή CSV
+        </Button>
       </div>
 
       {/* Stats */}
