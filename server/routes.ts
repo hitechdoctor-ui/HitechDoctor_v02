@@ -2,9 +2,9 @@ import type { Express } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
 import { api, errorSchemas } from "@shared/routes";
-import { insertRepairRequestSchema, insertRepairItemSchema } from "@shared/schema";
+import { insertRepairRequestSchema, insertRepairItemSchema, insertSubscriptionSchema, insertWebsiteInquirySchema } from "@shared/schema";
 import { z } from "zod";
-import { sendRepairConfirmationEmail } from "./email";
+import { sendRepairConfirmationEmail, sendWebsiteInquiryEmail } from "./email";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -266,6 +266,114 @@ export async function registerRoutes(
       res.status(204).send();
     } catch (error) {
       res.status(404).json({ message: "Repair item not found" });
+    }
+  });
+
+  // --- Subscriptions API ---
+  app.get("/api/subscriptions", async (req, res) => {
+    try {
+      const type = req.query.type as string | undefined;
+      const subs = await storage.getSubscriptions(type);
+      res.json(subs);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch subscriptions" });
+    }
+  });
+
+  app.get("/api/subscriptions/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const sub = await storage.getSubscription(id);
+      if (!sub) return res.status(404).json({ message: "Subscription not found" });
+      res.json(sub);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch subscription" });
+    }
+  });
+
+  app.post("/api/subscriptions", async (req, res) => {
+    try {
+      const input = insertSubscriptionSchema.parse(req.body);
+      const sub = await storage.createSubscription(input);
+      res.status(201).json(sub);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message, field: err.errors[0].path.join('.') });
+      }
+      res.status(500).json({ message: "Failed to create subscription" });
+    }
+  });
+
+  app.patch("/api/subscriptions/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const schema = z.object({
+        customerName: z.string().optional(),
+        email: z.string().email().optional(),
+        phone: z.string().optional(),
+        status: z.string().optional(),
+        notes: z.string().optional(),
+        renewalDate: z.coerce.date().optional(),
+        notifiedMonthBefore: z.boolean().optional(),
+        notifiedTenDaysBefore: z.boolean().optional(),
+      });
+      const data = schema.parse(req.body);
+      const sub = await storage.updateSubscription(id, data);
+      res.json(sub);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      res.status(404).json({ message: "Subscription not found" });
+    }
+  });
+
+  app.delete("/api/subscriptions/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteSubscription(id);
+      res.status(204).send();
+    } catch (error) {
+      res.status(404).json({ message: "Subscription not found" });
+    }
+  });
+
+  // --- Website Inquiries API ---
+  app.get("/api/website-inquiries", async (req, res) => {
+    try {
+      const inquiries = await storage.getWebsiteInquiries();
+      res.json(inquiries);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch website inquiries" });
+    }
+  });
+
+  app.post("/api/website-inquiries", async (req, res) => {
+    try {
+      const input = insertWebsiteInquirySchema.parse(req.body);
+      const inquiry = await storage.createWebsiteInquiry(input);
+      res.status(201).json(inquiry);
+      sendWebsiteInquiryEmail(inquiry).catch((e) => console.error("[email] inquiry send failed:", e));
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message, field: err.errors[0].path.join('.') });
+      }
+      res.status(500).json({ message: "Failed to create website inquiry" });
+    }
+  });
+
+  app.patch("/api/website-inquiries/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const schema = z.object({
+        status: z.string().optional(),
+        notes: z.string().optional(),
+      });
+      const data = schema.parse(req.body);
+      const inquiry = await storage.updateWebsiteInquiry(id, data);
+      res.json(inquiry);
+    } catch (err) {
+      res.status(404).json({ message: "Website inquiry not found" });
     }
   });
 

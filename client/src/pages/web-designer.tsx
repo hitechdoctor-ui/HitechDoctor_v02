@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import { useState } from "react";
 import { Link } from "wouter";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
@@ -6,6 +7,7 @@ import { Seo } from "@/components/seo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Fragment } from "react";
+import { WebsiteInquiryModal } from "@/components/website-inquiry-modal";
 import {
   Globe, Code2, Smartphone, Zap, Search, ShoppingCart,
   ArrowRight, ExternalLink, CheckCircle2, Star, Palette,
@@ -104,6 +106,8 @@ const PRICING = [
 ];
 
 export default function WebDesigner() {
+  const [inquiryOpen, setInquiryOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Seo
@@ -244,17 +248,16 @@ export default function WebDesigner() {
                   Τιμή κατασκευής ιστοσελίδας συμπεριλαμβάνεται στη συνδρομή. Ανανέωση κάθε χρόνο — χωρίς κρυφές χρεώσεις.
                 </p>
 
-                <a href="mailto:info@hitechdoctor.com">
-                  <button
-                    className="w-full h-12 rounded-2xl font-extrabold text-black text-sm flex items-center justify-center gap-2"
-                    style={{ background: "linear-gradient(135deg, #fbbf24, #f59e0b)", boxShadow: "0 0 24px rgba(251,191,36,0.35)" }}
-                    data-testid="button-annual-package"
-                  >
-                    <Mail className="w-4 h-4" />
-                    Ζητήστε Προσφορά
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </a>
+                <button
+                  onClick={() => setInquiryOpen(true)}
+                  className="w-full h-12 rounded-2xl font-extrabold text-black text-sm flex items-center justify-center gap-2"
+                  style={{ background: "linear-gradient(135deg, #fbbf24, #f59e0b)", boxShadow: "0 0 24px rgba(251,191,36,0.35)" }}
+                  data-testid="button-annual-package"
+                >
+                  <Mail className="w-4 h-4" />
+                  Ζητήστε Προσφορά
+                  <ArrowRight className="w-4 h-4" />
+                </button>
               </div>
 
               {/* Right: included features */}
@@ -277,7 +280,7 @@ export default function WebDesigner() {
                   ].map((f) => (
                     <div key={f.text} className="flex items-center gap-2">
                       <f.icon className="w-3.5 h-3.5 text-amber-400/70 shrink-0" />
-                      <span className="text-xs text-foreground/75">{f.text}</span>
+                      <span className="text-xs text-white/80">{f.text}</span>
                     </div>
                   ))}
                 </div>
@@ -336,16 +339,15 @@ export default function WebDesigner() {
                     </li>
                   ))}
                 </ul>
-                <a href="mailto:info@hitechdoctor.com">
-                  <Button
-                    className="w-full h-11 font-bold border-0"
-                    style={plan.btnStyle}
-                    data-testid={`button-pricing-${plan.name.toLowerCase()}`}
-                  >
-                    Ζητήστε Προσφορά
-                    <ArrowRight className="w-3.5 h-3.5 ml-2" />
-                  </Button>
-                </a>
+                <Button
+                  onClick={() => setInquiryOpen(true)}
+                  className="w-full h-11 font-bold border-0"
+                  style={plan.btnStyle}
+                  data-testid={`button-pricing-${plan.name.toLowerCase()}`}
+                >
+                  Ζητήστε Προσφορά
+                  <ArrowRight className="w-3.5 h-3.5 ml-2" />
+                </Button>
               </div>
             ))}
           </div>
@@ -916,6 +918,8 @@ export default function WebDesigner() {
       </main>
 
       <Footer />
+
+      <WebsiteInquiryModal open={inquiryOpen} onOpenChange={setInquiryOpen} />
     </div>
   );
 }

@@ -2,6 +2,8 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { storage } from "./storage";
+import { sendSubscriptionRenewalEmail } from "./email";
 
 const app = express();
 const httpServer = createServer(app);
@@ -59,6 +61,45 @@ app.use((req, res, next) => {
   next();
 });
 
+// ── Subscription expiry check (runs every 24 hours) ──────────────────────────
+async function checkSubscriptionExpiry() {
+  try {
+    log("[subscriptions] Running expiry check...", "cron");
+
+    // Check subscriptions expiring in ~30 days (27–33 day window)
+    const in30 = await storage.getExpiringSubscriptions(33);
+    for (const sub of in30) {
+      const now = new Date();
+      const renewal = new Date(sub.renewalDate);
+      const daysLeft = Math.ceil((renewal.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (daysLeft <= 30 && !sub.notifiedMonthBefore) {
+        await sendSubscriptionRenewalEmail(sub, daysLeft);
+        await storage.updateSubscription(sub.id, { notifiedMonthBefore: true });
+        log(`[subscriptions] 30-day notice sent for sub #${sub.id} (${sub.customerName})`, "cron");
+      }
+    }
+
+    // Check subscriptions expiring in ~10 days (7–12 day window)
+    const in10 = await storage.getExpiringSubscriptions(12);
+    for (const sub of in10) {
+      const now = new Date();
+      const renewal = new Date(sub.renewalDate);
+      const daysLeft = Math.ceil((renewal.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (daysLeft <= 10 && !sub.notifiedTenDaysBefore) {
+        await sendSubscriptionRenewalEmail(sub, daysLeft);
+        await storage.updateSubscription(sub.id, { notifiedTenDaysBefore: true });
+        log(`[subscriptions] 10-day notice sent for sub #${sub.id} (${sub.customerName})`, "cron");
+      }
+    }
+
+    log("[subscriptions] Expiry check complete.", "cron");
+  } catch (err) {
+    console.error("[subscriptions] Expiry check error:", err);
+  }
+}
+
 (async () => {
   await registerRoutes(httpServer, app);
 
@@ -75,9 +116,6 @@ app.use((req, res, next) => {
     return res.status(status).json({ message });
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
   if (process.env.NODE_ENV === "production") {
     serveStatic(app);
   } else {
@@ -85,10 +123,6 @@ app.use((req, res, next) => {
     await setupVite(httpServer, app);
   }
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || "5000", 10);
   httpServer.listen(
     {
@@ -98,6 +132,9 @@ app.use((req, res, next) => {
     },
     () => {
       log(`serving on port ${port}`);
+      // Run subscription check on startup and then every 24 hours
+      checkSubscriptionExpiry();
+      setInterval(checkSubscriptionExpiry, 24 * 60 * 60 * 1000);
     },
   );
 })();

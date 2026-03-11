@@ -67,6 +67,9 @@ import AdminCustomers from "./pages/admin/customers";
 import AdminCustomerDetail from "./pages/admin/customer-detail";
 import AdminRepairRequests from "./pages/admin/repair-requests";
 import AdminOikonomika from "./pages/admin/oikonomika";
+import AdminAntivirusSubscriptions from "./pages/admin/antivirus-subscriptions";
+import AdminWebsiteSubscriptions from "./pages/admin/website-subscriptions";
+import AdminWebsiteInquiries from "./pages/admin/website-inquiries";
 
 function useAutoTheme() {
   useEffect(() => {
@@ -155,6 +158,9 @@ function Router() {
         <Route path="/prosvassimotita" component={AccessibilityStatement} />
         <Route path="/admin" component={AdminDashboard} />
         <Route path="/admin/repair-requests" component={AdminRepairRequests} />
+        <Route path="/admin/website-inquiries" component={AdminWebsiteInquiries} />
+        <Route path="/admin/antivirus-subscriptions" component={AdminAntivirusSubscriptions} />
+        <Route path="/admin/website-subscriptions" component={AdminWebsiteSubscriptions} />
         <Route path="/admin/products" component={AdminProducts} />
         <Route path="/admin/orders" component={AdminOrders} />
         <Route path="/admin/customers" component={AdminCustomers} />

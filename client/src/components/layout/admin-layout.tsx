@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Package, Users, ShoppingCart, LayoutDashboard, LogOut, Wrench, Euro, Menu, X } from "lucide-react";
+import { Package, Users, ShoppingCart, LayoutDashboard, LogOut, Wrench, Euro, Menu, X, Shield, Globe, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
@@ -12,12 +12,15 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const links = [
-    { href: "/admin",                 label: "Dashboard",             icon: LayoutDashboard },
-    { href: "/admin/repair-requests", label: "Αιτήματα Επισκευής",   icon: Wrench          },
-    { href: "/admin/customers",       label: "Πελατολόγιο (CRM)",    icon: Users           },
-    { href: "/admin/orders",          label: "Παραγγελίες",           icon: ShoppingCart    },
-    { href: "/admin/products",        label: "Προϊόντα eShop",        icon: Package         },
-    { href: "/admin/oikonomika",      label: "Οικονομικά",            icon: Euro            },
+    { href: "/admin",                              label: "Dashboard",                 icon: LayoutDashboard },
+    { href: "/admin/repair-requests",              label: "Αιτήματα Επισκευής",        icon: Wrench          },
+    { href: "/admin/website-inquiries",            label: "Αιτήματα Ιστοσελίδων",     icon: MessageSquare   },
+    { href: "/admin/antivirus-subscriptions",      label: "Συνδρομές Antivirus",       icon: Shield          },
+    { href: "/admin/website-subscriptions",        label: "Συνδρομές Ιστοσελίδων",    icon: Globe           },
+    { href: "/admin/customers",                    label: "Πελατολόγιο (CRM)",         icon: Users           },
+    { href: "/admin/orders",                       label: "Παραγγελίες",               icon: ShoppingCart    },
+    { href: "/admin/products",                     label: "Προϊόντα eShop",            icon: Package         },
+    { href: "/admin/oikonomika",                   label: "Οικονομικά",                icon: Euro            },
   ];
 
   const SidebarContent = () => (
@@ -34,7 +37,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </button>
       </div>
 
-      <nav className="flex-1 p-4 flex flex-col gap-1.5 overflow-y-auto">
+      <nav className="flex-1 p-4 flex flex-col gap-1 overflow-y-auto">
         {links.map((link) => {
           const isActive =
             link.href === "/admin"
@@ -45,13 +48,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               key={link.href}
               href={link.href}
               onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium transition-all duration-200 text-sm ${
                 isActive
                   ? "bg-primary/10 text-primary border border-primary/20 shadow-[0_0_15px_rgba(0,229,255,0.1)]"
                   : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
               }`}
             >
-              <link.icon className="w-5 h-5 shrink-0" />
+              <link.icon className="w-4 h-4 shrink-0" />
               {link.label}
             </Link>
           );
