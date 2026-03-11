@@ -74,6 +74,37 @@ export const repairItems = pgTable("repair_items", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// ── Subscriptions (Antivirus €55/yr, Website €150/yr) ────────────────────────
+export const subscriptions = pgTable("subscriptions", {
+  id: serial("id").primaryKey(),
+  customerName: text("customer_name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  type: text("type").notNull(), // "antivirus" | "website"
+  startDate: timestamp("start_date").notNull(),
+  renewalDate: timestamp("renewal_date").notNull(),
+  price: numeric("price").notNull(),
+  status: text("status").notNull().default("active"), // "active" | "expired" | "cancelled"
+  notes: text("notes"),
+  notifiedMonthBefore: boolean("notified_month_before").default(false),
+  notifiedTenDaysBefore: boolean("notified_ten_days_before").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// ── Website Inquiries (leads from web-designer page) ─────────────────────────
+export const websiteInquiries = pgTable("website_inquiries", {
+  id: serial("id").primaryKey(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  phone: text("phone").notNull(),
+  email: text("email").notNull(),
+  prepayment: numeric("prepayment"),
+  prepaymentIncludesVat: boolean("prepayment_includes_vat").default(true),
+  notes: text("notes"),
+  status: text("status").notNull().default("pending"), // "pending" | "contacted" | "won" | "lost"
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Zod schemas
 export const insertProductSchema = createInsertSchema(products).omit({ id: true, createdAt: true });
 export const insertCustomerSchema = createInsertSchema(customers).omit({ id: true, createdAt: true });
@@ -88,6 +119,22 @@ export const insertRepairRequestSchema = createInsertSchema(repairRequests).omit
   lastName: z.string().min(2, "Εισάγετε το επίθετό σας"),
   deviceName: z.string().min(2, "Εισάγετε το όνομα της συσκευής"),
   serialNumber: z.string().min(3, "Εισάγετε τον αριθμό σειράς"),
+});
+
+export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({ id: true, createdAt: true, notifiedMonthBefore: true, notifiedTenDaysBefore: true }).extend({
+  email: z.string().email("Μη έγκυρο email"),
+  customerName: z.string().min(2, "Εισάγετε το όνομα πελάτη"),
+  type: z.enum(["antivirus", "website"]),
+  startDate: z.coerce.date(),
+  renewalDate: z.coerce.date(),
+  price: z.string(),
+});
+
+export const insertWebsiteInquirySchema = createInsertSchema(websiteInquiries).omit({ id: true, createdAt: true }).extend({
+  email: z.string().email("Μη έγκυρο email"),
+  phone: z.string().min(10, "Εισάγετε έγκυρο αριθμό τηλεφώνου"),
+  firstName: z.string().min(2, "Εισάγετε το όνομά σας"),
+  lastName: z.string().min(2, "Εισάγετε το επίθετό σας"),
 });
 
 // Type definitions
@@ -108,6 +155,12 @@ export type InsertRepairRequest = z.infer<typeof insertRepairRequestSchema>;
 
 export type RepairItem = typeof repairItems.$inferSelect;
 export type InsertRepairItem = z.infer<typeof insertRepairItemSchema>;
+
+export type Subscription = typeof subscriptions.$inferSelect;
+export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
+
+export type WebsiteInquiry = typeof websiteInquiries.$inferSelect;
+export type InsertWebsiteInquiry = z.infer<typeof insertWebsiteInquirySchema>;
 
 // Order payload for checkout
 export const checkoutPayloadSchema = z.object({

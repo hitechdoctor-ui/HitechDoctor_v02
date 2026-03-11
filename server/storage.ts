@@ -6,6 +6,8 @@ import {
   orderItems,
   repairRequests,
   repairItems,
+  subscriptions,
+  websiteInquiries,
   type Product,
   type InsertProduct,
   type Customer,
@@ -18,9 +20,13 @@ import {
   type InsertRepairRequest,
   type RepairItem,
   type InsertRepairItem,
+  type Subscription,
+  type InsertSubscription,
+  type WebsiteInquiry,
+  type InsertWebsiteInquiry,
   type CheckoutPayload
 } from "@shared/schema";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, sql, lte, gte } from "drizzle-orm";
 
 export interface IStorage {
   // Products
@@ -55,6 +61,20 @@ export interface IStorage {
   createRepairItem(data: InsertRepairItem): Promise<RepairItem>;
   updateRepairItem(id: number, data: { description?: string; amount?: string }): Promise<RepairItem>;
   deleteRepairItem(id: number): Promise<void>;
+
+  // Subscriptions
+  getSubscriptions(type?: string): Promise<Subscription[]>;
+  getSubscription(id: number): Promise<Subscription | undefined>;
+  createSubscription(data: InsertSubscription): Promise<Subscription>;
+  updateSubscription(id: number, data: Partial<InsertSubscription & { notifiedMonthBefore?: boolean; notifiedTenDaysBefore?: boolean }>): Promise<Subscription>;
+  deleteSubscription(id: number): Promise<void>;
+  getExpiringSubscriptions(daysAhead: number): Promise<Subscription[]>;
+
+  // Website Inquiries
+  getWebsiteInquiries(): Promise<WebsiteInquiry[]>;
+  getWebsiteInquiry(id: number): Promise<WebsiteInquiry | undefined>;
+  createWebsiteInquiry(data: InsertWebsiteInquiry): Promise<WebsiteInquiry>;
+  updateWebsiteInquiry(id: number, data: { status?: string; notes?: string }): Promise<WebsiteInquiry>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -270,6 +290,74 @@ export class DatabaseStorage implements IStorage {
 
   async deleteRepairItem(id: number): Promise<void> {
     await db.delete(repairItems).where(eq(repairItems.id, id));
+  }
+
+  // --- Subscriptions ---
+  async getSubscriptions(type?: string): Promise<Subscription[]> {
+    if (type) {
+      return await db.select().from(subscriptions)
+        .where(eq(subscriptions.type, type))
+        .orderBy(desc(subscriptions.createdAt));
+    }
+    return await db.select().from(subscriptions).orderBy(desc(subscriptions.createdAt));
+  }
+
+  async getSubscription(id: number): Promise<Subscription | undefined> {
+    const [sub] = await db.select().from(subscriptions).where(eq(subscriptions.id, id));
+    return sub;
+  }
+
+  async createSubscription(data: InsertSubscription): Promise<Subscription> {
+    const [created] = await db.insert(subscriptions).values(data).returning();
+    return created;
+  }
+
+  async updateSubscription(id: number, data: Partial<InsertSubscription & { notifiedMonthBefore?: boolean; notifiedTenDaysBefore?: boolean }>): Promise<Subscription> {
+    const [updated] = await db.update(subscriptions)
+      .set(data as any)
+      .where(eq(subscriptions.id, id))
+      .returning();
+    if (!updated) throw new Error("Subscription not found");
+    return updated;
+  }
+
+  async deleteSubscription(id: number): Promise<void> {
+    await db.delete(subscriptions).where(eq(subscriptions.id, id));
+  }
+
+  async getExpiringSubscriptions(daysAhead: number): Promise<Subscription[]> {
+    const now = new Date();
+    const future = new Date(now.getTime() + daysAhead * 24 * 60 * 60 * 1000);
+    return await db.select().from(subscriptions)
+      .where(and(
+        eq(subscriptions.status, "active"),
+        lte(subscriptions.renewalDate, future),
+        gte(subscriptions.renewalDate, now)
+      ));
+  }
+
+  // --- Website Inquiries ---
+  async getWebsiteInquiries(): Promise<WebsiteInquiry[]> {
+    return await db.select().from(websiteInquiries).orderBy(desc(websiteInquiries.createdAt));
+  }
+
+  async getWebsiteInquiry(id: number): Promise<WebsiteInquiry | undefined> {
+    const [inq] = await db.select().from(websiteInquiries).where(eq(websiteInquiries.id, id));
+    return inq;
+  }
+
+  async createWebsiteInquiry(data: InsertWebsiteInquiry): Promise<WebsiteInquiry> {
+    const [created] = await db.insert(websiteInquiries).values(data).returning();
+    return created;
+  }
+
+  async updateWebsiteInquiry(id: number, data: { status?: string; notes?: string }): Promise<WebsiteInquiry> {
+    const [updated] = await db.update(websiteInquiries)
+      .set(data)
+      .where(eq(websiteInquiries.id, id))
+      .returning();
+    if (!updated) throw new Error("Website inquiry not found");
+    return updated;
   }
 }
 
