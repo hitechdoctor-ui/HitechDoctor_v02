@@ -406,7 +406,7 @@ export function Navbar() {
           {/* Mobile Menu */}
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
+              <Button variant="ghost" size="icon" className="md:hidden" aria-label="Άνοιγμα μενού πλοήγησης">
                 <Menu className="w-5 h-5" />
               </Button>
             </SheetTrigger>
