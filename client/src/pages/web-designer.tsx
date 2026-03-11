@@ -13,6 +13,7 @@ import {
   Lock, Server,
 } from "lucide-react";
 import screenshotHydrofix from "@assets/Screenshot_2026-03-11_at_13.11.57_1773227593503.png";
+import screenshotRegalo   from "@assets/Screenshot_2026-03-11_at_13.18.39_1773228083914.png";
 
 // ── Portfolio projects ───────────────────────────────────────────────────────
 const PROJECTS = [
@@ -575,6 +576,67 @@ export default function WebDesigner() {
                   </div>
 
                   <div className="flex items-center gap-2 text-sm font-bold text-emerald-400 group-hover:gap-3 transition-all">
+                    Δείτε πλήρες Case Study
+                    <ArrowRight className="w-4 h-4" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Link>
+
+          {/* e-regalo.gr card */}
+          <Link href="/portfolio/regalo-gr" data-testid="card-real-project-regalo" className="mt-5 block">
+            <div className="group relative rounded-3xl border border-amber-500/20 overflow-hidden cursor-pointer hover:border-amber-400/45 transition-all hover:-translate-y-0.5 duration-200"
+              style={{ background: "linear-gradient(145deg, #110b01 0%, #1a1002 60%, #0e0901 100%)" }}>
+              <div className="grid md:grid-cols-2 gap-0">
+                {/* Screenshot */}
+                <div className="relative overflow-hidden">
+                  <img
+                    src={screenshotRegalo}
+                    alt="e-regalo.gr — eShop κοσμημάτων Μοσχάτο"
+                    className="w-full h-full object-cover object-top group-hover:scale-[1.03] transition-transform duration-500"
+                    style={{ minHeight: "200px", maxHeight: "260px" }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#110b01] md:block hidden" />
+                  <div className="absolute top-3 left-3 flex gap-2">
+                    <Badge className="bg-emerald-500 text-black font-extrabold text-[9px] px-2 py-1">LIVE</Badge>
+                    <Badge className="bg-amber-500/80 text-black font-extrabold text-[9px] px-2 py-1">eShop</Badge>
+                  </div>
+                </div>
+
+                {/* Info */}
+                <div className="p-7 flex flex-col justify-center">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-[10px] font-mono text-amber-500/60 flex items-center gap-1">
+                      e-regalo.gr <ExternalLink className="w-2.5 h-2.5" />
+                    </span>
+                  </div>
+                  <h3 className="text-2xl font-display font-extrabold text-white mb-2 group-hover:text-amber-300 transition-colors">
+                    e-regalo.gr
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                    eShop κοσμημάτων & αξεσουάρ στο Μοσχάτο. Elegant cream/gold design, Gallery με φίλτρα, Blog, δίγλωσσο, Google Maps.
+                  </p>
+
+                  {/* Scores */}
+                  <div className="grid grid-cols-2 gap-2 mb-5">
+                    {[
+                      { icon: Gauge,      label: "Performance", value: "88/100", color: "text-amber-400" },
+                      { icon: Search,     label: "SEO",          value: "96/100", color: "text-amber-400" },
+                      { icon: Shield,     label: "Ασφάλεια",     value: "A+",     color: "text-amber-400" },
+                      { icon: Layers,     label: "Gallery",      value: "Φίλτρα", color: "text-amber-400" },
+                    ].map((s) => (
+                      <div key={s.label} className="flex items-center gap-2 p-2.5 rounded-xl border border-amber-500/15 bg-amber-500/5">
+                        <s.icon className={`w-3.5 h-3.5 ${s.color} shrink-0`} />
+                        <div>
+                          <p className="text-[9px] text-muted-foreground">{s.label}</p>
+                          <p className={`text-xs font-extrabold ${s.color}`}>{s.value}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-2 text-sm font-bold text-amber-400 group-hover:gap-3 transition-all">
                     Δείτε πλήρες Case Study
                     <ArrowRight className="w-4 h-4" />
                   </div>
