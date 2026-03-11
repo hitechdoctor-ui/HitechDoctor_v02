@@ -4,7 +4,7 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 import { storage } from "./storage";
 import { sendSubscriptionRenewalEmail } from "./email";
-import { seedProductsIfEmpty } from "./seed";
+import { seedProductsIfEmpty, seedAdminIfEmpty } from "./seed";
 
 const app = express();
 const httpServer = createServer(app);
@@ -135,6 +135,8 @@ async function checkSubscriptionExpiry() {
       log(`serving on port ${port}`);
       // Auto-seed products if table is empty (first deployment)
       seedProductsIfEmpty();
+      // Auto-seed superadmin if no admin users exist
+      seedAdminIfEmpty();
       // Run subscription check on startup and then every 24 hours
       checkSubscriptionExpiry();
       setInterval(checkSubscriptionExpiry, 24 * 60 * 60 * 1000);

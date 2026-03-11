@@ -1,6 +1,7 @@
 import { db } from './db';
-import { products } from '../shared/schema';
+import { products, adminUsers } from '../shared/schema';
 import rawData from './seed-data/products.json';
+import bcrypt from 'bcrypt';
 
 type SeedProduct = typeof rawData[0];
 
@@ -38,5 +39,22 @@ export async function seedProductsIfEmpty() {
     console.log('[seed] Done — inserted', rows.length, 'products.');
   } catch (err) {
     console.error('[seed] Error seeding products:', err);
+  }
+}
+
+export async function seedAdminIfEmpty() {
+  try {
+    const existing = await db.select({ id: adminUsers.id }).from(adminUsers).limit(1);
+    if (existing.length > 0) return;
+    const hash = await bcrypt.hash('Q@wertyuiop1975', 12);
+    await db.insert(adminUsers).values({
+      name: 'HiTech Doctor Admin',
+      email: 'hitechdoctor@gmail.com',
+      passwordHash: hash,
+      role: 'superadmin',
+    });
+    console.log('[seed] Superadmin created: hitechdoctor@gmail.com');
+  } catch (err) {
+    console.error('[seed] Error seeding admin:', err);
   }
 }
