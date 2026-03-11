@@ -10,6 +10,7 @@ import {
   Globe, Code2, Smartphone, Zap, Search, ShoppingCart,
   ArrowRight, ExternalLink, CheckCircle2, Star, Palette,
   Monitor, Phone, Mail, ChevronRight, Layers, Shield, Gauge,
+  Lock, Server,
 } from "lucide-react";
 import screenshotHydrofix from "@assets/Screenshot_2026-03-11_at_13.11.57_1773227593503.png";
 
@@ -180,6 +181,7 @@ const PRICING = [
   {
     name: "Starter",
     price: "€490",
+    priceColor: "from-sky-400 to-cyan-300",
     period: "εφάπαξ",
     desc: "Για μικρές επιχειρήσεις και επαγγελματίες",
     features: [
@@ -197,6 +199,7 @@ const PRICING = [
   {
     name: "Business",
     price: "€990",
+    priceColor: "from-primary to-emerald-400",
     period: "εφάπαξ",
     desc: "Για επιχειρήσεις που θέλουν να ξεχωρίσουν",
     features: [
@@ -215,6 +218,7 @@ const PRICING = [
   {
     name: "E-Shop",
     price: "€1.490+",
+    priceColor: "from-violet-400 to-purple-300",
     period: "εφάπαξ",
     desc: "Ολοκληρωμένο e-commerce solution",
     features: [
@@ -343,6 +347,171 @@ export default function WebDesigner() {
       </section>
 
       <main className="container mx-auto px-4 max-w-6xl py-14 space-y-20">
+
+        {/* ── Ετήσιο Πακέτο (Annual Subscription) ─────────────────────── */}
+        <div>
+          <div className="mb-6">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-amber-400 mb-2">Ειδική Προσφορά 2026</p>
+            <h2 className="text-3xl font-display font-extrabold text-foreground mb-2">Ετήσιο Πακέτο Παρουσίας</h2>
+            <p className="text-sm text-muted-foreground max-w-xl">
+              Ό,τι χρειάζεται μια σύγχρονη ιστοσελίδα — domain, server, SSL, backup, updates — σε <strong className="text-foreground">μία ετήσια συνδρομή</strong>.
+            </p>
+          </div>
+
+          <div
+            className="relative rounded-3xl border border-amber-500/40 overflow-hidden"
+            style={{ background: "linear-gradient(145deg, #1a1200 0%, #120d00 50%, #0e0900 100%)", boxShadow: "0 0 50px rgba(251,191,36,0.08)" }}
+            data-testid="card-annual-package"
+          >
+            {/* Offer ribbon */}
+            <div className="absolute top-0 right-0 overflow-hidden w-28 h-28 pointer-events-none">
+              <div className="absolute top-5 right-[-28px] bg-amber-500 text-black text-[9px] font-extrabold uppercase tracking-widest px-8 py-1 rotate-45">
+                ΠΡΟΣΦΟΡΑ
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-0">
+              {/* Left: price + offer */}
+              <div className="p-8 border-r border-amber-500/15">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
+                    <Globe className="w-5 h-5 text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-amber-400/70 font-bold uppercase tracking-widest">Ολοκληρωμένη Λύση</p>
+                    <h3 className="text-base font-extrabold text-white">Απλή Ιστοσελίδα + Φιλοξενία</h3>
+                  </div>
+                </div>
+
+                {/* Price */}
+                <div className="mb-5">
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <span
+                      className="text-6xl font-extrabold"
+                      style={{ background: "linear-gradient(135deg, #fbbf24, #f59e0b, #fde68a)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
+                    >
+                      €150
+                    </span>
+                    <span className="text-base text-amber-300/70 font-bold">/χρόνο</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground/50 line-through">€500/χρόνο</span>
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase tracking-widest">
+                      -70%
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-xs text-muted-foreground leading-relaxed mb-6">
+                  Τιμή κατασκευής ιστοσελίδας συμπεριλαμβάνεται στη συνδρομή. Ανανέωση κάθε χρόνο — χωρίς κρυφές χρεώσεις.
+                </p>
+
+                <a href="mailto:info@hitechdoctor.com">
+                  <button
+                    className="w-full h-12 rounded-2xl font-extrabold text-black text-sm flex items-center justify-center gap-2"
+                    style={{ background: "linear-gradient(135deg, #fbbf24, #f59e0b)", boxShadow: "0 0 24px rgba(251,191,36,0.35)" }}
+                    data-testid="button-annual-package"
+                  >
+                    <Mail className="w-4 h-4" />
+                    Ζητήστε Προσφορά
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </a>
+              </div>
+
+              {/* Right: included features */}
+              <div className="p-8">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-amber-400/60 mb-5">Τι περιλαμβάνεται</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                  {[
+                    { icon: Globe,       text: "Domain .gr ή .com" },
+                    { icon: Lock,        text: "SSL Certificate" },
+                    { icon: Server,      text: "Hosting / Server" },
+                    { icon: Shield,      text: "Daily Backups" },
+                    { icon: Zap,         text: "Speed Optimization" },
+                    { icon: Search,      text: "Βασικό SEO" },
+                    { icon: Smartphone,  text: "Mobile Responsive" },
+                    { icon: Code2,       text: "Software Updates" },
+                    { icon: CheckCircle2,text: "Security Patches" },
+                    { icon: Mail,        text: "Email Support" },
+                    { icon: Star,        text: "GDPR Compliant" },
+                    { icon: Monitor,     text: "Uptime Monitoring" },
+                  ].map((f) => (
+                    <div key={f.text} className="flex items-center gap-2">
+                      <f.icon className="w-3.5 h-3.5 text-amber-400/70 shrink-0" />
+                      <span className="text-xs text-foreground/75">{f.text}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-5 p-3 rounded-xl border border-amber-500/15 bg-amber-500/5">
+                  <p className="text-[10px] text-amber-300/70 leading-relaxed">
+                    <strong className="text-amber-400">Χωρίς έκπληξη-χρεώσεις.</strong> Domain + Hosting + SSL + Backup + Updates — όλα σε μία ετήσια τιμή. Ανανεώνετε μόνο αν είστε ευχαριστημένοι.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Construction packages ────────────────────────────────────── */}
+        <div>
+          <div className="text-center mb-10">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-2">Τιμές</p>
+            <h2 className="text-3xl font-display font-extrabold text-foreground mb-3">Πακέτα Κατασκευής</h2>
+            <p className="text-sm text-muted-foreground max-w-lg mx-auto">
+              Εφάπαξ κατασκευή — τιμές ανάλογα με το είδος και τις απαιτήσεις του project.
+              Επικοινωνήστε για δωρεάν προσφορά.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-5">
+            {PRICING.map((plan) => (
+              <div
+                key={plan.name}
+                className={`relative flex flex-col rounded-3xl border p-6 ${plan.accent} ${plan.highlight ? "shadow-[0_0_40px_rgba(0,210,200,0.15)]" : ""}`}
+                style={{ background: plan.highlight ? "linear-gradient(145deg, rgba(0,210,200,0.07), rgba(0,0,0,0))" : "rgba(255,255,255,0.02)" }}
+                data-testid={`card-pricing-${plan.name.toLowerCase()}`}
+              >
+                {plan.highlight && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <Badge className="bg-primary text-black font-extrabold text-[9px] px-3 py-1 uppercase tracking-widest">
+                      Δημοφιλές
+                    </Badge>
+                  </div>
+                )}
+                <div className="mb-4">
+                  <h3 className="text-lg font-extrabold text-white">{plan.name}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">{plan.desc}</p>
+                </div>
+                <div className="mb-5">
+                  <span
+                    className={`text-4xl font-extrabold bg-gradient-to-r ${plan.priceColor} bg-clip-text text-transparent`}
+                  >
+                    {plan.price}
+                  </span>
+                  <span className="text-sm text-muted-foreground ml-1.5">{plan.period}</span>
+                </div>
+                <ul className="space-y-2 mb-6 flex-1">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-center gap-2 text-xs text-foreground/80">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <a href="mailto:info@hitechdoctor.com">
+                  <Button
+                    className="w-full h-11 font-bold border-0"
+                    style={plan.btnStyle}
+                    data-testid={`button-pricing-${plan.name.toLowerCase()}`}
+                  >
+                    Ζητήστε Προσφορά
+                    <ArrowRight className="w-3.5 h-3.5 ml-2" />
+                  </Button>
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* ── Real clients section ────────────────────────────────────── */}
         <div>
@@ -512,60 +681,6 @@ export default function WebDesigner() {
                 <Code2 className={`w-5 h-5 mx-auto mb-2 ${s.color}`} />
                 <p className="text-sm font-bold text-foreground mb-0.5">{s.name}</p>
                 <p className="text-[10px] text-muted-foreground">{s.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Pricing */}
-        <div>
-          <div className="text-center mb-10">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-2">Τιμές</p>
-            <h2 className="text-3xl font-display font-extrabold text-foreground mb-3">Πακέτα Κατασκευής</h2>
-            <p className="text-sm text-muted-foreground max-w-lg mx-auto">
-              Ενδεικτικές τιμές · κάθε έργο αξιολογείται ξεχωριστά. Επικοινωνήστε για δωρεάν προσφορά.
-            </p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-5">
-            {PRICING.map((plan) => (
-              <div
-                key={plan.name}
-                className={`relative flex flex-col rounded-3xl border p-6 ${plan.accent} ${plan.highlight ? "shadow-[0_0_40px_rgba(0,210,200,0.15)]" : ""}`}
-                style={{ background: plan.highlight ? "linear-gradient(145deg, rgba(0,210,200,0.07), rgba(0,0,0,0))" : "rgba(255,255,255,0.02)" }}
-              >
-                {plan.highlight && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-primary text-black font-extrabold text-[9px] px-3 py-1 uppercase tracking-widest">
-                      Δημοφιλές
-                    </Badge>
-                  </div>
-                )}
-                <div className="mb-4">
-                  <h3 className="text-lg font-extrabold text-white">{plan.name}</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">{plan.desc}</p>
-                </div>
-                <div className="mb-5">
-                  <span className="text-4xl font-extrabold text-white">{plan.price}</span>
-                  <span className="text-sm text-muted-foreground ml-1.5">{plan.period}</span>
-                </div>
-                <ul className="space-y-2 mb-6 flex-1">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-xs text-foreground/80">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <a href="mailto:info@hitechdoctor.com">
-                  <Button
-                    className="w-full h-11 font-bold border-0"
-                    style={plan.btnStyle}
-                    data-testid={`button-pricing-${plan.name.toLowerCase()}`}
-                  >
-                    Ζητήστε Προσφορά
-                    <ArrowRight className="w-3.5 h-3.5 ml-2" />
-                  </Button>
-                </a>
               </div>
             ))}
           </div>
