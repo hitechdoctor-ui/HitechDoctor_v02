@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp, numeric, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, numeric, boolean, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -29,7 +29,7 @@ export const customers = pgTable("customers", {
   phone: text("phone"),
   address: text("address"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (t) => [uniqueIndex("customers_email_idx").on(t.email)]);
 
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
