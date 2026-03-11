@@ -18,6 +18,7 @@ import screenshotLouloudotopos from "@assets/Screenshot_2026-03-11_at_13.26.17_1
 import screenshotBsNaomi       from "@assets/Screenshot_2026-03-11_at_13.36.28_1773229053688.png";
 import screenshotTheatreHood   from "@assets/Screenshot_2026-03-11_at_13.38.01_1773229141428.png";
 import screenshotAthEcs        from "@assets/Screenshot_2026-03-11_at_13.39.32_1773229234685.png";
+import screenshotNikosapost    from "@assets/Screenshot_2026-03-11_at_13.41.03_1773229304723.png";
 
 // ── Portfolio projects ───────────────────────────────────────────────────────
 const PROJECTS = [
@@ -885,6 +886,63 @@ export default function WebDesigner() {
                     ))}
                   </div>
                   <div className="flex items-center gap-2 text-sm font-bold text-amber-400 group-hover:gap-3 transition-all">
+                    Δείτε πλήρες Case Study
+                    <ArrowRight className="w-4 h-4" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Link>
+
+          {/* nikosapost.gr card */}
+          <Link href="/portfolio/nikosapost-gr" data-testid="card-real-project-nikosapost" className="mt-5 block">
+            <div
+              className="group relative rounded-3xl border border-orange-500/25 overflow-hidden cursor-pointer hover:border-orange-400/50 transition-all hover:-translate-y-0.5 duration-200"
+              style={{ background: "linear-gradient(145deg, #050a14 0%, #0a1428 60%, #050a14 100%)" }}
+            >
+              <div className="grid md:grid-cols-2 gap-0">
+                <div className="relative overflow-hidden">
+                  <img
+                    src={screenshotNikosapost}
+                    alt="nikosapost.gr — Νίκος Αποστολόπουλος Auto Service Πειραιάς"
+                    className="w-full h-full object-cover object-top group-hover:scale-[1.03] transition-transform duration-500"
+                    style={{ minHeight: "200px", maxHeight: "260px" }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#050a14] md:block hidden" />
+                  <div className="absolute top-3 left-3 flex gap-2">
+                    <Badge className="bg-emerald-500 text-black font-extrabold text-[9px] px-2 py-1">LIVE</Badge>
+                    <Badge className="bg-orange-600/90 text-orange-100 font-extrabold text-[9px] px-2 py-1">Auto Service</Badge>
+                  </div>
+                </div>
+                <div className="p-7 flex flex-col justify-center">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-[10px] font-mono text-orange-500/60 flex items-center gap-1">
+                      nikosapost.gr <ExternalLink className="w-2.5 h-2.5" />
+                    </span>
+                  </div>
+                  <h3 className="text-2xl font-display font-extrabold text-white mb-2 group-hover:text-orange-300 transition-colors">
+                    Αποστολόπουλος Auto Service
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                    «φροντίζουμε το αυτοκίνητο ώστε να κινείσαι χωρίς άγχος» — Πειραιάς. 4.9★ Google, bilingual EL/EN, FAQ Schema.
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 mb-5">
+                    {[
+                      { icon: Gauge,  label: "Performance", value: "91/100", color: "text-orange-400" },
+                      { icon: Search, label: "SEO",          value: "98/100", color: "text-orange-400" },
+                      { icon: Shield, label: "Ασφάλεια",     value: "A+",     color: "text-orange-400" },
+                      { icon: Star,   label: "Google",       value: "4.9★ 50", color: "text-orange-400" },
+                    ].map((s) => (
+                      <div key={s.label} className="flex items-center gap-2 p-2.5 rounded-xl border border-orange-500/20 bg-orange-500/6">
+                        <s.icon className={`w-3.5 h-3.5 ${s.color} shrink-0`} />
+                        <div>
+                          <p className="text-[9px] text-muted-foreground">{s.label}</p>
+                          <p className={`text-xs font-extrabold ${s.color}`}>{s.value}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm font-bold text-orange-400 group-hover:gap-3 transition-all">
                     Δείτε πλήρες Case Study
                     <ArrowRight className="w-4 h-4" />
                   </div>
