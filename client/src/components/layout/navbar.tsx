@@ -3,7 +3,7 @@ import {
   ShoppingCart, Wrench, Package, ShieldCheck, Menu, Zap,
   Smartphone, ChevronRight, Hammer, Laptop, Monitor, Watch,
   Gamepad2, Tablet, LogIn, MapPin, Shield, Cable, Tag, Info,
-  MessageCircle, HelpCircle,
+  MessageCircle, HelpCircle, Globe,
 } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -56,7 +56,7 @@ const PHONE_BRANDS = [
 // ── Other repair services ──────────────────────────────────────────────────────
 const OTHER_SERVICES = [
   { name: "Επισκευή Tablet",      href: "/services/episkeui-tablet", icon: Tablet,   color: "text-sky-400" },
-  { name: "Επισκευή PlayStation", href: "/services", icon: Gamepad2, color: "text-blue-400" },
+  { name: "Επισκευή PlayStation", href: "/services/episkeui-playstation", icon: Gamepad2, color: "text-blue-400" },
   { name: "Επισκευή Laptop",      href: "/services/episkeui-laptop", icon: Laptop,   color: "text-emerald-400" },
   { name: "Επισκευή Υπολογιστή",  href: "/services/episkeui-desktop", icon: Monitor,  color: "text-violet-400" },
   { name: "Επισκευή Apple Watch", href: "/services/episkeui-apple-watch", icon: Watch, color: "text-gray-300" },
@@ -64,10 +64,11 @@ const OTHER_SERVICES = [
 
 // ── Info quick links ───────────────────────────────────────────────────────────
 const INFO_LINKS = [
-  { name: "Blog",          href: "/blog",           icon: Wrench,        color: "text-emerald-400" },
-  { name: "Επικοινωνία",  href: "/epikoinonia",    icon: MapPin,        color: "text-sky-400" },
-  { name: "FAQ",           href: "/faq",            icon: HelpCircle,    color: "text-violet-400" },
-  { name: "Υποστήριξη",   href: "/epikoinonia",    icon: MessageCircle, color: "text-orange-400" },
+  { name: "Blog",            href: "/blog",           icon: Wrench,        color: "text-emerald-400" },
+  { name: "Επικοινωνία",    href: "/epikoinonia",    icon: MapPin,        color: "text-sky-400" },
+  { name: "FAQ",             href: "/faq",            icon: HelpCircle,    color: "text-violet-400" },
+  { name: "Υποστήριξη",     href: "/epikoinonia",    icon: MessageCircle, color: "text-orange-400" },
+  { name: "Web Designer",   href: "/web-designer",   icon: Globe,         color: "text-primary" },
 ];
 
 // ── Hook: dynamic product categories ──────────────────────────────────────────
@@ -316,7 +317,7 @@ export function Navbar() {
               <NavigationMenuItem>
                 <NavigationMenuTrigger
                   className={`text-sm font-medium bg-transparent hover:bg-transparent data-[state=open]:bg-transparent px-3 py-2 flex items-center gap-2 transition-colors ${
-                    isActive("/sxetika-me-mas") || isActive("/epikoinonia") || isActive("/faq") || isActive("/blog")
+                    isActive("/sxetika-me-mas") || isActive("/epikoinonia") || isActive("/faq") || isActive("/blog") || isActive("/web-designer")
                       ? "text-primary"
                       : "text-muted-foreground hover:text-primary"
                   }`}

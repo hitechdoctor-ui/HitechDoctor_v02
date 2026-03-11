@@ -11,6 +11,7 @@ const NAV_MENUS = [
       { label: "Blog",              href: "/blog",           external: false },
       { label: "Συχνές Ερωτήσεις", href: "/faq",            external: false },
       { label: "Επικοινωνία",      href: "/epikoinonia",    external: false },
+      { label: "Web Designer",     href: "/web-designer",   external: false },
     ],
   },
   {

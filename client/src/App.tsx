@@ -36,6 +36,8 @@ import TabletRepairDetail from "./pages/tablet-repair-detail";
 import ServiceDesktop from "./pages/service-desktop";
 import DesktopRepairDetail from "./pages/desktop-repair-detail";
 import ServiceAppleWatch from "./pages/service-apple-watch";
+import ServicePlayStation from "./pages/service-playstation";
+import WebDesigner from "./pages/web-designer";
 import EShop from "./pages/eshop";
 import ProductDetail from "./pages/product-detail";
 import Checkout from "./pages/checkout";
@@ -117,6 +119,8 @@ function Router() {
         <Route path="/services/episkeui-laptop" component={ServiceLaptop} />
         <Route path="/episkevi-laptop/:slug" component={LaptopRepairDetail} />
         <Route path="/services/episkeui-apple-watch" component={ServiceAppleWatch} />
+        <Route path="/services/episkeui-playstation" component={ServicePlayStation} />
+        <Route path="/web-designer" component={WebDesigner} />
         <Route path="/services/episkeui-desktop" component={ServiceDesktop} />
         <Route path="/episkevi-desktop/:slug" component={DesktopRepairDetail} />
         <Route path="/services/episkeui-tablet" component={ServiceTablet} />
