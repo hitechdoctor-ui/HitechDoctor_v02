@@ -92,6 +92,18 @@ export const subscriptions = pgTable("subscriptions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// ── Admin Users ───────────────────────────────────────────────────────────────
+export const adminUsers = pgTable("admin_users", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  passwordHash: text("password_hash").notNull(),
+  role: text("role").notNull().default("admin"), // "superadmin" | "admin"
+  createdAt: timestamp("created_at").defaultNow(),
+}, (t) => [uniqueIndex("admin_users_email_idx").on(t.email)]);
+
+export type AdminUser = typeof adminUsers.$inferSelect;
+
 // ── Website Inquiries (leads from web-designer page) ─────────────────────────
 export const websiteInquiries = pgTable("website_inquiries", {
   id: serial("id").primaryKey(),

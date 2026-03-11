@@ -70,6 +70,7 @@ import AdminOikonomika from "./pages/admin/oikonomika";
 import AdminAntivirusSubscriptions from "./pages/admin/antivirus-subscriptions";
 import AdminWebsiteSubscriptions from "./pages/admin/website-subscriptions";
 import AdminWebsiteInquiries from "./pages/admin/website-inquiries";
+import AdminUsersPage from "./pages/admin/admin-users";
 
 function useAutoTheme() {
   useEffect(() => {
@@ -166,6 +167,7 @@ function Router() {
         <Route path="/admin/customers" component={AdminCustomers} />
         <Route path="/admin/customers/:id" component={AdminCustomerDetail} />
         <Route path="/admin/oikonomika" component={AdminOikonomika} />
+        <Route path="/admin/users" component={AdminUsersPage} />
         <Route component={NotFound} />
       </Switch>
     </Fragment>

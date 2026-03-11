@@ -5,6 +5,9 @@ import { api, errorSchemas } from "@shared/routes";
 import { insertRepairRequestSchema, insertRepairItemSchema, insertSubscriptionSchema, insertWebsiteInquirySchema } from "@shared/schema";
 import { z } from "zod";
 import { sendRepairConfirmationEmail, sendWebsiteInquiryEmail, sendWebsiteInquiryClientEmail } from "./email";
+import bcrypt from "bcrypt";
+
+const BCRYPT_ROUNDS = 12;
 
 export async function registerRoutes(
   httpServer: Server,
@@ -12,31 +15,89 @@ export async function registerRoutes(
 ): Promise<Server> {
 
   // --- Admin Auth ---
-  app.post("/api/admin/login", (req, res) => {
-    const { email, password } = req.body || {};
-    const adminEmail = process.env.ADMIN_EMAIL || "info@hitechdoctor.com";
-    const adminPass = process.env.ADMIN_PASSWORD || "hitech2026!";
-    if (email === adminEmail && password === adminPass) {
-      const token = Buffer.from(`${email}:${adminPass}:${Date.now()}`).toString("base64");
-      res.json({ ok: true, token });
-    } else {
-      res.status(401).json({ ok: false, message: "Λάθος email ή κωδικός" });
+  app.post("/api/admin/login", async (req, res) => {
+    try {
+      const { email, password } = req.body || {};
+      if (!email || !password) return res.status(400).json({ ok: false, message: "Email και κωδικός απαιτούνται" });
+      const user = await storage.getAdminByEmail(email);
+      if (!user) return res.status(401).json({ ok: false, message: "Λάθος email ή κωδικός" });
+      const valid = await bcrypt.compare(password, user.passwordHash);
+      if (!valid) return res.status(401).json({ ok: false, message: "Λάθος email ή κωδικός" });
+      const payload = JSON.stringify({ id: user.id, email: user.email, name: user.name, role: user.role, ts: Date.now() });
+      const token = Buffer.from(payload).toString("base64");
+      res.json({ ok: true, token, name: user.name, email: user.email, role: user.role });
+    } catch (err) {
+      console.error("[admin/login]", err);
+      res.status(500).json({ ok: false, message: "Σφάλμα σύνδεσης" });
     }
   });
 
-  app.get("/api/admin/me", (req, res) => {
+  app.get("/api/admin/me", async (req, res) => {
     const auth = req.headers.authorization || "";
     const token = auth.replace("Bearer ", "");
     if (!token) return res.status(401).json({ ok: false });
     try {
       const decoded = Buffer.from(token, "base64").toString("utf8");
-      const adminEmail = process.env.ADMIN_EMAIL || "info@hitechdoctor.com";
-      const adminPass = process.env.ADMIN_PASSWORD || "hitech2026!";
-      if (decoded.startsWith(`${adminEmail}:${adminPass}:`)) {
-        return res.json({ ok: true, email: adminEmail });
-      }
-    } catch {}
-    res.status(401).json({ ok: false });
+      const payload = JSON.parse(decoded);
+      if (!payload?.email) return res.status(401).json({ ok: false });
+      const user = await storage.getAdminByEmail(payload.email);
+      if (!user) return res.status(401).json({ ok: false });
+      return res.json({ ok: true, id: user.id, email: user.email, name: user.name, role: user.role });
+    } catch {
+      res.status(401).json({ ok: false });
+    }
+  });
+
+  // --- Admin Users CRUD ---
+  app.get("/api/admin/users", async (req, res) => {
+    try {
+      const users = await storage.getAdminUsers();
+      res.json(users);
+    } catch { res.status(500).json({ message: "Σφάλμα" }); }
+  });
+
+  app.post("/api/admin/users", async (req, res) => {
+    try {
+      const schema = z.object({
+        name: z.string().min(2),
+        email: z.string().email(),
+        password: z.string().min(8, "Ο κωδικός πρέπει να έχει τουλάχιστον 8 χαρακτήρες"),
+        role: z.enum(["admin", "superadmin"]).default("admin"),
+      });
+      const data = schema.parse(req.body);
+      const existing = await storage.getAdminByEmail(data.email);
+      if (existing) return res.status(409).json({ message: "Υπάρχει ήδη διαχειριστής με αυτό το email" });
+      const hash = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
+      const user = await storage.createAdminUser(data.name, data.email, hash, data.role);
+      res.status(201).json(user);
+    } catch (err) {
+      if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
+      res.status(500).json({ message: "Σφάλμα" });
+    }
+  });
+
+  app.delete("/api/admin/users/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const all = await storage.getAdminUsers();
+      if (all.length <= 1) return res.status(400).json({ message: "Δεν μπορείτε να διαγράψετε τον τελευταίο διαχειριστή" });
+      await storage.deleteAdminUser(id);
+      res.json({ ok: true });
+    } catch { res.status(500).json({ message: "Σφάλμα" }); }
+  });
+
+  app.patch("/api/admin/users/:id/password", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const schema = z.object({ password: z.string().min(8) });
+      const { password } = schema.parse(req.body);
+      const hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+      await storage.updateAdminPassword(id, hash);
+      res.json({ ok: true });
+    } catch (err) {
+      if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
+      res.status(500).json({ message: "Σφάλμα" });
+    }
   });
 
   // --- Products API ---

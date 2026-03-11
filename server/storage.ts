@@ -8,6 +8,7 @@ import {
   repairItems,
   subscriptions,
   websiteInquiries,
+  adminUsers,
   type Product,
   type InsertProduct,
   type Customer,
@@ -24,7 +25,8 @@ import {
   type InsertSubscription,
   type WebsiteInquiry,
   type InsertWebsiteInquiry,
-  type CheckoutPayload
+  type CheckoutPayload,
+  type AdminUser
 } from "@shared/schema";
 import { eq, desc, and, sql, lte, gte } from "drizzle-orm";
 
@@ -81,6 +83,13 @@ export interface IStorage {
     status: string; notes: string; firstName: string; lastName: string;
     phone: string; email: string; prepayment: string | null; prepaymentIncludesVat: boolean;
   }>): Promise<WebsiteInquiry>;
+
+  // Admin Users
+  getAdminUsers(): Promise<Omit<AdminUser, "passwordHash">[]>;
+  getAdminByEmail(email: string): Promise<AdminUser | undefined>;
+  createAdminUser(name: string, email: string, passwordHash: string, role?: string): Promise<Omit<AdminUser, "passwordHash">>;
+  deleteAdminUser(id: number): Promise<void>;
+  updateAdminPassword(id: number, passwordHash: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -408,6 +417,32 @@ export class DatabaseStorage implements IStorage {
     if (!updated) throw new Error("Website inquiry not found");
     return updated;
   }
+
+  // --- Admin Users ---
+  async getAdminUsers(): Promise<Omit<AdminUser, "passwordHash">[]> {
+    const all = await db.select().from(adminUsers).orderBy(adminUsers.createdAt);
+    return all.map(({ passwordHash: _ph, ...rest }) => rest);
+  }
+
+  async getAdminByEmail(email: string): Promise<AdminUser | undefined> {
+    const [user] = await db.select().from(adminUsers).where(eq(adminUsers.email, email));
+    return user;
+  }
+
+  async createAdminUser(name: string, email: string, passwordHash: string, role = "admin"): Promise<Omit<AdminUser, "passwordHash">> {
+    const [created] = await db.insert(adminUsers).values({ name, email, passwordHash, role }).returning();
+    const { passwordHash: _ph, ...rest } = created;
+    return rest;
+  }
+
+  async deleteAdminUser(id: number): Promise<void> {
+    await db.delete(adminUsers).where(eq(adminUsers.id, id));
+  }
+
+  async updateAdminPassword(id: number, passwordHash: string): Promise<void> {
+    await db.update(adminUsers).set({ passwordHash }).where(eq(adminUsers.id, id));
+  }
 }
 
 export const storage = new DatabaseStorage();
+

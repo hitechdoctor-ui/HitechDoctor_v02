@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Package, Users, ShoppingCart, LayoutDashboard, LogOut, Wrench, Euro, Menu, X, Shield, Globe, MessageSquare, Lock, Mail, Eye, EyeOff } from "lucide-react";
+import { Package, Users, ShoppingCart, LayoutDashboard, LogOut, Wrench, Euro, Menu, X, Shield, Globe, MessageSquare, Lock, Mail, Eye, EyeOff, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
@@ -100,22 +100,36 @@ function AdminLogin({ onLogin }: { onLogin: (token: string) => void }) {
   );
 }
 
+function decodeAdminToken(token: string | null): { name?: string; email?: string; role?: string } {
+  if (!token) return {};
+  try {
+    const decoded = atob(token);
+    return JSON.parse(decoded);
+  } catch { return {}; }
+}
+
 export function AdminLayout({ children }: AdminLayoutProps) {
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [token, setToken] = useState<string | null>(() => {
     try { return localStorage.getItem(STORAGE_KEY); } catch { return null; }
   });
+  const [adminInfo, setAdminInfo] = useState(() => decodeAdminToken(
+    (() => { try { return localStorage.getItem(STORAGE_KEY); } catch { return null; } })()
+  ));
 
   useEffect(() => {
     if (!token) return;
     fetch("/api/admin/me", { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
-      .then(d => { if (!d.ok) { localStorage.removeItem(STORAGE_KEY); setToken(null); } })
+      .then(d => {
+        if (!d.ok) { localStorage.removeItem(STORAGE_KEY); setToken(null); }
+        else setAdminInfo({ name: d.name, email: d.email, role: d.role });
+      })
       .catch(() => {});
-  }, []);
+  }, [token]);
 
-  if (!token) return <AdminLogin onLogin={setToken} />;
+  if (!token) return <AdminLogin onLogin={(t) => { setToken(t); setAdminInfo(decodeAdminToken(t)); }} />;
 
   const handleLogout = () => {
     localStorage.removeItem(STORAGE_KEY);
@@ -132,6 +146,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin/orders",                       label: "Παραγγελίες",               icon: ShoppingCart    },
     { href: "/admin/products",                     label: "Προϊόντα eShop",            icon: Package         },
     { href: "/admin/oikonomika",                   label: "Οικονομικά",                icon: Euro            },
+    { href: "/admin/users",                        label: "Διαχειριστές",              icon: UserCog         },
   ];
 
   const SidebarContent = () => (
@@ -173,6 +188,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       </nav>
 
       <div className="p-4 border-t border-white/5 space-y-1">
+        {adminInfo?.name && (
+          <div className="px-3 py-2 mb-1 rounded-xl bg-white/5">
+            <p className="text-xs font-semibold text-foreground truncate">{adminInfo.name}</p>
+            <p className="text-xs text-muted-foreground truncate">{adminInfo.email}</p>
+          </div>
+        )}
         <Link href="/">
           <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground">
             <LogOut className="w-4 h-4 mr-2" />
