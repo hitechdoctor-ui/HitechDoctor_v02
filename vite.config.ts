@@ -29,20 +29,6 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (!id.includes("node_modules")) return;
-          if (id.includes("react-dom") || id.includes("/react/")) return "vendor-react";
-          if (id.includes("wouter")) return "vendor-router";
-          if (id.includes("@tanstack/react-query")) return "vendor-query";
-          if (id.includes("@hookform") || id.includes("react-hook-form") || id.includes("/zod/")) return "vendor-forms";
-          if (id.includes("@radix-ui")) return "vendor-radix";
-          if (id.includes("lucide-react")) return "vendor-icons";
-          return "vendor-misc";
-        },
-      },
-    },
   },
   server: {
     fs: {
