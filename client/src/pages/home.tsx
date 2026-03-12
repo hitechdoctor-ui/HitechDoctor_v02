@@ -153,6 +153,8 @@ export default function Home() {
                 alt="Επισκευή τεχνολογίας — μητρική πλακέτα ASUS"
                 className="w-full aspect-[4/3] object-cover"
                 loading="eager"
+                fetchpriority="high"
+                decoding="sync"
               />
               <div className="absolute inset-0 bg-gradient-to-tr from-background/80 via-background/20 to-transparent" />
               {/* Floating stat */}
