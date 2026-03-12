@@ -8,6 +8,18 @@
         if(window.matchMedia('(prefers-color-scheme: dark)').matches){
           document.documentElement.classList.add('dark');
         }
+        window.addEventListener('error', function(e){
+          var d = document.getElementById('root');
+          if(d && !d.childNodes.length){
+            d.innerHTML = '<div style="padding:20px;font-family:monospace;color:red;background:#fff;"><b>JS Error:</b><pre style="white-space:pre-wrap">' + (e.message||'') + '\n' + (e.filename||'') + ':' + (e.lineno||'') + '\n' + (e.error && e.error.stack ? e.error.stack : '') + '</pre></div>';
+          }
+        });
+        window.addEventListener('unhandledrejection', function(e){
+          var d = document.getElementById('root');
+          if(d && !d.childNodes.length){
+            d.innerHTML = '<div style="padding:20px;font-family:monospace;color:red;background:#fff;"><b>Unhandled Promise:</b><pre style="white-space:pre-wrap">' + (e.reason||'') + '</pre></div>';
+          }
+        });
       })();
     </script>
     <link rel="icon" type="image/png" href="/favicon.png" />
