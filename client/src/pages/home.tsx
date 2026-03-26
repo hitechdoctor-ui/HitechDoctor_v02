@@ -105,7 +105,7 @@ export default function Home() {
               <br />
               <span className="gradient-text">την Τεχνολογία</span>
               <br />
-              σας στη Ζωή.
+              σας στη ζωή.
             </h1>
 
             <p className="text-lg text-muted-foreground max-w-xl leading-relaxed">
