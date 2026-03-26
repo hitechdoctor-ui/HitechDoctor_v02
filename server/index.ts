@@ -1,8 +1,10 @@
+import 'dotenv/config'; 
 import express, { type Request, Response, NextFunction } from "express";
 import compression from "compression";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { exec } from "node:child_process";
 import { storage } from "./storage";
 import { sendSubscriptionRenewalEmail } from "./email";
 import { seedProductsIfEmpty, seedAdminIfEmpty } from "./seed";
@@ -35,7 +37,6 @@ export function log(message: string, source = "express") {
     second: "2-digit",
     hour12: true,
   });
-
   console.log(`${formattedTime} [${source}] ${message}`);
 }
 
@@ -57,47 +58,26 @@ app.use((req, res, next) => {
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
-
       log(logLine);
     }
   });
-
   next();
 });
 
-// ── Subscription expiry check (runs every 24 hours) ──────────────────────────
 async function checkSubscriptionExpiry() {
   try {
     log("[subscriptions] Running expiry check...", "cron");
-
-    // Check subscriptions expiring in ~30 days (27–33 day window)
     const in30 = await storage.getExpiringSubscriptions(33);
     for (const sub of in30) {
       const now = new Date();
       const renewal = new Date(sub.renewalDate);
       const daysLeft = Math.ceil((renewal.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-
       if (daysLeft <= 30 && !sub.notifiedMonthBefore) {
         await sendSubscriptionRenewalEmail(sub, daysLeft);
         await storage.updateSubscription(sub.id, { notifiedMonthBefore: true });
-        log(`[subscriptions] 30-day notice sent for sub #${sub.id} (${sub.customerName})`, "cron");
+        log(`[subscriptions] 30-day notice sent for sub #${sub.id}`, "cron");
       }
     }
-
-    // Check subscriptions expiring in ~10 days (7–12 day window)
-    const in10 = await storage.getExpiringSubscriptions(12);
-    for (const sub of in10) {
-      const now = new Date();
-      const renewal = new Date(sub.renewalDate);
-      const daysLeft = Math.ceil((renewal.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-
-      if (daysLeft <= 10 && !sub.notifiedTenDaysBefore) {
-        await sendSubscriptionRenewalEmail(sub, daysLeft);
-        await storage.updateSubscription(sub.id, { notifiedTenDaysBefore: true });
-        log(`[subscriptions] 10-day notice sent for sub #${sub.id} (${sub.customerName})`, "cron");
-      }
-    }
-
     log("[subscriptions] Expiry check complete.", "cron");
   } catch (err) {
     console.error("[subscriptions] Expiry check error:", err);
@@ -105,44 +85,52 @@ async function checkSubscriptionExpiry() {
 }
 
 (async () => {
-  await registerRoutes(httpServer, app);
+  try {
+    await registerRoutes(httpServer, app);
 
-  app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
+      console.error("Internal Error:", err);
+      if (res.headersSent) return next(err);
+      res.status(status).json({ message });
+    });
 
-    console.error("Internal Server Error:", err);
-
-    if (res.headersSent) {
-      return next(err);
+    if (process.env.NODE_ENV === "production") {
+      serveStatic(app);
+    } else {
+      const { setupVite } = await import("./vite");
+      await setupVite(httpServer, app);
     }
 
-    return res.status(status).json({ message });
-  });
-
-  if (process.env.NODE_ENV === "production") {
-    serveStatic(app);
-  } else {
-    const { setupVite } = await import("./vite");
-    await setupVite(httpServer, app);
-  }
-
-  const port = parseInt(process.env.PORT || "5000", 10);
-  httpServer.listen(
-    {
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    },
-    () => {
-      log(`serving on port ${port}`);
-      // Auto-seed products if table is empty (first deployment)
-      seedProductsIfEmpty();
-      // Auto-seed superadmin if no admin users exist
-      seedAdminIfEmpty();
-      // Run subscription check on startup and then every 24 hours
-      checkSubscriptionExpiry();
-      setInterval(checkSubscriptionExpiry, 24 * 60 * 60 * 1000);
-    },
-  );
+   // Θύρα 5173 — όχι 5060/5061 (Chrome ERR_UNSAFE_PORT: SIP)
+   const port = 5173;
+   // :: + ipv6Only:false ώστε να δουλεύει και το http://localhost (συχνά ::1 στο macOS)
+   // και το http://127.0.0.1 — όχι μόνο IPv4 listen που «σπάει» το localhost
+   httpServer.listen(
+     {
+       port,
+       host: "::",
+       ipv6Only: false,
+     },
+     () => {
+     log(`serving on port ${port} — http://127.0.0.1:${port} ή http://localhost:${port}`);
+     if (process.env.NODE_ENV === "development" && process.env.OPEN_BROWSER !== "0") {
+       const url = `http://127.0.0.1:${port}`;
+       const open =
+         process.platform === "win32"
+           ? `start "" "${url}"`
+           : process.platform === "darwin"
+             ? `open "${url}"`
+             : `xdg-open "${url}"`;
+       exec(open, () => {});
+     }
+     seedProductsIfEmpty();
+     seedAdminIfEmpty();
+     checkSubscriptionExpiry();
+     setInterval(checkSubscriptionExpiry, 24 * 60 * 60 * 1000);
+   });
+ } catch (error) {
+   console.error("Failed to start server:", error);
+ }
 })();
