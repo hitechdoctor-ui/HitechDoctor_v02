@@ -103,34 +103,43 @@ async function checkSubscriptionExpiry() {
       await setupVite(httpServer, app);
     }
 
-   // Θύρα 5173 — όχι 5060/5061 (Chrome ERR_UNSAFE_PORT: SIP)
-   const port = 5173;
-   // :: + ipv6Only:false ώστε να δουλεύει και το http://localhost (συχνά ::1 στο macOS)
-   // και το http://127.0.0.1 — όχι μόνο IPv4 listen που «σπάει» το localhost
-   httpServer.listen(
-     {
-       port,
-       host: "::",
-       ipv6Only: false,
-     },
-     () => {
-     log(`serving on port ${port} — http://127.0.0.1:${port} ή http://localhost:${port}`);
-     if (process.env.NODE_ENV === "development" && process.env.OPEN_BROWSER !== "0") {
-       const url = `http://127.0.0.1:${port}`;
-       const open =
-         process.platform === "win32"
-           ? `start "" "${url}"`
-           : process.platform === "darwin"
-             ? `open "${url}"`
-             : `xdg-open "${url}"`;
-       exec(open, () => {});
-     }
-     seedProductsIfEmpty();
-     seedAdminIfEmpty();
-     checkSubscriptionExpiry();
-     setInterval(checkSubscriptionExpiry, 24 * 60 * 60 * 1000);
-   });
- } catch (error) {
-   console.error("Failed to start server:", error);
- }
+    /**
+     * ΡΥΘΜΙΣΗ ΓΙΑ RAILWAY & LOCAL
+     * Χρησιμοποιούμε τη θύρα που δίνει το περιβάλλον (Railway) ή την 5000/5173
+     */
+    const port = Number(process.env.PORT) || 5000;
+    
+    // Στο production (Railway) χρησιμοποιούμε 0.0.0.0 για να δέχεται εξωτερική κίνηση
+    const host = process.env.NODE_ENV === "production" ? "0.0.0.0" : "::";
+
+    httpServer.listen(
+      {
+        port,
+        host,
+        ipv6Only: false,
+      },
+      () => {
+        log(`serving on port ${port} — Host: ${host}`);
+        
+        // Άνοιγμα browser μόνο τοπικά
+        if (process.env.NODE_ENV === "development" && process.env.OPEN_BROWSER !== "0") {
+          const url = `http://localhost:${port}`;
+          const openCmd =
+            process.platform === "win32"
+              ? `start "" "${url}"`
+              : process.platform === "darwin"
+                ? `open "${url}"`
+                : `xdg-open "${url}"`;
+          exec(openCmd, () => {});
+        }
+        
+        seedProductsIfEmpty();
+        seedAdminIfEmpty();
+        checkSubscriptionExpiry();
+        setInterval(checkSubscriptionExpiry, 24 * 60 * 60 * 1000);
+      }
+    );
+  } catch (error) {
+    console.error("Failed to start server:", error);
+  }
 })();
