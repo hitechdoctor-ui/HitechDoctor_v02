@@ -107,7 +107,7 @@ async function checkSubscriptionExpiry() {
      * ΡΥΘΜΙΣΗ ΓΙΑ RAILWAY & LOCAL
      * Χρησιμοποιούμε τη θύρα που δίνει το περιβάλλον (Railway) ή την 5000/5173
      */
-    const port = Number(process.env.PORT) || 5000;
+    const port = Number(process.env.PORT) || 8080;
     
     // Στο production (Railway) χρησιμοποιούμε 0.0.0.0 για να δέχεται εξωτερική κίνηση
     const host = process.env.NODE_ENV === "production" ? "0.0.0.0" : "::";
