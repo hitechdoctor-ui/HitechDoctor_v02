@@ -125,7 +125,13 @@ export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, cre
 export const insertOrderItemSchema = createInsertSchema(orderItems).omit({ id: true });
 export const insertRepairItemSchema = createInsertSchema(repairItems).omit({ id: true, createdAt: true });
 export const insertRepairRequestSchema = createInsertSchema(repairRequests).omit({ id: true, createdAt: true });
-export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({ id: true, createdAt: true });
+/** JSON requests send ISO date strings; drizzle-zod expects Date objects — coerce so POST /api/subscriptions validates. */
+export const insertSubscriptionSchema = createInsertSchema(subscriptions)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    startDate: z.coerce.date(),
+    renewalDate: z.coerce.date(),
+  });
 export const insertWebsiteInquirySchema = createInsertSchema(websiteInquiries).omit({ id: true, createdAt: true });
 
 export type Product = typeof products.$inferSelect;

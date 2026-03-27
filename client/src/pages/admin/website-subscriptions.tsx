@@ -19,6 +19,15 @@ import type { Subscription } from "@shared/schema";
 
 const PRICE = "150.00";
 
+function apiErrorDescription(err: Error): string {
+  const detail = err.message.replace(/^\d+:\s*/, "");
+  try {
+    const j = JSON.parse(detail) as { message?: string };
+    if (j.message) return j.message;
+  } catch { /* not JSON */ }
+  return detail;
+}
+
 const formSchema = z.object({
   customerName: z.string().min(2, "Εισάγετε το όνομα πελάτη"),
   email: z.string().email("Μη έγκυρο email"),
@@ -175,7 +184,7 @@ export default function AdminWebsiteSubscriptions() {
       return apiRequest("POST", "/api/subscriptions", { ...values, type: "website", price: PRICE, startDate: start.toISOString(), renewalDate: renewal.toISOString() });
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/subscriptions"] }); setFormOpen(false); toast({ title: "Συνδρομή δημιουργήθηκε!" }); },
-    onError: () => toast({ title: "Σφάλμα", variant: "destructive" }),
+    onError: (err: Error) => toast({ title: "Σφάλμα", description: apiErrorDescription(err), variant: "destructive" }),
   });
 
   const updateMutation = useMutation({
@@ -186,7 +195,7 @@ export default function AdminWebsiteSubscriptions() {
       return apiRequest("PATCH", `/api/subscriptions/${editing!.id}`, { ...values, renewalDate: renewal.toISOString(), notifiedMonthBefore: false, notifiedTenDaysBefore: false });
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/subscriptions"] }); setFormOpen(false); toast({ title: "Ενημερώθηκε!" }); },
-    onError: () => toast({ title: "Σφάλμα", variant: "destructive" }),
+    onError: (err: Error) => toast({ title: "Σφάλμα", description: apiErrorDescription(err), variant: "destructive" }),
   });
 
   const deleteMutation = useMutation({
