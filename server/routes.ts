@@ -387,6 +387,15 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/financial/repair-revenue", async (_req, res) => {
+    try {
+      const rows = await storage.getCompletedRepairRevenueRows();
+      res.json(rows);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch repair revenue" });
+    }
+  });
+
   // --- Subscriptions API ---
   app.get("/api/subscriptions", async (req, res) => {
     try {

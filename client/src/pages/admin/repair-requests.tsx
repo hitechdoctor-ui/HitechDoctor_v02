@@ -12,7 +12,7 @@ import {
   ChevronDown, ChevronUp, Plus, Trash2, Package, Download,
 } from "lucide-react";
 import { exportToCsv, formatDateEl } from "@/lib/csv-export";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, invalidateRepairFinancialQueries } from "@/lib/queryClient";
 import { type RepairRequest, type RepairItem } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo, Fragment } from "react";
@@ -194,6 +194,7 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/repair-requests", req.id, "items"] });
+      invalidateRepairFinancialQueries(queryClient);
       setNewDesc(""); setNewAmt("");
       toast({ title: "Προστέθηκε", description: "Το στοιχείο χρέωσης αποθηκεύτηκε." });
     },
@@ -204,6 +205,7 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
     mutationFn: (id: number) => apiRequest("DELETE", `/api/repair-items/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/repair-requests", req.id, "items"] });
+      invalidateRepairFinancialQueries(queryClient);
       toast({ title: "Διαγράφηκε" });
     },
   });
@@ -213,6 +215,7 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
       apiRequest("PUT", `/api/repair-items/${id}`, { description, amount }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/repair-requests", req.id, "items"] });
+      invalidateRepairFinancialQueries(queryClient);
       setEditingItemId(null);
       toast({ title: "Ενημερώθηκε" });
     },
@@ -222,6 +225,7 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
     mutationFn: (price: string | null) => apiRequest("PATCH", `/api/repair-requests/${req.id}`, { price }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/repair-requests"] });
+      invalidateRepairFinancialQueries(queryClient);
       toast({ title: "Αποθηκεύτηκε", description: "Η τιμή ενημερώθηκε." });
     },
   });
@@ -494,6 +498,7 @@ export default function AdminRepairRequests() {
       apiRequest("PATCH", `/api/repair-requests/${id}/status`, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/repair-requests"] });
+      invalidateRepairFinancialQueries(queryClient);
       toast({ title: "Ενημερώθηκε", description: "Η κατάσταση αποθηκεύτηκε." });
     },
     onError: () => toast({ title: "Σφάλμα", description: "Αδυναμία αποθήκευσης.", variant: "destructive" }),

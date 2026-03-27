@@ -13,7 +13,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, QUERY_FINANCIAL_REPAIR_REVENUE, invalidateRepairFinancialQueries } from "@/lib/queryClient";
 import { type RepairRequest, type Product } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo } from "react";
@@ -86,6 +86,7 @@ function RepairRequestsSection() {
       apiRequest("PATCH", `/api/repair-requests/${id}/status`, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/repair-requests"] });
+      invalidateRepairFinancialQueries(queryClient);
       toast({ title: "Ενημερώθηκε", description: "Η κατάσταση αποθηκεύτηκε." });
     },
     onError: () => {
@@ -359,6 +360,8 @@ function EShopSearchSection() {
 }
 
 // ── Main Dashboard ───────────────────────────────────────────────────────────
+type RepairRevenueRow = { id: number; createdAt: string; total: number; customerName: string; email: string };
+
 export default function AdminDashboard() {
   const { data: orders } = useOrders();
   const { data: products } = useProducts();
@@ -366,16 +369,30 @@ export default function AdminDashboard() {
   const { data: repairRequests } = useQuery<RepairRequest[]>({
     queryKey: ["/api/repair-requests"],
   });
+  const { data: repairRevenue = [] } = useQuery<RepairRevenueRow[]>({
+    queryKey: QUERY_FINANCIAL_REPAIR_REVENUE,
+    queryFn: () =>
+      fetch("/api/financial/repair-revenue", { credentials: "include" }).then((r) => {
+        if (!r.ok) throw new Error("Failed to fetch repair revenue");
+        return r.json();
+      }),
+  });
 
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-
-  const todayRevenue = orders?.reduce((sum, order) => {
-    if (order.status === "cancelled") return sum;
-    const created = new Date(order.createdAt);
-    if (created >= todayStart) return sum + Number(order.totalAmount);
+  const todayRevenue = useMemo(() => {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    let sum = 0;
+    for (const order of orders ?? []) {
+      if (order.status !== "completed") continue;
+      const created = new Date(order.createdAt);
+      if (created >= todayStart) sum += Number(order.totalAmount);
+    }
+    for (const r of repairRevenue) {
+      const created = new Date(r.createdAt);
+      if (created >= todayStart) sum += r.total;
+    }
     return sum;
-  }, 0) || 0;
+  }, [orders, repairRevenue]);
 
   const pendingRepairs = repairRequests?.filter((r) => r.status === "pending").length ?? 0;
 

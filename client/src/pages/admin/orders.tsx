@@ -438,11 +438,11 @@ export default function AdminOrders() {
   }, [orders, search, statusFilter]);
 
   // ── Stats ──
-  const totalRevenue = orders?.reduce((s: number, o: any) => o.status !== "cancelled" ? s + Number(o.totalAmount) : s, 0) ?? 0;
+  const totalRevenue = orders?.reduce((s: number, o: any) => (o.status === "completed" ? s + Number(o.totalAmount) : s), 0) ?? 0;
   const byStatus = (v: string) => orders?.filter((o: any) => o.status === v).length ?? 0;
 
   const stats = [
-    { label: "Συνολικά Έσοδα", value: formatPrice(totalRevenue), icon: Euro, color: "text-green-400", bg: "bg-green-400/10 border-green-400/20" },
+    { label: "Έσοδα (ολοκληρωμένες)", value: formatPrice(totalRevenue), icon: Euro, color: "text-green-400", bg: "bg-green-400/10 border-green-400/20" },
     { label: "Σύνολο Παραγγελιών", value: orders?.length ?? 0, icon: ShoppingCart, color: "text-blue-400", bg: "bg-blue-400/10 border-blue-400/20" },
     { label: "Εκκρεμείς", value: byStatus("pending"), icon: Clock, color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/20" },
     { label: "Ολοκληρωμένες", value: byStatus("completed"), icon: CheckCircle2, color: "text-green-400", bg: "bg-green-400/10 border-green-400/20" },

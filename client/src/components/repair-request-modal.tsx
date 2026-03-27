@@ -13,7 +13,7 @@ import {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
 } from "@/components/ui/form";
 import { CheckCircle2, Wrench, Smartphone, Hash, Lock, Phone, Mail, User, Shield, ExternalLink } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, invalidateRepairFinancialQueries } from "@/lib/queryClient";
 import { insertRepairRequestSchema } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
@@ -67,6 +67,7 @@ export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" 
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/repair-requests"] });
+      invalidateRepairFinancialQueries(queryClient);
       setSubmitted(true);
     },
     onError: () => {

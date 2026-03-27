@@ -1,9 +1,19 @@
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Seo } from "@/components/seo";
 import { useOrders } from "@/hooks/use-orders";
+import { QUERY_FINANCIAL_REPAIR_REVENUE } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Euro, ShoppingCart, TrendingUp, TrendingDown, CheckCircle2, Clock, XCircle, AlertCircle, BarChart3, CalendarDays, Calendar, Infinity } from "lucide-react";
+import { Euro, ShoppingCart, TrendingUp, CheckCircle2, Clock, XCircle, BarChart3, CalendarDays, Calendar, Wrench } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
+
+type RepairRevenueRow = {
+  id: number;
+  createdAt: string;
+  total: number;
+  customerName: string;
+  email: string;
+};
 
 const fmt = (n: number) =>
   new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR" }).format(n);
@@ -45,10 +55,17 @@ function MiniBar({ label, value, max, color }: { label: string; value: number; m
 
 export default function AdminOikonomika() {
   const { data: orders } = useOrders();
+  const { data: repairRevenue = [] } = useQuery<RepairRevenueRow[]>({
+    queryKey: QUERY_FINANCIAL_REPAIR_REVENUE,
+    queryFn: () =>
+      fetch("/api/financial/repair-revenue", { credentials: "include" }).then((r) => {
+        if (!r.ok) throw new Error("Failed to fetch repair revenue");
+        return r.json();
+      }),
+  });
 
   const stats = useMemo(() => {
-    if (!orders) return null;
-
+    const orderList = orders ?? [];
     const now = new Date();
 
     const todayStart = new Date(now);
@@ -62,36 +79,51 @@ export default function AdminOikonomika() {
 
     const yearStart = new Date(now.getFullYear(), 0, 1);
 
-    const validOrders = orders.filter((o) => o.status !== "cancelled");
+    /** Έσοδα eShop: μόνο ολοκληρωμένες παραγγελίες (αναγνώριση όταν ολοκληρώνεται η παραγγελία). */
+    const completedOrders = orderList.filter((o) => o.status === "completed");
 
-    const calc = (from: Date) =>
-      validOrders
+    const calcOrders = (from: Date) =>
+      completedOrders
         .filter((o) => new Date(o.createdAt) >= from)
         .reduce((s, o) => s + Number(o.totalAmount), 0);
+
+    const calcRepairs = (from: Date) =>
+      repairRevenue
+        .filter((r) => new Date(r.createdAt) >= from)
+        .reduce((s, r) => s + r.total, 0);
+
+    const calc = (from: Date) => calcOrders(from) + calcRepairs(from);
 
     const todayRev = calc(todayStart);
     const weekRev = calc(weekStart);
     const monthRev = calc(monthStart);
     const yearRev = calc(yearStart);
-    const allRev = validOrders.reduce((s, o) => s + Number(o.totalAmount), 0);
+    const allOrderRev = completedOrders.reduce((s, o) => s + Number(o.totalAmount), 0);
+    const allRepairRev = repairRevenue.reduce((s, r) => s + r.total, 0);
+    const allRev = allOrderRev + allRepairRev;
 
     const byStatus = {
-      completed: orders.filter((o) => o.status === "completed").reduce((s, o) => s + Number(o.totalAmount), 0),
-      pending: orders.filter((o) => o.status === "pending").reduce((s, o) => s + Number(o.totalAmount), 0),
-      cancelled: orders.filter((o) => o.status === "cancelled").reduce((s, o) => s + Number(o.totalAmount), 0),
+      completed: orderList.filter((o) => o.status === "completed").reduce((s, o) => s + Number(o.totalAmount), 0),
+      pending: orderList.filter((o) => o.status === "pending").reduce((s, o) => s + Number(o.totalAmount), 0),
+      cancelled: orderList.filter((o) => o.status === "cancelled").reduce((s, o) => s + Number(o.totalAmount), 0),
     };
 
     const countByStatus = {
-      completed: orders.filter((o) => o.status === "completed").length,
-      pending: orders.filter((o) => o.status === "pending").length,
-      cancelled: orders.filter((o) => o.status === "cancelled").length,
+      completed: orderList.filter((o) => o.status === "completed").length,
+      pending: orderList.filter((o) => o.status === "pending").length,
+      cancelled: orderList.filter((o) => o.status === "cancelled").length,
     };
 
     const monthlyMap: Record<string, number> = {};
-    validOrders.forEach((o) => {
+    completedOrders.forEach((o) => {
       const d = new Date(o.createdAt);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       monthlyMap[key] = (monthlyMap[key] || 0) + Number(o.totalAmount);
+    });
+    repairRevenue.forEach((r) => {
+      const d = new Date(r.createdAt);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      monthlyMap[key] = (monthlyMap[key] || 0) + r.total;
     });
 
     const monthlyData: { label: string; key: string; revenue: number }[] = [];
@@ -104,8 +136,46 @@ export default function AdminOikonomika() {
 
     const maxMonthly = Math.max(...monthlyData.map((m) => m.revenue), 1);
 
-    return { todayRev, weekRev, monthRev, yearRev, allRev, byStatus, countByStatus, monthlyData, maxMonthly };
-  }, [orders]);
+    return {
+      todayRev,
+      weekRev,
+      monthRev,
+      yearRev,
+      allRev,
+      allOrderRev,
+      allRepairRev,
+      byStatus,
+      countByStatus,
+      monthlyData,
+      maxMonthly,
+      repairCompletedCount: repairRevenue.length,
+    };
+  }, [orders, repairRevenue]);
+
+  const combinedTransactions = useMemo(() => {
+    const orderList = orders ?? [];
+    const fromOrders = orderList.map((o) => ({
+      kind: "order" as const,
+      id: o.id,
+      customerName: o.customerName,
+      email: o.customerEmail,
+      createdAt: o.createdAt,
+      status: o.status,
+      amount: Number(o.totalAmount),
+    }));
+    const fromRepairs = repairRevenue.map((r) => ({
+      kind: "repair" as const,
+      id: r.id,
+      customerName: r.customerName,
+      email: r.email,
+      createdAt: r.createdAt,
+      status: "completed" as const,
+      amount: r.total,
+    }));
+    return [...fromOrders, ...fromRepairs].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+  }, [orders, repairRevenue]);
 
   const topCards = [
     {
@@ -157,6 +227,10 @@ export default function AdminOikonomika() {
       <div className="mb-8">
         <h1 className="text-3xl font-display font-bold">Οικονομικά</h1>
         <p className="text-muted-foreground mt-1">Έσοδα, παραγγελίες και οικονομική επισκόπηση</p>
+        <p className="text-xs text-muted-foreground/90 mt-2 max-w-3xl">
+          Τα ποσά στα κυρίως στατιστικά ενημερώνονται όταν μια παραγγελία eShop ή ένα αίτημα επισκευής είναι σε κατάσταση <strong className="text-foreground/90">Ολοκληρώθηκε</strong>·
+          περιλαμβάνουν eShop και επισκευές.
+        </p>
       </div>
 
       {/* ── Revenue Stats ── */}
@@ -239,8 +313,21 @@ export default function AdminOikonomika() {
               </div>
             </div>
 
+            <div className="flex items-center justify-between p-3 rounded-xl bg-cyan-400/5 border border-cyan-400/15">
+              <div className="flex items-center gap-3">
+                <Wrench className="w-4 h-4 text-cyan-400" />
+                <div>
+                  <div className="text-sm font-semibold">Επισκευές (ολοκληρωμένες)</div>
+                  <div className="text-xs text-muted-foreground">{stats?.repairCompletedCount ?? 0} αιτήματα</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-sm font-bold text-cyan-400">{fmt(stats?.allRepairRev ?? 0)}</div>
+              </div>
+            </div>
+
             <div className="pt-2 mt-2 border-t border-white/5 flex items-center justify-between">
-              <span className="text-sm font-semibold text-muted-foreground">Σύνολο αποδεκτών</span>
+              <span className="text-sm font-semibold text-muted-foreground">Σύνολο (eShop ολοκλ. + επισκευές)</span>
               <span className="text-base font-bold text-primary">{fmt(stats?.allRev ?? 0)}</span>
             </div>
           </CardContent>
@@ -250,9 +337,9 @@ export default function AdminOikonomika() {
       {/* ── All Orders Table ── */}
       <Card className="bg-card border-white/5">
         <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-base">
+            <CardTitle className="flex items-center gap-2 text-base">
             <Euro className="w-4 h-4 text-primary" />
-            Αναλυτικές Συναλλαγές
+            Αναλυτικές Συναλλαγές (eShop + επισκευές)
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -261,6 +348,7 @@ export default function AdminOikonomika() {
               <thead>
                 <tr className="border-b border-white/5">
                   <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground">#</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground">Τύπος</th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground">Πελάτης</th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground">Email</th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground">Ημερομηνία</th>
@@ -269,44 +357,51 @@ export default function AdminOikonomika() {
                 </tr>
               </thead>
               <tbody>
-                {(orders ?? []).length === 0 ? (
+                {combinedTransactions.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center text-muted-foreground py-12 text-sm">
-                      Δεν υπάρχουν παραγγελίες ακόμα
+                    <td colSpan={7} className="text-center text-muted-foreground py-12 text-sm">
+                      Δεν υπάρχουν συναλλαγές ακόμα
                     </td>
                   </tr>
                 ) : (
-                  [...(orders ?? [])]
-                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                    .map((order) => {
-                      const statusCfg: Record<string, { label: string; color: string }> = {
-                        pending:    { label: "Σε Αναμονή",     color: "text-yellow-400" },
-                        completed:  { label: "Ολοκληρώθηκε",  color: "text-green-400" },
-                        cancelled:  { label: "Ακυρώθηκε",     color: "text-red-400" },
-                        "in-progress": { label: "Σε Εξέλιξη", color: "text-blue-400" },
-                      };
-                      const s = statusCfg[order.status] ?? { label: order.status, color: "text-muted-foreground" };
-                      return (
-                        <tr
-                          key={order.id}
-                          className="border-b border-white/4 hover:bg-white/2 transition-colors"
-                          data-testid={`row-order-${order.id}`}
-                        >
-                          <td className="px-6 py-4 font-mono text-xs text-muted-foreground">#{order.id}</td>
-                          <td className="px-6 py-4 font-medium">{order.customerName}</td>
-                          <td className="px-6 py-4 text-muted-foreground text-xs">{order.customerEmail}</td>
-                          <td className="px-6 py-4 text-muted-foreground text-xs">
-                            {new Intl.DateTimeFormat("el-GR", {
-                              day: "2-digit", month: "2-digit", year: "numeric",
-                            }).format(new Date(order.createdAt))}
-                          </td>
-                          <td className={`px-6 py-4 text-xs font-semibold ${s.color}`}>{s.label}</td>
-                          <td className={`px-6 py-4 text-right font-bold ${order.status === "cancelled" ? "text-red-400 line-through opacity-50" : "text-foreground"}`}>
-                            {fmt(Number(order.totalAmount))}
-                          </td>
-                        </tr>
-                      );
-                    })
+                  combinedTransactions.map((row) => {
+                    const statusCfg: Record<string, { label: string; color: string }> = {
+                      pending:    { label: "Σε Αναμονή",     color: "text-yellow-400" },
+                      completed:  { label: "Ολοκληρώθηκε",  color: "text-green-400" },
+                      cancelled:  { label: "Ακυρώθηκε",     color: "text-red-400" },
+                      "in-progress": { label: "Σε Εξέλιξη", color: "text-blue-400" },
+                    };
+                    const s =
+                      row.kind === "repair"
+                        ? { label: "Ολοκληρώθηκε", color: "text-green-400" }
+                        : statusCfg[row.status] ?? { label: row.status, color: "text-muted-foreground" };
+                    const cancelled = row.kind === "order" && row.status === "cancelled";
+                    return (
+                      <tr
+                        key={row.kind === "order" ? `o-${row.id}` : `r-${row.id}`}
+                        className="border-b border-white/4 hover:bg-white/2 transition-colors"
+                        data-testid={row.kind === "order" ? `row-order-${row.id}` : `row-repair-rev-${row.id}`}
+                      >
+                        <td className="px-6 py-4 font-mono text-xs text-muted-foreground">
+                          {row.kind === "order" ? `#${row.id}` : `ΕΠ-${row.id}`}
+                        </td>
+                        <td className="px-6 py-4 text-xs font-semibold text-muted-foreground">
+                          {row.kind === "order" ? "eShop" : "Επισκευή"}
+                        </td>
+                        <td className="px-6 py-4 font-medium">{row.customerName}</td>
+                        <td className="px-6 py-4 text-muted-foreground text-xs">{row.email}</td>
+                        <td className="px-6 py-4 text-muted-foreground text-xs">
+                          {new Intl.DateTimeFormat("el-GR", {
+                            day: "2-digit", month: "2-digit", year: "numeric",
+                          }).format(new Date(row.createdAt))}
+                        </td>
+                        <td className={`px-6 py-4 text-xs font-semibold ${s.color}`}>{s.label}</td>
+                        <td className={`px-6 py-4 text-right font-bold ${cancelled ? "text-red-400 line-through opacity-50" : "text-foreground"}`}>
+                          {fmt(row.amount)}
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>

@@ -55,3 +55,10 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+/** React-query key + invalidation για έσοδα επισκευών (Οικονομικά / Dashboard). */
+export const QUERY_FINANCIAL_REPAIR_REVENUE = ["/api/financial/repair-revenue"] as const;
+
+export function invalidateRepairFinancialQueries(queryClient: QueryClient) {
+  queryClient.invalidateQueries({ queryKey: [...QUERY_FINANCIAL_REPAIR_REVENUE] });
+}

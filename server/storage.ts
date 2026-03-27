@@ -63,6 +63,10 @@ export interface IStorage {
 
   // Repair Items (line items)
   getRepairItems(repairRequestId: number): Promise<RepairItem[]>;
+  /** Ολοκληρωμένες επισκευές με ποσό (γραμμές ή χειροκίνητη τιμή) — για Οικονομικά. */
+  getCompletedRepairRevenueRows(): Promise<
+    { id: number; createdAt: Date; total: number; customerName: string; email: string }[]
+  >;
   createRepairItem(data: InsertRepairItem): Promise<RepairItem>;
   updateRepairItem(id: number, data: { description?: string; amount?: string }): Promise<RepairItem>;
   deleteRepairItem(id: number): Promise<void>;
@@ -345,6 +349,26 @@ export class DatabaseStorage implements IStorage {
 
   async deleteRepairItem(id: number): Promise<void> {
     await db.delete(repairItems).where(eq(repairItems.id, id));
+  }
+
+  async getCompletedRepairRevenueRows(): Promise<
+    { id: number; createdAt: Date; total: number; customerName: string; email: string }[]
+  > {
+    const completed = await db.select().from(repairRequests).where(eq(repairRequests.status, "completed"));
+    const rows: { id: number; createdAt: Date; total: number; customerName: string; email: string }[] = [];
+    for (const r of completed) {
+      const items = await this.getRepairItems(r.id);
+      const total =
+        items.length > 0
+          ? items.reduce((s, i) => s + Number(i.amount), 0)
+          : r.price
+            ? Number(r.price)
+            : 0;
+      if (!r.createdAt) continue;
+      const customerName = `${r.firstName} ${r.lastName}`.trim();
+      rows.push({ id: r.id, createdAt: r.createdAt, total, customerName, email: r.email });
+    }
+    return rows;
   }
 
   // --- Subscriptions ---
