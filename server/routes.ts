@@ -5,6 +5,8 @@ import { api, errorSchemas } from "@shared/routes";
 import { insertRepairRequestSchema, insertRepairItemSchema, insertSubscriptionSchema, insertWebsiteInquirySchema } from "@shared/schema";
 import { z } from "zod";
 import { sendRepairConfirmationEmail, sendWebsiteInquiryEmail, sendWebsiteInquiryClientEmail } from "./email";
+import { runImeiLookup } from "./imei-lookup";
+import { fetchHubSpotContacts } from "./hubspot";
 import bcrypt from "bcrypt";
 
 const BCRYPT_ROUNDS = 12;
@@ -542,6 +544,44 @@ export async function registerRoutes(
       }
       console.error("[ipsw/track]", err);
       res.status(500).json({ message: "Σφάλμα καταγραφής" });
+    }
+  });
+
+  /** IMEI lookup — IMEI.info API v4 (IMEI_INFO_API_KEY) or custom GET URL (IMEI_LOOKUP_URL_TEMPLATE). */
+  app.post("/api/imei/lookup", async (req, res) => {
+    try {
+      const schema = z.object({ imei: z.string().min(10).max(32) });
+      const { imei } = schema.parse(req.body);
+      const result = await runImeiLookup(imei);
+      res.json(result);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Σφάλμα ελέγχου IMEI";
+      const isConfig =
+        msg.includes("ρυθμίστε") ||
+        msg.includes("not configured") ||
+        msg.includes("IMEI_LOOKUP_URL_TEMPLATE not set");
+      const status = isConfig ? 503 : 400;
+      res.status(status).json({ ok: false, error: msg });
+    }
+  });
+
+  app.get("/api/admin/hubspot/contacts", async (req, res) => {
+    const auth = req.headers.authorization || "";
+    const token = auth.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const decoded = Buffer.from(token, "base64").toString("utf8");
+      const payload = JSON.parse(decoded);
+      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
+      const user = await storage.getAdminByEmail(payload.email);
+      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      const contacts = await fetchHubSpotContacts();
+      res.json(contacts);
+    } catch (err) {
+      console.error("[hubspot/contacts]", err);
+      const msg = err instanceof Error ? err.message : "HubSpot error";
+      const status = msg.includes("HUBSPOT_ACCESS_TOKEN") ? 503 : 500;
+      res.status(status).json({ message: msg });
     }
   });
 

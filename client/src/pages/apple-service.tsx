@@ -2,7 +2,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Seo } from "@/components/seo";
 import { Helmet } from "react-helmet-async";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,7 @@ import {
   Laptop,
   Watch,
   Search,
+  Loader2,
   Cpu,
   Battery,
   Droplets,
@@ -29,6 +30,9 @@ import {
 } from "lucide-react";
 import { SiApple, SiViber } from "react-icons/si";
 import { buildViberUrl } from "@/lib/viber";
+import { requestImeiLookup } from "@/lib/imei-client";
+import { ImeiResultCard } from "@/components/imei-result-card";
+import type { ImeiLookupSuccess } from "@shared/imei-lookup";
 
 const GLASS =
   "rounded-3xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-2xl shadow-[0_8px_48px_rgba(0,0,0,0.45)]";
@@ -127,7 +131,7 @@ const HUB_CATEGORIES = [
     id: "imei",
     title: "Device Tools (IMEI)",
     titleEl: "Εργαλεία συσκευής (IMEI)",
-    description: "Έλεγχος IMEI με επίδειξη μοντέλου, χωρητικότητας και κατάστασης iCloud (λειτουργία demo).",
+    description: "Έλεγχος IMEI με μοντέλο, iCloud και εγγύηση μέσω IMEI.info API (απαιτείται κλειδί στο server).",
     icon: Smartphone,
     accent: "from-violet-500/25 to-fuchsia-600/10",
     href: "/services/imei-check",
@@ -190,16 +194,33 @@ const GUIDE_PLACEHOLDERS = [
 ] as const;
 
 export default function AppleServicePage() {
-  const [, setLocation] = useLocation();
   const [imeiBar, setImeiBar] = useState("");
+  const [imeiLoading, setImeiLoading] = useState(false);
+  const [imeiError, setImeiError] = useState<string | null>(null);
+  const [imeiResult, setImeiResult] = useState<ImeiLookupSuccess | null>(null);
 
-  const handleImeiBarSubmit = (e: React.FormEvent) => {
+  const handleImeiBarSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setImeiError(null);
     const digits = normalizeImeiDigits(imeiBar);
-    if (digits.length === 15) {
-      setLocation(`/services/imei-check?imei=${encodeURIComponent(digits)}`);
-    } else {
-      setLocation("/services/imei-check");
+    if (digits.length !== 15) {
+      setImeiError("Εισάγετε έγκυρο IMEI 15 ψηφίων.");
+      setImeiResult(null);
+      return;
+    }
+    setImeiLoading(true);
+    setImeiResult(null);
+    try {
+      const res = await requestImeiLookup(digits);
+      if (!res.ok) {
+        setImeiError(res.error);
+        return;
+      }
+      setImeiResult(res);
+    } catch {
+      setImeiError("Αποτυχία σύνδεσης με τον server. Δοκιμάστε ξανά.");
+    } finally {
+      setImeiLoading(false);
     }
   };
 
@@ -354,7 +375,7 @@ export default function AppleServicePage() {
                 <div>
                   <h3 className="font-display text-base font-bold text-white md:text-lg">IMEI Check</h3>
                   <p className="mt-0.5 text-xs text-zinc-500">
-                    Εισάγετε 15 ψηφία για γρήγορο έλεγχο — μεταφέρεστε στη σελίδα εργαλείου με προσυμπληρωμένο IMEI (αν είναι έγκυρο).
+                    Εισάγετε 15 ψηφία και πατήστε Έλεγχο για live αποτελέσματα (Model, iCloud, Warranty) μέσω IMEI.info API.
                   </p>
                 </div>
               </div>
@@ -368,25 +389,54 @@ export default function AppleServicePage() {
                   autoComplete="off"
                   placeholder="π.χ. 353456789012347"
                   value={imeiBar}
-                  onChange={(e) => setImeiBar(normalizeImeiDigits(e.target.value))}
+                  onChange={(e) => {
+                    setImeiBar(normalizeImeiDigits(e.target.value));
+                    setImeiError(null);
+                    setImeiResult(null);
+                  }}
                   className="h-11 border-white/12 bg-white/[0.06] font-mono text-sm tracking-wider text-white placeholder:text-zinc-600"
                   aria-label="IMEI 15 ψηφίων"
                 />
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     type="submit"
-                    className="h-11 shrink-0 rounded-xl border-0 bg-gradient-to-r from-violet-500 to-fuchsia-600 px-5 text-sm font-semibold text-white shadow-[0_0_28px_rgba(139,92,246,0.25)] hover:from-violet-400 hover:to-fuchsia-500"
+                    disabled={imeiLoading}
+                    className="h-11 shrink-0 rounded-xl border-0 bg-gradient-to-r from-violet-500 to-fuchsia-600 px-5 text-sm font-semibold text-white shadow-[0_0_28px_rgba(139,92,246,0.25)] hover:from-violet-400 hover:to-fuchsia-500 disabled:opacity-70"
                   >
-                    <Search className="mr-2 h-4 w-4" />
-                    Έλεγχος
+                    {imeiLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Έλεγχος…
+                      </>
+                    ) : (
+                      <>
+                        <Search className="mr-2 h-4 w-4" />
+                        Έλεγχος
+                      </>
+                    )}
                   </Button>
                   <Button type="button" variant="outline" className="h-11 rounded-xl border-white/15 bg-transparent text-zinc-300" asChild>
-                    <Link href="/services/imei-check">Πλήρες εργαλείο</Link>
+                    <Link
+                      href={
+                        normalizeImeiDigits(imeiBar).length === 15
+                          ? `/services/imei-check?imei=${encodeURIComponent(normalizeImeiDigits(imeiBar))}`
+                          : "/services/imei-check"
+                      }
+                    >
+                      Πλήρες εργαλείο
+                    </Link>
                   </Button>
                 </div>
               </form>
             </div>
           </div>
+          <ImeiResultCard
+            className="mt-5"
+            loading={imeiLoading}
+            error={imeiError && !imeiLoading ? imeiError : null}
+            data={imeiResult}
+            imeiDigits={normalizeImeiDigits(imeiBar)}
+          />
         </section>
 
         {/* 3 category dashboard */}

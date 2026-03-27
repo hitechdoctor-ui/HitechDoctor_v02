@@ -76,6 +76,7 @@ const AdminWebsiteSubscriptions = lazyWithReload(() => import("./pages/admin/web
 const AdminWebsiteInquiries = lazyWithReload(() => import("./pages/admin/website-inquiries"));
 const AdminUsersPage = lazyWithReload(() => import("./pages/admin/admin-users"));
 const AdminIpswDownloads = lazyWithReload(() => import("./pages/admin/ipsw-downloads"));
+const AdminHubspotContacts = lazyWithReload(() => import("./pages/admin/hubspot-contacts"));
 
 function PageLoader() {
   return (
@@ -206,6 +207,7 @@ function Router() {
           <Route path="/admin/products" component={AdminProducts} />
           <Route path="/admin/orders" component={AdminOrders} />
           <Route path="/admin/customers" component={AdminCustomers} />
+          <Route path="/admin/hubspot" component={AdminHubspotContacts} />
           <Route path="/admin/customers/:id" component={AdminCustomerDetail} />
           <Route path="/admin/oikonomika" component={AdminOikonomika} />
           <Route path="/admin/users" component={AdminUsersPage} />

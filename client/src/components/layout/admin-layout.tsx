@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Package, Users, ShoppingCart, LayoutDashboard, LogOut, Wrench, Euro, Menu, X, Shield, Globe, MessageSquare, Lock, Mail, Eye, EyeOff, UserCog, Download } from "lucide-react";
+import { Package, Users, ShoppingCart, LayoutDashboard, LogOut, Wrench, Euro, Menu, X, Shield, Globe, MessageSquare, Lock, Mail, Eye, EyeOff, UserCog, Download, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
@@ -143,6 +143,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin/antivirus-subscriptions",      label: "Συνδρομές Antivirus",       icon: Shield          },
     { href: "/admin/website-subscriptions",        label: "Συνδρομές Ιστοσελίδων",    icon: Globe           },
     { href: "/admin/customers",                    label: "Πελατολόγιο (CRM)",         icon: Users           },
+    { href: "/admin/hubspot",                     label: "HubSpot",                   icon: Link2           },
     { href: "/admin/orders",                       label: "Παραγγελίες",               icon: ShoppingCart    },
     { href: "/admin/products",                     label: "Προϊόντα eShop",            icon: Package         },
     { href: "/admin/oikonomika",                   label: "Οικονομικά",                icon: Euro            },

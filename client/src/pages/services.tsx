@@ -66,7 +66,7 @@ const allServices = [
     title: "IMEI Check",
     subtitle: "Έλεγχος συσκευής Apple — μοντέλο, χωρητικότητα, iCloud",
     description:
-      "Εισάγετε το IMEI για επίδειξη στοιχείων συσκευής (λειτουργία demo). Σύνδεση με Expert Hub & Apple Service Hub.",
+      "Έλεγχος IMEI μέσω IMEI.info API: μοντέλο, iCloud/Find My, εγγύηση. Σύνδεση με Expert Hub & Apple Service Hub.",
     features: ["Έλεγχος 15ψήφιου IMEI", "Εμφάνιση μοντέλου & χωρητικότητας", "Κατάσταση iCloud ON/OFF", "Ίδιο premium στυλ με το IPSW tool"],
     image: "https://images.unsplash.com/photo-1592899677977-99c217a9fc72?auto=format&fit=crop&q=80&w=900",
     imageAlt: "Ελεγχος IMEI iPhone Apple",

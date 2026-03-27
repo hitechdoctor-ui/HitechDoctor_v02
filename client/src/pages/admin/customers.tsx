@@ -23,7 +23,12 @@ export default function AdminCustomers() {
       <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-3xl font-display font-bold">Πελατολόγιο (CRM)</h1>
-          <p className="text-muted-foreground">Αρχείο πελατών και στοιχεία επικοινωνίας — κλικ για Καρτέλα</p>
+          <p className="text-muted-foreground">
+            Αρχείο πελατών και στοιχεία επικοινωνίας — κλικ για Καρτέλα.{" "}
+            <Link href="/admin/hubspot" className="text-primary hover:underline font-medium">
+              HubSpot επαφές →
+            </Link>
+          </p>
         </div>
         <Button
           variant="outline"

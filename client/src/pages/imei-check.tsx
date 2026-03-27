@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
@@ -36,21 +36,12 @@ import {
 } from "lucide-react";
 import { SiApple } from "react-icons/si";
 import { cn } from "@/lib/utils";
+import { requestImeiLookup } from "@/lib/imei-client";
+import { ImeiResultCard } from "@/components/imei-result-card";
+import type { ImeiLookupSuccess } from "@shared/imei-lookup";
 
 const GLASS =
   "rounded-3xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-2xl shadow-[0_8px_48px_rgba(0,0,0,0.45)]";
-
-const DEMO_DEVICE = {
-  model: "iPhone 15 Pro",
-  capacity: "256 GB",
-  color: "Natural Titanium",
-  icloudOn: true,
-  serial: "F2LQ7XXXXXX",
-  carrier: "—",
-  blacklist: "Δεν ελέγχθηκε",
-  warranty: "—",
-  purchase: "—",
-} as const;
 
 const SAMPLE_IMEI = "353456789012347";
 
@@ -70,7 +61,7 @@ const STEPS = [
   {
     n: 3,
     title: "Δείτε τα στοιχεία",
-    body: "Εμφανίζονται μοντέλο, χωρητικότητα, iCloud και άλλα (σε πλήρη λειτουργία).",
+    body: "Εμφανίζονται μοντέλο, iCloud/Find My και εγγύηση από το API (με έγκυρο κλειδί στο server).",
     icon: CheckCircle2,
   },
 ] as const;
@@ -115,7 +106,32 @@ export default function ImeiCheckPage() {
   const [imei, setImei] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showResult, setShowResult] = useState(false);
+  const [resultData, setResultData] = useState<ImeiLookupSuccess | null>(null);
+  const autoFetchKey = useRef<string | null>(null);
+
+  const runLookup = useCallback(async (digitsRaw: string) => {
+    const digits = normalizeImeiDigits(digitsRaw);
+    if (digits.length !== 15) {
+      setError("Εισάγετε έγκυρο IMEI 15 ψηφίων.");
+      setResultData(null);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    setResultData(null);
+    try {
+      const res = await requestImeiLookup(digits);
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
+      setResultData(res);
+    } catch {
+      setError("Αποτυχία σύνδεσης με τον server. Δοκιμάστε ξανά.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!location.startsWith("/services/imei-check")) return;
@@ -127,31 +143,29 @@ export default function ImeiCheckPage() {
     }
   }, [location]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get("imei");
+    if (!raw) return;
+    const d = normalizeImeiDigits(raw);
+    if (d.length !== 15) return;
+    if (autoFetchKey.current === d) return;
+    autoFetchKey.current = d;
+    void runLookup(d);
+  }, [location, runLookup]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    const digits = normalizeImeiDigits(imei);
-    if (digits.length !== 15) {
-      setError("Εισάγετε έγκυρο IMEI 15 ψηφίων.");
-      setShowResult(false);
-      return;
-    }
-    setLoading(true);
-    setShowResult(false);
-    window.setTimeout(() => {
-      setLoading(false);
-      setShowResult(true);
-    }, 1400);
+    void runLookup(imei);
   };
 
   const digitsForResult = normalizeImeiDigits(imei);
-  const tac = showResult && digitsForResult.length >= 8 ? digitsForResult.slice(0, 8) : "—";
 
   return (
     <div className="min-h-screen bg-[#060607] text-zinc-100 selection:bg-cyan-500/30">
       <Seo
         title="IMEI Check — Δωρεάν έλεγχος συσκευής (TAC, μοντέλο, iCloud)"
-        description="Έλεγχος IMEI 15 ψηφίων: μοντέλο, χωρητικότητα, iCloud, TAC. Οδηγίες *#06*, συμβουλές για μεταχειρισμένα. HiTech Doctor — Apple Expert Hub (demo εμφάνιση)."
+        description="Έλεγχος IMEI 15 ψηφίων: μοντέλο, iCloud/Find My, εγγύηση μέσω IMEI.info API. Οδηγίες *#06*, HiTech Doctor — Apple Expert Hub."
         url="https://hitechdoctor.com/services/imei-check"
       />
       <Helmet>
@@ -190,10 +204,10 @@ export default function ImeiCheckPage() {
                   onChange={(e) => {
                     setImei(normalizeImeiDigits(e.target.value));
                     setError(null);
+                    setResultData(null);
                   }}
                   className="h-12 min-h-12 flex-1 rounded-xl border-white/12 bg-white/[0.07] px-4 text-base tracking-widest text-white placeholder:text-zinc-600 focus-visible:border-cyan-400/40 focus-visible:ring-cyan-400/20 md:text-lg"
                   aria-invalid={!!error}
-                  aria-describedby={error ? "imei-error-page" : undefined}
                 />
                 <div className="flex flex-wrap gap-2 sm:shrink-0">
                   <Button
@@ -221,6 +235,7 @@ export default function ImeiCheckPage() {
                     onClick={() => {
                       setImei(SAMPLE_IMEI);
                       setError(null);
+                      setResultData(null);
                     }}
                   >
                     <Wand2 className="mr-2 h-3.5 w-3.5" />
@@ -228,13 +243,15 @@ export default function ImeiCheckPage() {
                   </Button>
                 </div>
               </div>
-              {error && (
-                <p id="imei-error-page" className="text-xs text-amber-400/90" role="alert">
-                  {error}
-                </p>
-              )}
             </form>
           </div>
+          <ImeiResultCard
+            className="mt-4"
+            loading={loading}
+            error={error && !loading ? error : null}
+            data={resultData}
+            imeiDigits={digitsForResult}
+          />
         </div>
       </div>
 
@@ -284,9 +301,9 @@ export default function ImeiCheckPage() {
                 πρώτα ψηφία) και πολλά ακόμη όταν συνδεθεί πραγματική υπηρεσία έρευνας.
               </p>
               <p className="mt-3 text-sm text-zinc-500">
-                Η λειτουργία παρακάτω εμφανίζει{" "}
-                <span className="text-zinc-400">επίδειξη (demo)</span> — τα δεδομένα αποτελέσματος είναι
-                δείγματα· για πλήρη blacklist, carrier και εγγύηση απαιτείται σύνδεση με πάροχο δεδομένων.
+                Τα αποτελέσματα (μοντέλο, iCloud/Find My, εγγύηση) προέρχονται από το{" "}
+                <span className="text-zinc-400">IMEI.info API</span> μέσω του server — χρειάζεται έγκυρο κλειδί
+                στο .env.
               </p>
             </div>
 
@@ -347,93 +364,20 @@ export default function ImeiCheckPage() {
                   <Shield className="h-7 w-7 text-violet-300" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h2 className="font-display text-xl font-bold text-white md:text-2xl">Αποτέλεσμα ελέγχου</h2>
+                  <h2 className="font-display text-xl font-bold text-white md:text-2xl">Πού βλέπω το αποτέλεσμα;</h2>
                   <p className="mt-1 text-sm text-zinc-500">
-                    Το IMEI εισάγεται πάντα από το πεδίο στην κορυφή της σελίδας.
+                    Το <span className="text-zinc-400">Αποτέλεσμα ελέγχου</span> εμφανίζεται αμέσως κάτω από την
+                    κολλητή μπάρα αναζήτησης — Model, iCloud, Warranty από JSON απάντηση του API.
                   </p>
                 </div>
               </div>
 
-              {!showResult && !loading && (
-                <p className="mt-8 text-center text-sm text-zinc-500">
-                  Συμπληρώστε το IMEI στο πάνω πεδίο και πατήστε <span className="text-zinc-400">Check IMEI</span> για
-                  επίδειξη αποτελεσμάτων.
-                </p>
-              )}
-
-              {loading && (
-                <div className="mt-10 flex items-center justify-center gap-2 text-sm text-zinc-500">
-                  <Loader2 className="h-5 w-5 animate-spin text-violet-400" />
-                  Έλεγχος IMEI…
-                </div>
-              )}
-
-              {showResult && (
-                <div
-                  className={`${GLASS} mt-8 border border-emerald-500/25 bg-emerald-500/[0.07] p-6 md:p-8 animate-in fade-in slide-in-from-top-2 duration-300`}
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
-                    <div>
-                      <Badge className="border-0 bg-emerald-500/20 text-xs font-bold uppercase tracking-wider text-emerald-300">
-                        Demo — βρέθηκε συσκευή
-                      </Badge>
-                      <p className="mt-2 max-w-xl text-xs text-zinc-500">
-                        Τα πεδία παρακάτω είναι επίδειξη. Σε παραγωγή θα εμφανίζονται πραγματικά δεδομένα από
-                        TAC database και παρόχους.
-                      </p>
-                    </div>
-                    <SiApple className="h-8 w-8 text-zinc-400 opacity-80" />
-                  </div>
-
-                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-2xl border border-white/[0.06] bg-black/25 px-4 py-3 sm:col-span-2">
-                      <dt className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-                        IMEI / TAC
-                      </dt>
-                      <dd className="mt-1 font-mono text-sm text-zinc-300">
-                        <span className="text-cyan-400/90">{tac}</span>
-                        <span className="text-zinc-500">{digitsForResult.slice(8)}</span>
-                      </dd>
-                      <p className="mt-1 text-[11px] text-zinc-600">TAC = πρώτα 8 ψηφία (Type Approval Code)</p>
-                    </div>
-                    {(
-                      [
-                        ["Μοντέλο", DEMO_DEVICE.model],
-                        ["Χωρητικότητα", DEMO_DEVICE.capacity],
-                        ["Χρώμα", DEMO_DEVICE.color],
-                        ["Serial", DEMO_DEVICE.serial],
-                        ["Φορέας (carrier)", DEMO_DEVICE.carrier],
-                        ["Blacklist", DEMO_DEVICE.blacklist],
-                        ["Εγγύηση", DEMO_DEVICE.warranty],
-                        ["Ημ. αγοράς", DEMO_DEVICE.purchase],
-                      ] as const
-                    ).map(([k, v]) => (
-                      <div key={k} className="rounded-2xl border border-white/[0.06] bg-black/20 px-4 py-3">
-                        <dt className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">{k}</dt>
-                        <dd className="mt-1 font-display text-base font-semibold text-white">{v}</dd>
-                      </div>
-                    ))}
-                    <div className="rounded-2xl border border-white/[0.06] bg-black/20 px-4 py-3 sm:col-span-2">
-                      <dt className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-                        iCloud
-                      </dt>
-                      <dd className="mt-1 flex items-center gap-2">
-                        <span
-                          className={cn(
-                            "inline-flex items-center rounded-full px-3 py-1 text-sm font-bold",
-                            DEMO_DEVICE.icloudOn
-                              ? "bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-400/30"
-                              : "bg-red-500/20 text-red-300 ring-1 ring-red-400/30"
-                          )}
-                        >
-                          {DEMO_DEVICE.icloudOn ? "ON (Find My)" : "OFF"}
-                        </span>
-                        <span className="text-xs text-zinc-600">(demo τιμή)</span>
-                      </dd>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <p className="mt-6 text-sm leading-relaxed text-zinc-400">
+                Ρυθμίστε στο server το <span className="font-mono text-xs text-cyan-300/90">IMEI_INFO_API_KEY</span>{" "}
+                (IMEI.info) ή προαιρετικά <span className="font-mono text-xs text-cyan-300/90">IMEI_LOOKUP_URL_TEMPLATE</span>{" "}
+                για δικό σας endpoint (placeholders <span className="font-mono">{"{imei}"}</span>,{" "}
+                <span className="font-mono">{"{key}"}</span>).
+              </p>
 
               <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-white/[0.06] pt-6">
                 <Link href="/apple-service" className="text-sm font-medium text-violet-400/90 hover:text-violet-300">
@@ -531,14 +475,15 @@ export default function ImeiCheckPage() {
                   όπου υπάρχει διασύνδεση — επιπλέον ελέγχοι (blacklist, φορέας, simlock).
                 </AccordionContent>
               </AccordionItem>
-              <AccordionItem value="demo" className="border-white/10 border-b-0">
+              <AccordionItem value="api" className="border-white/10 border-b-0">
                 <AccordionTrigger className="text-left text-zinc-200 hover:no-underline">
-                  Τι σημαίνει «demo» εδώ;
+                  Πώς λειτουργεί το IMEI.info API;
                 </AccordionTrigger>
                 <AccordionContent className="text-zinc-400">
-                  Η HiTech Doctor εμφανίζει δείγματα αποτελεσμάτων για να δείτε τη ροή της σελίδας. Για
-                  πραγματικά δεδομένα απαιτείται ενσωμάτωση με επίσημες ή εμπορικές πηγές IMEI lookup — μπορούμε
-                  να το προσθέσουμε στο μέλλον κατά προτίμησή σας.
+                  Ο server καλεί το <strong className="text-zinc-300">IMEI.info API</strong> (με μεταβλητό{" "}
+                  <span className="font-mono text-xs">service</span>) ή δικό σας URL μέσω{" "}
+                  <span className="font-mono text-xs">IMEI_LOOKUP_URL_TEMPLATE</span>. Το κλειδί μένει στο .env —
+                  ποτέ στο browser.
                 </AccordionContent>
               </AccordionItem>
             </Accordion>

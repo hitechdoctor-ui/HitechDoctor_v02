@@ -31,6 +31,7 @@ import {
   type AdminUser
 } from "@shared/schema";
 import { eq, desc, and, sql, lte, gte, count } from "drizzle-orm";
+import { queueHubSpotContactSync } from "./hubspot";
 
 export interface IStorage {
   // Products
@@ -196,15 +197,20 @@ export class DatabaseStorage implements IStorage {
 
   async upsertCustomerByEmail(name: string, email: string, phone?: string | null): Promise<Customer> {
     const existing = await this.getCustomerByEmail(email);
+    let result: Customer;
     if (existing) {
       if (phone && !existing.phone) {
         await db.update(customers).set({ phone }).where(eq(customers.id, existing.id));
-        return { ...existing, phone };
+        result = { ...existing, phone };
+      } else {
+        result = existing;
       }
-      return existing;
+    } else {
+      const [created] = await db.insert(customers).values({ name, email, phone: phone || null }).returning();
+      result = created;
     }
-    const [created] = await db.insert(customers).values({ name, email, phone: phone || null }).returning();
-    return created;
+    queueHubSpotContactSync({ name: result.name, email: result.email, phone: result.phone });
+    return result;
   }
 
   async getCustomerSubscriptions(email: string): Promise<Subscription[]> {
@@ -267,6 +273,15 @@ export class DatabaseStorage implements IStorage {
     } else {
       const [newCustomer] = await db.insert(customers).values(payload.customer).returning();
       customerId = newCustomer.id;
+    }
+
+    const customerForHubspot = await this.getCustomer(customerId);
+    if (customerForHubspot) {
+      queueHubSpotContactSync({
+        name: customerForHubspot.name,
+        email: customerForHubspot.email,
+        phone: customerForHubspot.phone,
+      });
     }
 
     let totalAmount = 0;
