@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Package, Users, ShoppingCart, LayoutDashboard, LogOut, Wrench, Euro, Menu, X, Shield, Globe, MessageSquare, Lock, Mail, Eye, EyeOff, UserCog } from "lucide-react";
+import { Package, Users, ShoppingCart, LayoutDashboard, LogOut, Wrench, Euro, Menu, X, Shield, Globe, MessageSquare, Lock, Mail, Eye, EyeOff, UserCog, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
@@ -146,6 +146,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin/orders",                       label: "Παραγγελίες",               icon: ShoppingCart    },
     { href: "/admin/products",                     label: "Προϊόντα eShop",            icon: Package         },
     { href: "/admin/oikonomika",                   label: "Οικονομικά",                icon: Euro            },
+    { href: "/admin/ipsw-downloads",               label: "IPSW λήψεις",               icon: Download        },
     { href: "/admin/users",                        label: "Διαχειριστές",              icon: UserCog         },
   ];
 

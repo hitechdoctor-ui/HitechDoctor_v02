@@ -3,7 +3,9 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { ReviewsSection } from "@/components/reviews-section";
 import { Breadcrumb } from "@/components/breadcrumb";
-import { Phone, Mail, Clock, MapPin, MessageCircle, Send, QrCode, UserPlus } from "lucide-react";
+import { Phone, Mail, Clock, MapPin, Send, QrCode, UserPlus } from "lucide-react";
+import { SiViber } from "react-icons/si";
+import { buildViberUrl } from "@/lib/viber";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
@@ -27,14 +29,14 @@ const INFO_CARDS = [
     glow: "group-hover:shadow-emerald-500/20",
   },
   {
-    icon: MessageCircle,
-    label: "WhatsApp",
+    icon: SiViber,
+    label: "Viber",
     value: "698 188 2005",
-    href: "https://wa.me/306981882005",
+    href: buildViberUrl(),
     cta: "Στείλε μήνυμα",
-    color: "text-green-400",
-    bg: "bg-green-500/10 border-green-500/20",
-    glow: "group-hover:shadow-green-500/20",
+    color: "text-[#7360f2]",
+    bg: "bg-[#7360f2]/10 border-[#7360f2]/25",
+    glow: "group-hover:shadow-[#7360f2]/25",
   },
   {
     icon: Mail,
@@ -114,7 +116,7 @@ export default function Contact() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} />
       <Helmet>
         <title>Επικοινωνία | HiTech Doctor – Επισκευές Κινητών & Τεχνολογία</title>
-        <meta name="description" content="Επικοινωνήστε με το HiTech Doctor. Τηλέφωνο, WhatsApp, email και χάρτης. Επισκευές κινητών, tablet, laptop και gaming console." />
+        <meta name="description" content="Επικοινωνήστε με το HiTech Doctor. Τηλέφωνο, Viber, email και χάρτης. Επισκευές κινητών, tablet, laptop και gaming console." />
         <meta property="og:title" content="Επικοινωνία | HiTech Doctor" />
         <meta property="og:description" content="Βρείτε μας στον χάρτη ή επικοινωνήστε μαζί μας τηλεφωνικά και email." />
       </Helmet>

@@ -3,12 +3,13 @@ import {
   ShoppingCart, Wrench, Package, ShieldCheck, Menu, Zap,
   Smartphone, ChevronRight, Hammer, Laptop, Monitor, Watch,
   Gamepad2, Tablet, LogIn, MapPin, Shield, Cable, Tag, Info,
-  MessageCircle, HelpCircle, Globe,
+  MessageCircle, HelpCircle, Globe, Download, ScanSearch,
 } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useCartStore } from "@/store/cart";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { CartDrawer } from "@/components/cart-drawer";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
@@ -20,6 +21,8 @@ import {
 } from "@/components/ui/navigation-menu";
 import { SiApple, SiSamsung, SiXiaomi, SiHuawei, SiOneplus } from "react-icons/si";
 import { GlobalSearch } from "@/components/global-search";
+import { SiViber } from "react-icons/si";
+import { buildViberUrl } from "@/lib/viber";
 
 // ── Category meta: subcategory (or "mobile") → display info ──────────────────
 const CATEGORY_META: Record<string, { label: string; icon: React.ElementType; color: string; bg: string; tab: string }> = {
@@ -55,6 +58,20 @@ const PHONE_BRANDS = [
 
 // ── Other repair services ──────────────────────────────────────────────────────
 const OTHER_SERVICES = [
+  {
+    name: "IPSW Downloads",
+    href: "/services/ipsw-download",
+    icon: Download,
+    color: "text-cyan-400",
+    badge: "Νέο",
+  },
+  {
+    name: "IMEI Check",
+    href: "/services/imei-check",
+    icon: ScanSearch,
+    color: "text-violet-400",
+    badge: "Νέο",
+  },
   { name: "Επισκευή Tablet",      href: "/services/episkeui-tablet", icon: Tablet,   color: "text-sky-400" },
   { name: "Επισκευή PlayStation", href: "/services/episkeui-playstation", icon: Gamepad2, color: "text-blue-400" },
   { name: "Επισκευή Laptop",      href: "/services/episkeui-laptop", icon: Laptop,   color: "text-emerald-400" },
@@ -155,6 +172,17 @@ export function Navbar() {
             Αρχική
           </Link>
 
+          <Link
+            href="/apple-service"
+            data-testid="nav-expert-hub"
+            className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors hover:text-primary flex items-center gap-2 ${
+              isActive("/apple-service") ? "text-primary" : "text-muted-foreground"
+            }`}
+          >
+            <SiApple className="w-4 h-4 opacity-90" />
+            Expert Hub
+          </Link>
+
           {/* Υπηρεσίες + eShop + Info — shared NavigationMenu */}
           <NavigationMenu>
             <NavigationMenuList>
@@ -214,9 +242,24 @@ export function Navbar() {
                         </div>
                         <div className="flex flex-col gap-1">
                           {OTHER_SERVICES.map((svc) => (
-                            <Link key={svc.name} href={svc.href} data-testid={`nav-service-${svc.name.toLowerCase().replace(/\s+/g, "-")}`} className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-white/5 transition-colors group">
+                            <Link
+                              key={svc.name}
+                              href={svc.href}
+                              data-testid={`nav-service-${svc.name.toLowerCase().replace(/\s+/g, "-")}`}
+                              className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-white/5 transition-colors group"
+                            >
                               <svc.icon className={`w-4 h-4 shrink-0 ${svc.color} group-hover:scale-110 transition-transform`} />
-                              <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors leading-tight">{svc.name}</span>
+                              <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors leading-tight flex-1 min-w-0">
+                                {svc.name}
+                              </span>
+                              {"badge" in svc && svc.badge ? (
+                                <Badge
+                                  variant="outline"
+                                  className="shrink-0 text-[9px] font-bold px-1.5 py-0 h-5 border-primary/40 bg-primary/15 text-primary uppercase tracking-wide"
+                                >
+                                  {svc.badge}
+                                </Badge>
+                              ) : null}
                             </Link>
                           ))}
                         </div>
@@ -388,6 +431,18 @@ export function Navbar() {
           {/* Desktop search */}
           <GlobalSearch className="hidden md:block w-56 lg:w-72" />
 
+          <a
+            href={buildViberUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden md:flex items-center justify-center p-2 rounded-xl border border-[#7360f2]/35 bg-[#7360f2]/12 hover:bg-[#7360f2]/20 hover:border-[#7360f2]/50 transition-all"
+            aria-label="Viber — HiTech Doctor"
+            title="Viber"
+            data-testid="nav-viber"
+          >
+            <SiViber className="w-5 h-5 text-[#7360f2]" />
+          </a>
+
           {/* Cart — icon only, primary color */}
           <button
             className="relative p-2 rounded-xl border border-white/10 hover:border-primary/50 bg-white/5 hover:bg-primary/10 transition-all"
@@ -415,10 +470,31 @@ export function Navbar() {
               <div className="mt-12 mb-4">
                 <GlobalSearch placeholder="Αναζήτηση..." />
               </div>
+              <a
+                href={buildViberUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mb-4 flex items-center justify-center gap-2 rounded-xl border border-[#7360f2]/35 bg-[#7360f2]/12 px-3 py-3 text-sm font-semibold text-[#c4b6ff] hover:bg-[#7360f2]/20"
+                data-testid="nav-mobile-viber"
+              >
+                <SiViber className="h-5 w-5 text-[#7360f2]" />
+                Viber
+              </a>
               <nav className="flex flex-col gap-2">
                 <Link href="/" className={`flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium ${location === "/" ? "text-primary bg-primary/10" : "text-foreground"}`}>
                   <Wrench className="w-5 h-5" />
                   Αρχική
+                </Link>
+
+                <Link
+                  href="/apple-service"
+                  data-testid="nav-mobile-expert-hub"
+                  className={`flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium ${
+                    isActive("/apple-service") ? "text-primary bg-primary/10" : "text-foreground"
+                  }`}
+                >
+                  <SiApple className="w-5 h-5 opacity-90" />
+                  Expert Hub
                 </Link>
 
                 {/* Mobile: Υπηρεσίες */}
@@ -443,9 +519,22 @@ export function Navbar() {
                       <div className="mt-1 pt-1 border-t border-white/8">
                         <p className="text-[10px] font-bold text-muted-foreground px-3 py-1 uppercase tracking-wider">Άλλες Υπηρεσίες</p>
                         {OTHER_SERVICES.map((svc) => (
-                          <Link key={svc.name} href={svc.href} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 text-sm text-foreground">
-                            <svc.icon className={`w-4 h-4 ${svc.color}`} />
-                            {svc.name}
+                          <Link
+                            key={svc.name}
+                            href={svc.href}
+                            data-testid={`nav-mobile-service-${svc.name.toLowerCase().replace(/\s+/g, "-")}`}
+                            className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 text-sm text-foreground"
+                          >
+                            <svc.icon className={`w-4 h-4 shrink-0 ${svc.color}`} />
+                            <span className="flex-1 min-w-0">{svc.name}</span>
+                            {"badge" in svc && svc.badge ? (
+                              <Badge
+                                variant="outline"
+                                className="shrink-0 text-[9px] font-bold px-1.5 py-0 h-5 border-primary/40 bg-primary/15 text-primary uppercase tracking-wide"
+                              >
+                                {svc.badge}
+                              </Badge>
+                            ) : null}
                           </Link>
                         ))}
                       </div>

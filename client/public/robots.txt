@@ -1,7 +1,10 @@
 User-agent: *
 Allow: /
-
 Disallow: /admin/
 Disallow: /checkout
 
-Sitemap: https://hitechdoctor.com/sitemap.xml
+# Αποκλεισμός AI Bots (Προαιρετικό αλλά προτείνεται)
+User-agent: GPTBot
+Disallow: /
+
+Sitemap: https://www.hitechdoctor.com/sitemap.xml

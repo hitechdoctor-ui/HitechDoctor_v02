@@ -22,6 +22,8 @@ import {
   Cpu,
   ServerCrash,
   ScanLine,
+  Download,
+  ScanSearch,
 } from "lucide-react";
 import { Link } from "wouter";
 import { SiApple, SiSamsung, SiXiaomi, SiHuawei, SiOneplus } from "react-icons/si";
@@ -42,6 +44,36 @@ const allServices = [
     timeFrom: "30 λεπτά",
     tag: "Δημοφιλές",
     href: "/services/episkeui-kiniton",
+  },
+  {
+    id: "ipsw-download",
+    icon: Download,
+    title: "IPSW Download",
+    subtitle: "Επίσημα firmware iPhone (.ipsw) — επιλογή μοντέλου & λήψη",
+    description:
+      "Κατεβάστε επίσημα αρχεία restore για iPhone μέσω του καταλόγου ipsw.me. Εμφάνιση έκδοσης iOS, build ID και συνδέσμων λήψης από τους διακομιστές της Apple.",
+    features: ["Όλα τα μοντέλα iPhone", "Έκδοση & build ID", "Υπογεγραμμένα builds", "Σύνδεσμοι Apple CDN"],
+    image: "https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&q=80&w=900",
+    imageAlt: "iPhone λογισμικό firmware IPSW Apple",
+    priceFrom: "Δωρεάν",
+    timeFrom: "Άμεσα",
+    tag: "Νέο",
+    href: "/services/ipsw-download",
+  },
+  {
+    id: "imei-check",
+    icon: ScanSearch,
+    title: "IMEI Check",
+    subtitle: "Έλεγχος συσκευής Apple — μοντέλο, χωρητικότητα, iCloud",
+    description:
+      "Εισάγετε το IMEI για επίδειξη στοιχείων συσκευής (λειτουργία demo). Σύνδεση με Expert Hub & Apple Service Hub.",
+    features: ["Έλεγχος 15ψήφιου IMEI", "Εμφάνιση μοντέλου & χωρητικότητας", "Κατάσταση iCloud ON/OFF", "Ίδιο premium στυλ με το IPSW tool"],
+    image: "https://images.unsplash.com/photo-1592899677977-99c217a9fc72?auto=format&fit=crop&q=80&w=900",
+    imageAlt: "Ελεγχος IMEI iPhone Apple",
+    priceFrom: "Δωρεάν",
+    timeFrom: "Άμεσα",
+    tag: "Νέο",
+    href: "/services/imei-check",
   },
   {
     id: "episkeui-tablet",

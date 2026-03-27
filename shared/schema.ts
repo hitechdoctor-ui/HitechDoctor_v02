@@ -104,6 +104,16 @@ export const adminUsers = pgTable("admin_users", {
   createdAt: timestamp("created_at").defaultNow(),
 }, (t) => [uniqueIndex("admin_users_email_idx").on(t.email)]);
 
+// --- IPSW download tracking (public tool page) ---
+export const ipswDownloadEvents = pgTable("ipsw_download_events", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  deviceIdentifier: text("device_identifier").notNull(),
+  deviceName: text("device_name"),
+  version: text("version").notNull(),
+  buildId: text("build_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // --- Website Inquiries ---
 export const websiteInquiries = pgTable("website_inquiries", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -143,6 +153,7 @@ export type RepairItem = typeof repairItems.$inferSelect;
 export type Subscription = typeof subscriptions.$inferSelect;
 export type AdminUser = typeof adminUsers.$inferSelect;
 export type WebsiteInquiry = typeof websiteInquiries.$inferSelect;
+export type IpswDownloadEvent = typeof ipswDownloadEvents.$inferSelect;
 
 // Προσθήκη του Schema για το Checkout
 export const checkoutPayloadSchema = z.object({

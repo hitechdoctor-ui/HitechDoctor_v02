@@ -524,5 +524,43 @@ export async function registerRoutes(
     }
   });
 
+  // --- IPSW download tracking (public page + admin stats) ---
+  app.post("/api/ipsw/track", async (req, res) => {
+    try {
+      const schema = z.object({
+        deviceIdentifier: z.string().min(1).max(128),
+        deviceName: z.string().max(256).optional().nullable(),
+        version: z.string().min(1).max(64),
+        buildId: z.string().min(1).max(64),
+      });
+      const data = schema.parse(req.body);
+      const row = await storage.recordIpswDownload(data);
+      res.status(201).json({ ok: true, id: row.id });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0]?.message ?? "Invalid payload" });
+      }
+      console.error("[ipsw/track]", err);
+      res.status(500).json({ message: "Σφάλμα καταγραφής" });
+    }
+  });
+
+  app.get("/api/admin/ipsw-downloads", async (req, res) => {
+    const auth = req.headers.authorization || "";
+    const token = auth.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const decoded = Buffer.from(token, "base64").toString("utf8");
+      const payload = JSON.parse(decoded);
+      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
+      const user = await storage.getAdminByEmail(payload.email);
+      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      const stats = await storage.getIpswDownloadStats();
+      res.json(stats);
+    } catch {
+      res.status(401).json({ message: "Unauthorized" });
+    }
+  });
+
   return httpServer;
 }

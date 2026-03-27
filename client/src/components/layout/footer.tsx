@@ -1,8 +1,10 @@
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { PriceDisclaimer } from "@/components/price-disclaimer";
+import { RepairTrackerSection } from "@/components/repair-tracker-section";
 import { Wrench, Package, Shield, Phone, Mail, MapPin, Facebook, Instagram, ExternalLink, Smartphone, Cable, Laptop, Monitor } from "lucide-react";
-import { SiTiktok } from "react-icons/si";
+import { SiTiktok, SiViber } from "react-icons/si";
+import { buildViberUrl } from "@/lib/viber";
 
 const NAV_MENUS = [
   {
@@ -20,6 +22,8 @@ const NAV_MENUS = [
     links: [
       { label: "Επισκευή iPhone",   href: "/services/episkeui-iphone",  external: false },
       { label: "Επισκευή Κινητών",  href: "/services/episkeui-kiniton", external: false },
+      { label: "IPSW Download (iPhone)", href: "/services/ipsw-download", external: false },
+      { label: "IMEI Check", href: "/services/imei-check", external: false },
       { label: "Όλες οι Υπηρεσίες", href: "/services",                  external: false },
     ],
   },
@@ -83,6 +87,9 @@ export function Footer() {
   return (
     <footer className="border-t border-white/8 bg-card/50 backdrop-blur-sm mt-0">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+        <div className="mb-12">
+          <RepairTrackerSection />
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-10">
 
           {/* Brand column */}
@@ -129,6 +136,10 @@ export function Footer() {
               <a href="https://tiktok.com/@hitechdoctor" target="_blank" rel="noopener noreferrer" aria-label="TikTok" data-testid="footer-social-tiktok"
                 className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:border-white/30 hover:bg-white/10 transition-all">
                 <SiTiktok className="w-3.5 h-3.5 text-muted-foreground" />
+              </a>
+              <a href={buildViberUrl()} target="_blank" rel="noopener noreferrer" aria-label="Viber" data-testid="footer-social-viber"
+                className="w-8 h-8 rounded-lg bg-[#7360f2]/15 border border-[#7360f2]/35 flex items-center justify-center hover:border-[#7360f2]/55 hover:bg-[#7360f2]/25 transition-all">
+                <SiViber className="w-3.5 h-3.5 text-[#7360f2]" />
               </a>
             </div>
           </div>

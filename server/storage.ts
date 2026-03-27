@@ -8,6 +8,7 @@ import {
   repairItems,
   subscriptions,
   websiteInquiries,
+  ipswDownloadEvents,
   adminUsers,
   type Product,
   type InsertProduct,
@@ -25,10 +26,11 @@ import {
   type InsertSubscription,
   type WebsiteInquiry,
   type InsertWebsiteInquiry,
+  type IpswDownloadEvent,
   type CheckoutPayload,
   type AdminUser
 } from "@shared/schema";
-import { eq, desc, and, sql, lte, gte } from "drizzle-orm";
+import { eq, desc, and, sql, lte, gte, count } from "drizzle-orm";
 
 export interface IStorage {
   // Products
@@ -94,6 +96,21 @@ export interface IStorage {
   createAdminUser(name: string, email: string, passwordHash: string, role?: string): Promise<Omit<AdminUser, "passwordHash">>;
   deleteAdminUser(id: number): Promise<void>;
   updateAdminPassword(id: number, passwordHash: string): Promise<void>;
+
+  // IPSW downloads
+  recordIpswDownload(data: {
+    deviceIdentifier: string;
+    deviceName?: string | null;
+    version: string;
+    buildId: string;
+  }): Promise<IpswDownloadEvent>;
+  getIpswDownloadStats(): Promise<{
+    total: number;
+    last7Days: number;
+    last30Days: number;
+    byDevice: { deviceIdentifier: string; deviceName: string | null; count: number }[];
+    recent: IpswDownloadEvent[];
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -465,6 +482,79 @@ export class DatabaseStorage implements IStorage {
 
   async updateAdminPassword(id: number, passwordHash: string): Promise<void> {
     await db.update(adminUsers).set({ passwordHash }).where(eq(adminUsers.id, id));
+  }
+
+  // --- IPSW download tracking ---
+  async recordIpswDownload(data: {
+    deviceIdentifier: string;
+    deviceName?: string | null;
+    version: string;
+    buildId: string;
+  }): Promise<IpswDownloadEvent> {
+    const [row] = await db.insert(ipswDownloadEvents).values({
+      deviceIdentifier: data.deviceIdentifier,
+      deviceName: data.deviceName ?? null,
+      version: data.version,
+      buildId: data.buildId,
+    }).returning();
+    return row;
+  }
+
+  async getIpswDownloadStats(): Promise<{
+    total: number;
+    last7Days: number;
+    last30Days: number;
+    byDevice: { deviceIdentifier: string; deviceName: string | null; count: number }[];
+    recent: IpswDownloadEvent[];
+  }> {
+    const now = new Date();
+    const d7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const d30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    const [totalRow] = await db
+      .select({ c: sql<number>`cast(count(*) as integer)` })
+      .from(ipswDownloadEvents);
+    const total = totalRow?.c ?? 0;
+
+    const [r7] = await db
+      .select({ c: sql<number>`cast(count(*) as integer)` })
+      .from(ipswDownloadEvents)
+      .where(gte(ipswDownloadEvents.createdAt, d7));
+    const last7Days = r7?.c ?? 0;
+
+    const [r30] = await db
+      .select({ c: sql<number>`cast(count(*) as integer)` })
+      .from(ipswDownloadEvents)
+      .where(gte(ipswDownloadEvents.createdAt, d30));
+    const last30Days = r30?.c ?? 0;
+
+    const byDeviceRows = await db
+      .select({
+        deviceIdentifier: ipswDownloadEvents.deviceIdentifier,
+        deviceName: sql<string | null>`max(${ipswDownloadEvents.deviceName})`,
+        cnt: count(),
+      })
+      .from(ipswDownloadEvents)
+      .groupBy(ipswDownloadEvents.deviceIdentifier)
+      .orderBy(desc(count()));
+
+    const recent = await db
+      .select()
+      .from(ipswDownloadEvents)
+      .orderBy(desc(ipswDownloadEvents.createdAt))
+      .limit(80);
+
+    return {
+      total,
+      last7Days,
+      last30Days,
+      byDevice: byDeviceRows.map((r) => ({
+        deviceIdentifier: r.deviceIdentifier,
+        deviceName: r.deviceName,
+        count: r.cnt,
+      })),
+      recent,
+    };
   }
 }
 
