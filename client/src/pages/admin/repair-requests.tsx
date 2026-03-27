@@ -12,7 +12,7 @@ import {
   ChevronDown, ChevronUp, Plus, Trash2, Package, Download,
 } from "lucide-react";
 import { exportToCsv, formatDateEl } from "@/lib/csv-export";
-import { apiRequest, invalidateRepairFinancialQueries } from "@/lib/queryClient";
+import { apiRequest, getAdminAuthHeaders, invalidateRepairFinancialQueries } from "@/lib/queryClient";
 import { type RepairRequest, type RepairItem } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo, Fragment } from "react";
@@ -184,7 +184,14 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
 
   const { data: items = [], isLoading } = useQuery<RepairItem[]>({
     queryKey: ["/api/repair-requests", req.id, "items"],
-    queryFn: () => fetch(`/api/repair-requests/${req.id}/items`).then(r => r.json()),
+    queryFn: async () => {
+      const res = await fetch(`/api/repair-requests/${req.id}/items`, {
+        credentials: "include",
+        headers: getAdminAuthHeaders(),
+      });
+      if (!res.ok) throw new Error("Failed to load items");
+      return res.json();
+    },
   });
 
   const addItem = useMutation({
@@ -224,7 +231,7 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
   const savePrice = useMutation({
     mutationFn: (price: string | null) => apiRequest("PATCH", `/api/repair-requests/${req.id}`, { price }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/repair-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/repair-requests"] });
       invalidateRepairFinancialQueries(queryClient);
       toast({ title: "Αποθηκεύτηκε", description: "Η τιμή ενημερώθηκε." });
     },
@@ -241,7 +248,7 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
 
   return (
     <tr>
-      <td colSpan={10} className="px-0 py-0">
+      <td colSpan={11} className="px-0 py-0">
         <div className="bg-background/60 border-t border-b border-white/8 px-6 py-5">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
@@ -482,6 +489,10 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
 }
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
+type MeResponse = { ok?: boolean; role?: string; id?: number };
+
+type AdminUserRow = { id: number; name: string; email: string; role: string };
+
 export default function AdminRepairRequests() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -489,15 +500,35 @@ export default function AdminRepairRequests() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
 
+  const { data: me } = useQuery<MeResponse>({
+    queryKey: ["/api/admin/me"],
+  });
+  const isStaff = me?.role === "staff";
+
+  const { data: assignUsers = [] } = useQuery<AdminUserRow[]>({
+    queryKey: ["/api/admin/users"],
+    enabled: !isStaff,
+  });
+
   const { data: requests, isLoading } = useQuery<RepairRequest[]>({
-    queryKey: ["/api/repair-requests"],
+    queryKey: ["/api/admin/repair-requests"],
+  });
+
+  const assignMutation = useMutation({
+    mutationFn: ({ id, assignedToUserId }: { id: number; assignedToUserId: number | null }) =>
+      apiRequest("PATCH", `/api/repair-requests/${id}`, { assignedToUserId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/repair-requests"] });
+      toast({ title: "Αποθηκεύτηκε", description: "Η ανάθεση ενημερώθηκε." });
+    },
+    onError: () => toast({ title: "Σφάλμα", description: "Αδυναμία αποθήκευσης.", variant: "destructive" }),
   });
 
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: string }) =>
       apiRequest("PATCH", `/api/repair-requests/${id}/status`, { status }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/repair-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/repair-requests"] });
       invalidateRepairFinancialQueries(queryClient);
       toast({ title: "Ενημερώθηκε", description: "Η κατάσταση αποθηκεύτηκε." });
     },
@@ -544,6 +575,11 @@ export default function AdminRepairRequests() {
         <div>
           <h1 className="text-3xl font-display font-bold">Αιτήματα Επισκευής</h1>
           <p className="text-muted-foreground mt-1">Διαχείριση και παρακολούθηση αιτημάτων επισκευής</p>
+          {isStaff && (
+            <p className="text-xs text-amber-400/90 mt-2">
+              Βλέπετε μόνο τα αιτήματα που έχουν ανατεθεί στον λογαριασμό σας.
+            </p>
+          )}
         </div>
         <Button
           variant="outline"
@@ -642,7 +678,7 @@ export default function AdminRepairRequests() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-white/8 bg-white/2 text-left">
-                    {["", "#", "Πελάτης", "Επικοινωνία", "Συσκευή", "Serial / Κωδικός", "Τιμή", "Ημερομηνία", "Κατάσταση", ""].map((h, i) => (
+                    {["", "#", "Πελάτης", "Επικοινωνία", "Συσκευή", "Serial / Κωδικός", "Τιμή", "Ημερομηνία", "Υπεύθυνος", "Κατάσταση", ""].map((h, i) => (
                       <th key={i} className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
@@ -731,6 +767,38 @@ export default function AdminRepairRequests() {
                           </td>
                           <td className="px-4 py-4">
                             <span className="text-xs text-muted-foreground whitespace-nowrap">{formatDate(req.createdAt)}</span>
+                          </td>
+                          <td className="px-4 py-4 max-w-[160px]">
+                            {isStaff ? (
+                              <span className="text-xs text-muted-foreground">
+                                {req.assignedToUserId != null ? "Εσείς" : "—"}
+                              </span>
+                            ) : (
+                              <Select
+                                value={req.assignedToUserId != null ? String(req.assignedToUserId) : "none"}
+                                onValueChange={(v) =>
+                                  assignMutation.mutate({
+                                    id: req.id,
+                                    assignedToUserId: v === "none" ? null : parseInt(v, 10),
+                                  })
+                                }
+                                disabled={assignMutation.isPending}
+                              >
+                                <SelectTrigger className="h-8 text-xs border-white/10 bg-card" data-testid={`select-assign-${req.id}`}>
+                                  <SelectValue placeholder="Ανάθεση" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-background border-white/10">
+                                  <SelectItem value="none" className="text-xs">— χωρίς ανάθεση</SelectItem>
+                                  {assignUsers
+                                    .filter((u) => u.role === "staff")
+                                    .map((u) => (
+                                      <SelectItem key={u.id} value={String(u.id)} className="text-xs">
+                                        {u.name}
+                                      </SelectItem>
+                                    ))}
+                                </SelectContent>
+                              </Select>
+                            )}
                           </td>
                           <td className="px-4 py-4">
                             <Select

@@ -67,7 +67,7 @@ export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" 
         ...(hasPrice ? { price: netPrice.toFixed(2), priceIncludesVat: selectedBox === "gross" } : {}),
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/repair-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/repair-requests"] });
       invalidateRepairFinancialQueries(queryClient);
       setSubmitted(true);
     },

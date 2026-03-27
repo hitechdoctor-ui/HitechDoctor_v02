@@ -109,9 +109,22 @@ export default function AdminUsersPage() {
                     <td className="px-4 py-3 font-medium">{user.name}</td>
                     <td className="px-4 py-3 text-muted-foreground">{user.email}</td>
                     <td className="px-4 py-3">
-                      <Badge variant={user.role === "superadmin" ? "default" : "secondary"} className="gap-1">
-                        {user.role === "superadmin" ? <ShieldCheck className="w-3 h-3" /> : <Shield className="w-3 h-3" />}
-                        {user.role === "superadmin" ? "Super Admin" : "Admin"}
+                      <Badge
+                        variant={user.role === "superadmin" ? "default" : "secondary"}
+                        className="gap-1"
+                      >
+                        {user.role === "superadmin" ? (
+                          <ShieldCheck className="w-3 h-3" />
+                        ) : user.role === "staff" ? (
+                          <Eye className="w-3 h-3" />
+                        ) : (
+                          <Shield className="w-3 h-3" />
+                        )}
+                        {user.role === "superadmin"
+                          ? "Super Admin"
+                          : user.role === "staff"
+                            ? "Προσωπικό"
+                            : "Admin"}
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
@@ -209,6 +222,7 @@ export default function AdminUsersPage() {
                 <SelectContent>
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="superadmin">Super Admin</SelectItem>
+                  <SelectItem value="staff">Προσωπικό (μόνο ανατεθέντα αιτήματα)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

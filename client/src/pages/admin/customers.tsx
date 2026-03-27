@@ -2,15 +2,40 @@ import { AdminLayout } from "@/components/layout/admin-layout";
 import { Seo } from "@/components/seo";
 import { useCustomers } from "@/hooks/use-customers";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Mail, Phone, MapPin, ChevronRight, Download } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Mail, Phone, MapPin, ChevronRight, Download, Search, X } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { exportToCsv, formatDateEl } from "@/lib/csv-export";
+import { useMemo, useState } from "react";
 
 export default function AdminCustomers() {
   const { data: customers, isLoading } = useCustomers();
+  const [q, setQ] = useState("");
 
-  const formatDate = (dateString: string) => {
+  const filtered = useMemo(() => {
+    if (!customers) return [];
+    const s = q.trim().toLowerCase();
+    if (!s) return customers;
+    return customers.filter((c) => {
+      const name = c.name.toLowerCase();
+      const email = c.email.toLowerCase();
+      const phone = (c.phone ?? "").replace(/\s/g, "");
+      const qDigits = s.replace(/\D/g, "");
+      const phoneDigits = phone.replace(/\D/g, "");
+      const phoneMatch =
+        qDigits.length >= 3 && phoneDigits.includes(qDigits);
+      return (
+        name.includes(s) ||
+        email.includes(s) ||
+        phone.includes(s.replace(/\s/g, "")) ||
+        phoneMatch
+      );
+    });
+  }, [customers, q]);
+
+  const formatDate = (dateString: string | Date | null | undefined) => {
+    if (!dateString) return "—";
     return new Date(dateString).toLocaleDateString('el-GR', {
       day: '2-digit', month: 'short', year: 'numeric'
     });
@@ -30,6 +55,27 @@ export default function AdminCustomers() {
             </Link>
           </p>
         </div>
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto md:ml-auto">
+          <div className="relative flex-1 min-w-[200px] max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <Input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Αναζήτηση: όνομα, email, τηλέφωνο..."
+              className="pl-9 pr-9 h-10 bg-card border-white/10"
+              data-testid="input-customers-search"
+            />
+            {q && (
+              <button
+                type="button"
+                onClick={() => setQ("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
+                aria-label="Καθαρισμός"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         <Button
           variant="outline"
           size="sm"
@@ -51,6 +97,7 @@ export default function AdminCustomers() {
           <Download className="w-4 h-4" />
           Εξαγωγή CSV
         </Button>
+        </div>
       </div>
 
       <div className="bg-card rounded-2xl border border-white/5 overflow-hidden">
@@ -69,8 +116,10 @@ export default function AdminCustomers() {
               <TableRow><TableCell colSpan={5} className="text-center py-8">Φόρτωση...</TableCell></TableRow>
             ) : customers?.length === 0 ? (
               <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Δεν υπάρχουν πελάτες</TableCell></TableRow>
+            ) : filtered.length === 0 ? (
+              <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Δεν βρέθηκαν πελάτες με αυτή την αναζήτηση</TableCell></TableRow>
             ) : (
-              customers?.map(customer => (
+              filtered.map(customer => (
                 <TableRow
                   key={customer.id}
                   className="border-white/5 hover:bg-white/5 cursor-pointer transition-colors"

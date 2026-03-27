@@ -109,7 +109,7 @@ function decodeAdminToken(token: string | null): { name?: string; email?: string
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [token, setToken] = useState<string | null>(() => {
     try { return localStorage.getItem(STORAGE_KEY); } catch { return null; }
@@ -129,6 +129,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       .catch(() => {});
   }, [token]);
 
+  /** Ρόλος staff: μόνο «Αιτήματα Επισκευής» — όχι CRM, παραγγελίες κ.λπ. */
+  useEffect(() => {
+    if (adminInfo?.role !== "staff") return;
+    const allowed =
+      location === "/admin/repair-requests" || location.startsWith("/admin/repair-requests/");
+    if (!allowed) setLocation("/admin/repair-requests");
+  }, [adminInfo?.role, location, setLocation]);
+
   if (!token) return <AdminLogin onLogin={(t) => { setToken(t); setAdminInfo(decodeAdminToken(t)); }} />;
 
   const handleLogout = () => {
@@ -136,7 +144,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     setToken(null);
   };
 
-  const links = [
+  const allLinks = [
     { href: "/admin",                              label: "Dashboard",                 icon: LayoutDashboard },
     { href: "/admin/repair-requests",              label: "Αιτήματα Επισκευής",        icon: Wrench          },
     { href: "/admin/website-inquiries",            label: "Αιτήματα Ιστοσελίδων",     icon: MessageSquare   },
@@ -150,6 +158,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin/ipsw-downloads",               label: "IPSW λήψεις",               icon: Download        },
     { href: "/admin/users",                        label: "Διαχειριστές",              icon: UserCog         },
   ];
+
+  const links =
+    adminInfo?.role === "staff"
+      ? allLinks.filter((l) => l.href === "/admin/repair-requests")
+      : allLinks;
 
   const SidebarContent = () => (
     <>

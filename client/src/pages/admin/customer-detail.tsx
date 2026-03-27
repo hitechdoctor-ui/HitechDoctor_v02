@@ -9,6 +9,7 @@ import {
   Shield, Globe, MessageSquare,
 } from "lucide-react";
 import { type Customer, type RepairRequest, type RepairItem, type Subscription, type WebsiteInquiry } from "@shared/schema";
+import { getAdminAuthHeaders } from "@/lib/queryClient";
 
 const VAT_RATE = 0.24;
 const fmt = (n: number) => n.toFixed(2).replace(".", ",") + " €";
@@ -174,7 +175,14 @@ function formatDate(d: string | null | undefined) {
 function RepairItemsSection({ rep, customer }: { rep: RepairRequest; customer: Customer }) {
   const { data: items = [], isLoading } = useQuery<RepairItem[]>({
     queryKey: ["/api/repair-requests", rep.id, "items"],
-    queryFn: () => fetch(`/api/repair-requests/${rep.id}/items`).then(r => r.json()),
+    queryFn: async () => {
+      const res = await fetch(`/api/repair-requests/${rep.id}/items`, {
+        credentials: "include",
+        headers: getAdminAuthHeaders(),
+      });
+      if (!res.ok) throw new Error("Failed to load items");
+      return res.json();
+    },
   });
 
   const hasItems = items.length > 0;
@@ -252,12 +260,26 @@ export default function AdminCustomerDetail() {
 
   const { data: customer, isLoading: loadingCustomer } = useQuery<Customer>({
     queryKey: ["/api/customers", customerId],
-    queryFn: () => fetch(`/api/customers/${customerId}`).then(r => r.json()),
+    queryFn: async () => {
+      const res = await fetch(`/api/customers/${customerId}`, {
+        credentials: "include",
+        headers: getAdminAuthHeaders(),
+      });
+      if (!res.ok) throw new Error("Failed to load customer");
+      return res.json();
+    },
   });
 
   const { data: orders, isLoading: loadingOrders } = useQuery<any[]>({
     queryKey: ["/api/customers", customerId, "orders"],
-    queryFn: () => fetch(`/api/customers/${customerId}/orders`).then(r => r.json()),
+    queryFn: async () => {
+      const res = await fetch(`/api/customers/${customerId}/orders`, {
+        credentials: "include",
+        headers: getAdminAuthHeaders(),
+      });
+      if (!res.ok) throw new Error("Failed to load orders");
+      return res.json();
+    },
     enabled: !!customer,
   });
 
@@ -269,13 +291,27 @@ export default function AdminCustomerDetail() {
 
   const { data: subscriptions = [], isLoading: loadingSubscriptions } = useQuery<Subscription[]>({
     queryKey: ["/api/customers", customerId, "subscriptions"],
-    queryFn: () => fetch(`/api/customers/${customerId}/subscriptions`).then(r => r.json()),
+    queryFn: async () => {
+      const res = await fetch(`/api/customers/${customerId}/subscriptions`, {
+        credentials: "include",
+        headers: getAdminAuthHeaders(),
+      });
+      if (!res.ok) throw new Error("Failed to load subscriptions");
+      return res.json();
+    },
     enabled: !!customer,
   });
 
   const { data: inquiries = [], isLoading: loadingInquiries } = useQuery<WebsiteInquiry[]>({
     queryKey: ["/api/customers", customerId, "inquiries"],
-    queryFn: () => fetch(`/api/customers/${customerId}/inquiries`).then(r => r.json()),
+    queryFn: async () => {
+      const res = await fetch(`/api/customers/${customerId}/inquiries`, {
+        credentials: "include",
+        headers: getAdminAuthHeaders(),
+      });
+      if (!res.ok) throw new Error("Failed to load inquiries");
+      return res.json();
+    },
     enabled: !!customer,
   });
 

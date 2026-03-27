@@ -65,6 +65,8 @@ export const repairRequests = pgTable("repair_requests", {
   status: text("status").notNull().default("pending"),
   price: numeric("price"),
   priceIncludesVat: boolean("price_includes_vat").default(false),
+  /** Διαχειριστής / προσωπικό στο οποίο έχει ανατεθεί το αίτημα (ρόλος staff βλέπει μόνο τα δικά του). */
+  assignedToUserId: integer("assigned_to_user_id"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -134,7 +136,8 @@ export const insertCustomerSchema = createInsertSchema(customers).omit({ id: tru
 export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true });
 export const insertOrderItemSchema = createInsertSchema(orderItems).omit({ id: true });
 export const insertRepairItemSchema = createInsertSchema(repairItems).omit({ id: true, createdAt: true });
-export const insertRepairRequestSchema = createInsertSchema(repairRequests).omit({ id: true, createdAt: true });
+export const insertRepairRequestSchema = createInsertSchema(repairRequests)
+  .omit({ id: true, createdAt: true, assignedToUserId: true });
 /** JSON requests send ISO date strings; drizzle-zod expects Date objects — coerce so POST /api/subscriptions validates. */
 export const insertSubscriptionSchema = createInsertSchema(subscriptions)
   .omit({ id: true, createdAt: true })

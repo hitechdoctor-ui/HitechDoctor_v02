@@ -60,12 +60,23 @@ export interface IStorage {
   // Repair Requests
   getRepairRequests(): Promise<RepairRequest[]>;
   getRepairRequestsByEmail(email: string): Promise<RepairRequest[]>;
+  getRepairRequestsForStaff(userId: number): Promise<RepairRequest[]>;
+  getRepairRequestById(id: number): Promise<RepairRequest | undefined>;
   createRepairRequest(data: InsertRepairRequest): Promise<RepairRequest>;
   updateRepairRequestStatus(id: number, status: string): Promise<RepairRequest>;
-  updateRepairRequest(id: number, data: { status?: string; price?: string | null }): Promise<RepairRequest>;
+  updateRepairRequest(
+    id: number,
+    data: {
+      status?: string;
+      price?: string | null;
+      priceIncludesVat?: boolean;
+      assignedToUserId?: number | null;
+    }
+  ): Promise<RepairRequest>;
 
   // Repair Items (line items)
   getRepairItems(repairRequestId: number): Promise<RepairItem[]>;
+  getRepairItemById(id: number): Promise<RepairItem | undefined>;
   /** Ολοκληρωμένες επισκευές με ποσό (γραμμές ή χειροκίνητη τιμή) — για Οικονομικά. */
   getCompletedRepairRevenueRows(): Promise<
     { id: number; createdAt: Date; total: number; customerName: string; email: string }[]
@@ -335,6 +346,17 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(repairRequests.createdAt));
   }
 
+  async getRepairRequestsForStaff(userId: number): Promise<RepairRequest[]> {
+    return await db.select().from(repairRequests)
+      .where(eq(repairRequests.assignedToUserId, userId))
+      .orderBy(desc(repairRequests.createdAt));
+  }
+
+  async getRepairRequestById(id: number): Promise<RepairRequest | undefined> {
+    const [row] = await db.select().from(repairRequests).where(eq(repairRequests.id, id));
+    return row;
+  }
+
   async createRepairRequest(data: InsertRepairRequest): Promise<RepairRequest> {
     const [created] = await db.insert(repairRequests).values(data).returning();
     return created;
@@ -349,7 +371,15 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async updateRepairRequest(id: number, data: { status?: string; price?: string | null }): Promise<RepairRequest> {
+  async updateRepairRequest(
+    id: number,
+    data: {
+      status?: string;
+      price?: string | null;
+      priceIncludesVat?: boolean;
+      assignedToUserId?: number | null;
+    }
+  ): Promise<RepairRequest> {
     const [updated] = await db.update(repairRequests)
       .set(data)
       .where(eq(repairRequests.id, id))
@@ -368,6 +398,11 @@ export class DatabaseStorage implements IStorage {
   async createRepairItem(data: InsertRepairItem): Promise<RepairItem> {
     const [created] = await db.insert(repairItems).values(data).returning();
     return created;
+  }
+
+  async getRepairItemById(id: number): Promise<RepairItem | undefined> {
+    const [row] = await db.select().from(repairItems).where(eq(repairItems.id, id));
+    return row;
   }
 
   async updateRepairItem(id: number, data: { description?: string; amount?: string }): Promise<RepairItem> {

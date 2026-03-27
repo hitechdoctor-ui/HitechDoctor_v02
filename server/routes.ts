@@ -1,6 +1,7 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
+import type { AdminUser, RepairRequest } from "@shared/schema";
 import { api, errorSchemas } from "@shared/routes";
 import { insertRepairRequestSchema, insertRepairItemSchema, insertSubscriptionSchema, insertWebsiteInquirySchema } from "@shared/schema";
 import { z } from "zod";
@@ -10,6 +11,25 @@ import { fetchHubSpotContacts } from "./hubspot";
 import bcrypt from "bcrypt";
 
 const BCRYPT_ROUNDS = 12;
+
+async function getAdminUserFromRequest(req: Request): Promise<AdminUser | null> {
+  const auth = req.headers.authorization || "";
+  const token = auth.replace(/^Bearer\s+/i, "");
+  if (!token) return null;
+  try {
+    const decoded = Buffer.from(token, "base64").toString("utf8");
+    const payload = JSON.parse(decoded) as { email?: string };
+    if (!payload?.email) return null;
+    return (await storage.getAdminByEmail(payload.email)) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function staffMayEditRepair(user: AdminUser, repair: Pick<RepairRequest, "assignedToUserId">): boolean {
+  if (user.role !== "staff") return true;
+  return repair.assignedToUserId != null && repair.assignedToUserId === user.id;
+}
 
 export async function registerRoutes(
   httpServer: Server,
@@ -53,6 +73,9 @@ export async function registerRoutes(
   // --- Admin Users CRUD ---
   app.get("/api/admin/users", async (req, res) => {
     try {
+      const u = await getAdminUserFromRequest(req);
+      if (!u) return res.status(401).json({ message: "Σύνδεση απαιτείται" });
+      if (u.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const users = await storage.getAdminUsers();
       res.json(users);
     } catch { res.status(500).json({ message: "Σφάλμα" }); }
@@ -60,11 +83,13 @@ export async function registerRoutes(
 
   app.post("/api/admin/users", async (req, res) => {
     try {
+      const actor = await getAdminUserFromRequest(req);
+      if (!actor || actor.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const schema = z.object({
         name: z.string().min(2),
         email: z.string().email(),
         password: z.string().min(8, "Ο κωδικός πρέπει να έχει τουλάχιστον 8 χαρακτήρες"),
-        role: z.enum(["admin", "superadmin"]).default("admin"),
+        role: z.enum(["admin", "superadmin", "staff"]).default("admin"),
       });
       const data = schema.parse(req.body);
       const existing = await storage.getAdminByEmail(data.email);
@@ -80,6 +105,8 @@ export async function registerRoutes(
 
   app.delete("/api/admin/users/:id", async (req, res) => {
     try {
+      const actor = await getAdminUserFromRequest(req);
+      if (!actor || actor.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const id = parseInt(req.params.id);
       const all = await storage.getAdminUsers();
       if (all.length <= 1) return res.status(400).json({ message: "Δεν μπορείτε να διαγράψετε τον τελευταίο διαχειριστή" });
@@ -90,6 +117,8 @@ export async function registerRoutes(
 
   app.patch("/api/admin/users/:id/password", async (req, res) => {
     try {
+      const actor = await getAdminUserFromRequest(req);
+      if (!actor || actor.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const id = parseInt(req.params.id);
       const schema = z.object({ password: z.string().min(8) });
       const { password } = schema.parse(req.body);
@@ -99,6 +128,23 @@ export async function registerRoutes(
     } catch (err) {
       if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
       res.status(500).json({ message: "Σφάλμα" });
+    }
+  });
+
+  /** Λίστα αιτημάτων επισκευής για το admin: staff βλέπει μόνο ανατεθέντα σε αυτόν. */
+  app.get("/api/admin/repair-requests", async (req, res) => {
+    try {
+      const u = await getAdminUserFromRequest(req);
+      if (!u) return res.status(401).json({ message: "Σύνδεση απαιτείται" });
+      if (u.role === "staff") {
+        const list = await storage.getRepairRequestsForStaff(u.id);
+        return res.json(list);
+      }
+      const requests = await storage.getRepairRequests();
+      res.json(requests);
+    } catch (error) {
+      console.error("[admin/repair-requests]", error);
+      res.status(500).json({ message: "Failed to fetch repair requests" });
     }
   });
 
@@ -174,6 +220,8 @@ export async function registerRoutes(
   // --- Customers API ---
   app.get(api.customers.list.path, async (req, res) => {
     try {
+      const u = await getAdminUserFromRequest(req);
+      if (u?.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const customers = await storage.getCustomers();
       res.json(customers);
     } catch (error) {
@@ -183,6 +231,8 @@ export async function registerRoutes(
 
   app.get("/api/customers/:id", async (req, res) => {
     try {
+      const u = await getAdminUserFromRequest(req);
+      if (u?.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const id = parseInt(req.params.id);
       const customer = await storage.getCustomer(id);
       if (!customer) return res.status(404).json({ message: "Customer not found" });
@@ -194,6 +244,8 @@ export async function registerRoutes(
 
   app.get("/api/customers/:id/orders", async (req, res) => {
     try {
+      const u = await getAdminUserFromRequest(req);
+      if (u?.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const id = parseInt(req.params.id);
       const orderList = await storage.getCustomerOrders(id);
       res.json(orderList);
@@ -204,6 +256,8 @@ export async function registerRoutes(
 
   app.get("/api/customers/:id/subscriptions", async (req, res) => {
     try {
+      const u = await getAdminUserFromRequest(req);
+      if (u?.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const id = parseInt(req.params.id);
       const customer = await storage.getCustomer(id);
       if (!customer) return res.status(404).json({ message: "Customer not found" });
@@ -216,6 +270,8 @@ export async function registerRoutes(
 
   app.get("/api/customers/:id/inquiries", async (req, res) => {
     try {
+      const u = await getAdminUserFromRequest(req);
+      if (u?.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const id = parseInt(req.params.id);
       const customer = await storage.getCustomer(id);
       if (!customer) return res.status(404).json({ message: "Customer not found" });
@@ -308,18 +364,35 @@ export async function registerRoutes(
   app.patch("/api/repair-requests/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      const actor = await getAdminUserFromRequest(req);
+      if (!actor) return res.status(401).json({ message: "Σύνδεση απαιτείται" });
+      const repair = await storage.getRepairRequestById(id);
+      if (!repair) return res.status(404).json({ message: "Repair request not found" });
+      if (!staffMayEditRepair(actor, repair)) return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const schema = z.object({
         status: z.string().optional(),
         price: z.string().nullable().optional(),
         priceIncludesVat: z.boolean().optional(),
+        assignedToUserId: z.number().int().positive().nullable().optional(),
       });
       const data = schema.parse(req.body);
       if (data.price !== undefined && data.priceIncludesVat === undefined) {
         (data as typeof data & { priceIncludesVat?: boolean }).priceIncludesVat = false;
       }
-      const request = await storage.updateRepairRequest(id, data);
+      if (data.assignedToUserId !== undefined && actor.role === "staff") {
+        return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      }
+      const { assignedToUserId, ...rest } = data;
+      const payload =
+        assignedToUserId !== undefined
+          ? { ...rest, assignedToUserId }
+          : rest;
+      const request = await storage.updateRepairRequest(id, payload);
       res.json(request);
     } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
       res.status(404).json({ message: "Repair request not found" });
     }
   });
@@ -327,10 +400,18 @@ export async function registerRoutes(
   app.patch("/api/repair-requests/:id/status", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      const actor = await getAdminUserFromRequest(req);
+      if (!actor) return res.status(401).json({ message: "Σύνδεση απαιτείται" });
+      const repair = await storage.getRepairRequestById(id);
+      if (!repair) return res.status(404).json({ message: "Repair request not found" });
+      if (!staffMayEditRepair(actor, repair)) return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const { status } = z.object({ status: z.string() }).parse(req.body);
       const request = await storage.updateRepairRequestStatus(id, status);
       res.json(request);
     } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
       res.status(404).json({ message: "Repair request not found" });
     }
   });
@@ -339,6 +420,11 @@ export async function registerRoutes(
   app.get("/api/repair-requests/:id/items", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      const actor = await getAdminUserFromRequest(req);
+      if (!actor) return res.status(401).json({ message: "Σύνδεση απαιτείται" });
+      const repair = await storage.getRepairRequestById(id);
+      if (!repair) return res.status(404).json({ message: "Repair request not found" });
+      if (!staffMayEditRepair(actor, repair)) return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const items = await storage.getRepairItems(id);
       res.json(items);
     } catch (error) {
@@ -349,6 +435,11 @@ export async function registerRoutes(
   app.post("/api/repair-requests/:id/items", async (req, res) => {
     try {
       const repairRequestId = parseInt(req.params.id);
+      const actor = await getAdminUserFromRequest(req);
+      if (!actor) return res.status(401).json({ message: "Σύνδεση απαιτείται" });
+      const repair = await storage.getRepairRequestById(repairRequestId);
+      if (!repair) return res.status(404).json({ message: "Repair request not found" });
+      if (!staffMayEditRepair(actor, repair)) return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const schema = z.object({
         description: z.string().min(1),
         amount: z.string(),
@@ -367,6 +458,12 @@ export async function registerRoutes(
   app.put("/api/repair-items/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      const actor = await getAdminUserFromRequest(req);
+      if (!actor) return res.status(401).json({ message: "Σύνδεση απαιτείται" });
+      const existing = await storage.getRepairItemById(id);
+      if (!existing) return res.status(404).json({ message: "Repair item not found" });
+      const repair = await storage.getRepairRequestById(existing.repairRequestId);
+      if (!repair || !staffMayEditRepair(actor, repair)) return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const schema = z.object({
         description: z.string().min(1).optional(),
         amount: z.string().optional(),
@@ -375,6 +472,9 @@ export async function registerRoutes(
       const item = await storage.updateRepairItem(id, data);
       res.json(item);
     } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
       res.status(404).json({ message: "Repair item not found" });
     }
   });
@@ -382,6 +482,12 @@ export async function registerRoutes(
   app.delete("/api/repair-items/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      const actor = await getAdminUserFromRequest(req);
+      if (!actor) return res.status(401).json({ message: "Σύνδεση απαιτείται" });
+      const existing = await storage.getRepairItemById(id);
+      if (!existing) return res.status(404).json({ message: "Repair item not found" });
+      const repair = await storage.getRepairRequestById(existing.repairRequestId);
+      if (!repair || !staffMayEditRepair(actor, repair)) return res.status(403).json({ message: "Δεν επιτρέπεται" });
       await storage.deleteRepairItem(id);
       res.status(204).send();
     } catch (error) {
@@ -389,8 +495,10 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/financial/repair-revenue", async (_req, res) => {
+  app.get("/api/financial/repair-revenue", async (req, res) => {
     try {
+      const u = await getAdminUserFromRequest(req);
+      if (u?.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const rows = await storage.getCompletedRepairRevenueRows();
       res.json(rows);
     } catch (error) {
@@ -575,6 +683,7 @@ export async function registerRoutes(
       if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
       const user = await storage.getAdminByEmail(payload.email);
       if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const contacts = await fetchHubSpotContacts();
       res.json(contacts);
     } catch (err) {
@@ -595,6 +704,7 @@ export async function registerRoutes(
       if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
       const user = await storage.getAdminByEmail(payload.email);
       if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const stats = await storage.getIpswDownloadStats();
       res.json(stats);
     } catch {

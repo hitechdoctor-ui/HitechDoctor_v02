@@ -13,7 +13,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { apiRequest, QUERY_FINANCIAL_REPAIR_REVENUE, invalidateRepairFinancialQueries } from "@/lib/queryClient";
+import { apiRequest, getAdminAuthHeaders, QUERY_FINANCIAL_REPAIR_REVENUE, invalidateRepairFinancialQueries } from "@/lib/queryClient";
 import { type RepairRequest, type Product } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo } from "react";
@@ -78,14 +78,14 @@ function RepairRequestsSection() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const { data: requests, isLoading } = useQuery<RepairRequest[]>({
-    queryKey: ["/api/repair-requests"],
+    queryKey: ["/api/admin/repair-requests"],
   });
 
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: string }) =>
       apiRequest("PATCH", `/api/repair-requests/${id}/status`, { status }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/repair-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/repair-requests"] });
       invalidateRepairFinancialQueries(queryClient);
       toast({ title: "Ενημερώθηκε", description: "Η κατάσταση αποθηκεύτηκε." });
     },
@@ -367,12 +367,15 @@ export default function AdminDashboard() {
   const { data: products } = useProducts();
   const { data: customers } = useCustomers();
   const { data: repairRequests } = useQuery<RepairRequest[]>({
-    queryKey: ["/api/repair-requests"],
+    queryKey: ["/api/admin/repair-requests"],
   });
   const { data: repairRevenue = [] } = useQuery<RepairRevenueRow[]>({
     queryKey: QUERY_FINANCIAL_REPAIR_REVENUE,
     queryFn: () =>
-      fetch("/api/financial/repair-revenue", { credentials: "include" }).then((r) => {
+      fetch("/api/financial/repair-revenue", {
+        credentials: "include",
+        headers: getAdminAuthHeaders(),
+      }).then((r) => {
         if (!r.ok) throw new Error("Failed to fetch repair revenue");
         return r.json();
       }),
