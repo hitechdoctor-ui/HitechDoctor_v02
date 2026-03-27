@@ -3,6 +3,7 @@ import { useRoute, Link } from "wouter";
 import { Helmet } from "react-helmet-async";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { Seo } from "@/components/seo";
 import { RepairRequestModal } from "@/components/repair-request-modal";
 import { Button } from "@/components/ui/button";
@@ -635,6 +636,7 @@ export default function IPhoneRepairDetail() {
                 <a href="tel:+306981882005" className="flex items-center justify-center gap-2 mt-2 text-sm text-primary hover:underline" data-testid="link-sidebar-phone">
                   <Phone className="w-3.5 h-3.5" /> 6981 882 005
                 </a>
+                <PriceDisclaimer className="mt-3 pt-3 border-t border-white/5" />
               </div>
 
               {/* Trust Badges */}

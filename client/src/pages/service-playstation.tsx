@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/footer";
 import { Seo } from "@/components/seo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { RepairRequestModal } from "@/components/repair-request-modal";
 import { Fragment, useState } from "react";
 import {
@@ -259,6 +260,7 @@ export default function ServicePlayStation() {
           <div>
             <h2 className="text-2xl font-display font-extrabold text-foreground mb-1">Τιμές ανά Μοντέλο</h2>
             <p className="text-sm text-muted-foreground">Επιλέξτε το μοντέλο σας για να δείτε τις τιμές επισκευής.</p>
+            <PriceDisclaimer className="mt-2 max-w-xl" />
           </div>
 
           {PS_MODELS.map((model) => (

@@ -1,5 +1,6 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { useCartStore } from "@/store/cart";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { Link } from "wouter";
@@ -95,12 +96,13 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
 
         {items.length > 0 && (
           <div className="pt-6 border-t border-white/10 mt-auto">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-2">
               <span className="text-muted-foreground">Σύνολο</span>
               <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-white">
                 {formatPrice(getCartTotal())}
               </span>
             </div>
+            <PriceDisclaimer className="mb-4" />
             <Link href="/checkout">
               <Button 
                 className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary text-primary-foreground shadow-lg shadow-primary/25"

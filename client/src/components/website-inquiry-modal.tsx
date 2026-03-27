@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { Globe, CheckCircle2, Mail, Phone, User } from "lucide-react";
 
 const VAT = 0.24;
@@ -260,6 +261,7 @@ export function WebsiteInquiryModal({ open, onOpenChange }: Props) {
                     </div>
                   </div>
                 )}
+                <PriceDisclaimer className="pt-1" />
               </div>
 
               <FormField

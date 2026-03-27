@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Fragment } from "react";
+import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { WebsiteInquiryModal } from "@/components/website-inquiry-modal";
 import {
   Globe, Code2, Smartphone, Zap, Search, ShoppingCart,
@@ -310,6 +311,7 @@ export default function WebDesigner() {
                       -70%
                     </span>
                   </div>
+                  <PriceDisclaimer className="mt-3" emphasis />
                 </div>
 
                 <p className="text-xs text-muted-foreground leading-relaxed mb-6">
@@ -419,6 +421,7 @@ export default function WebDesigner() {
               </div>
             ))}
           </div>
+          <PriceDisclaimer className="mt-6 text-center max-w-xl mx-auto" />
         </div>
 
         {/* ── Real clients section ────────────────────────────────────── */}

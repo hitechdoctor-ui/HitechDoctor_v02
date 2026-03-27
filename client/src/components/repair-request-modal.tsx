@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/form";
 import { CheckCircle2, Wrench, Smartphone, Hash, Lock, Phone, Mail, User, Shield, ExternalLink } from "lucide-react";
 import { apiRequest, invalidateRepairFinancialQueries } from "@/lib/queryClient";
+import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { insertRepairRequestSchema } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
@@ -294,6 +295,7 @@ export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" 
                       {hasPrice ? (selectedBox === "net" ? "χωρίς ΦΠΑ" : "με ΦΠΑ 24%") : "επιλέξτε τιμή"}
                     </span>
                   </div>
+                  <PriceDisclaimer className="pt-1" />
                 </div>
 
                 {/* Σημειώσεις */}

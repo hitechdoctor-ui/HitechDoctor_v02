@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { findLaptopBrandBySlug, LAPTOP_BRANDS } from "@/data/laptop-brands";
+import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { RepairRequestModal } from "@/components/repair-request-modal";
 import {
   CheckCircle2, Monitor, Battery, Keyboard, HardDrive, Cpu, Zap,
@@ -228,6 +229,7 @@ export default function LaptopRepairDetail() {
                   <PriceRow icon={HardDrive} label="Αναβάθμιση RAM / SSD"  price={brand.upgradeLabor} note="Εργασία αναβάθμισης (ανταλλακτικό extra)" onBook={() => setModalOpen(true)} />
                 )}
               </div>
+              <PriceDisclaimer className="mt-3" />
               <div className="grid grid-cols-3 gap-3 mt-6">
                 {[{ icon: Shield, label: "Εγγύηση", sub: "Γραπτή εγγύηση" }, { icon: Clock, label: "Αυθημερόν", sub: "Οι περισσότερες" }, { icon: Star, label: "Τεχνικοί", sub: "Εξειδικευμένοι" }].map((b) => (
                   <div key={b.label} className="flex flex-col items-center text-center p-3 rounded-xl border border-white/8 bg-white/2">

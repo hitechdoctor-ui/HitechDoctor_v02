@@ -3,6 +3,7 @@ import { useRoute, Link } from "wouter";
 import { Helmet } from "react-helmet-async";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { Seo } from "@/components/seo";
 import { RepairRequestModal } from "@/components/repair-request-modal";
 import { Button } from "@/components/ui/button";
@@ -486,6 +487,7 @@ export default function IPhoneRepairAlt() {
                   <Phone className="w-4 h-4" />
                   698 188 2005
                 </a>
+                <PriceDisclaimer className="mt-3 pt-3 border-t border-white/5" />
               </div>
 
               {/* Trust card */}

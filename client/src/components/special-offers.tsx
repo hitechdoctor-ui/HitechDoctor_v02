@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { RepairRequestModal } from "@/components/repair-request-modal";
 import {
   Rocket, Shield, CheckCircle2, HardDrive, Wrench, Monitor,
@@ -208,6 +209,8 @@ export function SpecialOffers() {
 
         </div>
       </div>
+
+      <PriceDisclaimer className="mt-8 text-center max-w-lg mx-auto" />
 
       <RepairRequestModal
         open={modalOpen}

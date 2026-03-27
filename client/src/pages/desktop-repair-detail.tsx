@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { findDesktopBrandBySlug, DESKTOP_BRANDS } from "@/data/desktop-brands";
+import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { RepairRequestModal } from "@/components/repair-request-modal";
 import {
   CheckCircle2, Monitor, HardDrive, Cpu, Zap, Shield,
@@ -246,6 +247,7 @@ export default function DesktopRepairDetail() {
                   <PriceRow icon={Gamepad2}  label="Επισκευή GPU (Κάρτα Γραφικών)" price={50} suffix="+" note="Reballing, κοντύλι, αντικατάσταση ανεμιστήρα" onBook={() => setModalOpen(true)} />
                 )}
               </div>
+              <PriceDisclaimer className="mt-3" />
               <div className="grid grid-cols-3 gap-3 mt-6">
                 {[{ icon: Shield, label: "Εγγύηση", sub: "Γραπτή εγγύηση" }, { icon: Clock, label: "Γρήγορα", sub: "Αυθημερόν/1-2 ώρες" }, { icon: Star, label: "Τεχνικοί", sub: "Εξειδικευμένοι" }].map((b) => (
                   <div key={b.label} className="flex flex-col items-center text-center p-3 rounded-xl border border-white/8 bg-white/2">

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { findXiaomiBySlug, findXiaomiSeriesForModel, XIAOMI_SERIES } from "@/data/xiaomi-devices";
+import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { RepairRequestModal } from "@/components/repair-request-modal";
 import {
   CheckCircle2, Monitor, Battery, Zap, ChevronRight, Phone,
@@ -290,6 +291,7 @@ export default function XiaomiRepairDetail() {
                 <PriceRow icon={Battery} label="Αλλαγή Μπαταρίας" price={model.batteryPrice} note="Γνήσια ή premium ποιότητας" onBook={() => setModalOpen(true)} />
                 <PriceRow icon={Zap}     label="Επισκευή Θύρας USB-C" price={model.portPrice} note="Αντικατάσταση ή καθαρισμός θύρας φόρτισης" onBook={() => setModalOpen(true)} />
               </div>
+              <PriceDisclaimer className="mt-3" />
               <div className="grid grid-cols-3 gap-3 mt-6">
                 {[{ icon: Shield, label: "Εγγύηση", sub: "Γραπτή εγγύηση" }, { icon: Clock, label: "30 λεπτά", sub: "Γρήγορη" }, { icon: Star, label: "Τεχνικοί", sub: "Εξειδικευμένοι" }].map((b) => (
                   <div key={b.label} className="flex flex-col items-center text-center p-3 rounded-xl border border-white/8 bg-white/2">

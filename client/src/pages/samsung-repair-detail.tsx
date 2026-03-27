@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { findSamsungBySlug, SAMSUNG_SERIES } from "@/data/samsung-devices";
+import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { RepairRequestModal } from "@/components/repair-request-modal";
 import {
   CheckCircle2, Monitor, Battery, Zap, ChevronRight, Phone,
@@ -313,6 +314,7 @@ export default function SamsungRepairDetail() {
                 <PriceRow icon={Battery} label="Αλλαγή Μπαταρίας" price={model.batteryPrice} note="Γνήσια ή premium ποιότητας" onBook={() => setModalOpen(true)} />
                 <PriceRow icon={Zap}     label="Επισκευή Θύρας USB-C" price={model.portPrice} note="Αντικατάσταση ή καθαρισμός θύρας φόρτισης" onBook={() => setModalOpen(true)} />
               </div>
+              <PriceDisclaimer className="mt-3" />
 
               <div className="grid grid-cols-3 gap-3 mt-6">
                 {[{ icon: Shield, label: "Εγγύηση", sub: "Γραπτή εγγύηση" }, { icon: Clock, label: "30 λεπτά", sub: "Γρήγορη επισκευή" }, { icon: Star, label: "Πιστοποιημένοι", sub: "Samsung τεχνικοί" }].map((b) => (

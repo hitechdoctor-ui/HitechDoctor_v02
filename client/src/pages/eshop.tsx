@@ -15,6 +15,7 @@ import { useSearch } from "wouter";
 import { ShoppingCart, Package, Shield, Smartphone, Cable, Tag, X, SlidersHorizontal, HardDrive, Palette, SlidersVertical, ChevronRight, Laptop, Monitor } from "lucide-react";
 import { Link } from "wouter";
 import type { Product } from "@shared/schema";
+import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 // ── Color name → hex mapping ────────────────────────────────────────────────
@@ -880,6 +881,8 @@ export default function EShop() {
             </div>
           </div>
         )}
+
+        <PriceDisclaimer className="mb-4 max-w-2xl" emphasis />
 
         {/* ── Product grid ── */}
         {isLoading ? (

@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { Wrench, Package, Shield, Phone, Mail, MapPin, Facebook, Instagram, ExternalLink, Smartphone, Cable, Laptop, Monitor } from "lucide-react";
 import { SiTiktok } from "react-icons/si";
 
@@ -182,8 +183,12 @@ export function Footer() {
           ))}
         </div>
 
+        <div className="mt-10 pt-4 border-t border-white/5">
+          <PriceDisclaimer className="text-center max-w-2xl mx-auto" />
+        </div>
+
         {/* Bottom bar */}
-        <div className="mt-12 pt-6 border-t border-white/6 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="mt-8 pt-6 border-t border-white/6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground/50">
             © {new Date().getFullYear()} HiTech Doctor. Με επιφύλαξη παντός δικαιώματος. Design & Development by{" "}
             <a href="https://hitechdoctor.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">

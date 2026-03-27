@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { findTabletBrandBySlug, TABLET_BRANDS } from "@/data/tablet-brands";
+import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { RepairRequestModal } from "@/components/repair-request-modal";
 import {
   CheckCircle2, MonitorSmartphone, Battery, Zap, Layers, Shield,
@@ -222,6 +223,7 @@ export default function TabletRepairDetail() {
                 <PriceRow icon={Zap}               label="Θύρα Φόρτισης"        price={brand.portPriceFrom}     note={brand.slug === "apple-ipad" ? "Lightning ή USB-C" : "USB-C — επισκευή/αντικατάσταση"} onBook={() => setModalOpen(true)} />
                 <PriceRow icon={Layers}            label="Back Glass / Καπάκι"  price={brand.backGlassPriceFrom} note="Αντικατάσταση πλάτης & πλαισίου" onBook={() => setModalOpen(true)} />
               </div>
+              <PriceDisclaimer className="mt-3" />
               <div className="grid grid-cols-3 gap-3 mt-6">
                 {[{ icon: Shield, label: "Εγγύηση", sub: "Γραπτή εγγύηση" }, { icon: Clock, label: "1-2 Ώρες", sub: "Αλλαγή οθόνης" }, { icon: Star, label: "Τεχνικοί", sub: "Εξειδικευμένοι" }].map((b) => (
                   <div key={b.label} className="flex flex-col items-center text-center p-3 rounded-xl border border-white/8 bg-white/2">
