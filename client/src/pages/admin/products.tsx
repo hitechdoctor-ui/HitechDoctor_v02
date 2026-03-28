@@ -35,6 +35,11 @@ const adminProductFormSchema = z.object({
   urlSkroutz: z.string().optional().nullable(),
   urlBestPrice: z.string().optional().nullable(),
   urlShopflix: z.string().optional().nullable(),
+  /** Χειροκίνητες τιμές ανταγωνιστών (EUR) όταν το fetch αποτυγχάνει */
+  priceSkroutz: z.string().optional().nullable(),
+  priceBestPrice: z.string().optional().nullable(),
+  priceKotsovolos: z.string().optional().nullable(),
+  priceShopflix: z.string().optional().nullable(),
   slug: z.string().optional().nullable(),
   variantGroup: z.string().optional().nullable(),
   preOrder: z.boolean().optional(),
@@ -50,6 +55,13 @@ const BRANDS = [
 ];
 
 const STORAGE_OPTIONS = ["16GB", "32GB", "64GB", "128GB", "256GB", "512GB", "1TB"];
+
+function parseOptionalEuroField(s: string | null | undefined): string | null {
+  if (s == null || String(s).trim() === "") return null;
+  const n = parseFloat(String(s).replace(",", ".").trim());
+  if (!Number.isFinite(n) || n < 0) return null;
+  return n.toFixed(2);
+}
 
 // ── Extra Images Manager ─────────────────────────────────────────────────────
 function ExtraImagesManager({
@@ -211,9 +223,6 @@ function ProductPriceCompareFields({
   onRefresh: () => void;
   refreshing: boolean;
 }) {
-  const fmt = (v: string | null | undefined) =>
-    v != null && v !== "" ? `${Number(v).toFixed(2)} €` : "—";
-
   return (
     <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4 space-y-4">
       <div className="flex items-center gap-2 pb-1 border-b border-white/8">
@@ -239,6 +248,43 @@ function ProductPriceCompareFields({
             />
           )}
         />
+      </div>
+
+      <div className="space-y-2 rounded-lg border border-white/10 bg-background/30 p-3">
+        <Label className="text-xs font-semibold">Manual competitor prices (€)</Label>
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
+          Use when <strong className="text-foreground/80">Refresh Prices</strong> does not find a price. Saved with the product; the storefront uses these values.
+        </p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {(
+            [
+              { name: "priceSkroutz" as const, label: "Skroutz (€)" },
+              { name: "priceBestPrice" as const, label: "BestPrice (€)" },
+              { name: "priceKotsovolos" as const, label: "Kotsovolos (€)" },
+              { name: "priceShopflix" as const, label: "Shopflix (€)" },
+            ] as const
+          ).map(({ name, label }) => (
+            <div key={name} className="space-y-1">
+              <Label className="text-[11px] font-medium">{label}</Label>
+              <Controller
+                control={control}
+                name={name}
+                render={({ field }) => (
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    className="bg-background h-9 text-sm"
+                    placeholder="e.g. 899.99"
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(e.target.value === "" ? "" : e.target.value)}
+                    data-testid={`input-${name}`}
+                  />
+                )}
+              />
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-3">
@@ -288,28 +334,17 @@ function ProductPriceCompareFields({
         )}
       </div>
 
-      {liveProduct && (liveProduct.lastPriceUpdate || liveProduct.priceKotsovolos || liveProduct.priceSkroutz || liveProduct.priceBestPrice || liveProduct.priceShopflix) && (
-        <div className="rounded-lg border border-white/10 bg-background/50 p-3 text-[11px] space-y-1.5">
-          <p className="font-semibold text-muted-foreground uppercase tracking-wide text-[10px]">Τρέχουσες αποθηκευμένες τιμές</p>
-          <div className="grid sm:grid-cols-2 gap-x-4 gap-y-1">
-            <span>Kotsovolos: <strong className="text-foreground">{fmt(liveProduct.priceKotsovolos as string)}</strong></span>
-            <span>Skroutz: <strong className="text-foreground">{fmt(liveProduct.priceSkroutz as string)}</strong></span>
-            <span>BestPrice: <strong className="text-foreground">{fmt(liveProduct.priceBestPrice as string)}</strong></span>
-            <span>Shopflix: <strong className="text-foreground">{fmt(liveProduct.priceShopflix as string)}</strong></span>
-          </div>
-          {liveProduct.lastPriceUpdate && (
-            <p className="text-[10px] text-muted-foreground pt-1">
-              Τελευταία ενημέρωση:{" "}
-              {new Intl.DateTimeFormat("el-GR", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              }).format(new Date(liveProduct.lastPriceUpdate as string | Date))}
-            </p>
-          )}
-        </div>
+      {liveProduct?.lastPriceUpdate && (
+        <p className="text-[10px] text-muted-foreground">
+          Last auto-refresh:{" "}
+          {new Intl.DateTimeFormat("el-GR", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          }).format(new Date(liveProduct.lastPriceUpdate as string | Date))}
+        </p>
       )}
     </div>
   );
@@ -391,6 +426,10 @@ export default function AdminProducts() {
       urlSkroutz: null,
       urlBestPrice: null,
       urlShopflix: null,
+      priceSkroutz: "",
+      priceBestPrice: "",
+      priceKotsovolos: "",
+      priceShopflix: "",
       slug: null,
       variantGroup: null,
       preOrder: false,
@@ -417,6 +456,10 @@ export default function AdminProducts() {
       urlSkroutz: null,
       urlBestPrice: null,
       urlShopflix: null,
+      priceSkroutz: "",
+      priceBestPrice: "",
+      priceKotsovolos: "",
+      priceShopflix: "",
       slug: null,
       variantGroup: null,
       preOrder: false,
@@ -445,6 +488,14 @@ export default function AdminProducts() {
       urlSkroutz: product.urlSkroutz ?? null,
       urlBestPrice: product.urlBestPrice ?? null,
       urlShopflix: product.urlShopflix ?? null,
+      priceSkroutz:
+        product.priceSkroutz != null && product.priceSkroutz !== "" ? String(product.priceSkroutz) : "",
+      priceBestPrice:
+        product.priceBestPrice != null && product.priceBestPrice !== "" ? String(product.priceBestPrice) : "",
+      priceKotsovolos:
+        product.priceKotsovolos != null && product.priceKotsovolos !== "" ? String(product.priceKotsovolos) : "",
+      priceShopflix:
+        product.priceShopflix != null && product.priceShopflix !== "" ? String(product.priceShopflix) : "",
       slug: product.slug ?? null,
       variantGroup: product.variantGroup ?? null,
       preOrder: !!(product as Product).preOrder,
@@ -456,6 +507,13 @@ export default function AdminProducts() {
     if (!editingId) return;
     try {
       const result = await refreshPrices(editingId);
+      const p = result.product;
+      if (p) {
+        form.setValue("priceSkroutz", p.priceSkroutz != null && p.priceSkroutz !== "" ? String(p.priceSkroutz) : "");
+        form.setValue("priceBestPrice", p.priceBestPrice != null && p.priceBestPrice !== "" ? String(p.priceBestPrice) : "");
+        form.setValue("priceKotsovolos", p.priceKotsovolos != null && p.priceKotsovolos !== "" ? String(p.priceKotsovolos) : "");
+        form.setValue("priceShopflix", p.priceShopflix != null && p.priceShopflix !== "" ? String(p.priceShopflix) : "");
+      }
       const errEntries = Object.entries(result.errors ?? {}).filter(([, v]) => v);
       toast({
         title: "Ανανέωση τιμών",
@@ -495,6 +553,10 @@ export default function AdminProducts() {
         urlSkroutz: data.urlSkroutz?.trim() || null,
         urlBestPrice: data.urlBestPrice?.trim() || null,
         urlShopflix: data.urlShopflix?.trim() || null,
+        priceSkroutz: parseOptionalEuroField(data.priceSkroutz),
+        priceBestPrice: parseOptionalEuroField(data.priceBestPrice),
+        priceKotsovolos: parseOptionalEuroField(data.priceKotsovolos),
+        priceShopflix: parseOptionalEuroField(data.priceShopflix),
         slug: data.slug?.trim() || null,
         variantGroup: data.variantGroup?.trim() || null,
         preOrder: data.preOrder ?? false,

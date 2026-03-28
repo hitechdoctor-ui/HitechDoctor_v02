@@ -2,8 +2,9 @@ import type { Product } from "@shared/schema";
 
 const FETCH_TIMEOUT_MS = 18_000;
 
-const DEFAULT_UA =
-  "Mozilla/5.0 (compatible; HiTechDoctorPriceBot/1.0; +https://hitechdoctor.com) AppleWebKit/537.36";
+/** Chrome-like User-Agent ώστε τα sites να μην μπλοκάρουν bot-like defaults */
+const BROWSER_USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 
 /**
  * Σύνθεση query: Brand + όνομα (μοντέλο) + RAM + Storage + Χρώμα
@@ -53,49 +54,117 @@ function manualUrlFor(product: Product, key: CompetitorKey): string | null {
   return t;
 }
 
-/**
- * Προσπάθεια εξαγωγής τιμής σε EUR από HTML (JSON-LD, meta, κείμενο).
- * Τα ελληνικά sites αλλάζουν συχνά markup — ενδέχεται null.
- */
-export function extractEuroPriceFromHtml(html: string): number | null {
-  const candidates: number[] = [];
+function parsePriceString(raw: string): number | null {
+  const cleaned = raw.replace(/\s/g, "").replace(/[^\d.,-]/g, "").replace(",", ".");
+  const n = parseFloat(cleaned);
+  if (!Number.isFinite(n) || n <= 0 || n >= 500_000) return null;
+  return n;
+}
 
-  // application/ld+json — Product / Offer
-  const ldRe = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
-  let m: RegExpExecArray | null;
-  while ((m = ldRe.exec(html)) !== null) {
-    const chunk = m[1];
-    try {
-      const data = JSON.parse(chunk.trim());
-      const items = Array.isArray(data) ? data : [data];
-      for (const node of items) {
-        if (!node || typeof node !== "object") continue;
-        const offers = (node as any).offers ?? (node as any).Offers;
-        const off = Array.isArray(offers) ? offers[0] : offers;
-        if (off?.price != null) {
-          const n = parseFloat(String(off.price).replace(",", "."));
-          if (Number.isFinite(n) && n > 0 && n < 500_000) candidates.push(n);
-        }
-        if ((node as any)["@type"] === "Product" && (node as any).offers?.price) {
-          const n = parseFloat(String((node as any).offers.price).replace(",", "."));
-          if (Number.isFinite(n) && n > 0 && n < 500_000) candidates.push(n);
+/**
+ * Meta tags: og:price:amount, product:price:amount (content πριν ή μετά το property)
+ */
+function extractPriceFromMetaTags(html: string): number | null {
+  const patterns: RegExp[] = [
+    /<meta[^>]+property=["']og:price:amount["'][^>]*content=["']([^"']+)["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:price:amount["']/i,
+    /<meta[^>]+property=["']product:price:amount["'][^>]*content=["']([^"']+)["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']product:price:amount["']/i,
+    /<meta[^>]+itemprop=["']price["'][^>]*content=["']([^"']+)["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+itemprop=["']price["']/i,
+  ];
+  for (const re of patterns) {
+    const m = html.match(re);
+    if (m?.[1]) {
+      const n = parsePriceString(m[1]);
+      if (n != null) return n;
+    }
+  }
+  return null;
+}
+
+function typeMatchesProduct(t: unknown): boolean {
+  if (t == null) return false;
+  const s = Array.isArray(t) ? t.join(",") : String(t);
+  return /\bProduct\b/i.test(s) || /\bAggregateOffer\b/i.test(s) || /\bOffer\b/i.test(s);
+}
+
+/** Αναδρομική ανάγνωση JSON-LD για offers.price, Offer.price, priceSpecification */
+function walkJsonLdPrices(node: unknown, out: number[]): void {
+  if (node == null) return;
+  if (Array.isArray(node)) {
+    for (const item of node) walkJsonLdPrices(item, out);
+    return;
+  }
+  if (typeof node !== "object") return;
+  const o = node as Record<string, unknown>;
+
+  if (o["@graph"] != null) walkJsonLdPrices(o["@graph"], out);
+
+  const offers = o.offers ?? (o as any).Offers;
+  if (offers != null) {
+    const list = Array.isArray(offers) ? offers : [offers];
+    for (const off of list) {
+      if (off == null || typeof off !== "object") continue;
+      const offObj = off as Record<string, unknown>;
+      if (offObj.price != null) {
+        const n = parsePriceString(String(offObj.price));
+        if (n != null) out.push(n);
+      }
+      const ps = offObj.priceSpecification;
+      if (ps != null && typeof ps === "object") {
+        const p = (ps as Record<string, unknown>).price;
+        if (p != null) {
+          const n = parsePriceString(String(p));
+          if (n != null) out.push(n);
         }
       }
-    } catch {
-      /* ignore */
+      if (typeMatchesProduct(offObj["@type"]) && offObj.price != null) {
+        const n = parsePriceString(String(offObj.price));
+        if (n != null) out.push(n);
+      }
     }
   }
 
-  // og:price / product:price:amount
-  const metaPrice =
-    html.match(/property=["']product:price:amount["'][^>]*content=["']([0-9]+[.,]?[0-9]*)/i) ||
-    html.match(/property=["']og:price:amount["'][^>]*content=["']([0-9]+[.,]?[0-9]*)/i);
-  if (metaPrice?.[1]) {
-    const n = parseFloat(metaPrice[1].replace(",", "."));
-    if (Number.isFinite(n) && n > 0 && n < 500_000) candidates.push(n);
+  if (typeMatchesProduct(o["@type"]) && o.offers == null && o.price != null) {
+    const n = parsePriceString(String(o.price));
+    if (n != null) out.push(n);
   }
 
-  // Generic € patterns (τελευταία λύση)
+  for (const key of Object.keys(o)) {
+    if (key === "@context" || key === "@type") continue;
+    walkJsonLdPrices(o[key], out);
+  }
+}
+
+function extractPricesFromJsonLd(html: string): number[] {
+  const out: number[] = [];
+  const ldRe = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = ldRe.exec(html)) !== null) {
+    const chunk = m[1].trim();
+    if (!chunk) continue;
+    try {
+      const data = JSON.parse(chunk);
+      walkJsonLdPrices(data, out);
+    } catch {
+      /* ignore malformed JSON */
+    }
+  }
+  return out;
+}
+
+/**
+ * Προτεραιότητα: 1) meta og:price:amount / product:price:amount 2) JSON-LD 3) γενικά € στο HTML
+ */
+export function extractEuroPriceFromHtml(html: string): number | null {
+  const fromMeta = extractPriceFromMetaTags(html);
+  if (fromMeta != null) return fromMeta;
+
+  const fromLd = extractPricesFromJsonLd(html);
+  if (fromLd.length > 0) return Math.min(...fromLd);
+
+  const candidates: number[] = [];
   const euroPatterns = [
     /(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})\s*€/g,
     /€\s*(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})/g,
@@ -112,9 +181,24 @@ export function extractEuroPriceFromHtml(html: string): number | null {
   }
 
   if (candidates.length === 0) return null;
-  // Σε σελίδες αποτελεσμάτων η μικρότερη «λογική» τιμή συχνά είναι το προϊόν — ασαφές· παίρνουμε min > 0
-  const finite = candidates.filter((x) => Number.isFinite(x));
-  return Math.min(...finite);
+  return Math.min(...candidates);
+}
+
+function browserLikeHeaders(url: string): Record<string, string> {
+  let origin = "https://www.google.com";
+  try {
+    origin = new URL(url).origin;
+  } catch {
+    /* keep default */
+  }
+  return {
+    "User-Agent": BROWSER_USER_AGENT,
+    Accept:
+      "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+    "Accept-Language": "el-GR,el;q=0.9,en-US;q=0.8,en;q=0.7",
+    "Accept-Encoding": "gzip, deflate, br",
+    Referer: `${origin}/`,
+  };
 }
 
 async function fetchHtml(url: string): Promise<string | null> {
@@ -124,11 +208,7 @@ async function fetchHtml(url: string): Promise<string | null> {
     const res = await fetch(url, {
       signal: ac.signal,
       redirect: "follow",
-      headers: {
-        "User-Agent": DEFAULT_UA,
-        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "el-GR,el;q=0.9,en;q=0.8",
-      },
+      headers: browserLikeHeaders(url),
     });
     if (!res.ok) return null;
     return await res.text();

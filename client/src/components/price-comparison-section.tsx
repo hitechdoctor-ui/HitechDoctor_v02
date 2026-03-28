@@ -3,6 +3,8 @@ import type { Product } from "@shared/schema";
 const formatPrice = (p: string | number) =>
   new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR" }).format(Number(p));
 
+const MISSING_PRICE = "-- €";
+
 /** Order: Skroutz, BestPrice, Kotsovolos, Shopflix */
 const STORES: {
   key: "skroutz" | "bestprice" | "kotsovolos" | "shopflix";
@@ -70,44 +72,28 @@ export function PriceComparisonSection({ product }: { product: Product }) {
         </span>
       )}
 
-      <div className="space-y-2">
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-primary/25 bg-primary/5 px-4 py-3">
-          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            HiTech Doctor
-          </span>
-          <span className="text-xl font-extrabold text-primary">{formatPrice(our)}</span>
+      <div className="flex flex-row flex-wrap items-stretch gap-4">
+        {/* HiTech Doctor */}
+        <div className="flex min-w-[7.5rem] flex-1 flex-col justify-between rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5 sm:max-w-[11rem] sm:flex-initial">
+          <span className="text-[10px] font-bold uppercase tracking-wide text-primary/90">HiTech Doctor</span>
+          <span className="text-base font-extrabold tabular-nums text-primary sm:text-lg">{formatPrice(our)}</span>
         </div>
 
         {rows.map((row) => {
           const p = row.price;
-          const delta = p != null ? p - our : null;
-          const deltaLabel =
-            delta == null
-              ? null
-              : delta === 0
-                ? "same as us"
-                : delta > 0
-                  ? `${formatPrice(delta)} above us`
-                  : `${formatPrice(Math.abs(delta))} below us`;
-
           return (
             <div
               key={row.key}
-              className="flex flex-wrap items-center gap-3 justify-between rounded-xl border border-white/10 bg-background/40 px-4 py-3"
+              className="flex min-w-[7.5rem] flex-1 flex-col justify-between rounded-lg border border-white/15 bg-background/60 px-3 py-2.5 sm:max-w-[11rem] sm:flex-initial"
             >
-              <div className="flex items-center gap-3 min-w-0">
-                <span
-                  className={`inline-flex items-center justify-center px-2.5 py-1 rounded-md text-[10px] font-bold shrink-0 ${row.className}`}
-                >
-                  {row.label}
-                </span>
-                <span className="text-lg font-semibold tabular-nums text-foreground">
-                  {p != null ? formatPrice(p) : "—"}
-                </span>
-              </div>
-              {deltaLabel != null && (
-                <span className="text-xs text-muted-foreground">{deltaLabel}</span>
-              )}
+              <span
+                className={`inline-flex w-fit max-w-full items-center justify-center rounded px-2 py-0.5 text-[10px] font-bold ${row.className}`}
+              >
+                {row.label}
+              </span>
+              <span className="text-base font-semibold tabular-nums text-foreground sm:text-lg">
+                {p != null ? formatPrice(p) : MISSING_PRICE}
+              </span>
             </div>
           );
         })}
