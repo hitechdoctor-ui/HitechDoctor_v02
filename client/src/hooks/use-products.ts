@@ -94,7 +94,7 @@ export function useDeleteProduct() {
   });
 }
 
-/** Ανανέωση τιμών Kotsovolos / Skroutz / BestPrice / Shopflix (admin) */
+/** Ανανέωση τιμών Kotsovolos / Skroutz / BestPrice (admin) */
 export function useRefreshProductPrices() {
   const queryClient = useQueryClient();
   return useMutation({

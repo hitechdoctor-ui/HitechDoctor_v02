@@ -5,16 +5,15 @@ const formatPrice = (p: string | number) =>
 
 const MISSING_PRICE = "-- €";
 
-/** Order: Skroutz, BestPrice, Kotsovolos, Shopflix */
+/** Order: Skroutz, BestPrice, Kotsovolos */
 const STORES: {
-  key: "skroutz" | "bestprice" | "kotsovolos" | "shopflix";
+  key: "skroutz" | "bestprice" | "kotsovolos";
   label: string;
   className: string;
 }[] = [
   { key: "skroutz", label: "Skroutz", className: "bg-[#FF6600] text-white" },
   { key: "bestprice", label: "BestPrice", className: "bg-[#00A859] text-white" },
   { key: "kotsovolos", label: "Kotsovolos", className: "bg-[#E30613] text-white" },
-  { key: "shopflix", label: "Shopflix", className: "bg-[#6B2D90] text-white" },
 ];
 
 function priceFor(product: Product, key: (typeof STORES)[number]["key"]): number | null {
@@ -22,7 +21,6 @@ function priceFor(product: Product, key: (typeof STORES)[number]["key"]): number
     kotsovolos: product.priceKotsovolos as string | null | undefined,
     skroutz: product.priceSkroutz as string | null | undefined,
     bestprice: product.priceBestPrice as string | null | undefined,
-    shopflix: product.priceShopflix as string | null | undefined,
   };
   const raw = map[key];
   if (raw == null || raw === "") return null;

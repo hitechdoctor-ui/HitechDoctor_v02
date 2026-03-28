@@ -16,7 +16,7 @@ export function buildPriceSearchQuery(product: Product): string {
   return parts.join(" ").replace(/\s+/g, " ").trim();
 }
 
-type CompetitorKey = "kotsovolos" | "skroutz" | "bestprice" | "shopflix";
+type CompetitorKey = "kotsovolos" | "skroutz" | "bestprice";
 
 const SITE_CONFIG: {
   key: CompetitorKey;
@@ -34,10 +34,6 @@ const SITE_CONFIG: {
     key: "bestprice",
     searchUrl: (q) => `https://www.bestprice.gr/?s=${q}`,
   },
-  {
-    key: "shopflix",
-    searchUrl: (q) => `https://www.shopflix.gr/el/search?q=${q}`,
-  },
 ];
 
 function manualUrlFor(product: Product, key: CompetitorKey): string | null {
@@ -45,13 +41,38 @@ function manualUrlFor(product: Product, key: CompetitorKey): string | null {
     kotsovolos: product.urlKotsovolos,
     skroutz: product.urlSkroutz,
     bestprice: product.urlBestPrice,
-    shopflix: product.urlShopflix,
   };
   const u = map[key];
   if (!u || typeof u !== "string") return null;
   const t = u.trim();
   if (!t.startsWith("http://") && !t.startsWith("https://")) return null;
   return t;
+}
+
+const MANUAL_FLAG: Record<CompetitorKey, keyof Product> = {
+  kotsovolos: "manualKotsovolos",
+  skroutz: "manualSkroutz",
+  bestprice: "manualBestPrice",
+};
+
+function storedCompetitorPrice(product: Product, key: CompetitorKey): number | null {
+  const map: Record<CompetitorKey, string | null | undefined> = {
+    kotsovolos: product.priceKotsovolos as string | null | undefined,
+    skroutz: product.priceSkroutz as string | null | undefined,
+    bestprice: product.priceBestPrice as string | null | undefined,
+  };
+  const raw = map[key];
+  if (raw == null || String(raw).trim() === "") return null;
+  const n = parseFloat(String(raw).replace(",", "."));
+  if (!Number.isFinite(n) || n < 0) return null;
+  return n;
+}
+
+/** Χειροκίνητη τιμή με flag — δεν γίνεται scraping (υπερισχύει πάντα). */
+function isManualPriceLocked(product: Product, key: CompetitorKey): boolean {
+  const flag = product[MANUAL_FLAG[key]] as boolean | null | undefined;
+  if (!flag) return false;
+  return storedCompetitorPrice(product, key) != null;
 }
 
 function parsePriceString(raw: string): number | null {
@@ -229,7 +250,6 @@ export type PriceRefreshResult = {
   priceKotsovolos: string | null;
   priceSkroutz: string | null;
   priceBestPrice: string | null;
-  priceShopflix: string | null;
   lastPriceUpdate: Date;
   errors: Partial<Record<CompetitorKey, string>>;
 };
@@ -239,8 +259,8 @@ function numToNumericString(n: number): string {
 }
 
 /**
- * Για κάθε κατάστημα: αν υπάρχει χειροκίνητο URL → χρήση του.
- * Αλλιώς δοκιμή public σελίδας αναζήτησης (μπορεί να μπλοκάρει ή να δώσει λάθος τιμή).
+ * Για κάθε κατάστημα: αν το admin έχει σημειώσει χειροκίνητη τιμή (manual*) → κανένα scraping, κρατάμε την υπάρχουσα τιμή.
+ * Αλλιώς: χειροκίνητο URL προϊόντος ή σελίδα αναζήτησης.
  */
 export async function refreshCompetitorPrices(product: Product): Promise<PriceRefreshResult> {
   const q = encodeURIComponent(buildPriceSearchQuery(product));
@@ -250,10 +270,13 @@ export async function refreshCompetitorPrices(product: Product): Promise<PriceRe
     kotsovolos: null,
     skroutz: null,
     bestprice: null,
-    shopflix: null,
   };
 
   for (const { key, searchUrl } of SITE_CONFIG) {
+    if (isManualPriceLocked(product, key)) {
+      continue;
+    }
+
     const manual = manualUrlFor(product, key);
     const url = manual ?? searchUrl(q);
     try {
@@ -274,7 +297,6 @@ export async function refreshCompetitorPrices(product: Product): Promise<PriceRe
     priceKotsovolos: prices.kotsovolos,
     priceSkroutz: prices.skroutz,
     priceBestPrice: prices.bestprice,
-    priceShopflix: prices.shopflix,
     lastPriceUpdate: new Date(),
     errors,
   };

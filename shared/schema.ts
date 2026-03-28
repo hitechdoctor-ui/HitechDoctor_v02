@@ -25,13 +25,15 @@ export const products = pgTable("products", {
   priceKotsovolos: numeric("price_kotsovolos"),
   priceSkroutz: numeric("price_skroutz"),
   priceBestPrice: numeric("price_bestprice"),
-  priceShopflix: numeric("price_shopflix"),
   lastPriceUpdate: timestamp("last_price_update"),
   /** Χειροκίνητα URLs όταν το αυτόματο fetch αποτυγχάνει */
   urlKotsovolos: text("url_kotsovolos"),
   urlSkroutz: text("url_skroutz"),
   urlBestPrice: text("url_bestprice"),
-  urlShopflix: text("url_shopflix"),
+  /** Αν true, η τιμή στο αντίστοιχο price* είναι χειροκίνητη — το refresh δεν κάνει scraping για αυτό το κατάστημα */
+  manualKotsovolos: boolean("manual_kotsovolos").default(false),
+  manualSkroutz: boolean("manual_skroutz").default(false),
+  manualBestPrice: boolean("manual_bestprice").default(false),
   preOrder: boolean("pre_order").default(false),
   variantGroup: text("variant_group"),
   createdAt: timestamp("created_at").defaultNow(),

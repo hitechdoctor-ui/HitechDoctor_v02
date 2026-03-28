@@ -237,10 +237,18 @@ export async function registerRoutes(
       if (!product) return res.status(404).json({ message: "Το προϊόν δεν βρέθηκε" });
       const result = await refreshCompetitorPrices(product);
       const updates: Record<string, unknown> = { lastPriceUpdate: result.lastPriceUpdate };
-      if (result.priceKotsovolos != null) updates.priceKotsovolos = result.priceKotsovolos;
-      if (result.priceSkroutz != null) updates.priceSkroutz = result.priceSkroutz;
-      if (result.priceBestPrice != null) updates.priceBestPrice = result.priceBestPrice;
-      if (result.priceShopflix != null) updates.priceShopflix = result.priceShopflix;
+      if (result.priceKotsovolos != null) {
+        updates.priceKotsovolos = result.priceKotsovolos;
+        updates.manualKotsovolos = false;
+      }
+      if (result.priceSkroutz != null) {
+        updates.priceSkroutz = result.priceSkroutz;
+        updates.manualSkroutz = false;
+      }
+      if (result.priceBestPrice != null) {
+        updates.priceBestPrice = result.priceBestPrice;
+        updates.manualBestPrice = false;
+      }
       const updated = await storage.updateProduct(id, updates as any);
       res.json({ product: updated, errors: result.errors });
     } catch (err) {

@@ -34,12 +34,13 @@ const adminProductFormSchema = z.object({
   urlKotsovolos: z.string().optional().nullable(),
   urlSkroutz: z.string().optional().nullable(),
   urlBestPrice: z.string().optional().nullable(),
-  urlShopflix: z.string().optional().nullable(),
   /** Χειροκίνητες τιμές ανταγωνιστών (EUR) όταν το fetch αποτυγχάνει */
   priceSkroutz: z.string().optional().nullable(),
   priceBestPrice: z.string().optional().nullable(),
   priceKotsovolos: z.string().optional().nullable(),
-  priceShopflix: z.string().optional().nullable(),
+  manualSkroutz: z.boolean().optional(),
+  manualBestPrice: z.boolean().optional(),
+  manualKotsovolos: z.boolean().optional(),
   slug: z.string().optional().nullable(),
   variantGroup: z.string().optional().nullable(),
   preOrder: z.boolean().optional(),
@@ -258,17 +259,16 @@ function ProductPriceCompareFields({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {(
             [
-              { name: "priceSkroutz" as const, label: "Skroutz (€)" },
-              { name: "priceBestPrice" as const, label: "BestPrice (€)" },
-              { name: "priceKotsovolos" as const, label: "Kotsovolos (€)" },
-              { name: "priceShopflix" as const, label: "Shopflix (€)" },
+              { price: "priceSkroutz" as const, manual: "manualSkroutz" as const, label: "Skroutz (€)" },
+              { price: "priceBestPrice" as const, manual: "manualBestPrice" as const, label: "BestPrice (€)" },
+              { price: "priceKotsovolos" as const, manual: "manualKotsovolos" as const, label: "Kotsovolos (€)" },
             ] as const
-          ).map(({ name, label }) => (
-            <div key={name} className="space-y-1">
+          ).map(({ price, manual, label }) => (
+            <div key={price} className="space-y-1.5 rounded-lg border border-white/10 bg-background/40 p-2.5">
               <Label className="text-[11px] font-medium">{label}</Label>
               <Controller
                 control={control}
-                name={name}
+                name={price}
                 render={({ field }) => (
                   <Input
                     type="number"
@@ -278,10 +278,26 @@ function ProductPriceCompareFields({
                     placeholder="e.g. 899.99"
                     value={field.value ?? ""}
                     onChange={(e) => field.onChange(e.target.value === "" ? "" : e.target.value)}
-                    data-testid={`input-${name}`}
+                    data-testid={`input-${price}`}
                   />
                 )}
               />
+              <label className="flex items-center gap-2 cursor-pointer text-[11px] text-muted-foreground">
+                <Controller
+                  control={control}
+                  name={manual}
+                  render={({ field }) => (
+                    <input
+                      type="checkbox"
+                      className="rounded border-white/20"
+                      checked={!!field.value}
+                      onChange={(e) => field.onChange(e.target.checked)}
+                      data-testid={`checkbox-${manual}`}
+                    />
+                  )}
+                />
+                <span>Manual price — skip scraping on refresh</span>
+              </label>
             </div>
           ))}
         </div>
@@ -293,7 +309,6 @@ function ProductPriceCompareFields({
             { name: "urlSkroutz" as const, label: "Skroutz URL" },
             { name: "urlBestPrice" as const, label: "BestPrice URL" },
             { name: "urlKotsovolos" as const, label: "Kotsovolos URL" },
-            { name: "urlShopflix" as const, label: "Shopflix URL" },
           ] as const
         ).map(({ name, label }) => (
           <div key={name} className="space-y-1">
@@ -425,11 +440,12 @@ export default function AdminProducts() {
       urlKotsovolos: null,
       urlSkroutz: null,
       urlBestPrice: null,
-      urlShopflix: null,
       priceSkroutz: "",
       priceBestPrice: "",
       priceKotsovolos: "",
-      priceShopflix: "",
+      manualSkroutz: false,
+      manualBestPrice: false,
+      manualKotsovolos: false,
       slug: null,
       variantGroup: null,
       preOrder: false,
@@ -455,11 +471,12 @@ export default function AdminProducts() {
       urlKotsovolos: null,
       urlSkroutz: null,
       urlBestPrice: null,
-      urlShopflix: null,
       priceSkroutz: "",
       priceBestPrice: "",
       priceKotsovolos: "",
-      priceShopflix: "",
+      manualSkroutz: false,
+      manualBestPrice: false,
+      manualKotsovolos: false,
       slug: null,
       variantGroup: null,
       preOrder: false,
@@ -487,15 +504,15 @@ export default function AdminProducts() {
       urlKotsovolos: product.urlKotsovolos ?? null,
       urlSkroutz: product.urlSkroutz ?? null,
       urlBestPrice: product.urlBestPrice ?? null,
-      urlShopflix: product.urlShopflix ?? null,
       priceSkroutz:
         product.priceSkroutz != null && product.priceSkroutz !== "" ? String(product.priceSkroutz) : "",
       priceBestPrice:
         product.priceBestPrice != null && product.priceBestPrice !== "" ? String(product.priceBestPrice) : "",
       priceKotsovolos:
         product.priceKotsovolos != null && product.priceKotsovolos !== "" ? String(product.priceKotsovolos) : "",
-      priceShopflix:
-        product.priceShopflix != null && product.priceShopflix !== "" ? String(product.priceShopflix) : "",
+      manualSkroutz: !!(product as Product).manualSkroutz,
+      manualBestPrice: !!(product as Product).manualBestPrice,
+      manualKotsovolos: !!(product as Product).manualKotsovolos,
       slug: product.slug ?? null,
       variantGroup: product.variantGroup ?? null,
       preOrder: !!(product as Product).preOrder,
@@ -512,7 +529,9 @@ export default function AdminProducts() {
         form.setValue("priceSkroutz", p.priceSkroutz != null && p.priceSkroutz !== "" ? String(p.priceSkroutz) : "");
         form.setValue("priceBestPrice", p.priceBestPrice != null && p.priceBestPrice !== "" ? String(p.priceBestPrice) : "");
         form.setValue("priceKotsovolos", p.priceKotsovolos != null && p.priceKotsovolos !== "" ? String(p.priceKotsovolos) : "");
-        form.setValue("priceShopflix", p.priceShopflix != null && p.priceShopflix !== "" ? String(p.priceShopflix) : "");
+        form.setValue("manualSkroutz", !!p.manualSkroutz);
+        form.setValue("manualBestPrice", !!p.manualBestPrice);
+        form.setValue("manualKotsovolos", !!p.manualKotsovolos);
       }
       const errEntries = Object.entries(result.errors ?? {}).filter(([, v]) => v);
       toast({
@@ -552,11 +571,12 @@ export default function AdminProducts() {
         urlKotsovolos: data.urlKotsovolos?.trim() || null,
         urlSkroutz: data.urlSkroutz?.trim() || null,
         urlBestPrice: data.urlBestPrice?.trim() || null,
-        urlShopflix: data.urlShopflix?.trim() || null,
         priceSkroutz: parseOptionalEuroField(data.priceSkroutz),
         priceBestPrice: parseOptionalEuroField(data.priceBestPrice),
         priceKotsovolos: parseOptionalEuroField(data.priceKotsovolos),
-        priceShopflix: parseOptionalEuroField(data.priceShopflix),
+        manualSkroutz: data.manualSkroutz ?? false,
+        manualBestPrice: data.manualBestPrice ?? false,
+        manualKotsovolos: data.manualKotsovolos ?? false,
         slug: data.slug?.trim() || null,
         variantGroup: data.variantGroup?.trim() || null,
         preOrder: data.preOrder ?? false,
