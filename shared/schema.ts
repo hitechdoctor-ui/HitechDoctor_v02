@@ -1,4 +1,5 @@
 import { pgTable, text, integer, timestamp, numeric, boolean, uniqueIndex } from "drizzle-orm/pg-core";
+import type { InferInsertModel } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -16,8 +17,21 @@ export const products = pgTable("products", {
   slug: text("slug"),
   compatibleModels: text("compatible_models").array(),
   brand: text("brand"),
+  /** RAM (π.χ. 8GB) — για σύνθεση query σύγκρισης τιμών */
+  ram: text("ram"),
   color: text("color"),
   storage: text("storage"),
+  /** Τιμές ανταγωνιστών (EUR) — ενημέρωση από script ή χειροκίνητα */
+  priceKotsovolos: numeric("price_kotsovolos"),
+  priceSkroutz: numeric("price_skroutz"),
+  priceBestPrice: numeric("price_bestprice"),
+  priceShopflix: numeric("price_shopflix"),
+  lastPriceUpdate: timestamp("last_price_update"),
+  /** Χειροκίνητα URLs όταν το αυτόματο fetch αποτυγχάνει */
+  urlKotsovolos: text("url_kotsovolos"),
+  urlSkroutz: text("url_skroutz"),
+  urlBestPrice: text("url_bestprice"),
+  urlShopflix: text("url_shopflix"),
   preOrder: boolean("pre_order").default(false),
   variantGroup: text("variant_group"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -131,23 +145,26 @@ export const websiteInquiries = pgTable("website_inquiries", {
 });
 
 // --- Schemas & Types ---
-export const insertProductSchema = createInsertSchema(products).omit({ id: true, createdAt: true });
-export const insertCustomerSchema = createInsertSchema(customers).omit({ id: true, createdAt: true });
-export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true });
-export const insertOrderItemSchema = createInsertSchema(orderItems).omit({ id: true });
-export const insertRepairItemSchema = createInsertSchema(repairItems).omit({ id: true, createdAt: true });
+/** Cast: drizzle-zod `createInsertSchema().omit({ …: true })` προκαλεί TS2322 (boolean → never) σε ορισμένες εκδόσεις. */
+export const insertProductSchema = createInsertSchema(products).omit({ id: true, createdAt: true }) as z.ZodTypeAny;
+export const insertCustomerSchema = createInsertSchema(customers).omit({ id: true, createdAt: true }) as z.ZodTypeAny;
+export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true }) as z.ZodTypeAny;
+export const insertOrderItemSchema = createInsertSchema(orderItems).omit({ id: true }) as z.ZodTypeAny;
+export const insertRepairItemSchema = createInsertSchema(repairItems).omit({ id: true, createdAt: true }) as z.ZodTypeAny;
 export const insertRepairRequestSchema = createInsertSchema(repairRequests)
-  .omit({ id: true, createdAt: true, assignedToUserId: true });
+  .omit({ id: true, createdAt: true, assignedToUserId: true }) as z.ZodTypeAny;
 /** JSON requests send ISO date strings; drizzle-zod expects Date objects — coerce so POST /api/subscriptions validates. */
 export const insertSubscriptionSchema = createInsertSchema(subscriptions)
   .omit({ id: true, createdAt: true })
   .extend({
     startDate: z.coerce.date(),
     renewalDate: z.coerce.date(),
-  });
-export const insertWebsiteInquirySchema = createInsertSchema(websiteInquiries).omit({ id: true, createdAt: true });
+  }) as z.ZodTypeAny;
+export const insertWebsiteInquirySchema = createInsertSchema(websiteInquiries).omit({ id: true, createdAt: true }) as z.ZodTypeAny;
 
 export type Product = typeof products.$inferSelect;
+/** Insert type από το Drizzle — αποφεύγει προβλήματα z.infer στο createInsertSchema (boolean → never). */
+export type InsertProduct = InferInsertModel<typeof products>;
 export type Customer = typeof customers.$inferSelect;
 export type Order = typeof orders.$inferSelect;
 export type OrderItem = typeof orderItems.$inferSelect;

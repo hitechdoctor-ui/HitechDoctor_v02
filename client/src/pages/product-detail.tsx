@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { PriceDisclaimer } from "@/components/price-disclaimer";
+import { PriceComparisonSection } from "@/components/price-comparison-section";
 import { ReviewsSection } from "@/components/reviews-section";
 import { Seo } from "@/components/seo";
 import { Helmet } from "react-helmet-async";
@@ -558,6 +559,8 @@ export default function ProductDetail() {
                 {formatPrice(product.price)}
               </p>
               <PriceDisclaimer className="mt-1" emphasis />
+
+              <PriceComparisonSection product={product} />
 
               {/* Description */}
               <p className="text-muted-foreground leading-relaxed">{product.description}</p>

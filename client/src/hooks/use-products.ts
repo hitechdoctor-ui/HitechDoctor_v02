@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
 import type { Product, InsertProduct } from "@shared/schema";
+import { getAdminAuthHeaders } from "@/lib/queryClient";
 
 export function useProducts(category?: string, subcategory?: string) {
   return useQuery({
@@ -89,6 +90,27 @@ export function useDeleteProduct() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.products.list.path] });
+    },
+  });
+}
+
+/** Ανανέωση τιμών Kotsovolos / Skroutz / BestPrice / Shopflix (admin) */
+export function useRefreshProductPrices() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/admin/products/${id}/refresh-prices`, {
+        method: "POST",
+        headers: { ...getAdminAuthHeaders() },
+        credentials: "include",
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error((json as { message?: string }).message || "Αποτυχία ανανέωσης");
+      return json as { product: Product; errors: Record<string, string> };
+    },
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: [api.products.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.products.get.path, id] });
     },
   });
 }

@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Seo } from "@/components/seo";
-import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct } from "@/hooks/use-products";
+import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, useRefreshProductPrices } from "@/hooks/use-products";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,17 +11,36 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertProductSchema } from "@shared/schema";
-import { Plus, Edit, Trash2, Package, Search, X, FileText, AlignLeft, ImagePlus, GripVertical, Star, Smartphone, Download } from "lucide-react";
+import type { Product } from "@shared/schema";
+import { Plus, Edit, Trash2, Package, Search, X, FileText, AlignLeft, ImagePlus, GripVertical, Star, Smartphone, Download, RefreshCw } from "lucide-react";
 import { exportToCsv } from "@/lib/csv-export";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { RichTextEditor } from "@/components/rich-text-editor";
 
-const formSchema = insertProductSchema.extend({
-  price: z.coerce.string().min(1, "Υποχρεωτικό"),
+/** Ρητό schema φόρμας (το createInsertSchema(products) δίνει προβληματικό z.infer με booleans). */
+const adminProductFormSchema = z.object({
+  name: z.string().min(1, "Υποχρεωτικό"),
+  description: z.string().min(1, "Υποχρεωτικό"),
   fullDescription: z.string().optional(),
+  price: z.coerce.string().min(1, "Υποχρεωτικό"),
+  imageUrl: z.string().optional().nullable(),
+  category: z.string().min(1),
+  subcategory: z.string().optional().nullable(),
+  brand: z.string().optional().nullable(),
+  ram: z.string().optional().nullable(),
+  color: z.string().optional().nullable(),
+  storage: z.string().optional().nullable(),
+  urlKotsovolos: z.string().optional().nullable(),
+  urlSkroutz: z.string().optional().nullable(),
+  urlBestPrice: z.string().optional().nullable(),
+  urlShopflix: z.string().optional().nullable(),
+  slug: z.string().optional().nullable(),
+  variantGroup: z.string().optional().nullable(),
+  preOrder: z.boolean().optional(),
 });
+
+const formSchema = adminProductFormSchema;
 
 type ProductFormData = z.infer<typeof formSchema>;
 
@@ -119,7 +138,7 @@ function ProductExtraFields({ control }: { control: any }) {
         <h3 className="text-sm font-semibold">Χαρακτηριστικά Προϊόντος</h3>
         <span className="text-[10px] bg-primary/10 border border-primary/20 rounded px-1.5 py-0.5 text-primary/80">εμφανίζεται στα φίλτρα eShop</span>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Brand */}
         <div className="space-y-1.5">
           <Label className="text-xs font-semibold">Μάρκα (Brand)</Label>
@@ -133,6 +152,24 @@ function ProductExtraFields({ control }: { control: any }) {
                 value={field.value ?? ""}
                 onChange={field.onChange}
                 data-testid="input-product-brand"
+              />
+            )}
+          />
+        </div>
+
+        {/* RAM — για σύγκριση τιμών */}
+        <div className="space-y-1.5">
+          <Label className="text-xs font-semibold">RAM</Label>
+          <Controller
+            control={control}
+            name="ram"
+            render={({ field }) => (
+              <Input
+                className="bg-background h-9 text-sm"
+                placeholder="π.χ. 8GB, 12GB"
+                value={field.value ?? ""}
+                onChange={field.onChange}
+                data-testid="input-product-ram"
               />
             )}
           />
@@ -178,12 +215,112 @@ function ProductExtraFields({ control }: { control: any }) {
   );
 }
 
+// ── Σύγκριση τιμών (URLs + manual refresh) ─────────────────────────────────
+function ProductPriceCompareFields({
+  control,
+  editingId,
+  liveProduct,
+  onRefresh,
+  refreshing,
+}: {
+  control: any;
+  editingId: number | null;
+  liveProduct: Product | undefined;
+  onRefresh: () => void;
+  refreshing: boolean;
+}) {
+  const fmt = (v: string | null | undefined) =>
+    v != null && v !== "" ? `${Number(v).toFixed(2)} €` : "—";
+
+  return (
+    <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4 space-y-4">
+      <div className="flex items-center gap-2 pb-1 border-b border-white/8">
+        <RefreshCw className="w-4 h-4 text-cyan-400" />
+        <h3 className="text-sm font-semibold">Σύγκριση τιμών (ανταγωνιστές)</h3>
+      </div>
+      <p className="text-[11px] text-muted-foreground leading-relaxed">
+        Αν το αυτόματο άνοιγμα αποτυγχάνει, επικολλήστε το ακριβές URL σελίδας προϊόντος από κάθε site. Το query αναζήτησης
+        χρησιμοποιεί Μάρκα + Όνομα + RAM + Storage + Χρώμα.
+      </p>
+      <div className="grid grid-cols-1 gap-3">
+        {(
+          [
+            { name: "urlKotsovolos" as const, label: "Kotsovolos — URL προϊόντος" },
+            { name: "urlSkroutz" as const, label: "Skroutz — URL προϊόντος" },
+            { name: "urlBestPrice" as const, label: "BestPrice — URL προϊόντος" },
+            { name: "urlShopflix" as const, label: "Shopflix — URL προϊόντος" },
+          ] as const
+        ).map(({ name, label }) => (
+          <div key={name} className="space-y-1">
+            <Label className="text-[11px] font-medium">{label}</Label>
+            <Controller
+              control={control}
+              name={name}
+              render={({ field }) => (
+                <Input
+                  className="bg-background h-9 text-xs font-mono"
+                  placeholder="https://..."
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  data-testid={`input-product-${name}`}
+                />
+              )}
+            />
+          </div>
+        ))}
+      </div>
+
+      {editingId && (
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-2 border-cyan-500/40 text-cyan-200 hover:bg-cyan-500/10"
+            onClick={onRefresh}
+            disabled={refreshing}
+            data-testid="btn-manual-refresh-prices"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+            Χειροκίνητη ανανέωση τιμών
+          </Button>
+        </div>
+      )}
+
+      {liveProduct && (liveProduct.lastPriceUpdate || liveProduct.priceKotsovolos || liveProduct.priceSkroutz || liveProduct.priceBestPrice || liveProduct.priceShopflix) && (
+        <div className="rounded-lg border border-white/10 bg-background/50 p-3 text-[11px] space-y-1.5">
+          <p className="font-semibold text-muted-foreground uppercase tracking-wide text-[10px]">Τρέχουσες αποθηκευμένες τιμές</p>
+          <div className="grid sm:grid-cols-2 gap-x-4 gap-y-1">
+            <span>Kotsovolos: <strong className="text-foreground">{fmt(liveProduct.priceKotsovolos as string)}</strong></span>
+            <span>Skroutz: <strong className="text-foreground">{fmt(liveProduct.priceSkroutz as string)}</strong></span>
+            <span>BestPrice: <strong className="text-foreground">{fmt(liveProduct.priceBestPrice as string)}</strong></span>
+            <span>Shopflix: <strong className="text-foreground">{fmt(liveProduct.priceShopflix as string)}</strong></span>
+          </div>
+          {liveProduct.lastPriceUpdate && (
+            <p className="text-[10px] text-muted-foreground pt-1">
+              Τελευταία ενημέρωση:{" "}
+              {new Intl.DateTimeFormat("el-GR", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              }).format(new Date(liveProduct.lastPriceUpdate as string | Date))}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function AdminProducts() {
   const { data: products, isLoading } = useProducts();
   const { mutateAsync: createProduct } = useCreateProduct();
   const { mutateAsync: updateProduct } = useUpdateProduct();
   const { mutateAsync: deleteProduct } = useDeleteProduct();
+  const { mutateAsync: refreshPrices, isPending: refreshingPrices } = useRefreshProductPrices();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -230,16 +367,59 @@ export default function AdminProducts() {
     filterPreOrder && filterPreOrder !== "all-preorder",
   ].filter(Boolean).length;
 
+  const liveProduct = useMemo(
+    () => (editingId != null ? products?.find((p) => p.id === editingId) : undefined),
+    [products, editingId]
+  );
+
   const form = useForm<ProductFormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: "", description: "", fullDescription: "", price: "", imageUrl: "", category: "mobile", subcategory: "", brand: null, color: null, storage: null },
+    defaultValues: {
+      name: "",
+      description: "",
+      fullDescription: "",
+      price: "",
+      imageUrl: "",
+      category: "mobile",
+      subcategory: "",
+      brand: null,
+      ram: null,
+      color: null,
+      storage: null,
+      urlKotsovolos: null,
+      urlSkroutz: null,
+      urlBestPrice: null,
+      urlShopflix: null,
+      slug: null,
+      variantGroup: null,
+      preOrder: false,
+    },
   });
 
   const openNew = () => {
     setEditingId(null);
     setRichContent("");
     setExtraImages([]);
-    form.reset({ name: "", description: "", fullDescription: "", price: "", imageUrl: "", category: "mobile", subcategory: "", brand: null, color: null, storage: null });
+    form.reset({
+      name: "",
+      description: "",
+      fullDescription: "",
+      price: "",
+      imageUrl: "",
+      category: "mobile",
+      subcategory: "",
+      brand: null,
+      ram: null,
+      color: null,
+      storage: null,
+      urlKotsovolos: null,
+      urlSkroutz: null,
+      urlBestPrice: null,
+      urlShopflix: null,
+      slug: null,
+      variantGroup: null,
+      preOrder: false,
+    });
     setIsDialogOpen(true);
   };
 
@@ -257,10 +437,39 @@ export default function AdminProducts() {
       category: product.category,
       subcategory: product.subcategory ?? "",
       brand: product.brand ?? null,
+      ram: product.ram ?? null,
       color: product.color ?? null,
       storage: product.storage ?? null,
+      urlKotsovolos: product.urlKotsovolos ?? null,
+      urlSkroutz: product.urlSkroutz ?? null,
+      urlBestPrice: product.urlBestPrice ?? null,
+      urlShopflix: product.urlShopflix ?? null,
+      slug: product.slug ?? null,
+      variantGroup: product.variantGroup ?? null,
+      preOrder: !!(product as Product).preOrder,
     });
     setIsDialogOpen(true);
+  };
+
+  const handleRefreshPricesDialog = async () => {
+    if (!editingId) return;
+    try {
+      const result = await refreshPrices(editingId);
+      const errEntries = Object.entries(result.errors ?? {}).filter(([, v]) => v);
+      toast({
+        title: "Ανανέωση τιμών",
+        description:
+          errEntries.length > 0
+            ? errEntries.map(([k, v]) => `${k}: ${v}`).join(" · ")
+            : "Οι διαθέσιμες τιμές ενημερώθηκαν.",
+      });
+    } catch (e) {
+      toast({
+        variant: "destructive",
+        title: "Σφάλμα",
+        description: e instanceof Error ? e.message : "Αποτυχία",
+      });
+    }
   };
 
   const handleDelete = async (id: number) => {
@@ -278,8 +487,16 @@ export default function AdminProducts() {
         images: extraImages.length > 0 ? extraImages : null,
         subcategory: data.subcategory || null,
         brand: data.brand || null,
+        ram: data.ram?.trim() || null,
         color: data.color || null,
         storage: data.storage || null,
+        urlKotsovolos: data.urlKotsovolos?.trim() || null,
+        urlSkroutz: data.urlSkroutz?.trim() || null,
+        urlBestPrice: data.urlBestPrice?.trim() || null,
+        urlShopflix: data.urlShopflix?.trim() || null,
+        slug: data.slug?.trim() || null,
+        variantGroup: data.variantGroup?.trim() || null,
+        preOrder: data.preOrder ?? false,
       };
       if (editingId) {
         await updateProduct({ id: editingId, ...payload });
@@ -376,6 +593,14 @@ export default function AdminProducts() {
 
             {/* ── Product extra fields (brand, color, storage) ── */}
             <ProductExtraFields control={form.control} />
+
+            <ProductPriceCompareFields
+              control={form.control}
+              editingId={editingId}
+              liveProduct={liveProduct}
+              onRefresh={handleRefreshPricesDialog}
+              refreshing={refreshingPrices}
+            />
 
             {/* ── Images Section ── */}
             <div className="rounded-2xl border border-white/10 bg-white/2 p-4 space-y-4">
@@ -575,6 +800,36 @@ export default function AdminProducts() {
                   </TableCell>
                   <TableCell className="font-semibold text-primary">{Number(product.price).toFixed(2)} €</TableCell>
                   <TableCell className="text-right space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title="Χειροκίνητη ανανέωση τιμών ανταγωνιστών"
+                      className="text-cyan-400/90 hover:text-cyan-300 hover:bg-cyan-500/10"
+                      disabled={refreshingPrices}
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        try {
+                          const result = await refreshPrices(product.id);
+                          const errEntries = Object.entries(result.errors ?? {}).filter(([, v]) => v);
+                          toast({
+                            title: "Ανανέωση τιμών",
+                            description:
+                              errEntries.length > 0
+                                ? errEntries.map(([k, v]) => `${k}: ${v}`).join(" · ")
+                                : "Ολοκληρώθηκε.",
+                          });
+                        } catch (err) {
+                          toast({
+                            variant: "destructive",
+                            title: "Σφάλμα",
+                            description: err instanceof Error ? err.message : "Αποτυχία",
+                          });
+                        }
+                      }}
+                      data-testid={`btn-refresh-prices-${product.id}`}
+                    >
+                      <RefreshCw className={`w-4 h-4 ${refreshingPrices ? "animate-spin" : ""}`} />
+                    </Button>
                     <Button variant="ghost" size="icon" onClick={() => openEdit(product)} data-testid={`btn-edit-product-${product.id}`}>
                       <Edit className="w-4 h-4" />
                     </Button>

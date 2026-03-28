@@ -17,6 +17,7 @@ import { fetchHubSpotContacts } from "./hubspot";
 import bcrypt from "bcrypt";
 import { sendOrderStatusEmail } from "./nodemailer-mail";
 import { resolveCheckStatus } from "./check-status";
+import { refreshCompetitorPrices } from "./price-compare";
 
 const BCRYPT_ROUNDS = 12;
 
@@ -222,6 +223,29 @@ export async function registerRoutes(
       res.status(204).send();
     } catch (error) {
       res.status(404).json({ message: "Product not found" });
+    }
+  });
+
+  /** Χειροκίνητη ανανέωση τιμών ανταγωνιστών (Skroutz, Kotsovolos, κ.λπ.) για ένα προϊόν */
+  app.post("/api/admin/products/:id/refresh-prices", async (req, res) => {
+    try {
+      const u = await getAdminUserFromRequest(req);
+      if (!u) return res.status(401).json({ message: "Σύνδεση απαιτείται" });
+      const id = parseInt(req.params.id, 10);
+      if (!Number.isFinite(id)) return res.status(400).json({ message: "Μη έγκυρο id" });
+      const product = await storage.getProduct(id);
+      if (!product) return res.status(404).json({ message: "Το προϊόν δεν βρέθηκε" });
+      const result = await refreshCompetitorPrices(product);
+      const updates: Record<string, unknown> = { lastPriceUpdate: result.lastPriceUpdate };
+      if (result.priceKotsovolos != null) updates.priceKotsovolos = result.priceKotsovolos;
+      if (result.priceSkroutz != null) updates.priceSkroutz = result.priceSkroutz;
+      if (result.priceBestPrice != null) updates.priceBestPrice = result.priceBestPrice;
+      if (result.priceShopflix != null) updates.priceShopflix = result.priceShopflix;
+      const updated = await storage.updateProduct(id, updates as any);
+      res.json({ product: updated, errors: result.errors });
+    } catch (err) {
+      console.error("[admin/refresh-prices]", err);
+      res.status(500).json({ message: "Αποτυχία ανανέωσης τιμών" });
     }
   });
 
