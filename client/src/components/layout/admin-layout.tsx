@@ -1,13 +1,30 @@
 import { Link, useLocation } from "wouter";
+import type { LucideIcon } from "lucide-react";
 import { Package, Users, ShoppingCart, LayoutDashboard, LogOut, Wrench, Euro, Menu, X, Shield, Globe, MessageSquare, Lock, Mail, Eye, EyeOff, UserCog, Download, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@shared/routes";
+import { getAdminAuthHeaders } from "@/lib/queryClient";
 
 const STORAGE_KEY = "hitech_admin_token";
+/** Διακριτικός ήχος όταν αυξάνεται ο αριθμός μη ολοκληρωμένων παραγγελιών (public). */
+const OPEN_ORDERS_NOTIFICATION_MP3 = "/notification.mp3";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
+}
+
+type NavLinkItem = { href: string; label: string; icon: LucideIcon };
+
+type NavBlock =
+  | { kind: "links"; items: NavLinkItem[] }
+  | { kind: "group"; title: string; items: NavLinkItem[] };
+
+function linkIsActive(href: string, location: string): boolean {
+  if (href === "/admin") return location === "/admin";
+  return location.startsWith(href);
 }
 
 function AdminLogin({ onLogin }: { onLogin: (token: string) => void }) {
@@ -137,6 +154,42 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     if (!allowed) setLocation("/admin/repair-requests");
   }, [adminInfo?.role, location, setLocation]);
 
+  const { data: ordersList } = useQuery({
+    queryKey: [api.orders.list.path],
+    queryFn: async () => {
+      const res = await fetch(api.orders.list.path, {
+        credentials: "include",
+        headers: getAdminAuthHeaders(),
+      });
+      if (!res.ok) throw new Error("Failed to fetch orders");
+      return res.json() as Promise<{ status?: string }[]>;
+    },
+    enabled: !!token && adminInfo?.role !== "staff",
+    refetchInterval: 30_000,
+    staleTime: 0,
+  });
+
+  const openOrdersCount = useMemo(() => {
+    if (!Array.isArray(ordersList)) return 0;
+    return ordersList.filter((o) => o.status !== "completed").length;
+  }, [ordersList]);
+
+  const prevOpenOrdersRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!token || adminInfo?.role === "staff") {
+      prevOpenOrdersRef.current = null;
+      return;
+    }
+    const prev = prevOpenOrdersRef.current;
+    if (prev !== null && openOrdersCount > prev) {
+      const audio = new Audio(OPEN_ORDERS_NOTIFICATION_MP3);
+      audio.volume = 0.35;
+      void audio.play().catch(() => {});
+    }
+    prevOpenOrdersRef.current = openOrdersCount;
+  }, [openOrdersCount, token, adminInfo?.role]);
+
   if (!token) return <AdminLogin onLogin={(t) => { setToken(t); setAdminInfo(decodeAdminToken(t)); }} />;
 
   const handleLogout = () => {
@@ -144,25 +197,56 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     setToken(null);
   };
 
-  const allLinks = [
-    { href: "/admin",                              label: "Dashboard",                 icon: LayoutDashboard },
-    { href: "/admin/repair-requests",              label: "Αιτήματα Επισκευής",        icon: Wrench          },
-    { href: "/admin/website-inquiries",            label: "Αιτήματα Ιστοσελίδων",     icon: MessageSquare   },
-    { href: "/admin/antivirus-subscriptions",      label: "Συνδρομές Antivirus",       icon: Shield          },
-    { href: "/admin/website-subscriptions",        label: "Συνδρομές Ιστοσελίδων",    icon: Globe           },
-    { href: "/admin/customers",                    label: "Πελατολόγιο (CRM)",         icon: Users           },
-    { href: "/admin/hubspot",                     label: "HubSpot",                   icon: Link2           },
-    { href: "/admin/orders",                       label: "Παραγγελίες",               icon: ShoppingCart    },
-    { href: "/admin/products",                     label: "Προϊόντα eShop",            icon: Package         },
-    { href: "/admin/oikonomika",                   label: "Οικονομικά",                icon: Euro            },
-    { href: "/admin/ipsw-downloads",               label: "IPSW λήψεις",               icon: Download        },
-    { href: "/admin/users",                        label: "Διαχειριστές",              icon: UserCog         },
+  const adminNavBlocks: NavBlock[] = [
+    {
+      kind: "links",
+      items: [{ href: "/admin", label: "Dashboard", icon: LayoutDashboard }],
+    },
+    {
+      kind: "group",
+      title: "Συνδρομές",
+      items: [
+        { href: "/admin/antivirus-subscriptions", label: "Συνδρομές Antivirus", icon: Shield },
+        { href: "/admin/website-subscriptions", label: "Συνδρομές Ιστοσελίδων", icon: Globe },
+      ],
+    },
+    {
+      kind: "group",
+      title: "CRM",
+      items: [
+        { href: "/admin/customers", label: "Πελατολόγιο (CRM)", icon: Users },
+        { href: "/admin/hubspot", label: "HubSpot — Επαφές", icon: Link2 },
+      ],
+    },
+    {
+      kind: "group",
+      title: "Αιτήματα",
+      items: [
+        { href: "/admin/repair-requests", label: "Αιτήματα Επισκευής", icon: Wrench },
+        { href: "/admin/website-inquiries", label: "Αιτήματα Ιστοσελίδων", icon: MessageSquare },
+      ],
+    },
+    {
+      kind: "links",
+      items: [
+        { href: "/admin/orders", label: "Παραγγελίες", icon: ShoppingCart },
+        { href: "/admin/products", label: "Προϊόντα eShop", icon: Package },
+        { href: "/admin/oikonomika", label: "Οικονομικά", icon: Euro },
+        { href: "/admin/ipsw-downloads", label: "IPSW λήψεις", icon: Download },
+        { href: "/admin/users", label: "Διαχειριστές", icon: UserCog },
+      ],
+    },
   ];
 
-  const links =
-    adminInfo?.role === "staff"
-      ? allLinks.filter((l) => l.href === "/admin/repair-requests")
-      : allLinks;
+  const staffNavBlocks: NavBlock[] = [
+    {
+      kind: "group",
+      title: "Αιτήματα",
+      items: [{ href: "/admin/repair-requests", label: "Αιτήματα Επισκευής", icon: Wrench }],
+    },
+  ];
+
+  const navBlocks = adminInfo?.role === "staff" ? staffNavBlocks : adminNavBlocks;
 
   const SidebarContent = () => (
     <>
@@ -178,26 +262,68 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </button>
       </div>
 
-      <nav className="flex-1 p-4 flex flex-col gap-1 overflow-y-auto">
-        {links.map((link) => {
-          const isActive =
-            link.href === "/admin"
-              ? location === "/admin"
-              : location.startsWith(link.href);
+      <nav className="flex-1 p-4 flex flex-col gap-3 overflow-y-auto">
+        {navBlocks.map((block, blockIdx) => {
+          if (block.kind === "links") {
+            return (
+              <div key={`links-${blockIdx}`} className="flex flex-col gap-1">
+                {block.items.map((link) => {
+                  const isActive = linkIsActive(link.href, location);
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setMobileOpen(false)}
+                      className={`flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium transition-all duration-200 text-sm w-full ${
+                        isActive
+                          ? "bg-primary/10 text-primary border border-primary/20 shadow-[0_0_15px_rgba(0,229,255,0.1)]"
+                          : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                      }`}
+                    >
+                      <link.icon className="w-4 h-4 shrink-0" />
+                      <span className="flex-1 truncate text-left">{link.label}</span>
+                      {link.href === "/admin/orders" && openOrdersCount > 0 && (
+                        <span
+                          className="shrink-0 min-h-[1.25rem] min-w-[1.25rem] px-1.5 rounded-full bg-yellow-400 text-black text-[10px] font-bold leading-none flex items-center justify-center tabular-nums shadow-sm ring-1 ring-yellow-500/30"
+                          aria-label={`${openOrdersCount} παραγγελίες χωρίς κατάσταση ολοκλήρωσης`}
+                          data-testid="badge-admin-open-orders"
+                        >
+                          {openOrdersCount > 99 ? "99+" : openOrdersCount}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            );
+          }
+
           return (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium transition-all duration-200 text-sm ${
-                isActive
-                  ? "bg-primary/10 text-primary border border-primary/20 shadow-[0_0_15px_rgba(0,229,255,0.1)]"
-                  : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
-              }`}
-            >
-              <link.icon className="w-4 h-4 shrink-0" />
-              {link.label}
-            </Link>
+            <div key={block.title} className="flex flex-col gap-1">
+              <p className="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                {block.title}
+              </p>
+              <div className="flex flex-col gap-0.5 border-l border-white/10 ml-3 pl-2">
+                {block.items.map((link) => {
+                  const isActive = linkIsActive(link.href, location);
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setMobileOpen(false)}
+                      className={`flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-all duration-200 text-sm w-full ${
+                        isActive
+                          ? "bg-primary/10 text-primary border border-primary/20 shadow-[0_0_12px_rgba(0,229,255,0.08)]"
+                          : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                      }`}
+                    >
+                      <link.icon className="w-4 h-4 shrink-0 opacity-90" />
+                      <span className="flex-1 truncate text-left leading-snug">{link.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
           );
         })}
       </nav>
