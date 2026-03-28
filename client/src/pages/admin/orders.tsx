@@ -1,20 +1,29 @@
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Seo } from "@/components/seo";
 import { useOrders, useUpdateOrderStatus } from "@/hooks/use-orders";
-import { useQuery } from "@tanstack/react-query";
+import { useProducts } from "@/hooks/use-products";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   ShoppingCart, Euro, CheckCircle2, XCircle, Clock, AlertCircle,
   ChevronDown, ChevronRight, Mail, Package, Search, X,
-  User, Printer, Download,
+  User, Printer, Download, Plus, Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { exportToCsv, formatDateEl } from "@/lib/csv-export";
+import { apiRequest } from "@/lib/queryClient";
+import { api } from "@shared/routes";
+import type { CheckoutPayload } from "@shared/schema";
 
 // ── Status config ────────────────────────────────────────────────────────────
 const ORDER_STATUSES = [
@@ -227,6 +236,204 @@ function SearchInput({ value, onChange }: { value: string; onChange: (v: string)
   );
 }
 
+// ── Χειροκίνητη παραγγελία (admin) ───────────────────────────────────────────
+function ManualOrderDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { data: products, isLoading: loadingProducts } = useProducts();
+
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<CheckoutPayload["paymentMethod"]>("cod");
+  const [lines, setLines] = useState<{ productId: number; quantity: number }[]>([{ productId: 0, quantity: 1 }]);
+
+  useEffect(() => {
+    if (!open) return;
+    setCustomerName("");
+    setCustomerEmail("");
+    setCustomerPhone("");
+    setCustomerAddress("");
+    setPaymentMethod("cod");
+    setLines([{ productId: 0, quantity: 1 }]);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open || !products?.length) return;
+    setLines((prev) => {
+      if (prev.length === 1 && prev[0].productId === 0) {
+        return [{ productId: products[0].id, quantity: 1 }];
+      }
+      return prev;
+    });
+  }, [open, products]);
+
+  const mutation = useMutation({
+    mutationFn: (payload: CheckoutPayload) => apiRequest("POST", "/api/admin/orders", payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.orders.list.path] });
+      toast({ title: "Η παραγγελία δημιουργήθηκε" });
+      onOpenChange(false);
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : "Αποτυχία";
+      toast({ variant: "destructive", title: "Σφάλμα", description: msg });
+    },
+  });
+
+  const handleSubmit = () => {
+    if (!customerName.trim() || !customerEmail.trim()) {
+      toast({ variant: "destructive", title: "Συμπληρώστε όνομα και email πελάτη" });
+      return;
+    }
+    const validLines = lines.filter((l) => l.productId > 0 && l.quantity >= 1);
+    if (validLines.length === 0) {
+      toast({ variant: "destructive", title: "Προσθέστε τουλάχιστον ένα προϊόν" });
+      return;
+    }
+    const payload: CheckoutPayload = {
+      customer: {
+        name: customerName.trim(),
+        email: customerEmail.trim(),
+        phone: customerPhone.trim() || null,
+        address: customerAddress.trim() || null,
+      },
+      items: validLines.map((l) => ({ productId: l.productId, quantity: l.quantity })),
+      paymentMethod,
+    };
+    mutation.mutate(payload);
+  };
+
+  const addLine = () => {
+    const pid = products?.[0]?.id ?? 0;
+    setLines((prev) => [...prev, { productId: pid, quantity: 1 }]);
+  };
+
+  const removeLine = (idx: number) => {
+    setLines((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== idx)));
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto border-white/10 bg-card">
+        <DialogHeader>
+          <DialogTitle>Προσθήκη παραγγελίας</DialogTitle>
+        </DialogHeader>
+        {loadingProducts ? (
+          <p className="text-sm text-muted-foreground py-6">Φόρτωση προϊόντων…</p>
+        ) : !products?.length ? (
+          <p className="text-sm text-amber-400/90 py-4">Δεν υπάρχουν προϊόντα στο eShop. Προσθέστε προϊόντα πρώτα.</p>
+        ) : (
+          <div className="space-y-4 py-1">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label>Ονοματεπώνυμο πελάτη</Label>
+                <Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Πλήρες όνομα" />
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label>Email</Label>
+                <Input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Τηλέφωνο</Label>
+                <Input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label>Διεύθυνση (προαιρετικό)</Label>
+                <Input value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Τρόπος πληρωμής</Label>
+              <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v as CheckoutPayload["paymentMethod"])}>
+                <SelectTrigger className="border-white/10 bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cod">Αντικαταβολή</SelectItem>
+                  <SelectItem value="bank">Τραπεζική κατάθεση</SelectItem>
+                  <SelectItem value="card">Κάρτα</SelectItem>
+                  <SelectItem value="store">Κατάστημα</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Γραμμές παραγγελίας</Label>
+                <Button type="button" variant="outline" size="sm" className="h-8 gap-1" onClick={addLine}>
+                  <Plus className="w-3.5 h-3.5" /> Γραμμή
+                </Button>
+              </div>
+              {lines.map((line, idx) => (
+                <div key={idx} className="flex flex-wrap gap-2 items-end">
+                  <div className="flex-1 min-w-[160px] space-y-1">
+                    <Label className="text-[10px] text-muted-foreground">Προϊόν</Label>
+                    <Select
+                      value={String(line.productId)}
+                      onValueChange={(v) => {
+                        const id = parseInt(v, 10);
+                        setLines((prev) => prev.map((row, i) => (i === idx ? { ...row, productId: id } : row)));
+                      }}
+                    >
+                      <SelectTrigger className="border-white/10 bg-background text-xs">
+                        <SelectValue placeholder="Επιλογή" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {products.map((p) => (
+                          <SelectItem key={p.id} value={String(p.id)} className="text-xs">
+                            {p.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="w-24 space-y-1">
+                    <Label className="text-[10px] text-muted-foreground">Ποσ.</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={line.quantity}
+                      onChange={(e) => {
+                        const q = Math.max(1, parseInt(e.target.value, 10) || 1);
+                        setLines((prev) => prev.map((row, i) => (i === idx ? { ...row, quantity: q } : row)));
+                      }}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0 text-muted-foreground hover:text-red-400"
+                    onClick={() => removeLine(idx)}
+                    disabled={lines.length <= 1}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>Ακύρωση</Button>
+          <Button onClick={handleSubmit} disabled={mutation.isPending || loadingProducts || !products?.length}>
+            {mutation.isPending ? "Αποθήκευση…" : "Δημιουργία παραγγελίας"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ── Order Items expanded row ──────────────────────────────────────────────────
 function OrderItemsRow({ orderId }: { orderId: number }) {
   const { data: items, isLoading } = useQuery<any[]>({
@@ -412,6 +619,7 @@ export default function AdminOrders() {
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [manualOpen, setManualOpen] = useState(false);
 
   const handleStatusChange = async (id: number, status: string) => {
     try {
@@ -458,6 +666,16 @@ export default function AdminOrders() {
           <h1 className="text-3xl font-display font-bold">Παραγγελίες</h1>
           <p className="text-muted-foreground mt-1">Παρακολούθηση, αναζήτηση και διεκπεραίωση παραγγελιών eShop</p>
         </div>
+        <div className="flex flex-wrap items-center gap-2 ml-auto">
+          <Button
+            size="sm"
+            className="gap-2"
+            onClick={() => setManualOpen(true)}
+            data-testid="btn-add-manual-order"
+          >
+            <Plus className="w-4 h-4" />
+            Προσθήκη παραγγελίας
+          </Button>
         <Button
           variant="outline"
           size="sm"
@@ -481,7 +699,10 @@ export default function AdminOrders() {
           <Download className="w-4 h-4" />
           Εξαγωγή CSV
         </Button>
+        </div>
       </div>
+
+      <ManualOrderDialog open={manualOpen} onOpenChange={setManualOpen} />
 
       {/* ── Stats cards ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">

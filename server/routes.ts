@@ -3,12 +3,20 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import type { AdminUser, RepairRequest } from "@shared/schema";
 import { api, errorSchemas } from "@shared/routes";
-import { insertRepairRequestSchema, insertRepairItemSchema, insertSubscriptionSchema, insertWebsiteInquirySchema } from "@shared/schema";
+import {
+  insertRepairRequestSchema,
+  insertRepairItemSchema,
+  insertSubscriptionSchema,
+  insertWebsiteInquirySchema,
+  checkoutPayloadSchema,
+} from "@shared/schema";
 import { z } from "zod";
 import { sendRepairConfirmationEmail, sendWebsiteInquiryEmail, sendWebsiteInquiryClientEmail } from "./email";
 import { runImeiLookup } from "./imei-lookup";
 import { fetchHubSpotContacts } from "./hubspot";
 import bcrypt from "bcrypt";
+import { sendOrderStatusEmail } from "./nodemailer-mail";
+import { resolveCheckStatus } from "./check-status";
 
 const BCRYPT_ROUNDS = 12;
 
@@ -306,6 +314,44 @@ export async function registerRoutes(
     }
   });
 
+  /** Χειροκίνητη παραγγελία από admin (ίδιο payload με checkout). */
+  app.post("/api/admin/orders", async (req, res) => {
+    try {
+      const u = await getAdminUserFromRequest(req);
+      if (!u || u.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const input = checkoutPayloadSchema.parse(req.body);
+      if (!input.items?.length) {
+        return res.status(400).json({ message: "Προσθέστε τουλάχιστον ένα προϊόν." });
+      }
+      const order = await storage.createOrder(input);
+      res.status(201).json(order);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      console.error("[admin/orders]", err);
+      res.status(500).json({ message: "Αποτυχία δημιουργίας παραγγελίας" });
+    }
+  });
+
+  app.post("/api/public/check-status", async (req, res) => {
+    try {
+      const body = z.object({
+        ticketId: z.string().min(1, "Συμπληρώστε αριθμό ticket"),
+        email: z.string().email("Μη έγκυρο email"),
+      }).parse(req.body);
+      const result = await resolveCheckStatus(storage, body.ticketId, body.email);
+      if (!result.ok) return res.status(404).json(result);
+      res.json(result);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ ok: false, message: err.errors[0].message });
+      }
+      console.error("[check-status]", err);
+      res.status(500).json({ ok: false, message: "Σφάλμα διακομιστή" });
+    }
+  });
+
   app.get("/api/orders/:id/items", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -320,7 +366,16 @@ export async function registerRoutes(
     try {
       const id = parseInt(req.params.id);
       const input = api.orders.updateStatus.input.parse(req.body);
+      const before = await storage.getOrderWithCustomer(id);
+      if (!before) return res.status(404).json({ message: "Order not found" });
       const order = await storage.updateOrderStatus(id, input.status);
+      if (before.order.status !== order.status && before.customerEmail) {
+        sendOrderStatusEmail({
+          to: before.customerEmail,
+          orderId: order.id,
+          status: order.status,
+        }).catch((e) => console.error("[order-status-email]", e));
+      }
       res.json(order);
     } catch (err) {
       res.status(404).json({ message: "Order not found" });

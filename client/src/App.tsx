@@ -52,6 +52,7 @@ const PortfolioMetamorfosi = lazyWithReload(() => import("./pages/portfolio-meta
 const EShop = lazyWithReload(() => import("./pages/eshop"));
 const ProductDetail = lazyWithReload(() => import("./pages/product-detail"));
 const Checkout = lazyWithReload(() => import("./pages/checkout"));
+const CheckStatusPage = lazyWithReload(() => import("./pages/check-status"));
 const Terms = lazyWithReload(() => import("./pages/terms"));
 const Contact = lazyWithReload(() => import("./pages/contact"));
 const Blog = lazyWithReload(() => import("./pages/blog"));
@@ -189,6 +190,7 @@ function Router() {
           <Route path="/eshop" component={EShop} />
           <Route path="/eshop/:slug" component={ProductDetail} />
           <Route path="/checkout" component={Checkout} />
+          <Route path="/check-status" component={CheckStatusPage} />
           <Route path="/oroi-episkeuis" component={Terms} />
           <Route path="/contact" component={Contact} />
           <Route path="/epikoinonia" component={Contact} />
