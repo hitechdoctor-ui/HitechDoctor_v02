@@ -138,7 +138,7 @@ function ProductExtraFields({ control }: { control: any }) {
         <h3 className="text-sm font-semibold">Χαρακτηριστικά Προϊόντος</h3>
         <span className="text-[10px] bg-primary/10 border border-primary/20 rounded px-1.5 py-0.5 text-primary/80">εμφανίζεται στα φίλτρα eShop</span>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Brand */}
         <div className="space-y-1.5">
           <Label className="text-xs font-semibold">Μάρκα (Brand)</Label>
@@ -152,24 +152,6 @@ function ProductExtraFields({ control }: { control: any }) {
                 value={field.value ?? ""}
                 onChange={field.onChange}
                 data-testid="input-product-brand"
-              />
-            )}
-          />
-        </div>
-
-        {/* RAM — για σύγκριση τιμών */}
-        <div className="space-y-1.5">
-          <Label className="text-xs font-semibold">RAM</Label>
-          <Controller
-            control={control}
-            name="ram"
-            render={({ field }) => (
-              <Input
-                className="bg-background h-9 text-sm"
-                placeholder="π.χ. 8GB, 12GB"
-                value={field.value ?? ""}
-                onChange={field.onChange}
-                data-testid="input-product-ram"
               />
             )}
           />
@@ -236,19 +218,36 @@ function ProductPriceCompareFields({
     <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4 space-y-4">
       <div className="flex items-center gap-2 pb-1 border-b border-white/8">
         <RefreshCw className="w-4 h-4 text-cyan-400" />
-        <h3 className="text-sm font-semibold">Σύγκριση τιμών (ανταγωνιστές)</h3>
+        <h3 className="text-sm font-semibold">RAM &amp; competitor URLs</h3>
       </div>
       <p className="text-[11px] text-muted-foreground leading-relaxed">
-        Αν το αυτόματο άνοιγμα αποτυγχάνει, επικολλήστε το ακριβές URL σελίδας προϊόντος από κάθε site. Το query αναζήτησης
-        χρησιμοποιεί Μάρκα + Όνομα + RAM + Storage + Χρώμα.
+        Optional product URLs for price scraping. Search uses brand + name + RAM + storage + color. If auto-fetch fails, paste each store&apos;s product page URL.
       </p>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs font-semibold">RAM</Label>
+        <Controller
+          control={control}
+          name="ram"
+          render={({ field }) => (
+            <Input
+              className="bg-background h-9 text-sm"
+              placeholder="e.g. 8GB, 12GB"
+              value={field.value ?? ""}
+              onChange={field.onChange}
+              data-testid="input-product-ram"
+            />
+          )}
+        />
+      </div>
+
       <div className="grid grid-cols-1 gap-3">
         {(
           [
-            { name: "urlKotsovolos" as const, label: "Kotsovolos — URL προϊόντος" },
-            { name: "urlSkroutz" as const, label: "Skroutz — URL προϊόντος" },
-            { name: "urlBestPrice" as const, label: "BestPrice — URL προϊόντος" },
-            { name: "urlShopflix" as const, label: "Shopflix — URL προϊόντος" },
+            { name: "urlSkroutz" as const, label: "Skroutz URL" },
+            { name: "urlBestPrice" as const, label: "BestPrice URL" },
+            { name: "urlKotsovolos" as const, label: "Kotsovolos URL" },
+            { name: "urlShopflix" as const, label: "Shopflix URL" },
           ] as const
         ).map(({ name, label }) => (
           <div key={name} className="space-y-1">
@@ -270,22 +269,24 @@ function ProductPriceCompareFields({
         ))}
       </div>
 
-      {editingId && (
-        <div className="flex flex-wrap items-center gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="gap-2 border-cyan-500/40 text-cyan-200 hover:bg-cyan-500/10"
-            onClick={onRefresh}
-            disabled={refreshing}
-            data-testid="btn-manual-refresh-prices"
-          >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-            Χειροκίνητη ανανέωση τιμών
-          </Button>
-        </div>
-      )}
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="gap-2 border-cyan-500/40 text-cyan-200 hover:bg-cyan-500/10"
+          onClick={onRefresh}
+          disabled={refreshing || !editingId}
+          title={!editingId ? "Save the product first to refresh prices" : undefined}
+          data-testid="btn-refresh-prices"
+        >
+          <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+          Refresh Prices
+        </Button>
+        {!editingId && (
+          <span className="text-[11px] text-muted-foreground">Save the product once, then you can refresh.</span>
+        )}
+      </div>
 
       {liveProduct && (liveProduct.lastPriceUpdate || liveProduct.priceKotsovolos || liveProduct.priceSkroutz || liveProduct.priceBestPrice || liveProduct.priceShopflix) && (
         <div className="rounded-lg border border-white/10 bg-background/50 p-3 text-[11px] space-y-1.5">
@@ -803,7 +804,7 @@ export default function AdminProducts() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      title="Χειροκίνητη ανανέωση τιμών ανταγωνιστών"
+                      title="Refresh Prices"
                       className="text-cyan-400/90 hover:text-cyan-300 hover:bg-cyan-500/10"
                       disabled={refreshingPrices}
                       onClick={async (e) => {

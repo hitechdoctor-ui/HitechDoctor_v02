@@ -558,9 +558,10 @@ export default function ProductDetail() {
               <p className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-cyan-300">
                 {formatPrice(product.price)}
               </p>
-              <PriceDisclaimer className="mt-1" emphasis />
 
               <PriceComparisonSection product={product} />
+
+              <PriceDisclaimer className="mt-1" emphasis />
 
               {/* Description */}
               <p className="text-muted-foreground leading-relaxed">{product.description}</p>
