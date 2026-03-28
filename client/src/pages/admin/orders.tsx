@@ -17,13 +17,23 @@ import { useState, useMemo, useEffect } from "react";
 import {
   ShoppingCart, Euro, CheckCircle2, XCircle, Clock, AlertCircle,
   ChevronDown, ChevronRight, Mail, Package, Search, X,
-  User, Printer, Download, Plus, Trash2,
+  User, Printer, Download, Plus, Trash2, Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { exportToCsv, formatDateEl } from "@/lib/csv-export";
 import { apiRequest } from "@/lib/queryClient";
 import { api } from "@shared/routes";
-import type { CheckoutPayload } from "@shared/schema";
+import type { CheckoutPayload, Product } from "@shared/schema";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 
 // ── Status config ────────────────────────────────────────────────────────────
 const ORDER_STATUSES = [
@@ -236,6 +246,61 @@ function SearchInput({ value, onChange }: { value: string; onChange: (v: string)
   );
 }
 
+// ── Επιλογέας προϊόντος με αναζήτηση (χειροκίνητη παραγγελία) ─────────────────
+function ManualOrderProductSelect({
+  products,
+  productId,
+  onChange,
+}: {
+  products: Product[];
+  productId: number;
+  onChange: (id: number) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = products.find((p) => p.id === productId);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between border-white/10 bg-background text-xs font-normal h-9 px-3"
+        >
+          <span className="truncate text-left">{selected?.name ?? "Επιλογή προϊόντος"}</span>
+          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)] max-w-[min(100vw-2rem,360px)]" align="start">
+        <Command>
+          <CommandInput placeholder="Αναζήτηση προϊόντος…" className="h-9" />
+          <CommandList>
+            <CommandEmpty>Δεν βρέθηκε προϊόν.</CommandEmpty>
+            <CommandGroup>
+              {products.map((p) => (
+                <CommandItem
+                  key={p.id}
+                  value={`${p.name} ${p.id}`}
+                  onSelect={() => {
+                    onChange(p.id);
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    className={cn("mr-2 h-4 w-4 shrink-0", productId === p.id ? "opacity-100" : "opacity-0")}
+                  />
+                  <span className="truncate">{p.name}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 // ── Χειροκίνητη παραγγελία (admin) ───────────────────────────────────────────
 function ManualOrderDialog({
   open,
@@ -377,24 +442,13 @@ function ManualOrderDialog({
                 <div key={idx} className="flex flex-wrap gap-2 items-end">
                   <div className="flex-1 min-w-[160px] space-y-1">
                     <Label className="text-[10px] text-muted-foreground">Προϊόν</Label>
-                    <Select
-                      value={String(line.productId)}
-                      onValueChange={(v) => {
-                        const id = parseInt(v, 10);
+                    <ManualOrderProductSelect
+                      products={products}
+                      productId={line.productId}
+                      onChange={(id) => {
                         setLines((prev) => prev.map((row, i) => (i === idx ? { ...row, productId: id } : row)));
                       }}
-                    >
-                      <SelectTrigger className="border-white/10 bg-background text-xs">
-                        <SelectValue placeholder="Επιλογή" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {products.map((p) => (
-                          <SelectItem key={p.id} value={String(p.id)} className="text-xs">
-                            {p.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    />
                   </div>
                   <div className="w-24 space-y-1">
                     <Label className="text-[10px] text-muted-foreground">Ποσ.</Label>
