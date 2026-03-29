@@ -1,25 +1,58 @@
+import type { Product } from "./schema";
+
 /** Βάση URL για prompts (production). */
 export const SITE_BASE = "https://hitechdoctor.com";
 
-export type ProductCatalogRow = {
-  name: string;
-  slug: string | null;
-  category: string;
-  subcategory: string | null;
-};
+function fmtEur(price: string | number): string {
+  const n = typeof price === "string" ? parseFloat(price) : price;
+  if (Number.isNaN(n)) return String(price);
+  return new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR" }).format(n);
+}
+
+function availabilityLine(p: Product): string {
+  if (p.preOrder) return "διαθεσιμότητα: προ-παραγγελία";
+  return "διαθεσιμότητα: σε απόθεμα (όπως στο eShop)";
+}
 
 /**
- * Προϊόντα eShop από τη βάση — μία γραμμή ανά προϊόν με σύνδεσμο.
+ * Προϊόντα eShop από τη βάση — τιμή, μάρκα, διαθεσιμότητα, σύνδεσμος (για ακριβείς απαντήσεις AI).
+ * Χρησιμοποιείται από server/chat-repair.ts μετά το storage.getProducts().
  */
-export function formatProductsForRepairCatalog(products: ProductCatalogRow[]): string {
+export function formatProductsForRepairCatalog(products: Product[]): string {
   const rows = products.filter((p) => p.slug && p.slug.length > 0);
   if (rows.length === 0) return "(Δεν υπάρχουν ενεργά προϊόντα eShop στον κατάλογο.)";
-  return rows
-    .map((p) => {
-      const cat = p.subcategory ?? p.category;
-      return `- ${p.name} [${cat}] → ${SITE_BASE}/eshop/${p.slug}`;
-    })
-    .join("\n");
+
+  const line = (p: Product) => {
+    const brand = p.brand?.trim() || "—";
+    const cat = p.subcategory ?? p.category;
+    const extras = [p.ram, p.storage, p.color].filter(Boolean).join(", ");
+    const meta = extras ? ` | ${extras}` : "";
+    return `- ${p.name} | μάρκα: ${brand} | τιμή HiTech: ${fmtEur(p.price)} | ${availabilityLine(p)} | κατηγορία: ${cat}${meta} | ${SITE_BASE}/eshop/${p.slug}`;
+  };
+
+  const apple = rows.filter(
+    (p) =>
+      (p.brand && /apple|iphone/i.test(p.brand)) ||
+      /iphone/i.test(p.name)
+  );
+  const xiaomiRedmi = rows.filter(
+    (p) =>
+      (p.brand && /xiaomi|redmi|poco/i.test(p.brand)) ||
+      /redmi|poco|xiaomi/i.test(p.name)
+  );
+  const rest = rows.filter((p) => !apple.includes(p) && !xiaomiRedmi.includes(p));
+
+  const parts: string[] = [];
+  if (apple.length) {
+    parts.push("#### Apple / iPhone (από βάση)\n" + apple.map(line).join("\n"));
+  }
+  if (xiaomiRedmi.length) {
+    parts.push("#### Xiaomi / Redmi / POCO (από βάση)\n" + xiaomiRedmi.map(line).join("\n"));
+  }
+  if (rest.length) {
+    parts.push("#### Λοιπά προϊόντα eShop (από βάση)\n" + rest.map(line).join("\n"));
+  }
+  return parts.join("\n\n");
 }
 
 /**

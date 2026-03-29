@@ -607,17 +607,19 @@ export default function ProductDetail() {
 
               <PriceComparisonSection product={product} />
 
-              <div className="mt-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="border-primary/40 bg-primary/5 hover:bg-primary/10 text-foreground"
-                  onClick={() => setOfferOpen(true)}
-                  data-testid="button-better-offer"
-                >
-                  <Tag className="w-4 h-4 mr-2 text-primary" />
-                  Θέλω καλύτερη προσφορά!
-                </Button>
+              <div className="mt-3 inline-block max-w-full rounded-xl p-[2px] bg-gradient-to-r from-primary/55 via-cyan-400/45 to-primary/55 bg-[length:200%_100%] animate-offer-shimmer">
+                <div className="rounded-[10px] animate-offer-ring">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="relative w-full border-0 bg-background/95 hover:bg-background shadow-sm transition-transform duration-300 hover:scale-[1.02] active:scale-[0.99] text-foreground font-semibold"
+                    onClick={() => setOfferOpen(true)}
+                    data-testid="button-better-offer"
+                  >
+                    <Tag className="w-4 h-4 mr-2 text-primary shrink-0 motion-safe:animate-pulse" />
+                    Θέλω καλύτερη προσφορά!
+                  </Button>
+                </div>
               </div>
 
               <Dialog
