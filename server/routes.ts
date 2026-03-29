@@ -36,7 +36,7 @@ import { sendOrderStatusEmail } from "./nodemailer-mail";
 import { resolveCheckStatus } from "./check-status";
 import { refreshCompetitorPrices } from "./price-compare";
 import { APIError } from "openai";
-import { getRepairCatalogPromptBlock, runRepairAssistantChat } from "./chat-repair";
+import { getRepairCatalogPromptBlock, runRepairAssistantChat } from "./chat-assistant";
 import { splitAssistantReply, tryParseLeadFromText, guessDeviceModelFromMessages } from "@shared/repair-assistant";
 import { runSupplierSyncJob, syncJobs, newSyncJobId } from "./supplier-sync";
 

@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ChatWindow } from "@/components/chat/ChatWindow";
 import { MessageCircle, X, Send, Loader2, Bot, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -29,13 +29,8 @@ export function RepairChatbot() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Turn[]>([]);
   const [loading, setLoading] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
   const [pageScrolled, setPageScrolled] = useState(false);
   const [serviceTermsAccepted, setServiceTermsAccepted] = useState(false);
-
-  useEffect(() => {
-    if (open) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, open, loading]);
 
   useEffect(() => {
     const onScroll = () => setPageScrolled(window.scrollY > 32);
@@ -138,56 +133,57 @@ export function RepairChatbot() {
             </Button>
           </div>
 
-          <ScrollArea className="flex-1 min-h-[200px] max-h-[400px] px-3 py-3">
-            <div className="space-y-3 pr-2">
-              {messages.length === 0 && (
-                <div className="rounded-xl bg-muted/40 border border-border px-3 py-2.5 text-sm text-muted-foreground leading-relaxed">
-                  {WELCOME}
-                </div>
-              )}
-              {messages.map((m, i) => (
-                <div
-                  key={i}
-                  className={cn(
-                    "rounded-xl px-3 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words",
-                    m.role === "user"
-                      ? "ml-6 bg-primary/15 border border-primary/25 text-foreground"
-                      : "mr-4 bg-muted/30 border border-white/8 text-foreground"
-                  )}
-                >
-                  {m.content}
-                  {m.role === "assistant" && m.ctas && m.ctas.length > 0 && (
-                    <div className="mt-3 flex flex-col gap-2">
-                      {m.ctas.map((c, j) => (
-                        <a
-                          key={j}
-                          href={normalizeCtaHref(c.href)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={cn(
-                            "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold",
-                            "bg-gradient-to-r from-primary to-cyan-600 text-white shadow-md shadow-primary/25",
-                            "border border-primary/40 hover:opacity-95 transition-opacity",
-                            "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-card"
-                          )}
-                        >
-                          <ExternalLink className="w-4 h-4 shrink-0 opacity-90" aria-hidden />
-                          {c.label}
-                        </a>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-              {loading && (
-                <div className="flex items-center gap-2 text-muted-foreground text-xs py-1">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Σκέφτομαι…
-                </div>
-              )}
-              <div ref={bottomRef} />
-            </div>
-          </ScrollArea>
+          <ChatWindow
+            scrollKey={messages.length}
+            loading={loading}
+            loadingSlot={
+              <div className="flex items-center gap-2 text-muted-foreground text-xs py-1">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Σκέφτομαι…
+              </div>
+            }
+          >
+            {messages.length === 0 && (
+              <div className="rounded-xl bg-muted/40 border border-border px-3 py-2.5 text-sm text-muted-foreground leading-relaxed">
+                {WELCOME}
+              </div>
+            )}
+            {messages.map((m, i) => (
+              <div
+                key={`${m.role}-${i}-${m.content.slice(0, 24)}`}
+                data-chat-message
+                className={cn(
+                  "rounded-xl px-3 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words",
+                  m.role === "user"
+                    ? "ml-6 bg-primary/15 border border-primary/25 text-foreground"
+                    : "mr-4 bg-muted/30 border border-white/8 text-foreground"
+                )}
+              >
+                {m.content}
+                {m.role === "assistant" && m.ctas && m.ctas.length > 0 && (
+                  <div className="mt-3 flex flex-col gap-2">
+                    {m.ctas.map((c, j) => (
+                      <a
+                        key={j}
+                        href={normalizeCtaHref(c.href)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn(
+                          "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold",
+                          "bg-gradient-to-r from-primary to-cyan-600 text-white shadow-md shadow-primary/25",
+                          "border border-primary/40 hover:opacity-95 transition-opacity",
+                          "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-card"
+                        )}
+                      >
+                        <ExternalLink className="w-4 h-4 shrink-0 opacity-90" aria-hidden />
+                        {c.label}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </ChatWindow>
 
           <div className="border-t border-white/10 bg-background/80 p-3">
             <label className="flex items-start gap-2.5 cursor-pointer select-none mb-3">

@@ -65,6 +65,7 @@ const PaymentMethods = lazyWithReload(() => import("./pages/payment-methods"));
 const CookiesPolicy = lazyWithReload(() => import("./pages/cookies-policy"));
 const AccessibilityStatement = lazyWithReload(() => import("./pages/accessibility-statement"));
 const NotFound = lazyWithReload(() => import("./pages/not-found"));
+const RepairRedirect = lazyWithReload(() => import("./pages/repair-redirect"));
 
 // Admin Pages — lazy loaded (biggest win: never loaded for public visitors)
 const AdminDashboard = lazyWithReload(() => import("./pages/admin/dashboard"));
@@ -214,6 +215,7 @@ function Router() {
           <Route path="/tropoi-pliromis" component={PaymentMethods} />
           <Route path="/politiki-cookies" component={CookiesPolicy} />
           <Route path="/prosvassimotita" component={AccessibilityStatement} />
+          <Route path="/repair/:slug" component={RepairRedirect} />
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/admin/repair-requests" component={AdminRepairRequests} />
           <Route path="/admin/website-inquiries" component={AdminWebsiteInquiries} />
