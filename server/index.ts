@@ -86,6 +86,13 @@ async function checkSubscriptionExpiry() {
 
 (async () => {
   try {
+    if (!process.env.OPENAI_API_KEY?.trim()) {
+      log(
+        "OPENAI_API_KEY λείπει — το AI chat επισκευών (/api/chat/repair-assistant) θα επιστρέφει 503. Ορίστε το στο .env ή στα environment variables του host (Railway/Netlify/VPS).",
+        "express"
+      );
+    }
+
     await registerRoutes(httpServer, app);
 
     app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
