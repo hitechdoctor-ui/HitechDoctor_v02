@@ -277,7 +277,8 @@ export function RepairChatbot() {
     <div
       className={cn(
         "relative z-[158] flex flex-col items-end gap-2 pointer-events-none shrink-0 transition-transform duration-500 ease-in-out",
-        !open && scrollDir === "down" && pageScrolled && "translate-x-[44px]"
+        // Slide right only when chat is OPEN + scrolling down (FAB button stays visible as peek)
+        open && scrollDir === "down" && pageScrolled && "translate-x-[calc(100%-3.5rem)]"
       )}
     >
       {/* Attention bubble: shown once after cookie consent + first scroll */}
