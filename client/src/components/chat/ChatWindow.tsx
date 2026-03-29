@@ -31,7 +31,7 @@ export function ChatWindow({ children, loading, loadingSlot, scrollKey, classNam
     <div
       ref={scrollRef}
       className={cn(
-        "flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 py-3 max-h-[min(50vh,420px)]",
+        "flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2.5 py-2 max-h-[min(50vh,420px)]",
         "[scrollbar-width:thin]",
         className
       )}
@@ -39,7 +39,7 @@ export function ChatWindow({ children, loading, loadingSlot, scrollKey, classNam
       aria-live="polite"
       aria-relevant="additions"
     >
-      <div className="space-y-3 pr-1">
+      <div className="space-y-1.5 pr-0.5">
         {children}
         {loading && loadingSlot}
       </div>

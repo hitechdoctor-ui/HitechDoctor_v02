@@ -34,7 +34,7 @@ function toAppPath(href: string): string {
 }
 
 const ctaBtnClass = cn(
-  "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold",
+  "inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold",
   "bg-gradient-to-r from-primary to-cyan-600 text-white shadow-md shadow-primary/25",
   "border border-primary/40 hover:opacity-95 transition-opacity",
   "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-card text-center"
@@ -166,7 +166,7 @@ export function RepairChatbot() {
             }
           >
             {messages.length === 0 && (
-              <div className="rounded-xl bg-muted/40 border border-border px-3 py-2.5 text-sm text-muted-foreground leading-relaxed">
+              <div className="rounded-xl bg-muted/40 border border-border px-2.5 py-2 text-xs text-muted-foreground leading-snug">
                 {WELCOME}
               </div>
             )}
@@ -175,15 +175,15 @@ export function RepairChatbot() {
                 key={`${m.role}-${i}-${m.content.slice(0, 24)}`}
                 data-chat-message
                 className={cn(
-                  "rounded-xl px-3 py-2.5 text-sm leading-snug whitespace-pre-wrap break-words [&_p]:my-1",
+                  "rounded-xl px-2.5 py-2 text-sm leading-snug whitespace-pre-wrap break-words [&_p]:my-0.5 [&_p+p]:mt-1",
                   m.role === "user"
-                    ? "ml-6 bg-primary/15 border border-primary/25 text-foreground"
-                    : "mr-4 bg-muted/30 border border-white/8 text-foreground"
+                    ? "ml-5 bg-primary/15 border border-primary/25 text-foreground"
+                    : "mr-3 bg-muted/30 border border-white/8 text-foreground"
                 )}
               >
                 {m.content}
                 {m.role === "assistant" && m.ctas && m.ctas.length > 0 && (
-                  <div className="mt-2 flex flex-col gap-1.5">
+                  <div className="mt-1.5 flex flex-col gap-1">
                     {m.ctas.map((c, j) => {
                       if (c.action === "repair_quote_modal") {
                         return (

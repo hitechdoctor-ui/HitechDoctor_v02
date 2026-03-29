@@ -38,3 +38,75 @@ export function resolveRepairSlugToPath(slug: string): string | null {
 
   return null;
 }
+
+/** Αφαιρεί επίθημα βλάβης από slug τύπου `samsung-a56-screen` → `samsung-a56` */
+export function stripRepairServiceSuffixes(slug: string): string {
+  let s = slug.trim().toLowerCase();
+  let prev = "";
+  const re = /-(screen|battery|display|port|service|back-glass|charging|camera|speaker|mic|lcd|touch|glass|water|other)$/i;
+  while (s !== prev) {
+    prev = s;
+    s = s.replace(re, "");
+  }
+  return s;
+}
+
+/** Δοκιμάζει το slug και παραλλαγές χωρίς επίθημα (για /repair/... από το chat). */
+export function guessRepairSlugCandidates(slug: string): string[] {
+  const s = slug.trim().toLowerCase();
+  const out: string[] = [];
+  const seen = new Set<string>();
+  const push = (x: string) => {
+    if (!x || seen.has(x)) return;
+    seen.add(x);
+    out.push(x);
+  };
+  push(s);
+  let cur = s;
+  for (let i = 0; i < 8; i++) {
+    const next = stripRepairServiceSuffixes(cur);
+    if (next === cur) break;
+    push(next);
+    cur = next;
+  }
+  return out;
+}
+
+/** Πρώτο ταιριστό path σελίδας επισκευής ή null. */
+export function resolveRepairSlugToPathWithFallbacks(slug: string): string | null {
+  for (const candidate of guessRepairSlugCandidates(slug)) {
+    const p = resolveRepairSlugToPath(candidate);
+    if (p) return p;
+  }
+  return null;
+}
+
+const BRAND_LABEL: Record<string, string> = {
+  iphone: "iPhone",
+  ipad: "iPad",
+  samsung: "Samsung",
+  galaxy: "Galaxy",
+  xiaomi: "Xiaomi",
+  redmi: "Redmi",
+  poco: "POCO",
+  huawei: "Huawei",
+  oneplus: "OnePlus",
+  apple: "Apple",
+};
+
+/** Εμφανίσιμο όνομα συσκευής από slug URL (π.χ. samsung-a56-screen → Samsung A56). */
+export function decodeRepairSlugToDisplayName(slug: string): string {
+  const base = stripRepairServiceSuffixes(slug);
+  const parts = base.split("-").filter(Boolean);
+  return parts
+    .map((p) => {
+      const low = p.toLowerCase();
+      if (BRAND_LABEL[low]) return BRAND_LABEL[low];
+      if (/^a\d{2,3}$/i.test(p)) return p.toUpperCase();
+      if (/^\d+$/i.test(p)) return p;
+      if (/^(pro|max|plus|mini|ultra|fe|e)$/i.test(p)) return p.charAt(0).toUpperCase() + p.slice(1).toLowerCase();
+      return p.charAt(0).toUpperCase() + p.slice(1).toLowerCase();
+    })
+    .join(" ")
+    .trim();
+}
