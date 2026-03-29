@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageCircle, X, Send, Loader2, Bot, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { OPEN_REPAIR_CHAT_EVENT } from "@/lib/repair-chat-events";
 
 type RepairChatCta = { label: string; href: string };
 
@@ -39,6 +40,12 @@ export function RepairChatbot() {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const openFromHero = () => setOpen(true);
+    window.addEventListener(OPEN_REPAIR_CHAT_EVENT, openFromHero);
+    return () => window.removeEventListener(OPEN_REPAIR_CHAT_EVENT, openFromHero);
   }, []);
 
   const send = useCallback(async () => {

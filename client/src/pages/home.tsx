@@ -27,10 +27,12 @@ import {
   ShoppingCart,
   Star,
   Paintbrush,
+  Bot,
 } from "lucide-react";
 import { Link } from "wouter";
 import { BLOG_POSTS, formatBlogDate } from "@/data/blog-posts";
 import { SpecialOffers } from "@/components/special-offers";
+import { requestOpenRepairChat } from "@/lib/repair-chat-events";
 const homeServices = [
   { icon: Smartphone, title: "Επισκευή Κινητών", href: "/services/episkeui-kiniton" },
   { icon: Tablet, title: "Επισκευή Tablet", href: "/services#episkeui-tablet" },
@@ -111,7 +113,7 @@ export default function Home() {
               Στο HiTech Doctor αναλαμβάνουμε επισκευές smartphone, tablet και Η/Υ — γρήγορα, υπεύθυνα και οικονομικά. Βρείτε επίσης κορυφαία αξεσουάρ στο eShop μας.
             </p>
 
-            <div className="flex flex-wrap items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4">
               <Link href="/services">
                 <Button
                   size="lg"
@@ -131,6 +133,17 @@ export default function Home() {
                   eShop
                 </Button>
               </Link>
+              <Button
+                type="button"
+                size="lg"
+                variant="outline"
+                className="h-12 px-8 text-base font-semibold border-primary/25 text-primary gap-2"
+                onClick={() => requestOpenRepairChat()}
+                data-testid="button-hero-ai-chat"
+              >
+                <Bot className="w-5 h-5 shrink-0" aria-hidden />
+                AI Βοηθός
+              </Button>
             </div>
 
             {/* Quick trust badges */}
