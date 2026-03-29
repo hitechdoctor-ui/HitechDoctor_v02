@@ -114,7 +114,7 @@ export function RepairChatbot() {
         <div
           className="pointer-events-auto w-[min(100vw-2rem,400px)] rounded-2xl border border-primary/20 bg-card/95 backdrop-blur-md shadow-[0_8px_40px_rgba(0,0,0,0.45)] flex flex-col overflow-hidden max-h-[min(70vh,560px)]"
           role="dialog"
-          aria-label="Συνομιλία HiTech Doctor"
+          aria-label="Συνομιλία AI Doctor"
         >
           <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-white/10 bg-primary/10">
             <div className="flex items-center gap-2 min-w-0">
@@ -122,8 +122,8 @@ export function RepairChatbot() {
                 <Bot className="w-5 h-5 text-primary" />
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-bold text-foreground truncate">HiTech Doctor AI</p>
-                <p className="text-[10px] text-muted-foreground">Βοηθός επισκευών</p>
+                <p className="text-sm font-bold text-foreground truncate">AI Doctor</p>
+                <p className="text-[10px] text-muted-foreground">Εκπαιδευμένος Βοηθός AI επισκευών</p>
               </div>
             </div>
             <Button
@@ -249,7 +249,7 @@ export function RepairChatbot() {
           open && (pageScrolled ? "ring-2 ring-amber-400/60" : "ring-2 ring-primary/50")
         )}
         aria-expanded={open}
-        aria-label={open ? "Κλείσιμο συνομιλίας" : "Άνοιγμα συνομιλίας HiTech Doctor"}
+        aria-label={open ? "Κλείσιμο συνομιλίας" : "Άνοιγμα συνομιλίας AI Doctor"}
         data-testid="button-repair-chat-toggle"
       >
         {open ? <X className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
