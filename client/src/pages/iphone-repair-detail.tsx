@@ -3,6 +3,7 @@ import { useRoute, Link } from "wouter";
 import { Helmet } from "react-helmet-async";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { RepairBottomProducts } from "@/components/repair-bottom-products";
 import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { Seo } from "@/components/seo";
 import { RepairRequestModal } from "@/components/repair-request-modal";
@@ -676,6 +677,10 @@ export default function IPhoneRepairDetail() {
           </aside>
         </div>
       </main>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <RepairBottomProducts serviceType="screen" />
+      </div>
 
       <Footer />
 

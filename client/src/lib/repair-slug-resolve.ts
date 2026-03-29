@@ -72,11 +72,77 @@ export function guessRepairSlugCandidates(slug: string): string[] {
   return out;
 }
 
+/**
+ * Fuzzy brand-strip resolution for AI-generated slugs.
+ * AI generates `{brand}-{model}-{fault}` (e.g. `samsung-a56-screen`, `iphone-15-pro-screen`).
+ * Real slugs strip the brand prefix: Samsung → `a56-5g`, iPhone → `15-pro`.
+ * This tries stripping known brand prefixes and does prefix/exact matching.
+ */
+function resolveRepairSlugFuzzy(slug: string): string | null {
+  const s = slug.trim().toLowerCase();
+
+  // Samsung: AI generates `samsung-a56`, real slug is `a56-5g`
+  const samsungPrefixes = ["samsung-galaxy-", "samsung-", "galaxy-"];
+  for (const prefix of samsungPrefixes) {
+    if (s.startsWith(prefix)) {
+      const rest = s.slice(prefix.length);
+      // Exact match first
+      for (const m of allSamsungModels()) {
+        if (m.slug === rest) return `/episkevi-samsung/${m.slug}`;
+      }
+      // Prefix match: e.g. `a56` matches `a56-5g`
+      for (const m of allSamsungModels()) {
+        if (m.slug.startsWith(rest + "-") || m.slug.startsWith(rest)) {
+          return `/episkevi-samsung/${m.slug}`;
+        }
+      }
+    }
+  }
+
+  // iPhone: AI generates `iphone-15-pro`, real slug is `15-pro`
+  if (s.startsWith("iphone-")) {
+    const rest = s.slice("iphone-".length);
+    for (const m of allModels()) {
+      if (m.slug === rest) return `/episkevi-iphone/${m.slug}`;
+    }
+    for (const m of allModels()) {
+      if (m.slug.startsWith(rest + "-") || m.slug.startsWith(rest)) {
+        return `/episkevi-iphone/${m.slug}`;
+      }
+    }
+  }
+
+  // Xiaomi/Redmi/POCO: slugs keep full name prefix so exact + prefix match
+  for (const m of allXiaomiModels()) {
+    if (m.slug === s || m.slug.startsWith(s + "-") || m.slug.startsWith(s)) {
+      return `/episkevi-xiaomi/${m.slug}`;
+    }
+  }
+
+  // Huawei: exact + prefix
+  for (const m of allHuaweiModels()) {
+    if (m.slug === s || m.slug.startsWith(s + "-") || m.slug.startsWith(s)) {
+      return `/episkevi-huawei/${m.slug}`;
+    }
+  }
+
+  // OnePlus: exact + prefix
+  for (const m of allOnePlusModels()) {
+    if (m.slug === s || m.slug.startsWith(s + "-") || m.slug.startsWith(s)) {
+      return `/episkevi-oneplus/${m.slug}`;
+    }
+  }
+
+  return null;
+}
+
 /** Πρώτο ταιριστό path σελίδας επισκευής ή null. */
 export function resolveRepairSlugToPathWithFallbacks(slug: string): string | null {
   for (const candidate of guessRepairSlugCandidates(slug)) {
     const p = resolveRepairSlugToPath(candidate);
     if (p) return p;
+    const fuzzy = resolveRepairSlugFuzzy(candidate);
+    if (fuzzy) return fuzzy;
   }
   return null;
 }

@@ -162,6 +162,10 @@
     --sidebar-accent-border: hsl(220 40% 18%);
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   * {
     @apply border-border;
   }

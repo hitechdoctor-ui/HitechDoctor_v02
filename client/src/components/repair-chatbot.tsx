@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { OPEN_REPAIR_CHAT_EVENT } from "@/lib/repair-chat-events";
 import { COOKIE_CONSENT_EVENT } from "@/components/cookie-banner";
+import { resolveRepairSlugToPathWithFallbacks } from "@/lib/repair-slug-resolve";
 import { guessDeviceModelFromMessages, type RepairChatCta } from "@shared/repair-assistant";
 
 type Turn = { role: "user" | "assistant"; content: string; ctas?: RepairChatCta[] };
@@ -177,14 +178,16 @@ export function RepairChatbot() {
         const ctas = data.ctas?.length ? data.ctas : undefined;
         setMessages([...next, { role: "assistant", content: data.reply, ctas }]);
 
-        // Auto-navigate to repair page if AI returned a /repair/ CTA
-        const repairCta = ctas?.find(
-          (c) => !c.action && c.href && c.href.includes("/repair/")
-        );
+        // Auto-navigate: if AI returned a /repair/{slug} CTA, resolve to actual repair page
+        const repairCta = ctas?.find((c) => !c.action && c.href && c.href.includes("/repair/"));
         if (repairCta) {
-          const path = toAppPath(normalizeCtaHref(repairCta.href));
-          if (path !== "#") {
-            setTimeout(() => setLocation(path), 900);
+          const rawPath = toAppPath(normalizeCtaHref(repairCta.href));
+          const slugMatch = rawPath.match(/^\/repair\/(.+)$/);
+          const finalPath = slugMatch
+            ? (resolveRepairSlugToPathWithFallbacks(slugMatch[1]) ?? rawPath)
+            : rawPath;
+          if (finalPath !== "#") {
+            setTimeout(() => setLocation(finalPath), 900);
           }
         }
       }

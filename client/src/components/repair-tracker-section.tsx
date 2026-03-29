@@ -40,7 +40,7 @@ export function RepairTrackerSection() {
   return (
     <section
       id="repair-tracker"
-      className="scroll-mt-24 rounded-2xl border border-white/10 bg-gradient-to-br from-zinc-950/90 via-zinc-900/80 to-zinc-950/90 p-6 shadow-[0_8px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl md:p-8"
+      className="scroll-mt-24 rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8"
       aria-labelledby="repair-tracker-heading"
     >
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-6">
@@ -49,18 +49,18 @@ export function RepairTrackerSection() {
             id="repair-tracker-heading"
             className="font-display text-xl font-bold tracking-tight text-foreground md:text-2xl"
           >
-            Check Repair Status
+            Έλεγχος Κατάστασης Επισκευής
           </h2>
-          <p className="text-sm text-muted-foreground">Έλεγχος κατάστασης επισκευής — εισάγετε το Ticket ID</p>
+          <p className="text-sm text-muted-foreground">Εισάγετε το Ticket ID για να δείτε την πρόοδο</p>
         </div>
         <a
           href={buildViberUrl()}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 self-start rounded-xl border border-[#7360f2]/35 bg-[#7360f2]/12 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-[#7360f2]/20"
+          className="inline-flex items-center gap-2 self-start rounded-xl border border-[#7360f2]/30 bg-[#7360f2]/8 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-[#7360f2]/15"
         >
           <SiViber className="h-4 w-4 shrink-0" style={{ color: VIBER_HEX }} />
-          <span className="text-[13px] leading-snug">Get real-time updates via Viber</span>
+          <span className="text-[13px] leading-snug">Ενημερώσεις μέσω Viber</span>
         </a>
       </div>
 
@@ -79,12 +79,12 @@ export function RepairTrackerSection() {
               setTicket(e.target.value);
               setChecked(false);
             }}
-            className="h-11 border-white/12 bg-white/[0.06] font-mono text-sm text-foreground placeholder:text-muted-foreground/60"
+            className="h-11 font-mono text-sm"
           />
         </div>
         <Button
           type="submit"
-          className="h-11 shrink-0 rounded-xl border-0 bg-primary px-8 font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90"
+          className="h-11 shrink-0 rounded-xl border-0 bg-primary px-8 font-semibold text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/90"
         >
           Έλεγχος
         </Button>
@@ -96,13 +96,13 @@ export function RepairTrackerSection() {
             Επίδειξη κατάστασης (demo) — η πραγματική ροή συντονίζεται μέσω Viber μετά την παραλαβή της συσκευής.
           </p>
 
-          <div className="flex h-3 gap-1 overflow-hidden rounded-full bg-white/10 p-0.5">
+          <div className="flex h-2.5 gap-1 overflow-hidden rounded-full bg-border p-0.5">
             {STAGES.map((s, i) => (
               <div
                 key={s.key}
                 className={cn(
                   "h-full min-w-0 flex-1 rounded-full transition-all duration-500",
-                  i <= activeIndex ? "bg-primary shadow-[0_0_12px_hsl(var(--primary)/0.45)]" : "bg-white/[0.07]",
+                  i <= activeIndex ? "bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.4)]" : "bg-muted",
                 )}
                 title={`${s.en} — ${s.el}`}
               />
@@ -118,9 +118,9 @@ export function RepairTrackerSection() {
                   key={stage.key}
                   className={cn(
                     "rounded-xl border px-2 py-3 text-center transition-colors",
-                    active && "border-primary/50 bg-primary/10 ring-1 ring-primary/40",
-                    done && !active && "border-white/10 bg-white/[0.04] opacity-80",
-                    !done && !active && "border-white/8 bg-transparent opacity-50",
+                    active && "border-primary/40 bg-primary/8 ring-1 ring-primary/30",
+                    done && !active && "border-border bg-muted/40 opacity-80",
+                    !done && !active && "border-border bg-transparent opacity-40",
                   )}
                 >
                   <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{stage.en}</p>
