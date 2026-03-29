@@ -9,8 +9,8 @@ import {
 } from "@/lib/repair-slug-resolve";
 
 /**
- * `/repair/:slug` — αν βρεθεί μοντέλο, SPA redirect στην πραγματική σελίδα.
- * Αλλιώς σελίδα «προετοιμασία προσφοράς» + άνοιγμα φόρμας επισκευής.
+ * `/repair/:slug` — αν βρεθεί μοντέλο, SPA redirect στην πραγματική σελίδα επισκευής.
+ * Αλλιώς σελίδα «προετοιμασία προσφοράς»· ο χρήστης ανοίγει τη φόρμα μόνο με το κουμπί.
  */
 export default function RepairRedirectPage() {
   const { slug = "" } = useParams<{ slug: string }>();
@@ -29,8 +29,6 @@ export default function RepairRedirectPage() {
       return;
     }
     setPhase("fallback");
-    const t = window.setTimeout(() => setModalOpen(true), 400);
-    return () => window.clearTimeout(t);
   }, [slug, setLocation]);
 
   if (phase === "checking") {

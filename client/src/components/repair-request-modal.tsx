@@ -37,6 +37,7 @@ export function RepairRequestModal({
   defaultTotalInclVat,
 }: RepairRequestModalProps) {
   const [submitted, setSubmitted] = useState(false);
+  const [submittedRequestId, setSubmittedRequestId] = useState<number | null>(null);
   const [gdprConsent, setGdprConsent] = useState(false);
   const [gdprError, setGdprError] = useState(false);
   const [serviceTermsConsent, setServiceTermsConsent] = useState(false);
@@ -83,14 +84,17 @@ export function RepairRequestModal({
   });
 
   const mutation = useMutation({
-    mutationFn: (data: FormValues) =>
-      apiRequest("POST", "/api/repair-requests", {
+    mutationFn: async (data: FormValues) => {
+      const res = await apiRequest("POST", "/api/repair-requests", {
         ...data,
         ...(hasPrice ? { price: netPrice.toFixed(2), priceIncludesVat: selectedBox === "gross" } : {}),
-      }),
-    onSuccess: () => {
+      });
+      return (await res.json()) as { id: number };
+    },
+    onSuccess: (created) => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/repair-requests"] });
       invalidateRepairFinancialQueries(queryClient);
+      setSubmittedRequestId(created.id);
       setSubmitted(true);
     },
     onError: () => {
@@ -101,6 +105,7 @@ export function RepairRequestModal({
   function handleClose(open: boolean) {
     if (!open) {
       setSubmitted(false);
+      setSubmittedRequestId(null);
       setGdprConsent(false);
       setGdprError(false);
       setServiceTermsConsent(false);
@@ -137,6 +142,37 @@ export function RepairRequestModal({
               <p className="text-sm text-muted-foreground max-w-sm">
                 Λάβαμε το αίτημά σας. Θα επικοινωνήσουμε μαζί σας το συντομότερο για να κλείσουμε ραντεβού.
               </p>
+            </div>
+            <div className="w-full rounded-xl border border-primary/25 bg-primary/5 px-4 py-3 text-left">
+              <div className="flex items-start gap-3">
+                <div className="shrink-0 w-9 h-9 rounded-lg bg-primary/15 border border-primary/30 flex items-center justify-center">
+                  <Shield className="w-4 h-4 text-primary" aria-hidden />
+                </div>
+                <div className="min-w-0 space-y-1">
+                  <p className="text-sm font-semibold text-foreground">Προσφορά: νέο τζάμι προστασίας −50%</p>
+                  <p className="text-xs text-muted-foreground leading-snug">
+                    Με την ολοκλήρωση της επισκευής σας, μπορείτε να προσθέσετε καινούργιο tempered glass (τζάμι
+                    προστασίας) με{" "}
+                    <span className="text-foreground font-semibold">έκπτωση 50%</span> στην τιμή του καταστήματος.
+                    {submittedRequestId != null ? (
+                      <>
+                        {" "}
+                        Αναφέρετε το αίτημα <span className="text-foreground font-mono">#{submittedRequestId}</span> στο
+                        κατάστημα ή κατά την παράδοση της συσκευής.
+                      </>
+                    ) : (
+                      <> Αναφέρετε το online αίτημά σας στο κατάστημα ή κατά την παράδοση της συσκευής.</>
+                    )}
+                  </p>
+                  <Link
+                    href="/eshop?tab=screen-protectors"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline pt-1"
+                  >
+                    Δείτε τζάμια προστασίας στο eShop
+                    <ExternalLink className="w-3 h-3" aria-hidden />
+                  </Link>
+                </div>
+              </div>
             </div>
             <Button
               onClick={() => handleClose(false)}
