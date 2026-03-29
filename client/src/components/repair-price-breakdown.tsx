@@ -1,9 +1,5 @@
 import { cn } from "@/lib/utils";
-import {
-  breakdownFromTotalInclVat,
-  formatRepairEuro,
-  REPAIR_WORK_FEE_EUR,
-} from "@shared/repair-pricing";
+import { formatRepairEuro } from "@shared/repair-pricing";
 
 type Props = {
   /** Τελική τιμή με ΦΠΑ (όπως εμφανίζεται στο site) */
@@ -12,8 +8,6 @@ type Props = {
 };
 
 export function RepairPriceBreakdownCard({ totalInclVat, className }: Props) {
-  const b = breakdownFromTotalInclVat(totalInclVat);
-
   return (
     <div
       className={cn(
@@ -22,34 +16,13 @@ export function RepairPriceBreakdownCard({ totalInclVat, className }: Props) {
       )}
       data-testid="repair-price-breakdown"
     >
-      <p className="text-[10px] font-bold uppercase tracking-wider text-primary mb-2.5">
-        Ανάλυση τιμής (ενδεικτική)
+      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
+        Τελική τιμή (με ΦΠΑ)
       </p>
-      <dl className="space-y-2">
-        <div className="flex justify-between gap-3 text-muted-foreground">
-          <dt>Ανταλλακτικό:</dt>
-          <dd className="font-semibold text-foreground tabular-nums">{formatRepairEuro(b.partNet)}</dd>
-        </div>
-        <div className="text-muted-foreground">
-          <div className="flex justify-between gap-3">
-            <dt className="leading-snug pr-2">
-              Εργασία &amp; Εγγύηση: {REPAIR_WORK_FEE_EUR} €
-            </dt>
-            <dd className="shrink-0 font-semibold text-foreground tabular-nums">{formatRepairEuro(b.workFee)}</dd>
-          </div>
-          <p className="text-[10px] text-muted-foreground/90 mt-1 leading-snug">
-            (Περιλαμβάνει 3 μήνες εγγύηση HiTech Doctor)
-          </p>
-        </div>
-        <div className="flex justify-between gap-3 text-muted-foreground">
-          <dt>ΦΠΑ 24%:</dt>
-          <dd className="font-semibold text-foreground tabular-nums">{formatRepairEuro(b.vatAmount)}</dd>
-        </div>
-        <div className="flex justify-between gap-3 border-t border-primary/20 pt-2 mt-2 text-foreground">
-          <dt className="font-bold">ΣΥΝΟΛΟ:</dt>
-          <dd className="font-extrabold text-primary tabular-nums text-base">{formatRepairEuro(b.totalInclVat)}</dd>
-        </div>
-      </dl>
+      <p className="text-lg font-extrabold text-primary tabular-nums">{formatRepairEuro(totalInclVat)}</p>
+      <p className="text-xs text-muted-foreground mt-2.5 leading-relaxed">
+        Στην τιμή περιλαμβάνεται το ανταλλακτικό, η εργασία και γραπτή εγγύηση 3 μηνών από τη HiTech Doctor.
+      </p>
     </div>
   );
 }

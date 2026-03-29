@@ -1,5 +1,5 @@
 /**
- * CLI: διαβάζει uploads/fixmobile/screens.pdf & batteries.pdf και ενημερώνει repair_price_overrides.
+ * CLI: διαβάζει uploads/fixmobile/fixmobile.pdf και ενημερώνει repair_price_overrides (κατηγορία ανά γραμμή).
  * Απαιτεί DATABASE_URL / σύνδεση στη βάση όπως το κύριο app.
  */
 import "dotenv/config";

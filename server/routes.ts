@@ -6,7 +6,7 @@ import path from "node:path";
 import { randomBytes } from "node:crypto";
 import multer from "multer";
 import { storage } from "./storage";
-import { runFixmobilePdfSyncFromDisk, FIXMOBILE_UPLOAD_DIR } from "./fixmobile-sync";
+import { runFixmobilePdfSyncFromDisk, FIXMOBILE_UPLOAD_DIR, FIXMOBILE_PDF } from "./fixmobile-sync";
 import type { AdminUser, RepairRequest } from "@shared/schema";
 import { api, errorSchemas } from "@shared/routes";
 import {
@@ -1102,7 +1102,7 @@ export async function registerRoutes(
     }
   });
 
-  /** Ανέβασμα PDF τιμοκαταλόγου FixMobile (Οθόνες ή Μπαταρίες) → uploads/fixmobile/screens.pdf | batteries.pdf */
+  /** Ανέβασμα ενιαίου PDF τιμοκαταλόγου FixMobile → uploads/fixmobile/fixmobile.pdf (οθόνες+μπαταρίες, κατηγορία ανά γραμμή) */
   app.post(
     "/api/admin/upload-fixmobile-pdf",
     fixmobileUpload.single("file"),
@@ -1118,16 +1118,10 @@ export async function registerRoutes(
         if (!user) return res.status(401).json({ message: "Unauthorized" });
         if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
         if (!req.file?.buffer?.length) return res.status(400).json({ message: "Απαιτείται αρχείο PDF" });
-        const kind = z.enum(["screens", "batteries"]).parse(req.body?.kind);
-        const filename = kind === "batteries" ? "batteries.pdf" : "screens.pdf";
         mkdirSync(FIXMOBILE_UPLOAD_DIR, { recursive: true });
-        const dest = path.join(FIXMOBILE_UPLOAD_DIR, filename);
-        await writeFile(dest, req.file.buffer);
-        res.json({ ok: true, path: dest, filename });
+        await writeFile(FIXMOBILE_PDF, req.file.buffer);
+        res.json({ ok: true, path: FIXMOBILE_PDF, filename: "fixmobile.pdf" });
       } catch (err) {
-        if (err instanceof z.ZodError) {
-          return res.status(400).json({ message: err.errors[0]?.message ?? "Μη έγκυρο kind" });
-        }
         console.error("[upload-fixmobile-pdf]", err);
         res.status(500).json({ message: "Σφάλμα αποθήκευσης" });
       }

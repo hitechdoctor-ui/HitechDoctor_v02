@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BoxnowMapEmbed } from "@/components/boxnow-map-embed";
+import { BoxNowMap } from "@/components/BoxNowMap";
 import type { BoxNowLockerSelected } from "@/lib/boxnow-types";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -114,7 +114,8 @@ export default function DeviceShippingPage() {
         description="Επιλέξτε BoxNow locker, συμπληρώστε τα στοιχεία σας και λάβετε κωδικό αναφοράς για την αποστολή."
       />
       <Helmet>
-        <link rel="preconnect" href="https://widget-cdn.boxnow.cy" />
+        <link rel="preconnect" href="https://widget-cdn.boxnow.gr" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://widget-v5.boxnow.gr" crossOrigin="anonymous" />
       </Helmet>
       <Navbar />
 
@@ -236,12 +237,12 @@ export default function DeviceShippingPage() {
               <CardHeader>
                 <CardTitle className="text-lg">2. Επιλογή BoxNow Locker</CardTitle>
                 <CardDescription>
-                  Πατήστε «Άνοιγμα χάρτη BoxNow» και επιλέξτε το σημείο που σας εξυπηρετεί. Μετά την επιλογή θα εμφανιστούν τα
+                  Πατήστε «Επιλογή Locker BoxNow» και επιλέξτε το σημείο που σας εξυπηρετεί. Μετά την επιλογή θα εμφανιστούν τα
                   στοιχεία του locker παρακάτω.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <BoxnowMapEmbed onSelect={setLocker} />
+                <BoxNowMap onSelect={setLocker} />
                 {locker ? (
                   <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
                     <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">Επιλεγμένο locker</p>

@@ -51,7 +51,6 @@ export default function AdminSupplierSyncPage() {
   const [syncMessage, setSyncMessage] = useState("");
   const [syncing, setSyncing] = useState(false);
 
-  const [pdfKind, setPdfKind] = useState<"screens" | "batteries">("screens");
   const [pdfBusy, setPdfBusy] = useState(false);
   const pdfFileRef = useRef<HTMLInputElement>(null);
 
@@ -209,7 +208,6 @@ export default function AdminSupplierSyncPage() {
     try {
       const fd = new FormData();
       fd.append("file", f);
-      fd.append("kind", pdfKind);
       const res = await fetch("/api/admin/upload-fixmobile-pdf", {
         method: "POST",
         headers: getAdminAuthHeaders(),
@@ -283,27 +281,15 @@ export default function AdminSupplierSyncPage() {
               PDF FixMobile — Τιμοκατάλογος
             </CardTitle>
             <CardDescription>
-              Ανεβάστε τα PDF <strong className="text-foreground">Οθονών</strong> και <strong className="text-foreground">Μπαταριών</strong> FixMobile (μοντέλο + τιμή χωρίς ΦΠΑ ανά γραμμή). Αποθηκεύονται ως{" "}
-              <code className="text-xs text-primary">uploads/fixmobile/screens.pdf</code> και{" "}
-              <code className="text-xs text-primary">batteries.pdf</code>. Μετά εκτελέστε συγχρονισμό για ενημέρωση της βάσης και των σελίδων επισκευής.
+              Ανεβάστε <strong className="text-foreground">ένα</strong> PDF τιμοκαταλόγου FixMobile (οθόνες και/ή μπαταρίες). Αποθηκεύεται ως{" "}
+              <code className="text-xs text-primary">uploads/fixmobile/fixmobile.pdf</code>. Ο συγχρονισμός διαβάζει κάθε γραμμή και ταξινομεί ως οθόνη ή μπαταρία
+              από λέξεις στο κείμενο (π.χ. «Οθόνη», «LCD», «Μπαταρία», «mAh»). Μετά εκτελέστε συγχρονισμό για ενημέρωση της βάσης.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-wrap gap-3 items-end">
-              <div className="space-y-2">
-                <Label htmlFor="pdf-kind">Τύπος PDF</Label>
-                <select
-                  id="pdf-kind"
-                  value={pdfKind}
-                  onChange={(e) => setPdfKind(e.target.value as "screens" | "batteries")}
-                  className="flex h-10 w-full min-w-[180px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <option value="screens">Οθόνες</option>
-                  <option value="batteries">Μπαταρίες</option>
-                </select>
-              </div>
               <div className="space-y-2 flex-1 min-w-[200px]">
-                <Label htmlFor="pdf-file">Αρχείο</Label>
+                <Label htmlFor="pdf-file">Αρχείο PDF</Label>
                 <Input id="pdf-file" ref={pdfFileRef} type="file" accept="application/pdf" disabled={pdfBusy} />
               </div>
               <Button type="button" onClick={() => void uploadFixmobilePdf()} disabled={pdfBusy} className="gap-2">

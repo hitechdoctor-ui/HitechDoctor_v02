@@ -4,6 +4,34 @@ import type { InsertRepairPriceOverride } from "@shared/schema";
 import { computeSellingPrice } from "./supplier-sync";
 import { getRepairCatalog, matchPdfModelToCatalog } from "./repair-catalog";
 import { extractPdfText, type ParsedPriceRow } from "./fixmobile-pdf";
+
+/**
+ * Ταξινόμηση γραμμής τιμοκαταλόγου (κείμενο πριν την τιμή «χωρίς ΦΠΑ»).
+ * Σε ενωμένο PDF κάθε γραμμή κρίνεται ξεχωριστά.
+ */
+export function classifyFixmobileProductLine(line: string): "screen_standard" | "battery_standard" | null {
+  const s = line.normalize("NFC");
+  const lower = s.toLocaleLowerCase("el-GR");
+  const hasBattery =
+    lower.includes("μπαταρία") ||
+    lower.includes("μπαταρια") ||
+    /\bbattery\b/i.test(s) ||
+    /\bmah\b/i.test(s);
+  const hasScreen =
+    lower.includes("οθόνη") ||
+    lower.includes("οθονη") ||
+    /\blcd\b/i.test(lower) ||
+    /\boled\b/i.test(lower);
+  if (hasBattery && hasScreen) {
+    if (/\bmah\b/i.test(s) || lower.includes("μπαταρία") || lower.includes("μπαταρια") || /\bbattery\b/i.test(s)) {
+      return "battery_standard";
+    }
+    return "screen_standard";
+  }
+  if (hasBattery) return "battery_standard";
+  if (hasScreen) return "screen_standard";
+  return null;
+}
 import { storage } from "./storage";
 
 /**
@@ -58,8 +86,18 @@ export function extractModelPriceRowsFromText(text: string, label: string): Pars
       continue;
     }
 
-    console.log(`[fixmobile-pdf] ${label} ✓ row: model=${JSON.stringify(model)} | netPrice=${netPrice}`);
-    out.push({ model, netPrice });
+    const serviceKey = classifyFixmobileProductLine(model);
+    if (!serviceKey) {
+      console.warn(
+        `[fixmobile-pdf] ${label} skip: unclassified line (χωρίς Οθόνη/LCD/OLED/Μπαταρία/Battery/mAh): ${JSON.stringify(model.slice(0, 100))}${model.length > 100 ? "…" : ""}`
+      );
+      continue;
+    }
+
+    console.log(
+      `[fixmobile-pdf] ${label} ✓ row: service=${serviceKey} model=${JSON.stringify(model)} | netPrice=${netPrice}`
+    );
+    out.push({ model, netPrice, serviceKey });
   }
 
   if (out.length === 0) {
@@ -75,8 +113,8 @@ export async function parsePdfPriceRows(buffer: Buffer, sourceLabel = "pdf"): Pr
 }
 
 export const FIXMOBILE_UPLOAD_DIR = path.join(process.cwd(), "uploads", "fixmobile");
-export const FIXMOBILE_SCREEN_PDF = path.join(FIXMOBILE_UPLOAD_DIR, "screens.pdf");
-export const FIXMOBILE_BATTERY_PDF = path.join(FIXMOBILE_UPLOAD_DIR, "batteries.pdf");
+/** Ενιαίο PDF (οθόνες + μπαταρίες σε ένα αρχείο) — η κατηγορία προκύπτει ανά γραμμή από το κείμενο */
+export const FIXMOBILE_PDF = path.join(FIXMOBILE_UPLOAD_DIR, "fixmobile.pdf");
 
 export type FixmobilePdfSyncResult = {
   screensParsed: number;
@@ -160,36 +198,31 @@ export async function runFixmobilePdfSyncFromDisk(): Promise<FixmobilePdfSyncRes
 
   const catalog = getRepairCatalog();
 
-  async function processFile(
-    absPath: string,
-    serviceKey: "screen_standard" | "battery_standard"
-  ): Promise<void> {
-    let buf: Buffer;
-    try {
-      buf = await readFile(absPath);
-    } catch {
-      errors.push(`Αρχείο δεν βρέθηκε: ${path.basename(absPath)}`);
-      return;
-    }
+  let buf: Buffer | undefined;
+  try {
+    buf = await readFile(FIXMOBILE_PDF);
+  } catch {
+    errors.push(
+      `Δεν βρέθηκε ${path.basename(FIXMOBILE_PDF)} — ανεβάστε το PDF τιμοκαταλόγου από το Admin (ενιαίο αρχείο).`
+    );
+  }
 
-    let rows: { model: string; netPrice: number }[];
+  if (buf) {
+    let rows: ParsedPriceRow[];
     try {
-      const srcLabel = serviceKey === "screen_standard" ? "screens" : "batteries";
-      rows = await parsePdfPriceRows(buf, srcLabel);
+      rows = await parsePdfPriceRows(buf, "fixmobile");
     } catch (e) {
-      errors.push(`${path.basename(absPath)}: ${e instanceof Error ? e.message : String(e)}`);
-      return;
+      errors.push(`${path.basename(FIXMOBILE_PDF)}: ${e instanceof Error ? e.message : String(e)}`);
+      rows = [];
     }
 
-    if (serviceKey === "screen_standard") screensParsed = rows.length;
-    else batteriesParsed = rows.length;
+    screensParsed = rows.filter((r) => r.serviceKey === "screen_standard").length;
+    batteriesParsed = rows.filter((r) => r.serviceKey === "battery_standard").length;
 
     const seen = new Map<string, InsertRepairPriceOverride>();
 
-    const srcTag = serviceKey === "screen_standard" ? "screens" : "batteries";
-    const logLabel = `fixmobile:${srcTag}`;
-
-    for (const { model, netPrice } of rows) {
+    for (const { model, netPrice, serviceKey } of rows) {
+      const logLabel = serviceKey === "screen_standard" ? "fixmobile:screens" : "fixmobile:batteries";
       const hit = matchPdfModelToCatalog(model, catalog, {
         serviceKey,
         logLabel,
@@ -217,7 +250,7 @@ export async function runFixmobilePdfSyncFromDisk(): Promise<FixmobilePdfSyncRes
       });
     }
 
-    for (const row of seen.values()) {
+    for (const row of Array.from(seen.values())) {
       try {
         await storage.upsertRepairPriceOverride(row);
         upserted++;
@@ -226,9 +259,6 @@ export async function runFixmobilePdfSyncFromDisk(): Promise<FixmobilePdfSyncRes
       }
     }
   }
-
-  await processFile(FIXMOBILE_SCREEN_PDF, "screen_standard");
-  await processFile(FIXMOBILE_BATTERY_PDF, "battery_standard");
 
   const totalPdfRows = screensParsed + batteriesParsed;
   const totalMatched = screensMatched + batteriesMatched;
