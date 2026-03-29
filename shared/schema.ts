@@ -1,4 +1,4 @@
-import { pgTable, text, integer, timestamp, numeric, boolean, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, timestamp, numeric, boolean, uniqueIndex, index } from "drizzle-orm/pg-core";
 import type { InferInsertModel } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -160,6 +160,61 @@ export const boxnowDropoffRequests = pgTable("boxnow_dropoff_requests", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+/** Προμηθευτές — XML feed για συγχρονισμό κόστους / τιμών επισκευών */
+export const suppliers = pgTable("suppliers", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  name: text("name").notNull(),
+  xmlUrl: text("xml_url").notNull(),
+  /** Εργασία (€) που προστίθεται στο κόστος αγοράς πριν το ΦΠΑ */
+  workFee: numeric("work_fee").notNull().default("60"),
+  /** ΦΠΑ % (π.χ. 24) */
+  vatRate: numeric("vat_rate").notNull().default("24"),
+  lastSync: timestamp("last_sync"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+/** Γραμμές τελευταίου συγχρονισμού ανά προμηθευτή (SKU, κόστος, τελική τιμή) */
+export const supplierSyncItems = pgTable(
+  "supplier_sync_items",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    supplierId: integer("supplier_id")
+      .notNull()
+      .references(() => suppliers.id, { onDelete: "cascade" }),
+    externalSku: text("external_sku").notNull(),
+    title: text("title"),
+    purchaseCost: numeric("purchase_cost").notNull(),
+    sellingPrice: numeric("selling_price").notNull(),
+    syncedAt: timestamp("synced_at").defaultNow(),
+  },
+  (t) => [uniqueIndex("supplier_sync_supplier_sku_idx").on(t.supplierId, t.externalSku), index("supplier_sync_supplier_idx").on(t.supplierId)]
+);
+
+/**
+ * Επισκευές: τελικές τιμές με ΦΠΑ (ενημερώνονται από sync όταν το external_sku ταιριάζει με το XML).
+ * Το frontend μπορεί να διαβάζει αυτά τα δεδομένα μέσω API για εμφάνιση τιμών.
+ */
+export const repairPriceOverrides = pgTable(
+  "repair_price_overrides",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    brand: text("brand").notNull(),
+    modelSlug: text("model_slug").notNull(),
+    /** π.χ. screen_oem, battery, port */
+    serviceKey: text("service_key").notNull().default("screen_oem"),
+    /** SKU από XML προμηθευτή — αν ταιριάζει, το sync ενημερώνει το price */
+    externalSku: text("external_sku"),
+    price: numeric("price").notNull(),
+    purchaseCost: numeric("purchase_cost"),
+    supplierId: integer("supplier_id").references(() => suppliers.id, { onDelete: "set null" }),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("repair_price_brand_slug_service_idx").on(t.brand, t.modelSlug, t.serviceKey),
+    uniqueIndex("repair_price_external_sku_unique").on(t.externalSku),
+  ]
+);
+
 /** eShop: «Θέλω καλύτερη προσφορά» — όνομα + κινητό, snapshot ονόματος προϊόντος */
 export const productOfferInterests = pgTable("product_offer_interests", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -222,6 +277,14 @@ export type AdminUser = typeof adminUsers.$inferSelect;
 export type WebsiteInquiry = typeof websiteInquiries.$inferSelect;
 export type ProductOfferInterest = typeof productOfferInterests.$inferSelect;
 export type InsertProductOfferInterest = InferInsertModel<typeof productOfferInterests>;
+export type Supplier = typeof suppliers.$inferSelect;
+export type SupplierSyncItem = typeof supplierSyncItems.$inferSelect;
+export type RepairPriceOverride = typeof repairPriceOverrides.$inferSelect;
+export type InsertSupplier = InferInsertModel<typeof suppliers>;
+export type InsertRepairPriceOverride = InferInsertModel<typeof repairPriceOverrides>;
+
+export const insertSupplierSchema = createInsertSchema(suppliers).omit({ id: true, createdAt: true, lastSync: true }) as z.ZodTypeAny;
+export const insertRepairPriceOverrideSchema = createInsertSchema(repairPriceOverrides).omit({ id: true, updatedAt: true }) as z.ZodTypeAny;
 export type BoxnowDropoffRequest = typeof boxnowDropoffRequests.$inferSelect;
 export type InsertBoxnowDropoffRequest = InferInsertModel<typeof boxnowDropoffRequests>;
 export type IpswDownloadEvent = typeof ipswDownloadEvents.$inferSelect;

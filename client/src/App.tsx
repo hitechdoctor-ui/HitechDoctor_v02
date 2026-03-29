@@ -12,6 +12,8 @@ import { ScrollProgressBar } from "@/components/scroll-progress-bar";
 import { CookieBanner } from "@/components/cookie-banner";
 import { ExitIntentPopup } from "@/components/exit-intent-popup";
 import { FloatingActionStack } from "@/components/floating-action-stack";
+import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
+import { cn } from "@/lib/utils";
 
 // Public Pages — lazy loaded (reload on stale chunk after deploy — see lazy-with-reload.ts)
 const Home = lazyWithReload(() => import("./pages/home"));
@@ -78,6 +80,7 @@ const AdminWebsiteInquiries = lazyWithReload(() => import("./pages/admin/website
 const AdminUsersPage = lazyWithReload(() => import("./pages/admin/admin-users"));
 const AdminIpswDownloads = lazyWithReload(() => import("./pages/admin/ipsw-downloads"));
 const AdminProductOfferInterests = lazyWithReload(() => import("./pages/admin/product-offer-interests"));
+const AdminSupplierSync = lazyWithReload(() => import("./pages/admin/supplier-sync"));
 const AdminHubspotContacts = lazyWithReload(() => import("./pages/admin/hubspot-contacts"));
 
 function PageLoader() {
@@ -142,15 +145,23 @@ function GlobalComponents() {
       <CookieBanner />
       <ExitIntentPopup />
       <FloatingActionStack />
+      <MobileBottomNav />
     </Fragment>
   );
 }
 
 function Router() {
+  const [location] = useLocation();
+  const isAdmin = location.startsWith("/admin");
   return (
     <Fragment>
       <ScrollToTop />
       <GlobalComponents />
+      <div
+        className={cn(
+          !isAdmin && "pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0"
+        )}
+      >
       <Suspense fallback={<PageLoader />}>
         <Switch>
           <Route path="/" component={Home} />
@@ -216,9 +227,11 @@ function Router() {
           <Route path="/admin/users" component={AdminUsersPage} />
           <Route path="/admin/ipsw-downloads" component={AdminIpswDownloads} />
           <Route path="/admin/product-offer-interests" component={AdminProductOfferInterests} />
+          <Route path="/admin/sync" component={AdminSupplierSync} />
           <Route component={NotFound} />
         </Switch>
       </Suspense>
+      </div>
     </Fragment>
   );
 }

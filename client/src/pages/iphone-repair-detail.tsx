@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRoute, Link } from "wouter";
 import { Helmet } from "react-helmet-async";
 import { Navbar } from "@/components/layout/navbar";
@@ -6,10 +6,19 @@ import { Footer } from "@/components/layout/footer";
 import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { Seo } from "@/components/seo";
 import { RepairRequestModal } from "@/components/repair-request-modal";
+import { RepairPriceBreakdownCard } from "@/components/repair-price-breakdown";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { findModelBySlug, IPHONE_SERIES } from "@/data/iphone-devices";
+import { mergeIphoneModel, useRepairPriceOverrideMap } from "@/lib/repair-price-overrides";
+import {
+  REPAIR_CTA_FULL,
+  REPAIR_CTA_GRADIENT,
+  REPAIR_CTA_WIDE,
+  REPAIR_SIDEBAR_ESHOP,
+  REPAIR_TAB_BTN,
+} from "@/lib/repair-touch-ui";
 import type { IPhoneModel } from "@/data/iphone-devices";
 import {
   CheckCircle2, Monitor, Battery, Zap, ChevronRight, Phone,
@@ -52,8 +61,9 @@ function TierCard({ tier, selected, onClick }: {
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`relative w-full text-left rounded-2xl border p-5 transition-all ${
+      className={`relative w-full text-left rounded-2xl border p-5 transition-all touch-manipulation active:scale-[0.99] ${
         selected
           ? "border-primary bg-primary/8 shadow-[0_0_20px_rgba(0,210,200,0.15)]"
           : tier.recommended
@@ -218,7 +228,7 @@ function SidebarProducts({ activeTab }: { activeTab: TabId }) {
         </Link>
       ))}
       <Link href="/eshop">
-        <Button size="sm" variant="outline" className="w-full h-8 text-xs border-primary/30 text-primary hover:bg-primary/10" data-testid="button-sidebar-eshop">
+        <Button size="sm" variant="outline" className={`${REPAIR_SIDEBAR_ESHOP} border-primary/30 text-primary hover:bg-primary/10`} data-testid="button-sidebar-eshop">
           <ShoppingCart className="w-3 h-3 mr-1.5" />
           Δείτε Όλα στο eShop
         </Button>
@@ -248,7 +258,12 @@ function TrustBadges() {
 export default function IPhoneRepairDetail() {
   const [, params] = useRoute("/episkevi-iphone/:slug");
   const modelSlug = params?.slug ?? "";
-  const model = findModelBySlug(modelSlug);
+  const baseModel = findModelBySlug(modelSlug);
+  const priceMap = useRepairPriceOverrideMap();
+  const model = useMemo(
+    () => (baseModel ? mergeIphoneModel(baseModel, priceMap) : null),
+    [baseModel, priceMap]
+  );
 
   const [activeTab, setActiveTab] = useState<TabId>("screen");
   const [selectedScreenTier, setSelectedScreenTier] = useState(1);
@@ -263,7 +278,7 @@ export default function IPhoneRepairDetail() {
           <h1 className="text-2xl font-bold mb-4">Μοντέλο δεν βρέθηκε</h1>
           <p className="text-muted-foreground mb-6">Το μοντέλο δεν υπάρχει στη βάση μας.</p>
           <Link href="/services/episkeui-iphone">
-            <Button className="bg-primary text-black">← Επιστροφή στα μοντέλα iPhone</Button>
+            <Button className="min-h-12 bg-primary px-6 text-base text-black touch-manipulation sm:min-h-10 sm:text-sm">← Επιστροφή στα μοντέλα iPhone</Button>
           </Link>
         </main>
         <Footer />
@@ -280,6 +295,13 @@ export default function IPhoneRepairDetail() {
     : activeTab === "battery"
     ? model.batteryTiers[selectedBatteryTier]
     : null;
+
+  const selectedTotalInclVat =
+    activeTab === "screen"
+      ? model.screenTiers[selectedScreenTier].price
+      : activeTab === "battery"
+        ? model.batteryTiers[selectedBatteryTier].price
+        : model.chargingPortPrice;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -343,7 +365,7 @@ export default function IPhoneRepairDetail() {
 
       <Navbar />
 
-      <main className="container mx-auto px-4 pt-6 pb-20 max-w-6xl">
+      <main className="container mx-auto max-w-6xl px-4 pt-6 pb-8 md:pb-20">
         {/* ── Breadcrumb ── */}
         <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-muted-foreground mb-6 flex-wrap">
           <Link href="/" className="hover:text-primary transition-colors">Αρχική</Link>
@@ -396,9 +418,10 @@ export default function IPhoneRepairDetail() {
             <div className="flex gap-2 mb-6 border-b border-white/10 pb-1 overflow-x-auto">
               {TAB_DEFS.map((t) => (
                 <button
+                  type="button"
                   key={t.id}
                   onClick={() => setActiveTab(t.id)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-semibold transition-all whitespace-nowrap ${
+                  className={`${REPAIR_TAB_BTN} ${
                     activeTab === t.id
                       ? "text-primary border-b-2 border-primary -mb-px"
                       : "text-muted-foreground hover:text-foreground"
@@ -441,18 +464,18 @@ export default function IPhoneRepairDetail() {
                     />
                   ))}
                 </div>
-                <div className="mt-5 p-4 rounded-xl border border-primary/20 bg-primary/5 flex flex-wrap items-center justify-between gap-3">
+                <div className="mt-5 flex flex-col gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                   <div>
                     <p className="text-sm font-semibold text-foreground">
                       {model.screenTiers[selectedScreenTier].label} — Αλλαγή Οθόνης {model.name}
                     </p>
                     <p className="text-xs text-muted-foreground">{model.screenTiers[selectedScreenTier].sublabel}</p>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
                     <span className="text-2xl font-extrabold text-primary">€{model.screenTiers[selectedScreenTier].price}</span>
                     <Button
                       onClick={() => setModalOpen(true)}
-                      className="h-9 px-5 font-semibold border-0 text-sm"
+                      className={REPAIR_CTA_GRADIENT}
                       style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
                       data-testid="button-book-screen"
                     >
@@ -460,6 +483,7 @@ export default function IPhoneRepairDetail() {
                     </Button>
                   </div>
                 </div>
+                <RepairPriceBreakdownCard totalInclVat={model.screenTiers[selectedScreenTier].price} className="mt-3" />
               </div>
             )}
 
@@ -479,18 +503,18 @@ export default function IPhoneRepairDetail() {
                     />
                   ))}
                 </div>
-                <div className="mt-5 p-4 rounded-xl border border-primary/20 bg-primary/5 flex flex-wrap items-center justify-between gap-3">
+                <div className="mt-5 flex flex-col gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                   <div>
                     <p className="text-sm font-semibold text-foreground">
                       {model.batteryTiers[selectedBatteryTier].label} — Αλλαγή Μπαταρίας {model.name}
                     </p>
                     <p className="text-xs text-muted-foreground">{model.batteryTiers[selectedBatteryTier].sublabel}</p>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
                     <span className="text-2xl font-extrabold text-primary">€{model.batteryTiers[selectedBatteryTier].price}</span>
                     <Button
                       onClick={() => setModalOpen(true)}
-                      className="h-9 px-5 font-semibold border-0 text-sm"
+                      className={REPAIR_CTA_GRADIENT}
                       style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
                       data-testid="button-book-battery"
                     >
@@ -498,6 +522,7 @@ export default function IPhoneRepairDetail() {
                     </Button>
                   </div>
                 </div>
+                <RepairPriceBreakdownCard totalInclVat={model.batteryTiers[selectedBatteryTier].price} className="mt-3" />
               </div>
             )}
 
@@ -534,16 +559,17 @@ export default function IPhoneRepairDetail() {
                       <p className="text-[10px] text-muted-foreground">συμπ. εργατικά</p>
                     </div>
                   </div>
-                  <div className="mt-5 pt-4 border-t border-white/8">
+                  <div className="mt-5 border-t border-white/8 pt-4">
                     <Button
                       onClick={() => setModalOpen(true)}
-                      className="w-full sm:w-auto h-10 px-8 font-semibold border-0"
+                      className={REPAIR_CTA_WIDE}
                       style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
                       data-testid="button-book-port"
                     >
                       Κλείσε Ραντεβού — €{model.chargingPortPrice}
                     </Button>
                   </div>
+                  <RepairPriceBreakdownCard totalInclVat={model.chargingPortPrice} className="mt-4" />
                 </div>
 
                 <div className="mt-6 p-4 rounded-xl border border-amber-500/20 bg-amber-500/5">
@@ -585,8 +611,8 @@ export default function IPhoneRepairDetail() {
               </p>
               <Button
                 onClick={() => setModalOpen(true)}
-                className="w-full sm:w-auto h-11 px-8 font-semibold border-0 text-base"
-                style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))", boxShadow: "0 0 24px rgba(0,210,200,0.25)" }}
+                className={`${REPAIR_CTA_WIDE} shadow-[0_0_24px_rgba(0,210,200,0.25)]`}
+                style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
                 data-testid="button-open-repair-form"
               >
                 <Wrench className="w-4 h-4 mr-2" />
@@ -627,7 +653,7 @@ export default function IPhoneRepairDetail() {
                 </div>
                 <Button
                   onClick={() => setModalOpen(true)}
-                  className="w-full mt-4 h-10 font-semibold border-0 text-sm"
+                  className={`${REPAIR_CTA_FULL} mt-4`}
                   style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
                   data-testid="button-sidebar-book"
                 >
@@ -657,6 +683,7 @@ export default function IPhoneRepairDetail() {
         open={modalOpen}
         onOpenChange={setModalOpen}
         defaultDeviceName={model.name}
+        defaultTotalInclVat={selectedTotalInclVat}
       />
     </div>
   );

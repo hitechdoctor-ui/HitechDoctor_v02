@@ -11,6 +11,9 @@ import {
   productOfferInterests,
   boxnowDropoffRequests,
   ipswDownloadEvents,
+  suppliers,
+  supplierSyncItems,
+  repairPriceOverrides,
   adminUsers,
   type Product,
   type InsertProduct,
@@ -34,7 +37,12 @@ import {
   type InsertBoxnowDropoffRequest,
   type IpswDownloadEvent,
   type CheckoutPayload,
-  type AdminUser
+  type AdminUser,
+  type Supplier,
+  type InsertSupplier,
+  type SupplierSyncItem,
+  type RepairPriceOverride,
+  type InsertRepairPriceOverride,
 } from "@shared/schema";
 import { eq, desc, and, sql, lte, gte, count } from "drizzle-orm";
 import { queueHubSpotContactSync } from "./hubspot";
@@ -141,6 +149,26 @@ export interface IStorage {
     byDevice: { deviceIdentifier: string; deviceName: string | null; count: number }[];
     recent: IpswDownloadEvent[];
   }>;
+
+  // Suppliers & sync
+  getSuppliers(): Promise<Supplier[]>;
+  getSupplier(id: number): Promise<Supplier | undefined>;
+  createSupplier(data: InsertSupplier): Promise<Supplier>;
+  updateSupplier(id: number, data: Partial<InsertSupplier>): Promise<Supplier>;
+  deleteSupplier(id: number): Promise<void>;
+  replaceSupplierSyncItems(
+    supplierId: number,
+    rows: { externalSku: string; title: string | null; purchaseCost: string; sellingPrice: string }[]
+  ): Promise<void>;
+  updateRepairPriceOverridesFromSync(
+    updates: { externalSku: string; price: string; purchaseCost: string; supplierId: number }[]
+  ): Promise<number>;
+  updateSupplierLastSync(id: number, at: Date): Promise<void>;
+  getSupplierSyncItems(supplierId?: number): Promise<SupplierSyncItem[]>;
+  getRepairPriceOverrides(): Promise<RepairPriceOverride[]>;
+  /** Όλες οι εγγραφές (για δημόσιο API τιμών επισκευής). */
+  getAllRepairPriceOverrides(): Promise<RepairPriceOverride[]>;
+  upsertRepairPriceOverride(data: InsertRepairPriceOverride): Promise<RepairPriceOverride>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -664,6 +692,126 @@ export class DatabaseStorage implements IStorage {
       })),
       recent,
     };
+  }
+
+  // --- Suppliers & XML sync ---
+  async getSuppliers(): Promise<Supplier[]> {
+    return await db.select().from(suppliers).orderBy(desc(suppliers.id));
+  }
+
+  async getSupplier(id: number): Promise<Supplier | undefined> {
+    const [r] = await db.select().from(suppliers).where(eq(suppliers.id, id));
+    return r;
+  }
+
+  async createSupplier(data: InsertSupplier): Promise<Supplier> {
+    const [r] = await db.insert(suppliers).values(data).returning();
+    return r;
+  }
+
+  async updateSupplier(id: number, data: Partial<InsertSupplier>): Promise<Supplier> {
+    const [r] = await db.update(suppliers).set(data).where(eq(suppliers.id, id)).returning();
+    if (!r) throw new Error("Supplier not found");
+    return r;
+  }
+
+  async deleteSupplier(id: number): Promise<void> {
+    await db.delete(suppliers).where(eq(suppliers.id, id));
+  }
+
+  async replaceSupplierSyncItems(
+    supplierId: number,
+    rows: { externalSku: string; title: string | null; purchaseCost: string; sellingPrice: string }[]
+  ): Promise<void> {
+    await db.delete(supplierSyncItems).where(eq(supplierSyncItems.supplierId, supplierId));
+    if (rows.length === 0) return;
+    await db.insert(supplierSyncItems).values(
+      rows.map((row) => ({
+        supplierId,
+        externalSku: row.externalSku,
+        title: row.title,
+        purchaseCost: row.purchaseCost,
+        sellingPrice: row.sellingPrice,
+      }))
+    );
+  }
+
+  async updateRepairPriceOverridesFromSync(
+    updates: { externalSku: string; price: string; purchaseCost: string; supplierId: number }[]
+  ): Promise<number> {
+    let n = 0;
+    for (const u of updates) {
+      const result = await db
+        .update(repairPriceOverrides)
+        .set({
+          price: u.price,
+          purchaseCost: u.purchaseCost,
+          supplierId: u.supplierId,
+          updatedAt: new Date(),
+        })
+        .where(eq(repairPriceOverrides.externalSku, u.externalSku))
+        .returning({ id: repairPriceOverrides.id });
+      if (result.length) n += result.length;
+    }
+    return n;
+  }
+
+  async updateSupplierLastSync(id: number, at: Date): Promise<void> {
+    await db.update(suppliers).set({ lastSync: at }).where(eq(suppliers.id, id));
+  }
+
+  async getSupplierSyncItems(supplierId?: number): Promise<SupplierSyncItem[]> {
+    if (supplierId != null) {
+      return await db
+        .select()
+        .from(supplierSyncItems)
+        .where(eq(supplierSyncItems.supplierId, supplierId))
+        .orderBy(desc(supplierSyncItems.syncedAt))
+        .limit(500);
+    }
+    return await db.select().from(supplierSyncItems).orderBy(desc(supplierSyncItems.syncedAt)).limit(500);
+  }
+
+  async getRepairPriceOverrides(): Promise<RepairPriceOverride[]> {
+    return await db.select().from(repairPriceOverrides).orderBy(desc(repairPriceOverrides.updatedAt)).limit(200);
+  }
+
+  async getAllRepairPriceOverrides(): Promise<RepairPriceOverride[]> {
+    return await db.select().from(repairPriceOverrides).orderBy(desc(repairPriceOverrides.updatedAt));
+  }
+
+  async upsertRepairPriceOverride(data: InsertRepairPriceOverride): Promise<RepairPriceOverride> {
+    const sk = data.serviceKey ?? "screen_oem";
+    const [byTriple] = await db
+      .select()
+      .from(repairPriceOverrides)
+      .where(
+        and(
+          eq(repairPriceOverrides.brand, data.brand),
+          eq(repairPriceOverrides.modelSlug, data.modelSlug),
+          eq(repairPriceOverrides.serviceKey, sk)
+        )
+      )
+      .limit(1);
+    if (byTriple) {
+      const [r] = await db
+        .update(repairPriceOverrides)
+        .set({
+          price: data.price,
+          externalSku: data.externalSku ?? byTriple.externalSku,
+          purchaseCost: data.purchaseCost ?? null,
+          supplierId: data.supplierId ?? null,
+          updatedAt: new Date(),
+        })
+        .where(eq(repairPriceOverrides.id, byTriple.id))
+        .returning();
+      return r!;
+    }
+    const [created] = await db
+      .insert(repairPriceOverrides)
+      .values({ ...data, serviceKey: sk })
+      .returning();
+    return created;
   }
 }
 

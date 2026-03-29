@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -18,6 +18,7 @@ import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { insertRepairRequestSchema } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
+import { RepairPriceBreakdownCard } from "@/components/repair-price-breakdown";
 
 type FormValues = z.infer<typeof insertRepairRequestSchema>;
 
@@ -25,12 +26,21 @@ interface RepairRequestModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultDeviceName?: string;
+  /** Τελική τιμή με ΦΠΑ από τη σελίδα επισκευής — προσυμπλήρωση πεδίου τιμής */
+  defaultTotalInclVat?: number;
 }
 
-export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" }: RepairRequestModalProps) {
+export function RepairRequestModal({
+  open,
+  onOpenChange,
+  defaultDeviceName = "",
+  defaultTotalInclVat,
+}: RepairRequestModalProps) {
   const [submitted, setSubmitted] = useState(false);
   const [gdprConsent, setGdprConsent] = useState(false);
   const [gdprError, setGdprError] = useState(false);
+  const [serviceTermsConsent, setServiceTermsConsent] = useState(false);
+  const [serviceTermsError, setServiceTermsError] = useState(false);
   const [priceInput, setPriceInput] = useState("");
   const [selectedBox, setSelectedBox] = useState<"net" | "gross">("net");
   const { toast } = useToast();
@@ -41,6 +51,18 @@ export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" 
   const netPrice = hasPrice ? priceNum : 0;
   const grossPrice = hasPrice ? priceNum * 1.24 : 0;
   const agreedPrice = selectedBox === "net" ? netPrice : grossPrice;
+  const totalInclVatForBreakdown = hasPrice
+    ? selectedBox === "gross"
+      ? grossPrice
+      : netPrice * 1.24
+    : 0;
+
+  useEffect(() => {
+    if (open && defaultTotalInclVat != null && defaultTotalInclVat > 0) {
+      setPriceInput((defaultTotalInclVat / 1.24).toFixed(2));
+      setSelectedBox("net");
+    }
+  }, [open, defaultTotalInclVat]);
 
   const fmt = (n: number) =>
     n.toLocaleString("el-GR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
@@ -81,6 +103,8 @@ export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" 
       setSubmitted(false);
       setGdprConsent(false);
       setGdprError(false);
+      setServiceTermsConsent(false);
+      setServiceTermsError(false);
       setPriceInput("");
       setSelectedBox("net");
       form.reset({ ...form.getValues(), deviceName: defaultDeviceName });
@@ -91,6 +115,10 @@ export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" 
   function handleSubmit(data: FormValues) {
     if (!gdprConsent) {
       setGdprError(true);
+      return;
+    }
+    if (!serviceTermsConsent) {
+      setServiceTermsError(true);
       return;
     }
     mutation.mutate(data);
@@ -296,6 +324,9 @@ export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" 
                     </span>
                   </div>
                   <PriceDisclaimer className="pt-1" />
+                  {hasPrice && (
+                    <RepairPriceBreakdownCard totalInclVat={totalInclVatForBreakdown} className="mt-2" />
+                  )}
                 </div>
 
                 {/* Σημειώσεις */}
@@ -314,6 +345,60 @@ export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" 
                     <FormMessage className="text-xs" />
                   </FormItem>
                 )} />
+
+                {/* Όροι service & εγγύηση */}
+                <div
+                  className={`rounded-xl p-3.5 border transition-colors ${
+                    serviceTermsError
+                      ? "bg-red-500/5 border-red-500/30"
+                      : serviceTermsConsent
+                        ? "bg-primary/5 border-primary/25"
+                        : "bg-white/3 border-white/10"
+                  }`}
+                >
+                  <label className="flex items-start gap-3 cursor-pointer select-none" htmlFor="service-terms-consent">
+                    <div className="mt-0.5 shrink-0">
+                      <input
+                        id="service-terms-consent"
+                        type="checkbox"
+                        checked={serviceTermsConsent}
+                        onChange={(e) => {
+                          setServiceTermsConsent(e.target.checked);
+                          if (e.target.checked) setServiceTermsError(false);
+                        }}
+                        className="sr-only"
+                        data-testid="checkbox-service-terms"
+                      />
+                      <div
+                        className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                          serviceTermsConsent
+                            ? "bg-primary border-primary"
+                            : serviceTermsError
+                              ? "border-red-400 bg-red-500/10"
+                              : "border-white/30 bg-card"
+                        }`}
+                      >
+                        {serviceTermsConsent && (
+                          <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] leading-relaxed text-muted-foreground">
+                        <span className="text-primary font-semibold">*</span> Αποδέχομαι τους Όρους Service και την Εγγύηση 3 μηνών.{" "}
+                        <Link href="/oroi-episkeuis" className="text-primary hover:underline inline-flex items-center gap-0.5" target="_blank" onClick={(e) => e.stopPropagation()}>
+                          Όροι επισκευής
+                          <ExternalLink className="w-2.5 h-2.5" />
+                        </Link>
+                      </p>
+                      {serviceTermsError && (
+                        <p className="text-[10px] text-red-400 mt-1 font-medium">Απαιτείται η αποδοχή για υποβολή αιτήματος.</p>
+                      )}
+                    </div>
+                  </label>
+                </div>
 
                 {/* GDPR */}
                 <div className={`rounded-xl p-3.5 border transition-colors ${gdprError ? "bg-red-500/5 border-red-500/30" : gdprConsent ? "bg-primary/5 border-primary/25" : "bg-white/3 border-white/10"}`}>
@@ -346,7 +431,7 @@ export function RepairRequestModal({ open, onOpenChange, defaultDeviceName = "" 
 
                 <Button
                   type="submit"
-                  disabled={mutation.isPending}
+                  disabled={mutation.isPending || !serviceTermsConsent || !gdprConsent}
                   className="w-full h-11 font-semibold border-0 mt-1"
                   style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))", boxShadow: "0 0 20px rgba(0,210,200,0.25)" }}
                   data-testid="button-submit-repair"

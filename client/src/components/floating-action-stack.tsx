@@ -9,7 +9,7 @@ import { RepairChatbot } from "@/components/repair-chatbot";
 export function FloatingActionStack() {
   return (
     <div
-      className="fixed bottom-6 right-4 z-[150] flex flex-col-reverse gap-3 items-center pointer-events-none sm:right-6"
+      className="fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom))] right-4 z-[150] flex flex-col-reverse gap-3 items-center pointer-events-none sm:bottom-6 sm:right-6"
       aria-label="Γρήγορες ενέργειες"
     >
       <SosButton />

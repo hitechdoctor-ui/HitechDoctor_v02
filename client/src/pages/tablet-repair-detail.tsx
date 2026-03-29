@@ -10,6 +10,16 @@ import { useQuery } from "@tanstack/react-query";
 import { findTabletBrandBySlug, TABLET_BRANDS } from "@/data/tablet-brands";
 import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { RepairRequestModal } from "@/components/repair-request-modal";
+import { RepairPriceBreakdownCard } from "@/components/repair-price-breakdown";
+import {
+  REPAIR_CTA_FLEX,
+  REPAIR_CTA_FULL,
+  REPAIR_CTA_GRADIENT,
+  REPAIR_CTA_WIDE,
+  REPAIR_OUTLINE_CALL,
+  REPAIR_PRICE_ROW_BOOK,
+  REPAIR_SIDEBAR_ESHOP,
+} from "@/lib/repair-touch-ui";
 import {
   CheckCircle2, MonitorSmartphone, Battery, Zap, Layers, Shield,
   ChevronRight, Phone, Star, Clock, Wrench, ShoppingCart, ArrowRight,
@@ -36,7 +46,7 @@ function SidebarProducts({ subcategory, label }: { subcategory: string; label: s
         </Link>
       ))}
       <Link href="/eshop">
-        <Button size="sm" variant="outline" className="w-full h-8 text-xs border-primary/30 text-primary hover:bg-primary/10" data-testid="button-sidebar-eshop">
+        <Button size="sm" variant="outline" className={`${REPAIR_SIDEBAR_ESHOP} border-primary/30 text-primary hover:bg-primary/10`} data-testid="button-sidebar-eshop">
           <ShoppingCart className="w-3 h-3 mr-1.5" />Δείτε Όλα στο eShop
         </Button>
       </Link>
@@ -73,7 +83,7 @@ function PriceRow({ icon: Icon, label, price, note, highlight, onBook }: PriceRo
           <p className="text-[10px] text-muted-foreground">συμπ. ΦΠΑ</p>
         </div>
         {onBook && (
-          <Button onClick={onBook} size="sm" className="h-9 px-4 font-semibold border-0 text-xs shrink-0"
+          <Button onClick={onBook} size="sm" className={`${REPAIR_PRICE_ROW_BOOK} shrink-0`}
             style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
             data-testid={`button-book-${label.toLowerCase().replace(/\s+/g, "-")}`}>
             Ραντεβού
@@ -89,6 +99,11 @@ export default function TabletRepairDetail() {
   const brandSlug = params?.slug ?? "";
   const brand = findTabletBrandBySlug(brandSlug);
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalDefaultTotal, setModalDefaultTotal] = useState<number | undefined>();
+  const openRepairModal = (totalInclVat: number) => {
+    setModalDefaultTotal(totalInclVat);
+    setModalOpen(true);
+  };
 
   if (!brand) {
     return (
@@ -98,7 +113,7 @@ export default function TabletRepairDetail() {
           <h1 className="text-2xl font-bold mb-4">Μάρκα δεν βρέθηκε</h1>
           <p className="text-muted-foreground mb-6">Η μάρκα δεν υπάρχει στη βάση μας.</p>
           <Link href="/services/episkeui-tablet">
-            <Button style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}>
+            <Button className={REPAIR_CTA_GRADIENT} style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}>
               ← Επιστροφή στις μάρκες Tablet
             </Button>
           </Link>
@@ -159,7 +174,7 @@ export default function TabletRepairDetail() {
 
       <Navbar />
 
-      <main className="container mx-auto px-4 pt-6 pb-28 max-w-6xl">
+      <main className="container mx-auto max-w-6xl px-4 pt-6 pb-[calc(7.5rem+env(safe-area-inset-bottom))] md:pb-20">
         {/* Breadcrumb */}
         <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-muted-foreground mb-6 flex-wrap">
           <Link href="/" className="hover:text-primary transition-colors">Αρχική</Link>
@@ -218,10 +233,10 @@ export default function TabletRepairDetail() {
             <section id="section-prices">
               <h2 className="text-xl font-display font-bold text-foreground mb-4">Τιμοκατάλογος Επισκευής {brand.name}</h2>
               <div className="space-y-3">
-                <PriceRow icon={MonitorSmartphone} label="Αλλαγή Οθόνης"        price={brand.screenPriceFrom}   note={`Touch + Display · ${brand.seriesLabel}`} highlight onBook={() => setModalOpen(true)} />
-                <PriceRow icon={Battery}           label="Αλλαγή Μπαταρίας"     price={brand.batteryPriceFrom}  note="Γνήσια ή premium ποιότητας" onBook={() => setModalOpen(true)} />
-                <PriceRow icon={Zap}               label="Θύρα Φόρτισης"        price={brand.portPriceFrom}     note={brand.slug === "apple-ipad" ? "Lightning ή USB-C" : "USB-C — επισκευή/αντικατάσταση"} onBook={() => setModalOpen(true)} />
-                <PriceRow icon={Layers}            label="Back Glass / Καπάκι"  price={brand.backGlassPriceFrom} note="Αντικατάσταση πλάτης & πλαισίου" onBook={() => setModalOpen(true)} />
+                <PriceRow icon={MonitorSmartphone} label="Αλλαγή Οθόνης"        price={brand.screenPriceFrom}   note={`Touch + Display · ${brand.seriesLabel}`} highlight onBook={() => openRepairModal(brand.screenPriceFrom)} />
+                <PriceRow icon={Battery}           label="Αλλαγή Μπαταρίας"     price={brand.batteryPriceFrom}  note="Γνήσια ή premium ποιότητας" onBook={() => openRepairModal(brand.batteryPriceFrom)} />
+                <PriceRow icon={Zap}               label="Θύρα Φόρτισης"        price={brand.portPriceFrom}     note={brand.slug === "apple-ipad" ? "Lightning ή USB-C" : "USB-C — επισκευή/αντικατάσταση"} onBook={() => openRepairModal(brand.portPriceFrom)} />
+                <PriceRow icon={Layers}            label="Back Glass / Καπάκι"  price={brand.backGlassPriceFrom} note="Αντικατάσταση πλάτης & πλαισίου" onBook={() => openRepairModal(brand.backGlassPriceFrom)} />
               </div>
               <PriceDisclaimer className="mt-3" />
               <div className="grid grid-cols-3 gap-3 mt-6">
@@ -254,20 +269,21 @@ export default function TabletRepairDetail() {
                   </li>
                 ))}
               </ul>
-              <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-col gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-foreground">Αλλαγή Οθόνης {brand.name}</p>
                   <p className="text-xs text-muted-foreground">{brand.seriesLabel}</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
                   <span className="text-2xl font-extrabold text-primary">€{brand.screenPriceFrom}+</span>
-                  <Button onClick={() => setModalOpen(true)} className="h-9 px-5 font-semibold border-0 text-sm"
+                  <Button onClick={() => openRepairModal(brand.screenPriceFrom)} className={REPAIR_CTA_GRADIENT}
                     style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
                     data-testid="button-book-screen">
                     Κλείσε Ραντεβού
                   </Button>
                 </div>
               </div>
+              <RepairPriceBreakdownCard totalInclVat={brand.screenPriceFrom} className="mt-3" />
             </section>
 
             {/* Battery */}
@@ -283,20 +299,21 @@ export default function TabletRepairDetail() {
                   </li>
                 ))}
               </ul>
-              <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-col gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-foreground">Αλλαγή Μπαταρίας {brand.name}</p>
                   <p className="text-xs text-muted-foreground">Γνήσια ή premium ποιότητας</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
                   <span className="text-2xl font-extrabold text-primary">€{brand.batteryPriceFrom}+</span>
-                  <Button onClick={() => setModalOpen(true)} className="h-9 px-5 font-semibold border-0 text-sm"
+                  <Button onClick={() => openRepairModal(brand.batteryPriceFrom)} className={REPAIR_CTA_GRADIENT}
                     style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
                     data-testid="button-book-battery">
                     Κλείσε Ραντεβού
                   </Button>
                 </div>
               </div>
+              <RepairPriceBreakdownCard totalInclVat={brand.batteryPriceFrom} className="mt-3" />
             </section>
 
             {/* Charging port */}
@@ -338,8 +355,8 @@ export default function TabletRepairDetail() {
             <section id="section-form" className="p-6 rounded-2xl border border-white/10 bg-card">
               <h2 className="text-xl font-display font-bold text-foreground mb-1">Αίτημα Επισκευής — {brand.name}</h2>
               <p className="text-sm text-muted-foreground mb-5">Συμπληρώστε τη φόρμα και θα επικοινωνήσουμε μαζί σας εντός 30 λεπτών.</p>
-              <Button onClick={() => setModalOpen(true)} className="w-full sm:w-auto h-11 px-8 font-semibold border-0 text-base"
-                style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))", boxShadow: "0 0 24px rgba(0,210,200,0.25)" }}
+              <Button onClick={() => openRepairModal(brand.screenPriceFrom)} className={`${REPAIR_CTA_WIDE} shadow-[0_0_24px_rgba(0,210,200,0.25)]`}
+                style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
                 data-testid="button-open-repair-form">
                 <Wrench className="w-4 h-4 mr-2" />Άνοιξε τη Φόρμα Επισκευής
               </Button>
@@ -407,8 +424,8 @@ export default function TabletRepairDetail() {
                     </div>
                   ))}
                 </div>
-                <Button onClick={() => setModalOpen(true)} className="w-full h-11 font-semibold border-0 mb-2"
-                  style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))", boxShadow: "0 0 20px rgba(0,210,200,0.25)" }}
+                <Button onClick={() => openRepairModal(brand.screenPriceFrom)} className={`${REPAIR_CTA_FULL} mb-2 shadow-[0_0_20px_rgba(0,210,200,0.25)]`}
+                  style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
                   data-testid="button-sidebar-book">
                   <Wrench className="w-4 h-4 mr-2" />Κλείσε Ραντεβού
                 </Button>
@@ -427,23 +444,31 @@ export default function TabletRepairDetail() {
           </aside>
         </div>
 
-        {/* Mobile sticky CTA */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden border-t border-primary/20 bg-background/95 backdrop-blur p-3 flex gap-2">
-          <Button onClick={() => setModalOpen(true)} className="flex-1 h-11 font-semibold border-0 text-sm"
+        {/* Mobile sticky CTA — πάνω από το bottom app nav */}
+        <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 z-[130] flex gap-2 border-t border-primary/20 bg-background/95 p-3 backdrop-blur lg:hidden">
+          <Button onClick={() => openRepairModal(brand.screenPriceFrom)} className={REPAIR_CTA_FLEX}
             style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
             data-testid="button-mobile-book">
-            <Wrench className="w-4 h-4 mr-2" />Αίτημα Επισκευής
+            <Wrench className="mr-2 h-4 w-4" />Αίτημα Επισκευής
           </Button>
           <a href="tel:+306981882005" className="shrink-0">
-            <Button variant="outline" className="h-11 px-4 border-primary/30 text-primary" data-testid="button-mobile-call">
-              <Phone className="w-4 h-4" />
+            <Button variant="outline" className={REPAIR_OUTLINE_CALL} data-testid="button-mobile-call">
+              <Phone className="h-4 w-4" />
             </Button>
           </a>
         </div>
       </main>
 
       <Footer />
-      <RepairRequestModal open={modalOpen} onOpenChange={setModalOpen} defaultDeviceName={`${brand.name}`} />
+      <RepairRequestModal
+        open={modalOpen}
+        onOpenChange={(o) => {
+          setModalOpen(o);
+          if (!o) setModalDefaultTotal(undefined);
+        }}
+        defaultDeviceName={`${brand.name}`}
+        defaultTotalInclVat={modalDefaultTotal}
+      />
     </div>
   );
 }

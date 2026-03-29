@@ -63,7 +63,7 @@ const BATTERY_TIERS: BatteryTier[] = [
   },
 ];
 
-function screenTiers(standardPrice: number): ScreenTier[] {
+export function screenTiers(standardPrice: number): ScreenTier[] {
   const premium = Math.round((standardPrice * 1.6) / 5) * 5;
   const genuine = Math.round((standardPrice * 2.5) / 5) * 5;
   return [

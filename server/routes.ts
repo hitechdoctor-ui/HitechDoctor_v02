@@ -1,7 +1,12 @@
 import type { Express, Request } from "express";
 import type { Server } from "http";
+import { mkdirSync } from "node:fs";
+import { writeFile } from "node:fs/promises";
+import path from "node:path";
 import { randomBytes } from "node:crypto";
+import multer from "multer";
 import { storage } from "./storage";
+import { runFixmobilePdfSyncFromDisk, FIXMOBILE_UPLOAD_DIR } from "./fixmobile-sync";
 import type { AdminUser, RepairRequest } from "@shared/schema";
 import { api, errorSchemas } from "@shared/routes";
 import {
@@ -12,6 +17,8 @@ import {
   checkoutPayloadSchema,
   productOfferInterestPublicSchema,
   boxnowDropoffPublicSchema,
+  insertSupplierSchema,
+  insertRepairPriceOverrideSchema,
 } from "@shared/schema";
 import { z } from "zod";
 import {
@@ -30,8 +37,14 @@ import { resolveCheckStatus } from "./check-status";
 import { refreshCompetitorPrices } from "./price-compare";
 import { getRepairCatalogPromptBlock, runRepairAssistantChat } from "./chat-repair";
 import { splitAssistantReply, tryParseLeadFromText, guessDeviceModelFromMessages } from "@shared/repair-assistant";
+import { runSupplierSyncJob, syncJobs, newSyncJobId } from "./supplier-sync";
 
 const BCRYPT_ROUNDS = 12;
+
+const fixmobileUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 30 * 1024 * 1024 },
+});
 
 async function getAdminUserFromRequest(req: Request): Promise<AdminUser | null> {
   const auth = req.headers.authorization || "";
@@ -56,6 +69,17 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+
+  // --- Δημόσιες τιμές επισκευής (από PDF sync / XML sync overrides) ---
+  app.get("/api/repair-prices", async (_req, res) => {
+    try {
+      const overrides = await storage.getAllRepairPriceOverrides();
+      res.json({ overrides });
+    } catch (err) {
+      console.error("[repair-prices]", err);
+      res.status(500).json({ message: "Σφάλμα φόρτωσης τιμών" });
+    }
+  });
 
   // --- Admin Auth ---
   app.post("/api/admin/login", async (req, res) => {
@@ -793,6 +817,268 @@ export async function registerRoutes(
     }
   });
 
+  /** Supplier XML sync — προμηθευτές & τιμές επισκευών */
+  app.get("/api/admin/suppliers", async (req, res) => {
+    const auth = req.headers.authorization || "";
+    const token = auth.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const decoded = Buffer.from(token, "base64").toString("utf8");
+      const payload = JSON.parse(decoded);
+      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
+      const user = await storage.getAdminByEmail(payload.email);
+      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      res.json(await storage.getSuppliers());
+    } catch {
+      res.status(401).json({ message: "Unauthorized" });
+    }
+  });
+
+  app.post("/api/admin/suppliers", async (req, res) => {
+    const auth = req.headers.authorization || "";
+    const token = auth.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const decoded = Buffer.from(token, "base64").toString("utf8");
+      const payload = JSON.parse(decoded);
+      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
+      const user = await storage.getAdminByEmail(payload.email);
+      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const body = insertSupplierSchema.parse(req.body);
+      const row = await storage.createSupplier(body);
+      res.status(201).json(row);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0]?.message ?? "Μη έγκυρα δεδομένα" });
+      }
+      console.error("[admin/suppliers POST]", err);
+      res.status(500).json({ message: "Σφάλμα" });
+    }
+  });
+
+  app.put("/api/admin/suppliers/:id", async (req, res) => {
+    const auth = req.headers.authorization || "";
+    const token = auth.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const decoded = Buffer.from(token, "base64").toString("utf8");
+      const payload = JSON.parse(decoded);
+      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
+      const user = await storage.getAdminByEmail(payload.email);
+      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const id = parseInt(req.params.id, 10);
+      if (Number.isNaN(id)) return res.status(400).json({ message: "Μη έγκυρο id" });
+      const body = z
+        .object({
+          name: z.string().min(1).optional(),
+          xmlUrl: z.string().url().optional(),
+          workFee: z.union([z.string(), z.number()]).optional(),
+          vatRate: z.union([z.string(), z.number()]).optional(),
+        })
+        .parse(req.body);
+      const row = await storage.updateSupplier(id, body);
+      res.json(row);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0]?.message ?? "Μη έγκυρα δεδομένα" });
+      }
+      console.error("[admin/suppliers PUT]", err);
+      res.status(500).json({ message: "Σφάλμα" });
+    }
+  });
+
+  app.delete("/api/admin/suppliers/:id", async (req, res) => {
+    const auth = req.headers.authorization || "";
+    const token = auth.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const decoded = Buffer.from(token, "base64").toString("utf8");
+      const payload = JSON.parse(decoded);
+      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
+      const user = await storage.getAdminByEmail(payload.email);
+      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const id = parseInt(req.params.id, 10);
+      if (Number.isNaN(id)) return res.status(400).json({ message: "Μη έγκυρο id" });
+      await storage.deleteSupplier(id);
+      res.status(204).end();
+    } catch (err) {
+      console.error("[admin/suppliers DELETE]", err);
+      res.status(500).json({ message: "Σφάλμα" });
+    }
+  });
+
+  app.post("/api/admin/sync-now", async (req, res) => {
+    const auth = req.headers.authorization || "";
+    const token = auth.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const decoded = Buffer.from(token, "base64").toString("utf8");
+      const payload = JSON.parse(decoded);
+      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
+      const user = await storage.getAdminByEmail(payload.email);
+      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const { supplierId } = z.object({ supplierId: z.number().int().positive().optional() }).parse(req.body ?? {});
+      const jobId = newSyncJobId();
+      syncJobs.set(jobId, { progress: 0, message: "Έναρξη…", done: false });
+      void runSupplierSyncJob(jobId, supplierId).catch((err) => {
+        console.error("[sync-now]", err);
+        syncJobs.set(jobId, {
+          progress: 100,
+          message: err instanceof Error ? err.message : String(err),
+          done: true,
+          error: true,
+        });
+      });
+      res.json({ jobId });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0]?.message ?? "Μη έγκυρα δεδομένα" });
+      }
+      console.error("[admin/sync-now]", err);
+      res.status(500).json({ message: "Σφάλμα" });
+    }
+  });
+
+  app.get("/api/admin/sync-status/:jobId", async (req, res) => {
+    const auth = req.headers.authorization || "";
+    const token = auth.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const decoded = Buffer.from(token, "base64").toString("utf8");
+      const payload = JSON.parse(decoded);
+      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
+      const user = await storage.getAdminByEmail(payload.email);
+      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const job = syncJobs.get(req.params.jobId);
+      if (!job) return res.status(404).json({ message: "Άγνωστη εργασία" });
+      res.json(job);
+    } catch {
+      res.status(401).json({ message: "Unauthorized" });
+    }
+  });
+
+  app.get("/api/admin/supplier-sync-items", async (req, res) => {
+    const auth = req.headers.authorization || "";
+    const token = auth.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const decoded = Buffer.from(token, "base64").toString("utf8");
+      const payload = JSON.parse(decoded);
+      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
+      const user = await storage.getAdminByEmail(payload.email);
+      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      let sid: number | undefined;
+      const q = req.query.supplierId;
+      if (q != null && String(q) !== "") {
+        const n = parseInt(String(q), 10);
+        if (!Number.isNaN(n)) sid = n;
+      }
+      const rows = await storage.getSupplierSyncItems(sid);
+      res.json(rows);
+    } catch {
+      res.status(401).json({ message: "Unauthorized" });
+    }
+  });
+
+  app.get("/api/admin/repair-price-overrides", async (req, res) => {
+    const auth = req.headers.authorization || "";
+    const token = auth.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const decoded = Buffer.from(token, "base64").toString("utf8");
+      const payload = JSON.parse(decoded);
+      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
+      const user = await storage.getAdminByEmail(payload.email);
+      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      res.json(await storage.getRepairPriceOverrides());
+    } catch {
+      res.status(401).json({ message: "Unauthorized" });
+    }
+  });
+
+  app.post("/api/admin/repair-price-overrides", async (req, res) => {
+    const auth = req.headers.authorization || "";
+    const token = auth.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const decoded = Buffer.from(token, "base64").toString("utf8");
+      const payload = JSON.parse(decoded);
+      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
+      const user = await storage.getAdminByEmail(payload.email);
+      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const body = insertRepairPriceOverrideSchema.parse(req.body);
+      const row = await storage.upsertRepairPriceOverride(body);
+      res.status(201).json(row);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0]?.message ?? "Μη έγκυρα δεδομένα" });
+      }
+      console.error("[admin/repair-price-overrides]", err);
+      res.status(500).json({ message: "Σφάλμα" });
+    }
+  });
+
+  /** Ανέβασμα PDF τιμοκαταλόγου FixMobile (Οθόνες ή Μπαταρίες) → uploads/fixmobile/screens.pdf | batteries.pdf */
+  app.post(
+    "/api/admin/upload-fixmobile-pdf",
+    fixmobileUpload.single("file"),
+    async (req, res) => {
+      const auth = req.headers.authorization || "";
+      const token = auth.replace("Bearer ", "");
+      if (!token) return res.status(401).json({ message: "Unauthorized" });
+      try {
+        const decoded = Buffer.from(token, "base64").toString("utf8");
+        const payload = JSON.parse(decoded);
+        if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
+        const user = await storage.getAdminByEmail(payload.email);
+        if (!user) return res.status(401).json({ message: "Unauthorized" });
+        if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+        if (!req.file?.buffer?.length) return res.status(400).json({ message: "Απαιτείται αρχείο PDF" });
+        const kind = z.enum(["screens", "batteries"]).parse(req.body?.kind);
+        const filename = kind === "batteries" ? "batteries.pdf" : "screens.pdf";
+        mkdirSync(FIXMOBILE_UPLOAD_DIR, { recursive: true });
+        const dest = path.join(FIXMOBILE_UPLOAD_DIR, filename);
+        await writeFile(dest, req.file.buffer);
+        res.json({ ok: true, path: dest, filename });
+      } catch (err) {
+        if (err instanceof z.ZodError) {
+          return res.status(400).json({ message: err.errors[0]?.message ?? "Μη έγκυρο kind" });
+        }
+        console.error("[upload-fixmobile-pdf]", err);
+        res.status(500).json({ message: "Σφάλμα αποθήκευσης" });
+      }
+    }
+  );
+
+  /** Διαβάζει τα αποθηκευμένα PDF και ενημερώνει repair_price_overrides */
+  app.post("/api/admin/sync-fixmobile-pdf", async (req, res) => {
+    const auth = req.headers.authorization || "";
+    const token = auth.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const decoded = Buffer.from(token, "base64").toString("utf8");
+      const payload = JSON.parse(decoded);
+      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
+      const user = await storage.getAdminByEmail(payload.email);
+      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const result = await runFixmobilePdfSyncFromDisk();
+      res.json(result);
+    } catch (err) {
+      console.error("[sync-fixmobile-pdf]", err);
+      res.status(500).json({ message: err instanceof Error ? err.message : "Σφάλμα" });
+    }
+  });
+
   app.get("/api/admin/ipsw-downloads", async (req, res) => {
     const auth = req.headers.authorization || "";
     const token = auth.replace("Bearer ", "");
@@ -866,8 +1152,14 @@ export async function registerRoutes(
           )
           .min(1)
           .max(28),
+        serviceTermsAccepted: z.boolean(),
       });
-      const { messages } = schema.parse(req.body);
+      const { messages, serviceTermsAccepted } = schema.parse(req.body);
+      if (!serviceTermsAccepted) {
+        return res.status(400).json({
+          message: "Πρέπει να αποδεχτείτε τους Όρους Service και την Εγγύηση 3 μηνών για να στείλετε μήνυμα.",
+        });
+      }
       const catalogBlock = await getRepairCatalogPromptBlock();
       const rawReply = await runRepairAssistantChat(messages, catalogBlock);
       const { displayText, ctas } = splitAssistantReply(rawReply);

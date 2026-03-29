@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -30,6 +31,7 @@ export function RepairChatbot() {
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const [pageScrolled, setPageScrolled] = useState(false);
+  const [serviceTermsAccepted, setServiceTermsAccepted] = useState(false);
 
   useEffect(() => {
     if (open) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -51,6 +53,14 @@ export function RepairChatbot() {
   const send = useCallback(async () => {
     const text = input.trim();
     if (!text || loading) return;
+    if (!serviceTermsAccepted) {
+      toast({
+        variant: "destructive",
+        title: "Όροι & εγγύηση",
+        description: "Επιλέξτε το πλαίσιο αποδοχής των Όρων Service και της Εγγύησης 3 μηνών πριν την αποστολή.",
+      });
+      return;
+    }
     setInput("");
     const next: Turn[] = [...messages, { role: "user", content: text }];
     setMessages(next);
@@ -59,7 +69,7 @@ export function RepairChatbot() {
       const res = await fetch("/api/chat/repair-assistant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next }),
+        body: JSON.stringify({ messages: next, serviceTermsAccepted: true }),
       });
       const data = (await res.json().catch(() => ({}))) as {
         reply?: string;
@@ -96,7 +106,7 @@ export function RepairChatbot() {
     } finally {
       setLoading(false);
     }
-  }, [input, loading, messages, toast]);
+  }, [input, loading, messages, serviceTermsAccepted, toast]);
 
   return (
     <div className="relative z-[158] flex flex-col items-end gap-2 pointer-events-none shrink-0">
@@ -179,7 +189,23 @@ export function RepairChatbot() {
             </div>
           </ScrollArea>
 
-          <div className="p-3 border-t border-white/10 flex gap-2 bg-background/80">
+          <div className="border-t border-white/10 bg-background/80 p-3">
+            <label className="flex items-start gap-2.5 cursor-pointer select-none mb-3">
+              <input
+                type="checkbox"
+                checked={serviceTermsAccepted}
+                onChange={(e) => setServiceTermsAccepted(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/30 bg-card text-primary focus:ring-primary"
+                data-testid="checkbox-repair-chat-terms"
+              />
+              <span className="text-[11px] leading-snug text-muted-foreground">
+                <span className="text-primary font-semibold">*</span> Αποδέχομαι τους Όρους Service και την Εγγύηση 3 μηνών.{" "}
+                <Link href="/oroi-episkeuis" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">
+                  Όροι επισκευής
+                </Link>
+              </span>
+            </label>
+            <div className="flex gap-2">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -199,12 +225,13 @@ export function RepairChatbot() {
               type="button"
               size="icon"
               className="h-10 w-10 shrink-0"
-              disabled={loading || !input.trim()}
+              disabled={loading || !input.trim() || !serviceTermsAccepted}
               onClick={() => void send()}
               aria-label="Αποστολή"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </Button>
+            </div>
           </div>
         </div>
       )}
