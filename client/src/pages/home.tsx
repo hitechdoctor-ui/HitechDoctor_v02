@@ -31,6 +31,7 @@ import {
 import { Link } from "wouter";
 import { BLOG_POSTS, formatBlogDate } from "@/data/blog-posts";
 import { SpecialOffers } from "@/components/special-offers";
+import { RepairChatbot } from "@/components/repair-chatbot";
 
 const homeServices = [
   { icon: Smartphone, title: "Επισκευή Κινητών", href: "/services/episkeui-kiniton" },
@@ -153,7 +154,7 @@ export default function Home() {
                 alt="Επισκευή τεχνολογίας — μητρική πλακέτα ASUS"
                 className="w-full aspect-[4/3] object-cover"
                 loading="eager"
-                fetchpriority="high"
+                fetchPriority="high"
                 decoding="sync"
               />
               <div className="absolute inset-0 bg-gradient-to-tr from-background/80 via-background/20 to-transparent" />
@@ -382,6 +383,7 @@ export default function Home() {
 
         <ReviewsSection />
       </main>
+      <RepairChatbot />
       <Footer />
     </div>
   );

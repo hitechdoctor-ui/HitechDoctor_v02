@@ -24,6 +24,7 @@ import {
   ScanLine,
   Download,
   ScanSearch,
+  Truck,
 } from "lucide-react";
 import { Link } from "wouter";
 import { SiApple, SiSamsung, SiXiaomi, SiHuawei, SiOneplus } from "react-icons/si";
@@ -74,6 +75,21 @@ const allServices = [
     timeFrom: "Άμεσα",
     tag: "Νέο",
     href: "/services/imei-check",
+  },
+  {
+    id: "apostoli-syskevis",
+    icon: Truck,
+    title: "Αποστολή Συσκευής",
+    subtitle: "BoxNow Lockers — χάρτης, στοιχεία & κωδικός αναφοράς",
+    description:
+      "Επιλέξτε το BoxNow locker που σας εξυπηρετεί μέσω του επίσημου widget, συμπληρώστε τα στοιχεία σας και λάβετε κωδικό αναφοράς HiTech για την παράδοση στη θυρίδα.",
+    features: ["Ενσωματωμένος χάρτης BoxNow", "Κωδικός αναφοράς για τη συσκευασία", "Email επιβεβαίωσης (προαιρετικά)"],
+    image: "https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?auto=format&fit=crop&q=80&w=900",
+    imageAlt: "Αποστολή δέματος courier locker",
+    priceFrom: "Δωρεάν εργαλείο",
+    timeFrom: "Άμεσα",
+    tag: "BoxNow",
+    href: "/services/apostoli-syskevis",
   },
   {
     id: "episkeui-tablet",

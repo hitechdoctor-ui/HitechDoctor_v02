@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import {
   Search, Package, Wrench, Smartphone, X, Laptop, Gamepad2,
   Tablet, Watch, ArrowRight, FileText, Info, Phone, HelpCircle,
-  ShoppingCart, Star, Monitor, Download, Sparkles,
+  ShoppingCart, Star, Monitor, Download, Sparkles, Truck,
 } from "lucide-react";
 import { type Product } from "@shared/schema";
 import { SAMSUNG_SERIES } from "@/data/samsung-devices";
@@ -35,6 +35,7 @@ function buildIndex(): SearchEntry[] {
     { name: "Επισκευή iPhone", href: "/services/episkeui-iphone", icon: Smartphone, sub: "Όλα τα μοντέλα iPhone", category: "service" },
     { name: "IPSW Download", href: "/services/ipsw-download", icon: Download, sub: "Επίσημα firmware .ipsw για iPhone", category: "service", keywords: "ipsw firmware restore ios" },
     { name: "IMEI Check", href: "/services/imei-check", icon: Smartphone, sub: "Έλεγχος IMEI — Model, iCloud, Warranty", category: "service", keywords: "imei check icloud" },
+    { name: "Αποστολή Συσκευής (BoxNow)", href: "/services/apostoli-syskevis", icon: Truck, sub: "Locker, στοιχεία & κωδικός αναφοράς", category: "service", keywords: "boxnow locker αποστολη δεμα courier" },
     { name: "Expert Hub (Apple)", href: "/apple-service", icon: Sparkles, sub: "Firmware, εργαλεία IMEI, οδηγοί", category: "page", keywords: "apple hub expert support" },
     { name: "Επισκευή Samsung Galaxy", href: "/services/episkeui-samsung", icon: Smartphone, sub: "A · S · Z Series", category: "service", keywords: "samsung galaxy" },
     { name: "Επισκευή Xiaomi / Redmi / Poco", href: "/services/episkeui-xiaomi", icon: Smartphone, sub: "Redmi Note · Redmi · Xiaomi · Poco", category: "service", keywords: "xiaomi redmi poco" },

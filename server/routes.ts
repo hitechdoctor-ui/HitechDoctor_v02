@@ -1,5 +1,6 @@
 import type { Express, Request } from "express";
 import type { Server } from "http";
+import { randomBytes } from "node:crypto";
 import { storage } from "./storage";
 import type { AdminUser, RepairRequest } from "@shared/schema";
 import { api, errorSchemas } from "@shared/routes";
@@ -9,15 +10,24 @@ import {
   insertSubscriptionSchema,
   insertWebsiteInquirySchema,
   checkoutPayloadSchema,
+  productOfferInterestPublicSchema,
+  boxnowDropoffPublicSchema,
 } from "@shared/schema";
 import { z } from "zod";
-import { sendRepairConfirmationEmail, sendWebsiteInquiryEmail, sendWebsiteInquiryClientEmail } from "./email";
+import {
+  sendRepairConfirmationEmail,
+  sendWebsiteInquiryEmail,
+  sendWebsiteInquiryClientEmail,
+  sendProductOfferInterestEmail,
+  sendBoxnowDropoffEmail,
+} from "./email";
 import { runImeiLookup } from "./imei-lookup";
 import { fetchHubSpotContacts } from "./hubspot";
 import bcrypt from "bcrypt";
 import { sendOrderStatusEmail } from "./nodemailer-mail";
 import { resolveCheckStatus } from "./check-status";
 import { refreshCompetitorPrices } from "./price-compare";
+import { getRepairCatalogPromptBlock, runRepairAssistantChat } from "./chat-repair";
 
 const BCRYPT_ROUNDS = 12;
 
@@ -794,6 +804,122 @@ export async function registerRoutes(
       if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const stats = await storage.getIpswDownloadStats();
       res.json(stats);
+    } catch {
+      res.status(401).json({ message: "Unauthorized" });
+    }
+  });
+
+  /** eShop: «Θέλω καλύτερη προσφορά» — αποθήκευση + email διαχειριστή */
+  app.post("/api/product-offer-interest", async (req, res) => {
+    try {
+      const input = productOfferInterestPublicSchema.parse(req.body);
+      const product = await storage.getProduct(input.productId);
+      if (!product) return res.status(404).json({ message: "Το προϊόν δεν βρέθηκε" });
+      const row = await storage.createProductOfferInterest({
+        productId: product.id,
+        productName: product.name,
+        productSlug: product.slug ?? null,
+        customerName: input.customerName.trim(),
+        phone: input.phone.trim(),
+      });
+      res.status(201).json({ ok: true, id: row.id });
+      sendProductOfferInterestEmail(row).catch((e) => console.error("[email] product offer interest failed:", e));
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message, field: err.errors[0].path.join(".") });
+      }
+      console.error("[product-offer-interest]", err);
+      res.status(500).json({ message: "Σφάλμα αποστολής" });
+    }
+  });
+
+  app.get("/api/admin/product-offer-interests", async (req, res) => {
+    const auth = req.headers.authorization || "";
+    const token = auth.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const decoded = Buffer.from(token, "base64").toString("utf8");
+      const payload = JSON.parse(decoded);
+      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
+      const user = await storage.getAdminByEmail(payload.email);
+      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const rows = await storage.getProductOfferInterests();
+      res.json(rows);
+    } catch {
+      res.status(401).json({ message: "Unauthorized" });
+    }
+  });
+
+  /** AI βοηθός επισκευών (GPT-4 / OpenAI) — δημόσιο, χωρίς auth */
+  app.post("/api/chat/repair-assistant", async (req, res) => {
+    try {
+      const schema = z.object({
+        messages: z
+          .array(
+            z.object({
+              role: z.enum(["user", "assistant"]),
+              content: z.string().min(1).max(12000),
+            })
+          )
+          .min(1)
+          .max(28),
+      });
+      const { messages } = schema.parse(req.body);
+      const catalogBlock = await getRepairCatalogPromptBlock();
+      const reply = await runRepairAssistantChat(messages, catalogBlock);
+      res.json({ reply });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      if (err instanceof Error && err.message === "OPENAI_API_KEY_MISSING") {
+        return res.status(503).json({ message: "Η υπηρεσία δεν είναι διαθέσιμη προσωρινά." });
+      }
+      console.error("[chat/repair-assistant]", err);
+      res.status(500).json({ message: "Σφάλμα συνομιλίας" });
+    }
+  });
+
+  /** Αποστολή συσκευής — BoxNow locker + κωδικός αναφοράς HiTech */
+  app.post("/api/boxnow-dropoff", async (req, res) => {
+    try {
+      const input = boxnowDropoffPublicSchema.parse(req.body);
+      const referenceCode = `HD-BN-${randomBytes(4).toString("hex").toUpperCase()}`;
+      const row = await storage.createBoxnowDropoffRequest({
+        referenceCode,
+        customerName: input.customerName.trim(),
+        phone: input.phone.trim(),
+        email: input.email && input.email !== "" ? input.email.trim() : null,
+        deviceNote: input.deviceNote?.trim() || null,
+        lockerId: input.lockerId,
+        lockerAddress: input.lockerAddress.trim(),
+        lockerPostalCode: input.lockerPostalCode?.trim() || null,
+      });
+      res.status(201).json({ ok: true, referenceCode: row.referenceCode });
+      sendBoxnowDropoffEmail(row).catch((e) => console.error("[email] boxnow dropoff failed:", e));
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message, field: err.errors[0].path.join(".") });
+      }
+      console.error("[boxnow-dropoff]", err);
+      res.status(500).json({ message: "Σφάλμα αποθήκευσης" });
+    }
+  });
+
+  app.get("/api/admin/boxnow-dropoffs", async (req, res) => {
+    const auth = req.headers.authorization || "";
+    const token = auth.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const decoded = Buffer.from(token, "base64").toString("utf8");
+      const payload = JSON.parse(decoded);
+      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
+      const user = await storage.getAdminByEmail(payload.email);
+      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const rows = await storage.getBoxnowDropoffRequests();
+      res.json(rows);
     } catch {
       res.status(401).json({ message: "Unauthorized" });
     }

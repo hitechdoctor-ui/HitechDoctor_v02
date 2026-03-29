@@ -13,11 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogClose, DialogHeader } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import {
   ShoppingCart, CheckCircle2, ChevronRight, ChevronLeft, Shield,
-  Clock, Star, ArrowLeft, Package, Truck, ZoomIn, X, Smartphone,
+  Clock, Star, ArrowLeft, Package, Truck, ZoomIn, X, Smartphone, Loader2, Tag,
   HardDrive, Palette, Award, Wrench, BadgeCheck, RotateCcw, HeadphonesIcon,
 } from "lucide-react";
 import type { Product } from "@shared/schema";
@@ -194,6 +196,10 @@ export default function ProductDetail() {
   const [selectedModel, setSelectedModel] = useState("");
   const [activeImg, setActiveImg] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [offerOpen, setOfferOpen] = useState(false);
+  const [offerName, setOfferName] = useState("");
+  const [offerPhone, setOfferPhone] = useState("");
+  const [offerSending, setOfferSending] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
   const { toast } = useToast();
 
@@ -236,6 +242,46 @@ export default function ProductDetail() {
         : product.name,
       duration: 3000,
     });
+  };
+
+  const submitBetterOffer = async () => {
+    if (!product) return;
+    const name = offerName.trim();
+    const phone = offerPhone.trim();
+    if (!name || phone.length < 10) {
+      toast({
+        variant: "destructive",
+        title: "Συμπληρώστε τα στοιχεία",
+        description: "Όνομα και κινητό (τουλάχιστον 10 ψηφία).",
+      });
+      return;
+    }
+    setOfferSending(true);
+    try {
+      const res = await fetch("/api/product-offer-interest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: product.id, customerName: name, phone }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { message?: string };
+      if (!res.ok) {
+        toast({
+          variant: "destructive",
+          title: "Σφάλμα",
+          description: data.message ?? "Δοκιμάστε ξανά.",
+        });
+        return;
+      }
+      toast({
+        title: "Ευχαριστούμε!",
+        description: "Λάβαμε το αίτημά σας. Θα επικοινωνήσουμε σύντομα.",
+      });
+      setOfferOpen(false);
+      setOfferName("");
+      setOfferPhone("");
+    } finally {
+      setOfferSending(false);
+    }
   };
 
   // ── Loading skeleton ────────────────────────────────────────────────────
@@ -560,6 +606,78 @@ export default function ProductDetail() {
               </p>
 
               <PriceComparisonSection product={product} />
+
+              <div className="mt-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-primary/40 bg-primary/5 hover:bg-primary/10 text-foreground"
+                  onClick={() => setOfferOpen(true)}
+                  data-testid="button-better-offer"
+                >
+                  <Tag className="w-4 h-4 mr-2 text-primary" />
+                  Θέλω καλύτερη προσφορά!
+                </Button>
+              </div>
+
+              <Dialog
+                open={offerOpen}
+                onOpenChange={(o) => {
+                  setOfferOpen(o);
+                  if (!o) {
+                    setOfferName("");
+                    setOfferPhone("");
+                  }
+                }}
+              >
+                <DialogContent className="sm:max-w-md border-border bg-card" data-testid="dialog-better-offer">
+                  <DialogHeader>
+                    <DialogTitle>Καλύτερη προσφορά</DialogTitle>
+                  </DialogHeader>
+                  <p className="text-sm text-muted-foreground">
+                    Αφήστε το όνομα και το κινητό σας· θα επικοινωνήσουμε για προσφορά στο{" "}
+                    <span className="text-foreground font-medium">{product.name}</span>.
+                  </p>
+                  <div className="space-y-4 pt-1">
+                    <div className="space-y-2">
+                      <Label htmlFor="offer-name">Όνομα</Label>
+                      <Input
+                        id="offer-name"
+                        value={offerName}
+                        onChange={(e) => setOfferName(e.target.value)}
+                        autoComplete="name"
+                        placeholder="π.χ. Γιάννης Παπαδόπουλος"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="offer-phone">Κινητό</Label>
+                      <Input
+                        id="offer-phone"
+                        type="tel"
+                        inputMode="tel"
+                        value={offerPhone}
+                        onChange={(e) => setOfferPhone(e.target.value)}
+                        autoComplete="tel"
+                        placeholder="π.χ. 6981234567"
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-2 justify-end pt-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => setOfferOpen(false)}
+                        disabled={offerSending}
+                      >
+                        Ακύρωση
+                      </Button>
+                      <Button type="button" onClick={() => void submitBetterOffer()} disabled={offerSending}>
+                        {offerSending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                        Αποστολή
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
 
               <PriceDisclaimer className="mt-1" emphasis />
 

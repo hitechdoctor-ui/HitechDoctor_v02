@@ -8,6 +8,8 @@ import {
   repairItems,
   subscriptions,
   websiteInquiries,
+  productOfferInterests,
+  boxnowDropoffRequests,
   ipswDownloadEvents,
   adminUsers,
   type Product,
@@ -26,6 +28,10 @@ import {
   type InsertSubscription,
   type WebsiteInquiry,
   type InsertWebsiteInquiry,
+  type ProductOfferInterest,
+  type InsertProductOfferInterest,
+  type BoxnowDropoffRequest,
+  type InsertBoxnowDropoffRequest,
   type IpswDownloadEvent,
   type CheckoutPayload,
   type AdminUser
@@ -106,6 +112,13 @@ export interface IStorage {
     status: string; notes: string; firstName: string; lastName: string;
     phone: string; email: string; prepayment: string | null; prepaymentIncludesVat: boolean;
   }>): Promise<WebsiteInquiry>;
+
+  // Product «καλύτερη προσφορά» (eShop)
+  createProductOfferInterest(data: InsertProductOfferInterest): Promise<ProductOfferInterest>;
+  getProductOfferInterests(): Promise<ProductOfferInterest[]>;
+
+  createBoxnowDropoffRequest(data: InsertBoxnowDropoffRequest): Promise<BoxnowDropoffRequest>;
+  getBoxnowDropoffRequests(): Promise<BoxnowDropoffRequest[]>;
 
   // Admin Users
   getAdminUsers(): Promise<Omit<AdminUser, "passwordHash">[]>;
@@ -535,6 +548,24 @@ export class DatabaseStorage implements IStorage {
       .returning();
     if (!updated) throw new Error("Website inquiry not found");
     return updated;
+  }
+
+  async createProductOfferInterest(data: InsertProductOfferInterest): Promise<ProductOfferInterest> {
+    const [created] = await db.insert(productOfferInterests).values(data).returning();
+    return created;
+  }
+
+  async getProductOfferInterests(): Promise<ProductOfferInterest[]> {
+    return await db.select().from(productOfferInterests).orderBy(desc(productOfferInterests.createdAt));
+  }
+
+  async createBoxnowDropoffRequest(data: InsertBoxnowDropoffRequest): Promise<BoxnowDropoffRequest> {
+    const [created] = await db.insert(boxnowDropoffRequests).values(data).returning();
+    return created;
+  }
+
+  async getBoxnowDropoffRequests(): Promise<BoxnowDropoffRequest[]> {
+    return await db.select().from(boxnowDropoffRequests).orderBy(desc(boxnowDropoffRequests.createdAt));
   }
 
   // --- Admin Users ---

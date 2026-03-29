@@ -1,8 +1,16 @@
 import { Resend } from "resend";
-import type { RepairRequest, Subscription, WebsiteInquiry } from "@shared/schema";
+import type { RepairRequest, Subscription, WebsiteInquiry, ProductOfferInterest, BoxnowDropoffRequest } from "@shared/schema";
 
 const FROM_EMAIL = "HiTech Doctor <noreply@hitechdoctor.com>";
 const ADMIN_EMAIL = "info@hitechdoctor.com";
+
+function escHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
 const INVOICE_NUM = (id: number) => `#REPR-${String(id).padStart(4, "0")}`;
 const VAT_RATE = 0.24;
 const fmt = (n: number) => n.toFixed(2).replace(".", ",") + " €";
@@ -232,6 +240,107 @@ export async function sendSubscriptionRenewalEmail(sub: Subscription, daysLeft: 
     else console.log(`[email] Renewal notice sent to ${sub.email} (${daysLeft} days left)`);
   } catch (err) {
     console.error("[email] Failed to send renewal:", err);
+  }
+}
+
+export async function sendProductOfferInterestEmail(row: ProductOfferInterest): Promise<void> {
+  const resend = getClient();
+  if (!resend) {
+    console.log("[email] RESEND_API_KEY not set — skipping product offer interest email");
+    return;
+  }
+  const pn = escHtml(row.productName);
+  const cn = escHtml(row.customerName);
+  const ph = escHtml(row.phone);
+  const telHref = escHtml(row.phone.replace(/\s/g, ""));
+  const subject = `Εκδήλωση ενδιαφέροντος για ${row.productName}`;
+  const html = `<!DOCTYPE html>
+<html lang="el"><head><meta charset="UTF-8"><title>${escHtml(subject)}</title></head>
+<body style="margin:0;padding:0;background:#0d1117;font-family:Arial,Helvetica,sans-serif;color:#e0e0e0;">
+  <div style="max-width:560px;margin:0 auto;padding:20px;">
+    <div style="background:linear-gradient(135deg,#050C19,#0a1628);border:1px solid rgba(0,210,200,0.15);border-radius:16px;padding:28px 32px;margin-bottom:16px;text-align:center;">
+      <div style="font-size:28px;font-weight:900;margin-bottom:4px;"><span style="color:#00D2C8;">HiTech</span><span style="color:#fff;">Doctor</span></div>
+      <div style="font-size:12px;color:#666;">eShop — Καλύτερη προσφορά</div>
+    </div>
+    <div style="background:#0a1628;border:1px solid rgba(0,210,200,0.1);border-radius:16px;padding:28px 32px;">
+      <h1 style="margin:0 0 16px 0;font-size:18px;font-weight:800;color:#fff;">Νέα εκδήλωση ενδιαφέροντος</h1>
+      <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">
+        <tr><td style="padding:8px 0;color:#888;width:40%;">Προϊόν</td><td style="padding:8px 0;color:#fff;font-weight:600;">${pn}</td></tr>
+        <tr><td style="padding:8px 0;color:#888;">ID προϊόντος</td><td style="padding:8px 0;color:#aaa;font-family:monospace;">${row.productId}</td></tr>
+        <tr><td style="padding:8px 0;color:#888;">Όνομα</td><td style="padding:8px 0;color:#fff;">${cn}</td></tr>
+        <tr><td style="padding:8px 0;color:#888;">Κινητό</td><td style="padding:8px 0;"><a href="tel:${telHref}" style="color:#00D2C8;font-weight:700;text-decoration:none;">${ph}</a></td></tr>
+        <tr><td style="padding:8px 0;color:#888;">Ημερομηνία</td><td style="padding:8px 0;color:#ccc;">${new Date(row.createdAt!).toLocaleString("el-GR")}</td></tr>
+      </table>
+    </div>
+  </div>
+</body></html>`;
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: [ADMIN_EMAIL],
+      subject,
+      html,
+    });
+    if (error) console.error("[email] Product offer interest error:", error);
+    else console.log(`[email] Product offer interest sent (${row.productName})`);
+  } catch (err) {
+    console.error("[email] Failed to send product offer interest:", err);
+  }
+}
+
+export async function sendBoxnowDropoffEmail(row: BoxnowDropoffRequest): Promise<void> {
+  const resend = getClient();
+  if (!resend) {
+    console.log("[email] RESEND_API_KEY not set — skipping boxnow dropoff email");
+    return;
+  }
+  const code = escHtml(row.referenceCode);
+  const name = escHtml(row.customerName);
+  const phone = escHtml(row.phone);
+  const em = row.email ? escHtml(row.email) : "";
+  const addr = escHtml(row.lockerAddress);
+  const postal = row.lockerPostalCode ? escHtml(row.lockerPostalCode) : "";
+  const lid = escHtml(row.lockerId);
+  const note = row.deviceNote ? escHtml(row.deviceNote) : "";
+  const subject = `Αποστολή συσκευής — ${row.referenceCode} (BoxNow)`;
+  const html = `<!DOCTYPE html>
+<html lang="el"><head><meta charset="UTF-8"><title>${escHtml(subject)}</title></head>
+<body style="margin:0;padding:0;background:#0d1117;font-family:Arial,Helvetica,sans-serif;color:#e0e0e0;">
+  <div style="max-width:560px;margin:0 auto;padding:20px;">
+    <div style="background:linear-gradient(135deg,#050C19,#0a1628);border:1px solid rgba(0,210,200,0.15);border-radius:16px;padding:28px 32px;margin-bottom:16px;text-align:center;">
+      <div style="font-size:28px;font-weight:900;margin-bottom:4px;"><span style="color:#00D2C8;">HiTech</span><span style="color:#fff;">Doctor</span></div>
+      <div style="font-size:12px;color:#666;">Αποστολή συσκευής — BoxNow</div>
+    </div>
+    <div style="background:#0a1628;border:1px solid rgba(0,210,200,0.2);border-radius:16px;padding:24px 28px;margin-bottom:16px;text-align:center;">
+      <p style="margin:0 0 8px 0;font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;">Κωδικός αναφοράς (γράψτε τον στη συσκευασία)</p>
+      <p style="margin:0;font-size:28px;font-weight:900;color:#00D2C8;font-family:monospace;letter-spacing:2px;">${code}</p>
+    </div>
+    <div style="background:#0a1628;border:1px solid rgba(0,210,200,0.1);border-radius:16px;padding:28px 32px;">
+      <h1 style="margin:0 0 16px 0;font-size:18px;font-weight:800;color:#fff;">Στοιχεία &amp; locker</h1>
+      <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">
+        <tr><td style="padding:8px 0;color:#888;width:40%;">Πελάτης</td><td style="padding:8px 0;color:#fff;font-weight:600;">${name}</td></tr>
+        <tr><td style="padding:8px 0;color:#888;">Τηλέφωνο</td><td style="padding:8px 0;"><a href="tel:${escHtml(row.phone.replace(/\s/g, ""))}" style="color:#00D2C8;font-weight:700;text-decoration:none;">${phone}</a></td></tr>
+        ${row.email ? `<tr><td style="padding:8px 0;color:#888;">Email</td><td style="padding:8px 0;color:#ccc;">${em}</td></tr>` : ""}
+        <tr><td style="padding:8px 0;color:#888;">BoxNow Locker ID</td><td style="padding:8px 0;color:#aaa;font-family:monospace;font-size:12px;">${lid}</td></tr>
+        <tr><td style="padding:8px 0;color:#888;">Διεύθυνση locker</td><td style="padding:8px 0;color:#fff;">${addr}${postal ? `, ${postal}` : ""}</td></tr>
+        ${row.deviceNote ? `<tr><td style="padding:8px 0;color:#888;vertical-align:top;">Συσκευή / σημ.</td><td style="padding:8px 0;color:#ccc;">${note}</td></tr>` : ""}
+        <tr><td style="padding:8px 0;color:#888;">Ημερομηνία</td><td style="padding:8px 0;color:#ccc;">${new Date(row.createdAt!).toLocaleString("el-GR")}</td></tr>
+      </table>
+    </div>
+  </div>
+</body></html>`;
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: [ADMIN_EMAIL],
+      bcc: row.email ? [row.email] : undefined,
+      subject,
+      html,
+    });
+    if (error) console.error("[email] BoxNow dropoff error:", error);
+    else console.log(`[email] BoxNow dropoff sent (${row.referenceCode})`);
+  } catch (err) {
+    console.error("[email] Failed to send boxnow dropoff email:", err);
   }
 }
 

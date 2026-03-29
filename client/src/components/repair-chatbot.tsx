@@ -1,0 +1,168 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { MessageCircle, X, Send, Loader2, Bot } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+
+type Turn = { role: "user" | "assistant"; content: string };
+
+const WELCOME =
+  "Γεια σας! Είμαι ο HiTech Doctor. Περιγράψτε μου τι συμβαίνει με τη συσκευή σας (μάρκα, μοντέλο αν το ξέρετε, και το πρόβλημα) — θα σας κατευθύνω στην κατάλληλη επισκευή.";
+
+export function RepairChatbot() {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState<Turn[]>([]);
+  const [loading, setLoading] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (open) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, open, loading]);
+
+  const send = useCallback(async () => {
+    const text = input.trim();
+    if (!text || loading) return;
+    setInput("");
+    const next: Turn[] = [...messages, { role: "user", content: text }];
+    setMessages(next);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/chat/repair-assistant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: next }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { reply?: string; message?: string };
+      if (!res.ok) {
+        toast({
+          variant: "destructive",
+          title: "Σφάλμα",
+          description: data.message ?? "Δοκιμάστε ξανά αργότερα.",
+        });
+        setMessages((m) => m.slice(0, -1));
+        setInput(text);
+        return;
+      }
+      if (data.reply) {
+        setMessages([...next, { role: "assistant", content: data.reply }]);
+      }
+    } catch {
+      toast({ variant: "destructive", title: "Σφάλμα δικτύου", description: "Ελέγξτε τη σύνδεσή σας." });
+      setMessages((m) => m.slice(0, -1));
+      setInput(text);
+    } finally {
+      setLoading(false);
+    }
+  }, [input, loading, messages, toast]);
+
+  return (
+    <div className="fixed z-[100] bottom-4 right-4 sm:bottom-6 sm:right-6 flex flex-col items-end gap-2 pointer-events-none">
+      {open && (
+        <div
+          className="pointer-events-auto w-[min(100vw-2rem,400px)] rounded-2xl border border-primary/20 bg-card/95 backdrop-blur-md shadow-[0_8px_40px_rgba(0,0,0,0.45)] flex flex-col overflow-hidden max-h-[min(70vh,560px)]"
+          role="dialog"
+          aria-label="Συνομιλία HiTech Doctor"
+        >
+          <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-white/10 bg-primary/10">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center shrink-0">
+                <Bot className="w-5 h-5 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-foreground truncate">HiTech Doctor AI</p>
+                <p className="text-[10px] text-muted-foreground">Βοηθός επισκευών</p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="shrink-0 h-8 w-8"
+              onClick={() => setOpen(false)}
+              aria-label="Κλείσιμο"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+
+          <ScrollArea className="flex-1 min-h-[200px] max-h-[400px] px-3 py-3">
+            <div className="space-y-3 pr-2">
+              {messages.length === 0 && (
+                <div className="rounded-xl bg-muted/40 border border-border px-3 py-2.5 text-sm text-muted-foreground leading-relaxed">
+                  {WELCOME}
+                </div>
+              )}
+              {messages.map((m, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "rounded-xl px-3 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words",
+                    m.role === "user"
+                      ? "ml-6 bg-primary/15 border border-primary/25 text-foreground"
+                      : "mr-4 bg-muted/30 border border-white/8 text-foreground"
+                  )}
+                >
+                  {m.content}
+                </div>
+              ))}
+              {loading && (
+                <div className="flex items-center gap-2 text-muted-foreground text-xs py-1">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Σκέφτομαι…
+                </div>
+              )}
+              <div ref={bottomRef} />
+            </div>
+          </ScrollArea>
+
+          <div className="p-3 border-t border-white/10 flex gap-2 bg-background/80">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Περιγράψτε τη βλάβη…"
+              className="bg-card border-white/10 text-sm h-10"
+              disabled={loading}
+              maxLength={4000}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  void send();
+                }
+              }}
+              data-testid="input-repair-chat"
+            />
+            <Button
+              type="button"
+              size="icon"
+              className="h-10 w-10 shrink-0"
+              disabled={loading || !input.trim()}
+              onClick={() => void send()}
+              aria-label="Αποστολή"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <Button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={cn(
+          "pointer-events-auto h-14 w-14 rounded-full shadow-lg border border-primary/30",
+          "bg-gradient-to-br from-primary to-cyan-600 hover:opacity-95 text-white",
+          open && "ring-2 ring-primary/50"
+        )}
+        aria-expanded={open}
+        aria-label={open ? "Κλείσιμο συνομιλίας" : "Άνοιγμα συνομιλίας HiTech Doctor"}
+        data-testid="button-repair-chat-toggle"
+      >
+        {open ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
+      </Button>
+    </div>
+  );
+}

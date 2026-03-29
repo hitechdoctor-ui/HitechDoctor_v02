@@ -3,7 +3,8 @@ import {
   ShoppingCart, Wrench, Package, ShieldCheck, Menu, Zap,
   Smartphone, ChevronRight, Hammer, Laptop, Monitor, Watch,
   Gamepad2, Tablet, LogIn, MapPin, Shield, Cable, Tag, Info,
-  MessageCircle, HelpCircle, Globe, Download, ScanSearch,
+  MessageCircle, HelpCircle, Globe, Download,   ScanSearch,
+  Truck,
 } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -71,6 +72,13 @@ const OTHER_SERVICES = [
     icon: ScanSearch,
     color: "text-violet-400",
     badge: "Νέο",
+  },
+  {
+    name: "Αποστολή Συσκευής",
+    href: "/services/apostoli-syskevis",
+    icon: Truck,
+    color: "text-emerald-400",
+    badge: "BoxNow",
   },
   { name: "Επισκευή Tablet",      href: "/services/episkeui-tablet", icon: Tablet,   color: "text-sky-400" },
   { name: "Επισκευή PlayStation", href: "/services/episkeui-playstation", icon: Gamepad2, color: "text-blue-400" },

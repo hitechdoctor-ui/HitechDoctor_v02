@@ -4,17 +4,30 @@ import { useOrders } from "@/hooks/use-orders";
 import { useProducts } from "@/hooks/use-products";
 import { useCustomers } from "@/hooks/use-customers";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Package, ShoppingCart, Users, Euro, Wrench,
   Clock, CheckCircle2, XCircle, AlertCircle, Hash, Smartphone, Phone, Mail,
-  Lock, Search, X, ExternalLink,
+  Lock, Search, X, ExternalLink, Tag, Loader2,
 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { apiRequest, getAdminAuthHeaders, QUERY_FINANCIAL_REPAIR_REVENUE, invalidateRepairFinancialQueries } from "@/lib/queryClient";
-import { type RepairRequest, type Product } from "@shared/schema";
+import {
+  apiRequest,
+  getAdminAuthHeaders,
+  QUERY_FINANCIAL_REPAIR_REVENUE,
+  invalidateRepairFinancialQueries,
+} from "@/lib/queryClient";
+import { type RepairRequest, type Product, type ProductOfferInterest } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
@@ -359,6 +372,99 @@ function EShopSearchSection() {
   );
 }
 
+// ── Πελάτες eShop: καλύτερη προσφορά (Dashboard) ────────────────────────────
+function ProductOfferInterestsCustomersSection({
+  rows,
+  isLoading,
+}: {
+  rows: ProductOfferInterest[];
+  isLoading: boolean;
+}) {
+  const recent = useMemo(() => rows.slice(0, 12), [rows]);
+
+  return (
+    <Card className="bg-card border-white/8 border-l-4 border-l-orange-500/35">
+      <CardHeader className="flex flex-col gap-3 pb-4 border-b border-white/8 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center shrink-0">
+            <Tag className="w-4.5 h-4.5 text-orange-400" />
+          </div>
+          <div>
+            <CardTitle className="text-base font-display font-bold">Πελάτες eShop — Καλύτερη προσφορά</CardTitle>
+            <CardDescription className="text-xs mt-0.5 max-w-xl">
+              Όνομα και κινητό από το eShop — η κάρτα «Πελάτες» πάνω δείχνει και πόσα τέτοια αιτήματα υπάρχουν.
+            </CardDescription>
+          </div>
+        </div>
+        <Link
+          href="/admin/product-offer-interests"
+          className="text-xs text-primary font-medium hover:underline inline-flex items-center gap-1 shrink-0"
+        >
+          Όλες οι εγγραφές
+          <ExternalLink className="w-3 h-3" />
+        </Link>
+      </CardHeader>
+      <CardContent className="pt-4">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12 text-muted-foreground text-sm gap-2">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            Φόρτωση…
+          </div>
+        ) : recent.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-10">Δεν υπάρχουν αιτήματα ακόμα.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">Ημερομηνία</TableHead>
+                  <TableHead className="text-xs">Όνομα</TableHead>
+                  <TableHead className="text-xs">Κινητό</TableHead>
+                  <TableHead className="text-xs">Προϊόν</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recent.map((row) => (
+                  <TableRow key={row.id}>
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                      {formatDate(row.createdAt)}
+                    </TableCell>
+                    <TableCell className="text-sm font-medium text-foreground">{row.customerName}</TableCell>
+                    <TableCell>
+                      <a
+                        href={`tel:${row.phone.replace(/\s/g, "")}`}
+                        className="text-xs text-primary inline-flex items-center gap-1 hover:underline"
+                      >
+                        <Phone className="w-3 h-3 shrink-0" />
+                        {row.phone}
+                      </a>
+                    </TableCell>
+                    <TableCell className="max-w-[200px]">
+                      <p className="text-xs text-foreground truncate" title={row.productName}>
+                        {row.productName}
+                      </p>
+                      {row.productSlug ? (
+                        <Link
+                          href={`/eshop/${row.productSlug}`}
+                          className="text-[10px] text-primary/80 hover:underline"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Άνοιγμα προϊόντος →
+                        </Link>
+                      ) : null}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // ── Main Dashboard ───────────────────────────────────────────────────────────
 type RepairRevenueRow = { id: number; createdAt: string; total: number; customerName: string; email: string };
 
@@ -380,6 +486,16 @@ export default function AdminDashboard() {
         return r.json();
       }),
   });
+  const { data: offerInterests = [], isLoading: offerInterestsLoading } = useQuery<ProductOfferInterest[]>({
+    queryKey: ["admin-product-offer-interests"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/product-offer-interests", {
+        headers: getAdminAuthHeaders(),
+      });
+      if (!res.ok) throw new Error("Failed to fetch offer interests");
+      return res.json();
+    },
+  });
 
   const todayRevenue = useMemo(() => {
     const todayStart = new Date();
@@ -399,22 +515,37 @@ export default function AdminDashboard() {
 
   const pendingRepairs = repairRequests?.filter((r) => r.status === "pending").length ?? 0;
 
-  const stats = [
-    {
-      title: "Έσοδα Σήμερα",
-      value: new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR" }).format(todayRevenue),
-      icon: Euro, color: "text-green-400",
-    },
-    { title: "Παραγγελίες", value: orders?.length ?? 0, icon: ShoppingCart, color: "text-blue-400" },
-    { title: "Προϊόντα", value: products?.length ?? 0, icon: Package, color: "text-purple-400" },
-    { title: "Πελάτες", value: customers?.length ?? 0, icon: Users, color: "text-orange-400" },
-    {
-      title: "Αιτήματα Επισκευής",
-      value: repairRequests?.length ?? 0,
-      icon: Wrench, color: "text-primary",
-      subtext: pendingRepairs > 0 ? `${pendingRepairs} νέα` : undefined,
-    },
-  ];
+  const stats = useMemo(
+    () => [
+      {
+        title: "Έσοδα Σήμερα",
+        value: new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR" }).format(todayRevenue),
+        icon: Euro,
+        color: "text-green-400",
+      },
+      { title: "Παραγγελίες", value: orders?.length ?? 0, icon: ShoppingCart, color: "text-blue-400" },
+      { title: "Προϊόντα", value: products?.length ?? 0, icon: Package, color: "text-purple-400" },
+      {
+        title: "Πελάτες",
+        value: customers?.length ?? 0,
+        icon: Users,
+        color: "text-orange-400",
+        subtext:
+          offerInterests.length > 0
+            ? `${offerInterests.length} ${offerInterests.length === 1 ? "αίτημα" : "αιτήματα"} «καλύτερη προσφορά» eShop`
+            : undefined,
+        subtextClass: "text-orange-400/95",
+      },
+      {
+        title: "Αιτήματα Επισκευής",
+        value: repairRequests?.length ?? 0,
+        icon: Wrench,
+        color: "text-primary",
+        subtext: pendingRepairs > 0 ? `${pendingRepairs} νέα` : undefined,
+      },
+    ],
+    [todayRevenue, orders, products, customers, offerInterests.length, repairRequests, pendingRepairs]
+  );
 
   return (
     <AdminLayout>
@@ -436,11 +567,22 @@ export default function AdminDashboard() {
             <CardContent>
               <div className="text-2xl font-bold">{stat.value}</div>
               {stat.subtext && (
-                <p className="text-xs text-yellow-400 mt-0.5 font-medium">{stat.subtext}</p>
+                <p
+                  className={`text-xs mt-0.5 font-medium ${
+                    "subtextClass" in stat && stat.subtextClass ? stat.subtextClass : "text-yellow-400"
+                  }`}
+                >
+                  {stat.subtext}
+                </p>
               )}
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* ── Πελάτες eShop: καλύτερη προσφορά ── */}
+      <div className="mb-6">
+        <ProductOfferInterestsCustomersSection rows={offerInterests} isLoading={offerInterestsLoading} />
       </div>
 
       {/* ── Repair Requests (service CRM) ── */}

@@ -146,6 +146,32 @@ export const websiteInquiries = pgTable("website_inquiries", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+/** Αποστολή συσκευής — BoxNow locker + κωδικός αναφοράς HiTech */
+export const boxnowDropoffRequests = pgTable("boxnow_dropoff_requests", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  referenceCode: text("reference_code").notNull().unique(),
+  customerName: text("customer_name").notNull(),
+  phone: text("phone").notNull(),
+  email: text("email"),
+  deviceNote: text("device_note"),
+  lockerId: text("locker_id").notNull(),
+  lockerAddress: text("locker_address").notNull(),
+  lockerPostalCode: text("locker_postal_code"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+/** eShop: «Θέλω καλύτερη προσφορά» — όνομα + κινητό, snapshot ονόματος προϊόντος */
+export const productOfferInterests = pgTable("product_offer_interests", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  productId: integer("product_id").notNull(),
+  productName: text("product_name").notNull(),
+  /** Για σύνδεσμο στο admin προς `/eshop/:slug` */
+  productSlug: text("product_slug"),
+  customerName: text("customer_name").notNull(),
+  phone: text("phone").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // --- Schemas & Types ---
 /** Cast: drizzle-zod `createInsertSchema().omit({ …: true })` προκαλεί TS2322 (boolean → never) σε ορισμένες εκδόσεις. */
 export const insertProductSchema = createInsertSchema(products).omit({ id: true, createdAt: true }) as z.ZodTypeAny;
@@ -163,6 +189,25 @@ export const insertSubscriptionSchema = createInsertSchema(subscriptions)
     renewalDate: z.coerce.date(),
   }) as z.ZodTypeAny;
 export const insertWebsiteInquirySchema = createInsertSchema(websiteInquiries).omit({ id: true, createdAt: true }) as z.ZodTypeAny;
+export const insertProductOfferInterestSchema = createInsertSchema(productOfferInterests).omit({ id: true, createdAt: true }) as z.ZodTypeAny;
+
+/** Δημόσιο POST — μόνο id προϊόντος + στοιχεία πελάτη (το όνομα προϊόντος έρχεται από τη βάση). */
+export const productOfferInterestPublicSchema = z.object({
+  productId: z.number().int().positive(),
+  customerName: z.string().min(1, "Συμπληρώστε το όνομά σας").max(200),
+  phone: z.string().min(10, "Μη έγκυρο κινητό").max(32),
+});
+
+/** Δημόσιο POST — αποστολή συσκευής μέσω BoxNow (στοιχεία + επιλεγμένο locker) */
+export const boxnowDropoffPublicSchema = z.object({
+  customerName: z.string().min(2, "Συμπληρώστε το όνομά σας").max(200),
+  phone: z.string().min(10, "Μη έγκυρο τηλέφωνο").max(32),
+  email: z.union([z.string().email("Μη έγκυρο email"), z.literal("")]).optional(),
+  deviceNote: z.string().max(2000).optional(),
+  lockerId: z.string().min(1, "Επιλέξτε locker από τον χάρτη"),
+  lockerAddress: z.string().min(1),
+  lockerPostalCode: z.string().max(32).optional(),
+});
 
 export type Product = typeof products.$inferSelect;
 /** Insert type από το Drizzle — αποφεύγει προβλήματα z.infer στο createInsertSchema (boolean → never). */
@@ -175,6 +220,10 @@ export type RepairItem = typeof repairItems.$inferSelect;
 export type Subscription = typeof subscriptions.$inferSelect;
 export type AdminUser = typeof adminUsers.$inferSelect;
 export type WebsiteInquiry = typeof websiteInquiries.$inferSelect;
+export type ProductOfferInterest = typeof productOfferInterests.$inferSelect;
+export type InsertProductOfferInterest = InferInsertModel<typeof productOfferInterests>;
+export type BoxnowDropoffRequest = typeof boxnowDropoffRequests.$inferSelect;
+export type InsertBoxnowDropoffRequest = InferInsertModel<typeof boxnowDropoffRequests>;
 export type IpswDownloadEvent = typeof ipswDownloadEvents.$inferSelect;
 
 // Προσθήκη του Schema για το Checkout

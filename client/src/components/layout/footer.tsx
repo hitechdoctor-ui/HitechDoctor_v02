@@ -24,6 +24,7 @@ const NAV_MENUS = [
       { label: "Επισκευή Κινητών",  href: "/services/episkeui-kiniton", external: false },
       { label: "IPSW Download (iPhone)", href: "/services/ipsw-download", external: false },
       { label: "IMEI Check", href: "/services/imei-check", external: false },
+      { label: "Αποστολή Συσκευής (BoxNow)", href: "/services/apostoli-syskevis", external: false },
       { label: "Όλες οι Υπηρεσίες", href: "/services",                  external: false },
     ],
   },

@@ -39,6 +39,7 @@ const ServiceAppleWatch = lazyWithReload(() => import("./pages/service-apple-wat
 const ServicePlayStation = lazyWithReload(() => import("./pages/service-playstation"));
 const IpswDownload = lazyWithReload(() => import("./pages/ipsw-download"));
 const ImeiCheck = lazyWithReload(() => import("./pages/imei-check"));
+const DeviceShipping = lazyWithReload(() => import("./pages/device-shipping"));
 const AppleService = lazyWithReload(() => import("./pages/apple-service"));
 const WebDesigner = lazyWithReload(() => import("./pages/web-designer"));
 const PortfolioHydrofix = lazyWithReload(() => import("./pages/portfolio-hydrofix"));
@@ -77,6 +78,7 @@ const AdminWebsiteSubscriptions = lazyWithReload(() => import("./pages/admin/web
 const AdminWebsiteInquiries = lazyWithReload(() => import("./pages/admin/website-inquiries"));
 const AdminUsersPage = lazyWithReload(() => import("./pages/admin/admin-users"));
 const AdminIpswDownloads = lazyWithReload(() => import("./pages/admin/ipsw-downloads"));
+const AdminProductOfferInterests = lazyWithReload(() => import("./pages/admin/product-offer-interests"));
 const AdminHubspotContacts = lazyWithReload(() => import("./pages/admin/hubspot-contacts"));
 
 function PageLoader() {
@@ -173,6 +175,7 @@ function Router() {
           <Route path="/services/episkeui-playstation" component={ServicePlayStation} />
           <Route path="/services/ipsw-download" component={IpswDownload} />
           <Route path="/services/imei-check" component={ImeiCheck} />
+          <Route path="/services/apostoli-syskevis" component={DeviceShipping} />
           <Route path="/apple-service" component={AppleService} />
           <Route path="/web-designer" component={WebDesigner} />
           <Route path="/portfolio/hydrofix-gr" component={PortfolioHydrofix} />
@@ -214,6 +217,7 @@ function Router() {
           <Route path="/admin/oikonomika" component={AdminOikonomika} />
           <Route path="/admin/users" component={AdminUsersPage} />
           <Route path="/admin/ipsw-downloads" component={AdminIpswDownloads} />
+          <Route path="/admin/product-offer-interests" component={AdminProductOfferInterests} />
           <Route component={NotFound} />
         </Switch>
       </Suspense>
