@@ -1204,9 +1204,16 @@ export async function registerRoutes(
         productSlug: product.slug ?? null,
         customerName: input.customerName.trim(),
         phone: input.phone.trim(),
+        notes: input.notes?.trim() ?? null,
+        offerType: input.offerType ?? null,
       });
       res.status(201).json({ ok: true, id: row.id });
       sendProductOfferInterestEmail(row).catch((e) => console.error("[email] product offer interest failed:", e));
+      // Upsert to CRM — use phone-derived placeholder email when no real email available
+      const phonePlaceholder = `${input.phone.replace(/\D/g, "").slice(-10)}@lead.hitechdoctor.com`;
+      storage.upsertCustomerByEmail(input.customerName.trim(), phonePlaceholder, input.phone.trim()).catch((e) =>
+        console.error("[crm] product-offer-interest upsert failed:", e)
+      );
     } catch (err) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: err.errors[0].message, field: err.errors[0].path.join(".") });

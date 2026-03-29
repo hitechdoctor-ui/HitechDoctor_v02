@@ -224,6 +224,10 @@ export const productOfferInterests = pgTable("product_offer_interests", {
   productSlug: text("product_slug"),
   customerName: text("customer_name").notNull(),
   phone: text("phone").notNull(),
+  /** Πρόσθετη περιγραφή / σημειώσεις πελάτη */
+  notes: text("notes"),
+  /** Τύπος αιτήματος: better_price | bundle | bulk */
+  offerType: text("offer_type"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -246,11 +250,13 @@ export const insertSubscriptionSchema = createInsertSchema(subscriptions)
 export const insertWebsiteInquirySchema = createInsertSchema(websiteInquiries).omit({ id: true, createdAt: true }) as z.ZodTypeAny;
 export const insertProductOfferInterestSchema = createInsertSchema(productOfferInterests).omit({ id: true, createdAt: true }) as z.ZodTypeAny;
 
-/** Δημόσιο POST — μόνο id προϊόντος + στοιχεία πελάτη (το όνομα προϊόντος έρχεται από τη βάση). */
+/** Δημόσιο POST — id προϊόντος + στοιχεία πελάτη + προαιρετικές σημειώσεις. */
 export const productOfferInterestPublicSchema = z.object({
   productId: z.number().int().positive(),
   customerName: z.string().min(1, "Συμπληρώστε το όνομά σας").max(200),
   phone: z.string().min(10, "Μη έγκυρο κινητό").max(32),
+  notes: z.string().max(1000).optional(),
+  offerType: z.enum(["better_price", "bundle", "bulk"]).optional(),
 });
 
 /** Δημόσιο POST — αποστολή συσκευής μέσω BoxNow (στοιχεία + επιλεγμένο locker) */

@@ -48,6 +48,26 @@ const WELCOME =
 const INTRO_SESSION_KEY = "htd_chat_intro_done";
 const COOKIE_STORE_KEY = "htd_cookie_consent";
 
+/** Αποδίδει markdown links [text](url) ως κλικαρίσιμα links χωρίς να σπάσει το layout */
+function ChatMessageContent({ content }: { content: string }) {
+  const MD_LINK = /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g;
+  const parts: React.ReactNode[] = [];
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = MD_LINK.exec(content)) !== null) {
+    if (m.index > last) parts.push(content.slice(last, m.index));
+    const href = toAppPath(m[2]);
+    parts.push(
+      <Link key={m.index} href={href} className="text-primary underline underline-offset-2 hover:opacity-80">
+        {m[1]}
+      </Link>
+    );
+    last = m.index + m[0].length;
+  }
+  if (last < content.length) parts.push(content.slice(last));
+  return <>{parts}</>;
+}
+
 export function RepairChatbot() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -266,7 +286,7 @@ export function RepairChatbot() {
                     : "mr-3 bg-muted/30 border border-white/8 text-foreground"
                 )}
               >
-                {m.content}
+                <ChatMessageContent content={m.content} />
                 {m.role === "assistant" && m.ctas && m.ctas.length > 0 && (
                   <div className="mt-1.5 flex flex-col gap-1">
                     {m.ctas.map((c, j) => {

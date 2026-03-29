@@ -108,6 +108,11 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-7px)" },
         },
+        "zoom-pulse": {
+          "0%, 100%": { transform: "scale(1)" },
+          "35%": { transform: "scale(1.06)" },
+          "65%": { transform: "scale(0.96)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -115,6 +120,7 @@ export default {
         "offer-ring": "offer-ring 2.4s ease-in-out infinite",
         "offer-shimmer": "offer-shimmer 4s linear infinite",
         "fab-bounce": "fab-bounce 1.75s ease-in-out infinite",
+        "zoom-pulse": "zoom-pulse 2.2s ease-in-out infinite",
       },
     },
   },

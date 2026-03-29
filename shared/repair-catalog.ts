@@ -25,9 +25,14 @@ export function formatProductsForRepairCatalog(products: Product[]): string {
   const line = (p: Product) => {
     const brand = p.brand?.trim() || "—";
     const cat = p.subcategory ?? p.category;
-    const extras = [p.ram, p.storage, p.color].filter(Boolean).join(", ");
-    const meta = extras ? ` | ${extras}` : "";
-    return `- ${p.name} | μάρκα: ${brand} | τιμή HiTech: ${fmtEur(p.price)} | ${availabilityLine(p)} | κατηγορία: ${cat}${meta} | ${SITE_BASE}/eshop/${p.slug}`;
+    const specs: string[] = [];
+    if (p.ram) specs.push(`RAM: ${p.ram}`);
+    if (p.storage) specs.push(`Αποθ: ${p.storage}`);
+    if (p.color) specs.push(`Χρώμα: ${p.color}`);
+    const specsMeta = specs.length ? ` | ${specs.join(", ")}` : "";
+    // Include first 200 chars of description for spec-based recommendations
+    const descSnippet = p.description ? ` | specs: ${p.description.slice(0, 200).replace(/\n/g, " ")}` : "";
+    return `- ${p.name} | μάρκα: ${brand} | τιμή HiTech: ${fmtEur(p.price)} | ${availabilityLine(p)} | κατηγορία: ${cat}${specsMeta}${descSnippet} | ${SITE_BASE}/eshop/${p.slug}`;
   };
 
   const apple = rows.filter(
@@ -60,6 +65,14 @@ export function formatProductsForRepairCatalog(products: Product[]): string {
  * Ο assistant πρέπει να προτείνει ΜΟΝΟ συνδέσμους από εδώ + από τα προϊόντα eShop παραπάνω.
  */
 export const REPAIR_STATIC_CATALOG_TEXT = `
+## Στοιχεία καταστήματος HiTech Doctor
+- Τηλέφωνο / Viber / WhatsApp: +30 698 188 2005
+- Email: info@hitechdoctor.com
+- Τοποθεσία: Αθήνα, Ελλάδα
+- Ώρες λειτουργίας: Δευτέρα–Παρασκευή 10:00–19:00 | Σάββατο 10:00–16:00 | Κυριακή Κλειστά
+- Σελίδα επικοινωνίας: ${SITE_BASE}/epikoinonia
+- Αποστολή συσκευής (BoxNow locker): ${SITE_BASE}/services/apostoli-syskevis
+
 ## Κεντρικές σελίδες υπηρεσιών
 - Επισκευή κινητών (γενικά): ${SITE_BASE}/services/episkeui-kiniton
 - Επισκευή iPhone (hub): ${SITE_BASE}/services/episkeui-iphone
@@ -73,15 +86,12 @@ export const REPAIR_STATIC_CATALOG_TEXT = `
 - Επισκευή Apple Watch: ${SITE_BASE}/services/episkeui-apple-watch
 - Επισκευή PlayStation: ${SITE_BASE}/services/episkeui-playstation
 - Όλες οι υπηρεσίες: ${SITE_BASE}/services
-- Επικοινωνία / ραντεβού: ${SITE_BASE}/epikoinonia
-- eShop: ${SITE_BASE}/eshop
-- Αποστολή συσκευής (BoxNow): ${SITE_BASE}/services/apostoli-syskevis
+- eShop (αγορά συσκευών & αξεσουάρ): ${SITE_BASE}/eshop
 - IMEI Check: ${SITE_BASE}/services/imei-check
 - IPSW Download: ${SITE_BASE}/services/ipsw-download
 
 ## Μοτίβα URL ανά μάρκα (σελίδα συγκεκριμένου μοντέλου)
-Κάθε μοντέλο έχει δική σελίδα με τιμές οθόνης / μπαταρίας / θύρας (όπου ισχύει).
-- iPhone: ${SITE_BASE}/episkevi-iphone/{slug} — π.χ. slug: iphone-15-pro, iphone-14, se-3
+- iPhone: ${SITE_BASE}/episkevi-iphone/{slug} — π.χ. 15-pro, 14, se-3
 - Samsung Galaxy: ${SITE_BASE}/episkevi-samsung/{slug}
 - Xiaomi / Redmi / Poco: ${SITE_BASE}/episkevi-xiaomi/{slug}
 - Huawei: ${SITE_BASE}/episkevi-huawei/{slug}
@@ -90,12 +100,12 @@ export const REPAIR_STATIC_CATALOG_TEXT = `
 - Tablet: ${SITE_BASE}/episkevi-tablet/{slug}
 - Desktop: ${SITE_BASE}/episkevi-desktop/{slug}
 
-## Τύποι βλαβών → τυπικές εργασίες (ενδεικτικά)
-- Ραγισμένη / μαύρη οθόνη, δεν ανάβει αφής → αλλαγή οθόνης (ανά μοντέλο στη σελίδα μοντέλου)
+## Τύποι βλαβών → τυπικές εργασίες
+- Ραγισμένη / μαύρη οθόνη, δεν ανάβει αφής → αλλαγή οθόνης
 - Γρήγορη αποφόρτιση, shutdown → αλλαγή μπαταρίας
 - Δεν φορτίζει, χαλαρή θύρα → επισκευή/αλλαγή θύρας φόρτισης
-- Νερό / υγρά → διαγνωστικός έλεγχος (επικοινωνία ή αίτημα επισκευής)
+- Νερό / υγρά → διαγνωστικός έλεγχος
 - Software / iOS restore → IPSW ή επικοινωνία
 
-Μην επινοείς slug· αν δεν ξέρεις το ακριβές slug, δώσε το hub της μάρκας και πες στον χρήστη να επιλέξει μοντέλο από τη λίστα.
+Μην επινοείς slug· αν δεν ξέρεις το ακριβές slug, δώσε το hub της μάρκας.
 `.trim();

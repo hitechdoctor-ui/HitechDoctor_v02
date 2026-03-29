@@ -16,11 +16,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogTitle, DialogClose, DialogHeader } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import {
   ShoppingCart, CheckCircle2, ChevronRight, ChevronLeft, Shield,
   Clock, Star, ArrowLeft, Package, Truck, ZoomIn, X, Smartphone, Loader2, Tag,
   HardDrive, Palette, Award, Wrench, BadgeCheck, RotateCcw, HeadphonesIcon,
+  Gift, Boxes,
 } from "lucide-react";
 import type { Product } from "@shared/schema";
 
@@ -197,8 +199,10 @@ export default function ProductDetail() {
   const [activeImg, setActiveImg] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [offerOpen, setOfferOpen] = useState(false);
+  const [offerType, setOfferType] = useState<"better_price" | "bundle" | "bulk">("better_price");
   const [offerName, setOfferName] = useState("");
   const [offerPhone, setOfferPhone] = useState("");
+  const [offerNotes, setOfferNotes] = useState("");
   const [offerSending, setOfferSending] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
   const { toast } = useToast();
@@ -244,6 +248,18 @@ export default function ProductDetail() {
     });
   };
 
+  const openOffer = (type: "better_price" | "bundle" | "bulk") => {
+    setOfferType(type);
+    setOfferNotes(
+      type === "bundle"
+        ? "Ενδιαφέρομαι για bundle: κινητό + θήκη + τζάμι προστασίας."
+        : type === "bulk"
+        ? "Ενδιαφέρομαι για αγορά πολλαπλών τεμαχίων."
+        : ""
+    );
+    setOfferOpen(true);
+  };
+
   const submitBetterOffer = async () => {
     if (!product) return;
     const name = offerName.trim();
@@ -261,24 +277,24 @@ export default function ProductDetail() {
       const res = await fetch("/api/product-offer-interest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: product.id, customerName: name, phone }),
+        body: JSON.stringify({
+          productId: product.id,
+          customerName: name,
+          phone,
+          notes: offerNotes.trim() || undefined,
+          offerType,
+        }),
       });
       const data = (await res.json().catch(() => ({}))) as { message?: string };
       if (!res.ok) {
-        toast({
-          variant: "destructive",
-          title: "Σφάλμα",
-          description: data.message ?? "Δοκιμάστε ξανά.",
-        });
+        toast({ variant: "destructive", title: "Σφάλμα", description: data.message ?? "Δοκιμάστε ξανά." });
         return;
       }
-      toast({
-        title: "Ευχαριστούμε!",
-        description: "Λάβαμε το αίτημά σας. Θα επικοινωνήσουμε σύντομα.",
-      });
+      toast({ title: "Ευχαριστούμε!", description: "Λάβαμε το αίτημά σας. Θα επικοινωνήσουμε σύντομα." });
       setOfferOpen(false);
       setOfferName("");
       setOfferPhone("");
+      setOfferNotes("");
     } finally {
       setOfferSending(false);
     }
@@ -607,13 +623,14 @@ export default function ProductDetail() {
 
               <PriceComparisonSection product={product} />
 
+              {/* Main offer button */}
               <div className="mt-3 inline-block max-w-full rounded-xl p-[2px] bg-gradient-to-r from-primary/55 via-cyan-400/45 to-primary/55 bg-[length:200%_100%] animate-offer-shimmer">
                 <div className="rounded-[10px] animate-offer-ring">
                   <Button
                     type="button"
                     variant="outline"
                     className="relative w-full border-0 bg-background/95 hover:bg-background shadow-sm transition-transform duration-300 hover:scale-[1.02] active:scale-[0.99] text-foreground font-semibold"
-                    onClick={() => setOfferOpen(true)}
+                    onClick={() => openOffer("better_price")}
                     data-testid="button-better-offer"
                   >
                     <Tag className="w-4 h-4 mr-2 text-primary shrink-0 motion-safe:animate-pulse" />
@@ -622,27 +639,56 @@ export default function ProductDetail() {
                 </div>
               </div>
 
+              {/* Two smaller offer buttons */}
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => openOffer("bundle")}
+                  className="motion-safe:animate-zoom-pulse inline-flex items-center gap-1.5 rounded-lg border border-amber-400/50 bg-amber-400/8 px-3 py-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-400/15 transition-colors shadow-sm"
+                  data-testid="button-bundle-offer"
+                >
+                  <Gift className="w-3.5 h-3.5 shrink-0" />
+                  Bundle: +Θήκη +Τζάμι ΔΩΡΟ
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openOffer("bulk")}
+                  className="motion-safe:animate-zoom-pulse inline-flex items-center gap-1.5 rounded-lg border border-violet-400/50 bg-violet-400/8 px-3 py-1.5 text-xs font-semibold text-violet-600 dark:text-violet-400 hover:bg-violet-400/15 transition-colors shadow-sm"
+                  style={{ animationDelay: "0.6s" }}
+                  data-testid="button-bulk-offer"
+                >
+                  <Boxes className="w-3.5 h-3.5 shrink-0" />
+                  Αγορά πολλαπλών τεμαχίων
+                </button>
+              </div>
+
               <Dialog
                 open={offerOpen}
                 onOpenChange={(o) => {
                   setOfferOpen(o);
-                  if (!o) {
-                    setOfferName("");
-                    setOfferPhone("");
-                  }
+                  if (!o) { setOfferName(""); setOfferPhone(""); setOfferNotes(""); }
                 }}
               >
                 <DialogContent className="sm:max-w-md border-border bg-card" data-testid="dialog-better-offer">
                   <DialogHeader>
-                    <DialogTitle>Καλύτερη προσφορά</DialogTitle>
+                    <DialogTitle>
+                      {offerType === "bundle"
+                        ? "Bundle Προσφορά — Κινητό + Θήκη + Τζάμι ΔΩΡΟ"
+                        : offerType === "bulk"
+                        ? "Αγορά Πολλαπλών Τεμαχίων"
+                        : "Καλύτερη Προσφορά"}
+                    </DialogTitle>
                   </DialogHeader>
                   <p className="text-sm text-muted-foreground">
-                    Αφήστε το όνομα και το κινητό σας· θα επικοινωνήσουμε για προσφορά στο{" "}
-                    <span className="text-foreground font-medium">{product.name}</span>.
+                    {offerType === "bundle"
+                      ? `Αγοράστε το ${product.name} μαζί με θήκη και πάρτε τζάμι προστασίας ΔΩΡΟ! Αφήστε τα στοιχεία σας και θα επικοινωνήσουμε με την καλύτερη τιμή.`
+                      : offerType === "bulk"
+                      ? `Ενδιαφέρεστε για αγορά 2+ τεμαχίων; Επικοινωνήστε μαζί μας για χονδρική τιμή.`
+                      : `Αφήστε το όνομα και το κινητό σας· θα επικοινωνήσουμε για ειδική προσφορά στο ${product.name}.`}
                   </p>
                   <div className="space-y-4 pt-1">
                     <div className="space-y-2">
-                      <Label htmlFor="offer-name">Όνομα</Label>
+                      <Label htmlFor="offer-name">Όνομα <span className="text-primary">*</span></Label>
                       <Input
                         id="offer-name"
                         value={offerName}
@@ -652,7 +698,7 @@ export default function ProductDetail() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="offer-phone">Κινητό</Label>
+                      <Label htmlFor="offer-phone">Κινητό <span className="text-primary">*</span></Label>
                       <Input
                         id="offer-phone"
                         type="tel"
@@ -663,13 +709,19 @@ export default function ProductDetail() {
                         placeholder="π.χ. 6981234567"
                       />
                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="offer-notes">Περιγραφή / Σημειώσεις</Label>
+                      <Textarea
+                        id="offer-notes"
+                        value={offerNotes}
+                        onChange={(e) => setOfferNotes(e.target.value)}
+                        placeholder="π.χ. Χρειάζομαι τιμή για 3 τεμάχια, ή συγκεκριμένο χρώμα θήκης…"
+                        rows={3}
+                        className="resize-none text-sm"
+                      />
+                    </div>
                     <div className="flex flex-wrap gap-2 justify-end pt-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => setOfferOpen(false)}
-                        disabled={offerSending}
-                      >
+                      <Button type="button" variant="ghost" onClick={() => setOfferOpen(false)} disabled={offerSending}>
                         Ακύρωση
                       </Button>
                       <Button type="button" onClick={() => void submitBetterOffer()} disabled={offerSending}>
