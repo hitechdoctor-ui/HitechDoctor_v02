@@ -66,12 +66,22 @@ export function formatProductsForRepairCatalog(products: Product[]): string {
  */
 export const REPAIR_STATIC_CATALOG_TEXT = `
 ## Στοιχεία καταστήματος HiTech Doctor
+- Διεύθυνση: Στρατηγού Μακρυγιάννη 109, Μοσχάτο 18345, Αττική
+- Google Maps πλοήγηση: https://maps.app.goo.gl/aSg3CYrBwq7Dqe8b9
 - Τηλέφωνο / Viber / WhatsApp: +30 698 188 2005
 - Email: info@hitechdoctor.com
-- Τοποθεσία: Αθήνα, Ελλάδα
 - Ώρες λειτουργίας: Δευτέρα–Παρασκευή 10:00–19:00 | Σάββατο 10:00–16:00 | Κυριακή Κλειστά
-- Σελίδα επικοινωνίας: ${SITE_BASE}/epikoinonia
+- Σελίδα επικοινωνίας & χάρτης: ${SITE_BASE}/epikoinonia
 - Αποστολή συσκευής (BoxNow locker): ${SITE_BASE}/services/apostoli-syskevis
+
+## Κατασκευή Ιστοσελίδων / Web Design (HiTech Doctor)
+Αν κάποιος ρωτήσει για ιστοσελίδα, web design, e-shop, WordPress, React, κατασκευή site — **ΜΗΝ** δίνεις γενικές συμβουλές. Παραπέμπεις ΑΜΕΣΑ στη σελίδα μας:
+- Σελίδα web designer: ${SITE_BASE}/web-designer
+- Τι κάνουμε: Εταιρικές ιστοσελίδες, e-shops, React/Next.js apps, SEO, Mobile-First design
+- Stack: React / Next.js, TypeScript, Tailwind CSS, Node.js, PostgreSQL, Stripe
+- Πακέτα: Starter €490 | Professional €990 | E-Commerce €1.490+
+- Portfolio: Hydrofix, Regalo, Louloudotopos, BsNaomi, TheatreHood, AthEcs, Nikosapost, Metamorfosi
+- Παράδειγμα απάντησης: "Φτιάχνουμε εμείς! Δείτε τα έργα μας και τα πακέτα τιμών στη σελίδα Web Designer μας."
 
 ## Κεντρικές σελίδες υπηρεσιών
 - Επισκευή κινητών (γενικά): ${SITE_BASE}/services/episkeui-kiniton

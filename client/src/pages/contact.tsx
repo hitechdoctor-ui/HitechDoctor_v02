@@ -50,7 +50,7 @@ const INFO_CARDS = [
   },
 ];
 
-const MAPS_URL = "https://maps.google.com/?q=37.9528736,23.6792087";
+const MAPS_URL = "https://maps.app.goo.gl/aSg3CYrBwq7Dqe8b9";
 const VCARD = `BEGIN:VCARD
 VERSION:3.0
 FN:HiTech Doctor
@@ -70,9 +70,9 @@ const localBusinessSchema = {
   "email": "info@hitechdoctor.com",
   "address": {
     "@type": "PostalAddress",
-    "streetAddress": "Αθήνα",
-    "addressLocality": "Αθήνα",
-    "postalCode": "10000",
+    "streetAddress": "Στρατηγού Μακρυγιάννη 109",
+    "addressLocality": "Μοσχάτο",
+    "postalCode": "18345",
     "addressCountry": "GR",
   },
   "geo": {

@@ -48,6 +48,12 @@ const WELCOME =
 const INTRO_SESSION_KEY = "htd_chat_intro_done";
 const COOKIE_STORE_KEY = "htd_cookie_consent";
 
+const PROACTIVE_MSGS: Array<{ key: string; depth: number; text: string; action?: "form" }> = [
+  { key: "p1", depth: 0.30, text: "Χρειάζεστε επισκευή; Ρωτήστε τον AI Doctor!" },
+  { key: "p2", depth: 0.60, text: "Θέλετε να συμπληρώσετε φόρμα επισκευής;" , action: "form" },
+  { key: "p3", depth: 0.88, text: "Βρήκατε αυτό που ψάχνετε; Μπορώ να σας βοηθήσω!" },
+];
+
 /** Αποδίδει markdown links [text](url) ως κλικαρίσιμα links χωρίς να σπάσει το layout */
 function ChatMessageContent({ content }: { content: string }) {
   const MD_LINK = /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g;
@@ -81,6 +87,8 @@ export function RepairChatbot() {
   const [repairFormDeviceName, setRepairFormDeviceName] = useState("");
   const [showAttention, setShowAttention] = useState(false);
   const attentionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [proactiveMsg, setProactiveMsg] = useState<{ text: string; action?: "form" } | null>(null);
+  const proactiveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Scroll detection ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -135,6 +143,43 @@ export function RepairChatbot() {
     const openFromHero = () => setOpen(true);
     window.addEventListener(OPEN_REPAIR_CHAT_EVENT, openFromHero);
     return () => window.removeEventListener(OPEN_REPAIR_CHAT_EVENT, openFromHero);
+  }, []);
+
+  // ── Scroll-depth proactive messages (one per threshold, once per session) ─
+  useEffect(() => {
+    const shownKeys = new Set<string>(
+      JSON.parse(sessionStorage.getItem("htd_proactive_shown") ?? "[]") as string[]
+    );
+
+    const check = () => {
+      const doc = document.documentElement;
+      const scrollable = doc.scrollHeight - window.innerHeight;
+      if (scrollable <= 0) return;
+      const depth = window.scrollY / scrollable;
+
+      for (const msg of PROACTIVE_MSGS) {
+        if (!shownKeys.has(msg.key) && depth >= msg.depth) {
+          shownKeys.add(msg.key);
+          sessionStorage.setItem("htd_proactive_shown", JSON.stringify([...shownKeys]));
+
+          // Only show when chat is closed
+          setProactiveMsg((cur) => {
+            if (cur) return cur; // already showing
+            const item = { text: msg.text, action: msg.action };
+            if (proactiveTimerRef.current) clearTimeout(proactiveTimerRef.current);
+            proactiveTimerRef.current = setTimeout(() => setProactiveMsg(null), 7000);
+            return item;
+          });
+          break;
+        }
+      }
+    };
+
+    window.addEventListener("scroll", check, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", check);
+      if (proactiveTimerRef.current) clearTimeout(proactiveTimerRef.current);
+    };
   }, []);
 
   // ── Post-form upsell message in chat ─────────────────────────────────────
@@ -230,6 +275,29 @@ export function RepairChatbot() {
         >
           <Bot className="w-4 h-4 text-primary shrink-0" />
           Μπορώ να βοηθήσω;
+        </div>
+      )}
+
+      {/* Proactive scroll-depth bubble */}
+      {proactiveMsg && !open && (
+        <div className="pointer-events-auto animate-in slide-in-from-right-4 fade-in duration-400 max-w-[210px]">
+          <button
+            type="button"
+            className="w-full text-left flex items-start gap-2 rounded-xl border border-primary/30 bg-card/95 backdrop-blur-sm px-3 py-2.5 shadow-lg shadow-black/30 hover:border-primary/60 transition-colors group"
+            onClick={() => {
+              setProactiveMsg(null);
+              if (proactiveMsg.action === "form") {
+                setRepairFormOpen(true);
+              } else {
+                setOpen(true);
+              }
+            }}
+          >
+            <Bot className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+            <span className="text-xs font-semibold text-foreground leading-snug group-hover:text-primary transition-colors">
+              {proactiveMsg.text}
+            </span>
+          </button>
         </div>
       )}
       {open && (
@@ -388,6 +456,10 @@ export function RepairChatbot() {
           if (showAttention) {
             setShowAttention(false);
             if (attentionTimerRef.current) clearTimeout(attentionTimerRef.current);
+          }
+          if (proactiveMsg) {
+            setProactiveMsg(null);
+            if (proactiveTimerRef.current) clearTimeout(proactiveTimerRef.current);
           }
         }}
         className={cn(

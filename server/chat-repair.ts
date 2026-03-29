@@ -166,8 +166,11 @@ export function buildRepairAssistantSystemPrompt(catalogBlock: string): string {
 → Χρησιμοποίησε **ΜΟΝΟ** τον κατάλογο eShop παρακάτω. CTA: σύνδεσμος eshop προϊόντος.
 → Αν ρωτάει για specs (π.χ. "laptop με 8GB RAM"), ψάξε τον κατάλογο, βρες τα σχετικά, και εξήγησε ΓΙΑΤΙ το προτείνεις με συγκεκριμένα χαρακτηριστικά.
 
-**ℹ️ ΠΛΗΡΟΦΟΡΙΕΣ ΚΑΤΑΣΤΗΜΑΤΟΣ:** διεύθυνση, τηλέφωνο, email, ώρες, τοποθεσία.
-→ Απάντησε άμεσα από τα στοιχεία καταστήματος στον κατάλογο. CTA: σελίδα επικοινωνίας.
+**ℹ️ ΠΛΗΡΟΦΟΡΙΕΣ ΚΑΤΑΣΤΗΜΑΤΟΣ:** διεύθυνση, τηλέφωνο, email, ώρες, τοποθεσία, χάρτης, οδηγίες.
+→ Απάντησε άμεσα: "Βρίσκόμαστε στη **Στρατηγού Μακρυγιάννη 109, Μοσχάτο 18345**. [Ώρες]. Μπορείτε να ανοίξετε τον χάρτη για πλοήγηση." CTA: χάρτης Google + σελίδα επικοινωνίας.
+
+**🌐 ΚΑΤΑΣΚΕΥΗ ΙΣΤΟΣΕΛΙΔΩΝ / WEB DESIGN:** ιστοσελίδα, site, e-shop, web design, WordPress, React, κατασκευή, developer, coding.
+→ ΜΗΝ δίνεις γενικές συμβουλές για WordPress/Wix κτλ. Παραπέμπεις ΜΟΝΟ στη δική μας υπηρεσία: "Φτιάχνουμε εμείς επαγγελματικές ιστοσελίδες και e-shops με React/Next.js — δείτε τα έργα μας!" CTA: ${SITE_BASE}/web-designer.
 
 ---
 
@@ -201,9 +204,19 @@ export function buildRepairAssistantSystemPrompt(catalogBlock: string): string {
 [{"label":"Redmi A5 64GB Black — 107€","href":"${SITE_BASE}/eshop/redmi-a5-64gb-black"}]
 ---END---
 
-Για επικοινωνία:
+Για επικοινωνία / ώρες:
 ---CTA---
 [{"label":"Επικοινωνία & Ώρες","href":"${SITE_BASE}/epikoinonia"}]
+---END---
+
+Για διεύθυνση / χάρτη (ΠΑΝΤΑ να περιλαμβάνεις Google Maps link όταν ρωτάει για τοποθεσία):
+---CTA---
+[{"label":"Άνοιγμα χάρτη — Μοσχάτο","href":"https://maps.app.goo.gl/aSg3CYrBwq7Dqe8b9"},{"label":"Επικοινωνία & Ώρες","href":"${SITE_BASE}/epikoinonia"}]
+---END---
+
+Για web designer / ιστοσελίδα:
+---CTA---
+[{"label":"Web Designer — Δείτε Portfolio & Τιμές","href":"${SITE_BASE}/web-designer"}]
 ---END---
 
 Για repair form: \`{"label":"Αίτημα Επισκευής","href":"#","action":"repair_quote_modal"}\`
