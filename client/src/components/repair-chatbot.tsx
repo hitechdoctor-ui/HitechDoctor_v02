@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { Link } from "wouter";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChatWindow } from "@/components/chat/ChatWindow";
@@ -8,6 +8,7 @@ import { MessageCircle, X, Send, Loader2, Bot, ArrowRight, Wrench } from "lucide
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { OPEN_REPAIR_CHAT_EVENT } from "@/lib/repair-chat-events";
+import { COOKIE_CONSENT_EVENT } from "@/components/cookie-banner";
 import { guessDeviceModelFromMessages, type RepairChatCta } from "@shared/repair-assistant";
 
 type Turn = { role: "user" | "assistant"; content: string; ctas?: RepairChatCta[] };
@@ -43,8 +44,12 @@ const ctaBtnClass = cn(
 const WELCOME =
   "Γεια σας! Είμαι ο HiTech Doctor. Περιγράψτε μου τι συμβαίνει με τη συσκευή σας (μάρκα, μοντέλο αν το ξέρετε, και το πρόβλημα) — θα σας κατευθύνω στην κατάλληλη επισκευή.";
 
+const INTRO_SESSION_KEY = "htd_chat_intro_done";
+const COOKIE_STORE_KEY = "htd_cookie_consent";
+
 export function RepairChatbot() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Turn[]>([]);
@@ -53,7 +58,10 @@ export function RepairChatbot() {
   const [serviceTermsAccepted, setServiceTermsAccepted] = useState(false);
   const [repairFormOpen, setRepairFormOpen] = useState(false);
   const [repairFormDeviceName, setRepairFormDeviceName] = useState("");
+  const [showAttention, setShowAttention] = useState(false);
+  const attentionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // ── Scroll detection ──────────────────────────────────────────────────────
   useEffect(() => {
     const onScroll = () => setPageScrolled(window.scrollY > 32);
     onScroll();
@@ -61,11 +69,66 @@ export function RepairChatbot() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // ── Cookie acceptance + first scroll → attention animation (once/session) ─
+  useEffect(() => {
+    if (sessionStorage.getItem(INTRO_SESSION_KEY)) return;
+
+    let scrollCleanup: (() => void) | null = null;
+
+    const triggerAttention = () => {
+      if (sessionStorage.getItem(INTRO_SESSION_KEY)) return;
+      sessionStorage.setItem(INTRO_SESSION_KEY, "1");
+      setShowAttention(true);
+      attentionTimerRef.current = setTimeout(() => setShowAttention(false), 4500);
+    };
+
+    const setupScrollListener = () => {
+      if (sessionStorage.getItem(INTRO_SESSION_KEY)) return;
+      const onFirstScroll = () => {
+        if (window.scrollY > 80) {
+          triggerAttention();
+          window.removeEventListener("scroll", onFirstScroll);
+        }
+      };
+      window.addEventListener("scroll", onFirstScroll, { passive: true });
+      scrollCleanup = () => window.removeEventListener("scroll", onFirstScroll);
+    };
+
+    const consent = localStorage.getItem(COOKIE_STORE_KEY);
+    if (consent === "accepted" || consent === "rejected") {
+      setupScrollListener();
+    }
+
+    const onCookieConsent = () => setupScrollListener();
+    window.addEventListener(COOKIE_CONSENT_EVENT, onCookieConsent);
+
+    return () => {
+      scrollCleanup?.();
+      window.removeEventListener(COOKIE_CONSENT_EVENT, onCookieConsent);
+      if (attentionTimerRef.current) clearTimeout(attentionTimerRef.current);
+    };
+  }, []);
+
+  // ── Open from hero button ─────────────────────────────────────────────────
   useEffect(() => {
     const openFromHero = () => setOpen(true);
     window.addEventListener(OPEN_REPAIR_CHAT_EVENT, openFromHero);
     return () => window.removeEventListener(OPEN_REPAIR_CHAT_EVENT, openFromHero);
   }, []);
+
+  // ── Post-form upsell message in chat ─────────────────────────────────────
+  const handleRepairFormSuccess = useCallback(() => {
+    const deviceName = repairFormDeviceName || "τη συσκευή σας";
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "assistant" as const,
+        content: `Επειδή η οθόνη του ${deviceName} είναι ακριβή, προτείνω να βάλουμε και ένα Crystal Clear Tempered Glass με την επισκευή για 100% προστασία· δείτε και μια θήκη στο eShop μας για πλήρη προστασία.`,
+        ctas: [{ label: "Τζάμια προστασίας −50%", href: "https://hitechdoctor.com/eshop?tab=screen-protectors" }],
+      },
+    ]);
+    setOpen(true);
+  }, [repairFormDeviceName]);
 
   const send = useCallback(async () => {
     const text = input.trim();
@@ -111,10 +174,19 @@ export function RepairChatbot() {
         });
       }
       if (data.reply) {
-        setMessages([
-          ...next,
-          { role: "assistant", content: data.reply, ctas: data.ctas?.length ? data.ctas : undefined },
-        ]);
+        const ctas = data.ctas?.length ? data.ctas : undefined;
+        setMessages([...next, { role: "assistant", content: data.reply, ctas }]);
+
+        // Auto-navigate to repair page if AI returned a /repair/ CTA
+        const repairCta = ctas?.find(
+          (c) => !c.action && c.href && c.href.includes("/repair/")
+        );
+        if (repairCta) {
+          const path = toAppPath(normalizeCtaHref(repairCta.href));
+          if (path !== "#") {
+            setTimeout(() => setLocation(path), 900);
+          }
+        }
       }
     } catch {
       toast({ variant: "destructive", title: "Σφάλμα δικτύου", description: "Ελέγξτε τη σύνδεσή σας." });
@@ -127,6 +199,16 @@ export function RepairChatbot() {
 
   return (
     <div className="relative z-[158] flex flex-col items-end gap-2 pointer-events-none shrink-0">
+      {/* Attention bubble: shown once after cookie consent + first scroll */}
+      {showAttention && !open && (
+        <div
+          className="pointer-events-auto animate-in slide-in-from-right-4 fade-in duration-500 flex items-center gap-2 rounded-xl border border-primary/30 bg-card/95 backdrop-blur-sm px-3 py-2 shadow-lg shadow-black/30 text-sm font-semibold text-foreground max-w-[200px]"
+          aria-hidden
+        >
+          <Bot className="w-4 h-4 text-primary shrink-0" />
+          Μπορώ να βοηθήσω;
+        </div>
+      )}
       {open && (
         <div
           className="pointer-events-auto w-[min(100vw-2rem,400px)] rounded-2xl border border-primary/20 bg-card/95 backdrop-blur-md shadow-[0_8px_40px_rgba(0,0,0,0.45)] flex flex-col overflow-hidden max-h-[min(70vh,560px)]"
@@ -267,15 +349,31 @@ export function RepairChatbot() {
         </div>
       )}
 
+      {/* Pulsing ring during attention animation */}
+      {showAttention && !open && (
+        <span
+          className="absolute bottom-0 right-0 h-12 w-12 rounded-full animate-ping opacity-60 pointer-events-none"
+          style={{ background: "radial-gradient(circle, hsl(185 100% 42%) 0%, transparent 70%)" }}
+          aria-hidden
+        />
+      )}
+
       <Button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => {
+          setOpen((o) => !o);
+          if (showAttention) {
+            setShowAttention(false);
+            if (attentionTimerRef.current) clearTimeout(attentionTimerRef.current);
+          }
+        }}
         className={cn(
           "pointer-events-auto h-12 w-12 rounded-full shadow-lg border transition-colors duration-300",
           pageScrolled
             ? "border-amber-400/70 bg-gradient-to-br from-amber-400 to-yellow-500 text-neutral-900 hover:opacity-95 shadow-amber-500/35"
             : "border-primary/30 bg-gradient-to-br from-primary to-cyan-600 text-white hover:opacity-95 shadow-primary/25",
-          !open && "motion-safe:animate-fab-bounce",
+          showAttention && !open && "motion-safe:animate-bounce",
+          !open && !showAttention && "motion-safe:animate-fab-bounce",
           open && "motion-reduce:animate-none animate-none",
           open && (pageScrolled ? "ring-2 ring-amber-400/60" : "ring-2 ring-primary/50")
         )}
@@ -290,6 +388,7 @@ export function RepairChatbot() {
         open={repairFormOpen}
         onOpenChange={setRepairFormOpen}
         defaultDeviceName={repairFormDeviceName}
+        onSubmitSuccess={handleRepairFormSuccess}
       />
     </div>
   );

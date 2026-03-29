@@ -28,6 +28,8 @@ interface RepairRequestModalProps {
   defaultDeviceName?: string;
   /** Τελική τιμή με ΦΠΑ από τη σελίδα επισκευής — προσυμπλήρωση πεδίου τιμής */
   defaultTotalInclVat?: number;
+  /** Callback όταν κλείνει το modal μετά από επιτυχημένη υποβολή */
+  onSubmitSuccess?: () => void;
 }
 
 export function RepairRequestModal({
@@ -35,6 +37,7 @@ export function RepairRequestModal({
   onOpenChange,
   defaultDeviceName = "",
   defaultTotalInclVat,
+  onSubmitSuccess,
 }: RepairRequestModalProps) {
   const [submitted, setSubmitted] = useState(false);
   const [submittedRequestId, setSubmittedRequestId] = useState<number | null>(null);
@@ -104,9 +107,11 @@ export function RepairRequestModal({
 
   function handleClose(open: boolean) {
     if (!open) {
+      const wasSubmitted = submitted;
       setSubmitted(false);
       setSubmittedRequestId(null);
       setGdprConsent(false);
+      if (wasSubmitted) onSubmitSuccess?.();
       setGdprError(false);
       setServiceTermsConsent(false);
       setServiceTermsError(false);

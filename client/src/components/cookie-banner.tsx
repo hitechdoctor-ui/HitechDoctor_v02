@@ -4,6 +4,7 @@ import { Cookie, X, Settings2, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const COOKIE_KEY = "htd_cookie_consent";
+export const COOKIE_CONSENT_EVENT = "htd:cookie-consent";
 
 type ConsentState = "accepted" | "rejected" | "pending";
 
@@ -23,11 +24,13 @@ export function CookieBanner() {
   const accept = () => {
     localStorage.setItem(COOKIE_KEY, "accepted");
     setState("accepted");
+    window.dispatchEvent(new CustomEvent(COOKIE_CONSENT_EVENT, { detail: "accepted" }));
   };
 
   const reject = () => {
     localStorage.setItem(COOKIE_KEY, "rejected");
     setState("rejected");
+    window.dispatchEvent(new CustomEvent(COOKIE_CONSENT_EVENT, { detail: "rejected" }));
   };
 
   if (!mounted || state !== "pending") return null;
