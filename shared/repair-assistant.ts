@@ -1,8 +1,23 @@
 /** Parsing για AI repair chat — CTA blocks & lead extraction */
 
-export type RepairChatCta = { label: string; href: string };
+export type RepairChatCta = {
+  label: string;
+  href: string;
+  /** Άνοιγμα φόρμας αιτήματος επισκευής σε modal (ίδια σελίδα) */
+  action?: "repair_quote_modal";
+};
 
 const CTA_RE = /---CTA---\s*([\s\S]*?)\s*---END---/;
+
+/** Συμπύκνωση κενών/γραμμών ώστε το UI να μην «φουσκώνει» με κενά. */
+export function compactAssistantDisplayText(text: string): string {
+  return text
+    .replace(/\n{4,}/g, "\n\n")
+    .replace(/\n{3}/g, "\n\n")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/[ \t]+\n/g, "\n")
+    .trim();
+}
 
 /**
  * Αφαιρεί το μπλοκ CTA από το κείμενο προς εμφάνιση και επιστρέφει τα κουμπιά.
@@ -10,6 +25,7 @@ const CTA_RE = /---CTA---\s*([\s\S]*?)\s*---END---/;
 export function splitAssistantReply(raw: string): { displayText: string; ctas: RepairChatCta[] } {
   const m = raw.match(CTA_RE);
   let displayText = raw.replace(CTA_RE, "").trim();
+  displayText = compactAssistantDisplayText(displayText);
   const ctas: RepairChatCta[] = [];
   if (m) {
     try {
@@ -24,7 +40,15 @@ export function splitAssistantReply(raw: string): { displayText: string; ctas: R
             typeof (item as RepairChatCta).label === "string" &&
             typeof (item as RepairChatCta).href === "string"
           ) {
-            ctas.push({ label: (item as RepairChatCta).label.trim(), href: (item as RepairChatCta).href.trim() });
+            const row = item as RepairChatCta & { action?: string };
+            const cta: RepairChatCta = {
+              label: row.label.trim(),
+              href: row.href.trim(),
+            };
+            if (row.action === "repair_quote_modal") {
+              cta.action = "repair_quote_modal";
+            }
+            ctas.push(cta);
           }
         }
       }

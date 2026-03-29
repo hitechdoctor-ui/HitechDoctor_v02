@@ -37,7 +37,12 @@ import { resolveCheckStatus } from "./check-status";
 import { refreshCompetitorPrices } from "./price-compare";
 import { APIError } from "openai";
 import { getRepairCatalogPromptBlock, runRepairAssistantChat } from "./chat-assistant";
-import { splitAssistantReply, tryParseLeadFromText, guessDeviceModelFromMessages } from "@shared/repair-assistant";
+import {
+  compactAssistantDisplayText,
+  splitAssistantReply,
+  tryParseLeadFromText,
+  guessDeviceModelFromMessages,
+} from "@shared/repair-assistant";
 import { runSupplierSyncJob, syncJobs, newSyncJobId } from "./supplier-sync";
 
 const BCRYPT_ROUNDS = 12;
@@ -1281,6 +1286,8 @@ export async function registerRoutes(
           }
         }
       }
+
+      reply = compactAssistantDisplayText(reply);
 
       res.json({ reply, ctas, leadEmailSent });
     } catch (err) {

@@ -3,12 +3,12 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChatWindow } from "@/components/chat/ChatWindow";
-import { MessageCircle, X, Send, Loader2, Bot, ExternalLink } from "lucide-react";
+import { RepairRequestModal } from "@/components/repair-request-modal";
+import { MessageCircle, X, Send, Loader2, Bot, ArrowRight, Wrench } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { OPEN_REPAIR_CHAT_EVENT } from "@/lib/repair-chat-events";
-
-type RepairChatCta = { label: string; href: string };
+import { guessDeviceModelFromMessages, type RepairChatCta } from "@shared/repair-assistant";
 
 type Turn = { role: "user" | "assistant"; content: string; ctas?: RepairChatCta[] };
 
@@ -19,6 +19,26 @@ function normalizeCtaHref(href: string): string {
     return href.startsWith("http") ? href : `https://hitechdoctor.com${href.startsWith("/") ? href : `/${href}`}`;
   }
 }
+
+/** Ίδιο tab: μόνο path για SPA (χωρίς νέο παράθυρο). */
+function toAppPath(href: string): string {
+  const h = href.trim();
+  if (!h || h === "#") return "#";
+  if (h.startsWith("/")) return h;
+  try {
+    const u = new URL(h);
+    return u.pathname + u.search + u.hash;
+  } catch {
+    return h.startsWith("/") ? h : `/${h}`;
+  }
+}
+
+const ctaBtnClass = cn(
+  "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold",
+  "bg-gradient-to-r from-primary to-cyan-600 text-white shadow-md shadow-primary/25",
+  "border border-primary/40 hover:opacity-95 transition-opacity",
+  "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-card text-center"
+);
 
 const WELCOME =
   "Γεια σας! Είμαι ο HiTech Doctor. Περιγράψτε μου τι συμβαίνει με τη συσκευή σας (μάρκα, μοντέλο αν το ξέρετε, και το πρόβλημα) — θα σας κατευθύνω στην κατάλληλη επισκευή.";
@@ -31,6 +51,8 @@ export function RepairChatbot() {
   const [loading, setLoading] = useState(false);
   const [pageScrolled, setPageScrolled] = useState(false);
   const [serviceTermsAccepted, setServiceTermsAccepted] = useState(false);
+  const [repairFormOpen, setRepairFormOpen] = useState(false);
+  const [repairFormDeviceName, setRepairFormDeviceName] = useState("");
 
   useEffect(() => {
     const onScroll = () => setPageScrolled(window.scrollY > 32);
@@ -153,7 +175,7 @@ export function RepairChatbot() {
                 key={`${m.role}-${i}-${m.content.slice(0, 24)}`}
                 data-chat-message
                 className={cn(
-                  "rounded-xl px-3 py-2.5 text-sm leading-relaxed whitespace-pre-wrap break-words",
+                  "rounded-xl px-3 py-2.5 text-sm leading-snug whitespace-pre-wrap break-words [&_p]:my-1",
                   m.role === "user"
                     ? "ml-6 bg-primary/15 border border-primary/25 text-foreground"
                     : "mr-4 bg-muted/30 border border-white/8 text-foreground"
@@ -161,24 +183,37 @@ export function RepairChatbot() {
               >
                 {m.content}
                 {m.role === "assistant" && m.ctas && m.ctas.length > 0 && (
-                  <div className="mt-3 flex flex-col gap-2">
-                    {m.ctas.map((c, j) => (
-                      <a
-                        key={j}
-                        href={normalizeCtaHref(c.href)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={cn(
-                          "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold",
-                          "bg-gradient-to-r from-primary to-cyan-600 text-white shadow-md shadow-primary/25",
-                          "border border-primary/40 hover:opacity-95 transition-opacity",
-                          "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-card"
-                        )}
-                      >
-                        <ExternalLink className="w-4 h-4 shrink-0 opacity-90" aria-hidden />
-                        {c.label}
-                      </a>
-                    ))}
+                  <div className="mt-2 flex flex-col gap-1.5">
+                    {m.ctas.map((c, j) => {
+                      if (c.action === "repair_quote_modal") {
+                        return (
+                          <Button
+                            key={j}
+                            type="button"
+                            className={ctaBtnClass}
+                            onClick={() => {
+                              setRepairFormDeviceName(
+                                guessDeviceModelFromMessages(
+                                  messages.map((t) => ({ role: t.role, content: t.content }))
+                                )
+                              );
+                              setRepairFormOpen(true);
+                            }}
+                          >
+                            <Wrench className="w-4 h-4 shrink-0 opacity-90" aria-hidden />
+                            {c.label}
+                          </Button>
+                        );
+                      }
+                      const path = toAppPath(normalizeCtaHref(c.href));
+                      if (path === "#") return null;
+                      return (
+                        <Link key={j} href={path} className={ctaBtnClass}>
+                          <ArrowRight className="w-4 h-4 shrink-0 opacity-90" aria-hidden />
+                          {c.label}
+                        </Link>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -196,7 +231,7 @@ export function RepairChatbot() {
               />
               <span className="text-[11px] leading-snug text-muted-foreground">
                 <span className="text-primary font-semibold">*</span> Αποδέχομαι τους Όρους Service και την Εγγύηση 3 μηνών.{" "}
-                <Link href="/oroi-episkeuis" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">
+                <Link href="/oroi-episkeuis" className="text-primary hover:underline">
                   Όροι επισκευής
                 </Link>
               </span>
@@ -250,6 +285,12 @@ export function RepairChatbot() {
       >
         {open ? <X className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
       </Button>
+
+      <RepairRequestModal
+        open={repairFormOpen}
+        onOpenChange={setRepairFormOpen}
+        defaultDeviceName={repairFormDeviceName}
+      />
     </div>
   );
 }
