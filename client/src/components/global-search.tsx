@@ -7,225 +7,39 @@ import {
   ShoppingCart, Star, Monitor, Download, Sparkles, Truck,
 } from "lucide-react";
 import { type Product } from "@shared/schema";
-import { SAMSUNG_SERIES } from "@/data/samsung-devices";
-import { IPHONE_SERIES } from "@/data/iphone-devices";
-import { XIAOMI_SERIES } from "@/data/xiaomi-devices";
-import { HUAWEI_SERIES } from "@/data/huawei-devices";
-import { ONEPLUS_SERIES } from "@/data/oneplus-devices";
-import { LAPTOP_BRANDS } from "@/data/laptop-brands";
-import { TABLET_BRANDS } from "@/data/tablet-brands";
-import { DESKTOP_BRANDS } from "@/data/desktop-brands";
-import { APPLE_WATCH_MODELS } from "@/data/apple-watch-models";
-import { BLOG_POSTS } from "@/data/blog-posts";
+import {
+  buildGlobalSearchIndex,
+  GLOBAL_SEARCH_UI_CATEGORY_ORDER,
+  groupMatchedEntries,
+  matchProductsForGlobalSearch,
+  type GlobalSearchCategory,
+  type GlobalSearchIndexEntry,
+} from "@/lib/global-search-index";
 
-interface SearchEntry {
-  name: string;
-  href: string;
+const PLAIN_INDEX = buildGlobalSearchIndex();
+
+const ICON_BY_CATEGORY: Record<GlobalSearchCategory, typeof Wrench> = {
+  service: Wrench,
+  iphone: Smartphone,
+  samsung: Smartphone,
+  xiaomi: Smartphone,
+  huawei: Smartphone,
+  oneplus: Smartphone,
+  tablet: Tablet,
+  laptop: Laptop,
+  desktop: Monitor,
+  watch: Watch,
+  page: Info,
+  blog: FileText,
+};
+
+interface SearchEntry extends GlobalSearchIndexEntry {
   icon: React.ComponentType<{ className?: string }>;
-  sub: string;
-  category: "service" | "iphone" | "samsung" | "xiaomi" | "huawei" | "oneplus" | "tablet" | "laptop" | "desktop" | "watch" | "page" | "blog";
-  keywords?: string;
 }
 
-function buildIndex(): SearchEntry[] {
-  const entries: SearchEntry[] = [];
-
-  // ── Static service pages ────────────────────────────────────────────────
-  entries.push(
-    { name: "Επισκευή iPhone", href: "/services/episkeui-iphone", icon: Smartphone, sub: "Όλα τα μοντέλα iPhone", category: "service" },
-    { name: "IPSW Download", href: "/services/ipsw-download", icon: Download, sub: "Επίσημα firmware .ipsw για iPhone", category: "service", keywords: "ipsw firmware restore ios" },
-    { name: "IMEI Check", href: "/services/imei-check", icon: Smartphone, sub: "Έλεγχος IMEI — Model, iCloud, Warranty", category: "service", keywords: "imei check icloud" },
-    { name: "Αποστολή Συσκευής (BoxNow)", href: "/services/apostoli-syskevis", icon: Truck, sub: "Locker, στοιχεία & κωδικός αναφοράς", category: "service", keywords: "boxnow locker αποστολη δεμα courier" },
-    { name: "Expert Hub (Apple)", href: "/apple-service", icon: Sparkles, sub: "Firmware, εργαλεία IMEI, οδηγοί", category: "page", keywords: "apple hub expert support" },
-    { name: "Επισκευή Samsung Galaxy", href: "/services/episkeui-samsung", icon: Smartphone, sub: "A · S · Z Series", category: "service", keywords: "samsung galaxy" },
-    { name: "Επισκευή Xiaomi / Redmi / Poco", href: "/services/episkeui-xiaomi", icon: Smartphone, sub: "Redmi Note · Redmi · Xiaomi · Poco", category: "service", keywords: "xiaomi redmi poco" },
-    { name: "Επισκευή Huawei", href: "/services/episkeui-huawei", icon: Smartphone, sub: "P · Mate · Nova · Y Series", category: "service", keywords: "huawei p mate nova" },
-    { name: "Επισκευή OnePlus", href: "/services/episkeui-oneplus", icon: Smartphone, sub: "Flagship · Nord Series", category: "service", keywords: "oneplus nord" },
-    { name: "Επισκευή Κινητών", href: "/services/episkeui-kiniton", icon: Smartphone, sub: "iPhone · Samsung · Xiaomi", category: "service" },
-    { name: "Επισκευή Laptop", href: "/services", icon: Laptop, sub: "Υπηρεσία", category: "service" },
-    { name: "Επισκευή Tablet", href: "/services", icon: Tablet, sub: "Υπηρεσία", category: "service" },
-    { name: "Επισκευή PlayStation", href: "/services", icon: Gamepad2, sub: "Υπηρεσία", category: "service" },
-    { name: "Επισκευή Υπολογιστή", href: "/services", icon: Laptop, sub: "Υπηρεσία", category: "service" },
-    { name: "Επισκευή Apple Watch", href: "/services/episkeui-apple-watch", icon: Watch, sub: "Touch & Μπαταρία · Series 3-Ultra 2", category: "watch" },
-  );
-
-  // ── Static informational pages ──────────────────────────────────────────
-  entries.push(
-    { name: "Σχετικά με εμάς", href: "/about", icon: Info, sub: "Η ιστορία μας", category: "page" },
-    { name: "Επικοινωνία", href: "/contact", icon: Phone, sub: "Τηλέφωνο & Διεύθυνση", category: "page" },
-    { name: "Συχνές Ερωτήσεις (FAQ)", href: "/faq", icon: HelpCircle, sub: "Απαντήσεις σε ερωτήσεις", category: "page" },
-    { name: "eShop", href: "/eshop", icon: ShoppingCart, sub: "Αξεσουάρ · Κινητά · Laptops", category: "page" },
-    { name: "Blog — Συμβουλές & Οδηγοί", href: "/blog", icon: FileText, sub: "Άρθρα για κινητά & επισκευή", category: "page" },
-    { name: "Τρόποι Πληρωμής", href: "/payment-methods", icon: Star, sub: "Κάρτα · Μετρητά · Δόσεις", category: "page" },
-    { name: "Όροι Υπηρεσιών", href: "/oroi-episkeuis", icon: FileText, sub: "Πολιτική επισκευής", category: "page" },
-  );
-
-  // ── iPhone model pages (dynamic from data) ─────────────────────────────
-  for (const series of IPHONE_SERIES) {
-    for (const model of series.models) {
-      entries.push({
-        name: `Επισκευή ${model.name}`,
-        href: `/episkevi-iphone/${model.slug}`,
-        icon: Smartphone,
-        sub: `Οθόνη από €${model.screenTiers[2].price} · Μπαταρία από €${model.batteryTiers[2].price}`,
-        category: "iphone",
-        keywords: `iphone ${model.name.toLowerCase()} επισκευή αλλαγη οθονη μπαταρια`,
-      });
-    }
-  }
-
-  // ── Samsung model pages (dynamic from data) ────────────────────────────
-  for (const series of SAMSUNG_SERIES) {
-    for (const model of series.models) {
-      entries.push({
-        name: `Επισκευή ${model.name}`,
-        href: `/episkevi-samsung/${model.slug}`,
-        icon: Smartphone,
-        sub: model.screenPriceOEM
-          ? `Οθόνη από €${model.screenPriceOEM} · Μπαταρία €${model.batteryPrice}`
-          : `Οθόνη €${model.screenPrice} · Μπαταρία €${model.batteryPrice}`,
-        category: "samsung",
-        keywords: `samsung galaxy ${model.name.toLowerCase()} επισκευή αλλαγη οθονη μπαταρια`,
-      });
-    }
-  }
-
-  // ── Xiaomi model pages (dynamic from data) ────────────────────────────
-  for (const series of XIAOMI_SERIES) {
-    for (const model of series.models) {
-      entries.push({
-        name: `Επισκευή ${model.name}`,
-        href: `/episkevi-xiaomi/${model.slug}`,
-        icon: Smartphone,
-        sub: model.screenPriceOEM
-          ? `Οθόνη από €${model.screenPriceOEM} · Μπαταρία €${model.batteryPrice}`
-          : `Οθόνη €${model.screenPrice} · Μπαταρία €${model.batteryPrice}`,
-        category: "xiaomi",
-        keywords: `xiaomi redmi poco ${model.name.toLowerCase()} επισκευή αλλαγη οθονη μπαταρια`,
-      });
-    }
-  }
-
-  // ── Huawei model pages (dynamic from data) ────────────────────────────
-  for (const series of HUAWEI_SERIES) {
-    for (const model of series.models) {
-      entries.push({
-        name: `Επισκευή ${model.name}`,
-        href: `/episkevi-huawei/${model.slug}`,
-        icon: Smartphone,
-        sub: model.screenPriceOEM
-          ? `Οθόνη από €${model.screenPriceOEM} · Μπαταρία €${model.batteryPrice}`
-          : `Οθόνη €${model.screenPrice} · Μπαταρία €${model.batteryPrice}`,
-        category: "huawei",
-        keywords: `huawei ${model.name.toLowerCase()} επισκευή αλλαγη οθονη μπαταρια`,
-      });
-    }
-  }
-
-  // ── OnePlus model pages (dynamic from data) ───────────────────────────
-  for (const series of ONEPLUS_SERIES) {
-    for (const model of series.models) {
-      entries.push({
-        name: `Επισκευή ${model.name}`,
-        href: `/episkevi-oneplus/${model.slug}`,
-        icon: Smartphone,
-        sub: model.screenPriceOEM
-          ? `Οθόνη από €${model.screenPriceOEM} · Μπαταρία €${model.batteryPrice}`
-          : `Οθόνη €${model.screenPrice} · Μπαταρία €${model.batteryPrice}`,
-        category: "oneplus",
-        keywords: `oneplus ${model.name.toLowerCase()} επισκευή αλλαγη οθονη μπαταρια`,
-      });
-    }
-  }
-
-  // ── Tablet brands ─────────────────────────────────────────────────────
-  for (const brand of TABLET_BRANDS) {
-    entries.push({
-      name: `Επισκευή ${brand.name}`,
-      href: `/episkevi-tablet/${brand.slug}`,
-      icon: Tablet,
-      sub: `Tablet · ${brand.seriesLabel}`,
-      category: "tablet",
-      keywords: `tablet ${brand.name.toLowerCase()} επισκευη αλλαγη οθονη μπαταρια φορτιση`,
-    });
-  }
-  entries.push({
-    name: "Επισκευή Tablet — Όλες οι Μάρκες",
-    href: "/services/episkeui-tablet",
-    icon: Tablet,
-    sub: "Tablet · iPad, Samsung Tab, Lenovo, Huawei",
-    category: "tablet",
-    keywords: "tablet επισκευη ipad samsung tab lenovo huawei αλλαγη οθονη μπαταρια",
-  });
-
-  // ── Laptop brands ─────────────────────────────────────────────────────
-  for (const brand of LAPTOP_BRANDS) {
-    entries.push({
-      name: `Επισκευή ${brand.name}`,
-      href: `/episkevi-laptop/${brand.slug}`,
-      icon: Laptop,
-      sub: `Laptop · ${brand.seriesLabel}`,
-      category: "laptop",
-      keywords: `laptop ${brand.name.toLowerCase()} επισκευη αλλαγη οθονη μπαταρια πληκτρολογιο`,
-    });
-  }
-  entries.push({
-    name: "Επισκευή Laptop — Όλες οι Μάρκες",
-    href: "/services/episkeui-laptop",
-    icon: Laptop,
-    sub: "Laptop · MacBook, Dell, HP, Lenovo, ASUS, Acer",
-    category: "laptop",
-    keywords: "laptop επισκευη macbook dell hp lenovo asus acer αλλαγη οθονη μπαταρια πληκτρολογιο",
-  });
-
-  // ── Desktop brands ────────────────────────────────────────────────────
-  for (const brand of DESKTOP_BRANDS) {
-    entries.push({
-      name: `Επισκευή ${brand.name}`,
-      href: `/episkevi-desktop/${brand.slug}`,
-      icon: Monitor,
-      sub: `Desktop · ${brand.seriesLabel}`,
-      category: "desktop",
-      keywords: `desktop pc υπολογιστης ${brand.name.toLowerCase()} επισκευη αναβαθμιση ram ssd τροφοδοτικο windows`,
-    });
-  }
-  entries.push({
-    name: "Επισκευή Desktop — Όλες οι Κατηγορίες",
-    href: "/services/episkeui-desktop",
-    icon: Monitor,
-    sub: "Desktop · Dell, HP, Lenovo, iMac, Custom PC",
-    category: "desktop",
-    keywords: "desktop υπολογιστης επισκευη αναβαθμιση ram ssd psu τροφοδοτικο windows imac gaming pc",
-  });
-
-  // ── Apple Watch models ────────────────────────────────────────────────
-  for (const model of APPLE_WATCH_MODELS) {
-    entries.push({
-      name: `Επισκευή ${model.name}`,
-      href: "/services/episkeui-apple-watch",
-      icon: Watch,
-      sub: `Apple Watch · ${model.sizes} · Touch από €${model.touchPriceFrom} · Μπαταρία €${model.batteryPriceFrom}`,
-      category: "watch",
-      keywords: `apple watch ${model.name.toLowerCase()} επισκευη touch μπαταρια αλλαγη τζαμι`,
-    });
-  }
-
-  // ── Blog posts (dynamic from data) ────────────────────────────────────
-  for (const post of BLOG_POSTS) {
-    entries.push({
-      name: post.title,
-      href: `/blog/${post.slug}`,
-      icon: FileText,
-      sub: `Blog · ${post.category}`,
-      category: "blog",
-      keywords: post.title.toLowerCase(),
-    });
-  }
-
-  return entries;
+function withIcon(e: GlobalSearchIndexEntry): SearchEntry {
+  return { ...e, icon: ICON_BY_CATEGORY[e.category] };
 }
-
-const ALL_ENTRIES = buildIndex();
 
 function highlight(text: string, query: string) {
   if (!query.trim()) return <span>{text}</span>;
@@ -247,6 +61,10 @@ const CATEGORY_LABELS: Record<string, { label: string; icon: typeof Wrench }> = 
   xiaomi:  { label: "Επισκευή Xiaomi / Redmi / Poco", icon: Smartphone },
   huawei:  { label: "Επισκευή Huawei", icon: Smartphone },
   oneplus: { label: "Επισκευή OnePlus", icon: Smartphone },
+  tablet:  { label: "Επισκευή Tablet", icon: Tablet },
+  laptop:  { label: "Επισκευή Laptop", icon: Laptop },
+  desktop: { label: "Επισκευή Desktop", icon: Monitor },
+  watch:   { label: "Apple Watch", icon: Watch },
   page:    { label: "Σελίδες", icon: Info },
   blog:    { label: "Blog", icon: FileText },
 };
@@ -290,30 +108,17 @@ export function GlobalSearch({ className = "", placeholder = "Αναζήτηση
 
   const q = query.trim().toLowerCase();
 
-  const matchedProducts = useMemo(() =>
-    q.length >= 1
-      ? (products ?? []).filter(
-          (p) =>
-            p.name.toLowerCase().includes(q) ||
-            p.description.toLowerCase().includes(q) ||
-            p.slug?.toLowerCase().includes(q) ||
-            (p.subcategory ?? "").toLowerCase().includes(q) ||
-            p.category.toLowerCase().includes(q)
-        ).slice(0, 5)
-      : [],
-    [q, products]
+  const matchedProducts = useMemo(
+    () => (q.length >= 1 ? matchProductsForGlobalSearch(products ?? [], query) : []),
+    [q, query, products]
   );
 
   const matchedEntries = useMemo(() => {
     if (q.length < 1) return {};
+    const plain = groupMatchedEntries(PLAIN_INDEX, q, 4);
     const grouped: Record<string, SearchEntry[]> = {};
-    for (const entry of ALL_ENTRIES) {
-      const searchable = `${entry.name} ${entry.sub} ${entry.keywords ?? ""}`.toLowerCase();
-      if (!searchable.includes(q)) continue;
-      if (!grouped[entry.category]) grouped[entry.category] = [];
-      if (grouped[entry.category].length < 4) {
-        grouped[entry.category].push(entry);
-      }
+    for (const cat of Object.keys(plain)) {
+      grouped[cat] = plain[cat].map(withIcon);
     }
     return grouped;
   }, [q]);
@@ -327,7 +132,7 @@ export function GlobalSearch({ className = "", placeholder = "Αναζήτηση
     navigate(href);
   }
 
-  const categoryOrder: (keyof typeof CATEGORY_LABELS)[] = ["service", "iphone", "samsung", "page", "blog"];
+  const categoryOrder = GLOBAL_SEARCH_UI_CATEGORY_ORDER;
 
   return (
     <div ref={containerRef} className={`relative ${className}`}>
