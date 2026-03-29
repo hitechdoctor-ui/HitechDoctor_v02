@@ -7,7 +7,7 @@ export function SosButton() {
       aria-label="Επείγον - Καλέστε μας στο 6981882005"
       data-testid="button-sos"
       title="Επείγον — Καλέστε μας"
-      className="fixed right-4 bottom-6 z-[155] w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform duration-200 hover:scale-110 active:scale-95 group"
+      className="pointer-events-auto relative z-[155] shrink-0 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform duration-200 hover:scale-110 active:scale-95 group"
       style={{
         background: "linear-gradient(135deg, #dc2626, #b91c1c)",
         boxShadow: "0 4px 20px rgba(220,38,38,0.5)",

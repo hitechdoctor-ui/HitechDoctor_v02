@@ -31,8 +31,6 @@ import {
 import { Link } from "wouter";
 import { BLOG_POSTS, formatBlogDate } from "@/data/blog-posts";
 import { SpecialOffers } from "@/components/special-offers";
-import { RepairChatbot } from "@/components/repair-chatbot";
-
 const homeServices = [
   { icon: Smartphone, title: "Επισκευή Κινητών", href: "/services/episkeui-kiniton" },
   { icon: Tablet, title: "Επισκευή Tablet", href: "/services#episkeui-tablet" },
@@ -383,7 +381,6 @@ export default function Home() {
 
         <ReviewsSection />
       </main>
-      <RepairChatbot />
       <Footer />
     </div>
   );

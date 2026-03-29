@@ -104,12 +104,17 @@ export default {
           "0%": { backgroundPosition: "0% 50%" },
           "100%": { backgroundPosition: "200% 50%" },
         },
+        "fab-bounce": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-7px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "offer-ring": "offer-ring 2.4s ease-in-out infinite",
         "offer-shimmer": "offer-shimmer 4s linear infinite",
+        "fab-bounce": "fab-bounce 1.75s ease-in-out infinite",
       },
     },
   },

@@ -20,6 +20,7 @@ import {
   sendWebsiteInquiryClientEmail,
   sendProductOfferInterestEmail,
   sendBoxnowDropoffEmail,
+  sendRepairChatLeadEmail,
 } from "./email";
 import { runImeiLookup } from "./imei-lookup";
 import { fetchHubSpotContacts } from "./hubspot";
@@ -28,6 +29,7 @@ import { sendOrderStatusEmail } from "./nodemailer-mail";
 import { resolveCheckStatus } from "./check-status";
 import { refreshCompetitorPrices } from "./price-compare";
 import { getRepairCatalogPromptBlock, runRepairAssistantChat } from "./chat-repair";
+import { splitAssistantReply, tryParseLeadFromText, guessDeviceModelFromMessages } from "@shared/repair-assistant";
 
 const BCRYPT_ROUNDS = 12;
 
@@ -867,8 +869,38 @@ export async function registerRoutes(
       });
       const { messages } = schema.parse(req.body);
       const catalogBlock = await getRepairCatalogPromptBlock();
-      const reply = await runRepairAssistantChat(messages, catalogBlock);
-      res.json({ reply });
+      const rawReply = await runRepairAssistantChat(messages, catalogBlock);
+      const { displayText, ctas } = splitAssistantReply(rawReply);
+
+      let reply = displayText;
+      let leadEmailSent = false;
+      const last = messages[messages.length - 1];
+      if (last?.role === "user") {
+        const lead = tryParseLeadFromText(last.content);
+        if (lead) {
+          const deviceModel = guessDeviceModelFromMessages(messages);
+          const transcriptSnippet = messages
+            .slice(-8)
+            .map((m) => `${m.role}: ${m.content}`)
+            .join("\n\n");
+          await sendRepairChatLeadEmail({
+            name: lead.name,
+            phone: lead.phone,
+            email: lead.email,
+            deviceModel,
+            transcriptSnippet,
+          });
+          await storage.upsertCustomerByEmail(lead.name, lead.email, lead.phone).catch(() => {});
+          leadEmailSent = true;
+          const alreadyAck = /έλαβα|ευχαριστ|στοιχεία|θα σας καλέσ/i.test(reply);
+          if (!alreadyAck) {
+            reply +=
+              "\n\n✅ Έλαβα τα στοιχεία σας — θα σας καλέσει τεχνικός μας σύντομα για ακριβή προσφορά και χρόνο επισκευής.";
+          }
+        }
+      }
+
+      res.json({ reply, ctas, leadEmailSent });
     } catch (err) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: err.errors[0].message });

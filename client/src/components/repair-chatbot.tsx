@@ -2,11 +2,21 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageCircle, X, Send, Loader2, Bot } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, Bot, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-type Turn = { role: "user" | "assistant"; content: string };
+type RepairChatCta = { label: string; href: string };
+
+type Turn = { role: "user" | "assistant"; content: string; ctas?: RepairChatCta[] };
+
+function normalizeCtaHref(href: string): string {
+  try {
+    return new URL(href.trim(), "https://hitechdoctor.com").href;
+  } catch {
+    return href.startsWith("http") ? href : `https://hitechdoctor.com${href.startsWith("/") ? href : `/${href}`}`;
+  }
+}
 
 const WELCOME =
   "Γεια σας! Είμαι ο HiTech Doctor. Περιγράψτε μου τι συμβαίνει με τη συσκευή σας (μάρκα, μοντέλο αν το ξέρετε, και το πρόβλημα) — θα σας κατευθύνω στην κατάλληλη επισκευή.";
@@ -18,10 +28,18 @@ export function RepairChatbot() {
   const [messages, setMessages] = useState<Turn[]>([]);
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const [pageScrolled, setPageScrolled] = useState(false);
 
   useEffect(() => {
     if (open) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, open, loading]);
+
+  useEffect(() => {
+    const onScroll = () => setPageScrolled(window.scrollY > 32);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const send = useCallback(async () => {
     const text = input.trim();
@@ -36,7 +54,12 @@ export function RepairChatbot() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: next }),
       });
-      const data = (await res.json().catch(() => ({}))) as { reply?: string; message?: string };
+      const data = (await res.json().catch(() => ({}))) as {
+        reply?: string;
+        message?: string;
+        ctas?: RepairChatCta[];
+        leadEmailSent?: boolean;
+      };
       if (!res.ok) {
         toast({
           variant: "destructive",
@@ -47,8 +70,17 @@ export function RepairChatbot() {
         setInput(text);
         return;
       }
+      if (data.leadEmailSent) {
+        toast({
+          title: "Τα στοιχεία στάλθηκαν",
+          description: "Θα επικοινωνήσει μαζί σας τεχνικός μας σύντομα.",
+        });
+      }
       if (data.reply) {
-        setMessages([...next, { role: "assistant", content: data.reply }]);
+        setMessages([
+          ...next,
+          { role: "assistant", content: data.reply, ctas: data.ctas?.length ? data.ctas : undefined },
+        ]);
       }
     } catch {
       toast({ variant: "destructive", title: "Σφάλμα δικτύου", description: "Ελέγξτε τη σύνδεσή σας." });
@@ -60,7 +92,7 @@ export function RepairChatbot() {
   }, [input, loading, messages, toast]);
 
   return (
-    <div className="fixed z-[100] bottom-4 right-4 sm:bottom-6 sm:right-6 flex flex-col items-end gap-2 pointer-events-none">
+    <div className="relative z-[158] flex flex-col items-end gap-2 pointer-events-none shrink-0">
       {open && (
         <div
           className="pointer-events-auto w-[min(100vw-2rem,400px)] rounded-2xl border border-primary/20 bg-card/95 backdrop-blur-md shadow-[0_8px_40px_rgba(0,0,0,0.45)] flex flex-col overflow-hidden max-h-[min(70vh,560px)]"
@@ -107,6 +139,27 @@ export function RepairChatbot() {
                   )}
                 >
                   {m.content}
+                  {m.role === "assistant" && m.ctas && m.ctas.length > 0 && (
+                    <div className="mt-3 flex flex-col gap-2">
+                      {m.ctas.map((c, j) => (
+                        <a
+                          key={j}
+                          href={normalizeCtaHref(c.href)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={cn(
+                            "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold",
+                            "bg-gradient-to-r from-primary to-cyan-600 text-white shadow-md shadow-primary/25",
+                            "border border-primary/40 hover:opacity-95 transition-opacity",
+                            "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-card"
+                          )}
+                        >
+                          <ExternalLink className="w-4 h-4 shrink-0 opacity-90" aria-hidden />
+                          {c.label}
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
               {loading && (
@@ -153,15 +206,19 @@ export function RepairChatbot() {
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          "pointer-events-auto h-14 w-14 rounded-full shadow-lg border border-primary/30",
-          "bg-gradient-to-br from-primary to-cyan-600 hover:opacity-95 text-white",
-          open && "ring-2 ring-primary/50"
+          "pointer-events-auto h-12 w-12 rounded-full shadow-lg border transition-colors duration-300",
+          pageScrolled
+            ? "border-amber-400/70 bg-gradient-to-br from-amber-400 to-yellow-500 text-neutral-900 hover:opacity-95 shadow-amber-500/35"
+            : "border-primary/30 bg-gradient-to-br from-primary to-cyan-600 text-white hover:opacity-95 shadow-primary/25",
+          !open && "motion-safe:animate-fab-bounce",
+          open && "motion-reduce:animate-none animate-none",
+          open && (pageScrolled ? "ring-2 ring-amber-400/60" : "ring-2 ring-primary/50")
         )}
         aria-expanded={open}
         aria-label={open ? "Κλείσιμο συνομιλίας" : "Άνοιγμα συνομιλίας HiTech Doctor"}
         data-testid="button-repair-chat-toggle"
       >
-        {open ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
+        {open ? <X className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
       </Button>
     </div>
   );

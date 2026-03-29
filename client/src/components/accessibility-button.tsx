@@ -101,7 +101,7 @@ export function AccessibilityButton() {
   };
 
   return (
-    <Fragment>
+    <div className="relative pointer-events-auto z-[160] shrink-0">
       {/* Accessibility CSS */}
       <style>{`
         .a11y-contrast { filter: contrast(180%) !important; }
@@ -116,19 +116,20 @@ export function AccessibilityButton() {
 
       {/* Floating button */}
       <button
+        type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label="Επιλογές Προσβασιμότητας"
         data-testid="btn-accessibility"
-        className="fixed right-4 bottom-20 z-[160] w-11 h-11 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+        className="relative z-[1] w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
       >
         <Accessibility className="w-5 h-5" />
       </button>
 
-      {/* Panel */}
+      {/* Panel — αριστερά του κουμπιού ώστε να μην καλύπτει το AI */}
       {open && (
         <Fragment>
           <div className="fixed inset-0 z-[161]" onClick={() => setOpen(false)} />
-          <div className="fixed right-16 bottom-6 z-[162] w-72 bg-card border border-white/15 rounded-2xl shadow-2xl overflow-hidden">
+          <div className="absolute right-full mr-3 bottom-0 z-[162] w-[min(18rem,calc(100vw-5rem))] max-h-[min(70vh,32rem)] bg-card border border-white/15 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-white/8 bg-white/3">
               <div className="flex items-center gap-2">
@@ -141,7 +142,7 @@ export function AccessibilityButton() {
               </div>
             </div>
 
-            <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+            <div className="p-4 space-y-4 flex-1 min-h-0 overflow-y-auto">
               {/* Text */}
               <div>
                 <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-2 flex items-center gap-1.5"><Type className="w-3 h-3" />Κείμενο</p>
@@ -226,6 +227,6 @@ export function AccessibilityButton() {
           </div>
         </Fragment>
       )}
-    </Fragment>
+    </div>
   );
 }

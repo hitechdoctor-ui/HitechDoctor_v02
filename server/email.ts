@@ -243,6 +243,63 @@ export async function sendSubscriptionRenewalEmail(sub: Subscription, daysLeft: 
   }
 }
 
+export async function sendRepairChatLeadEmail(params: {
+  name: string;
+  phone: string;
+  email: string;
+  deviceModel: string;
+  transcriptSnippet: string;
+}): Promise<void> {
+  const resend = getClient();
+  if (!resend) {
+    console.log("[email] RESEND_API_KEY not set — skipping repair chat lead email");
+    return;
+  }
+  const subject = `Νέο Lead από AI Chatbot - ${params.deviceModel}`;
+  const name = escHtml(params.name);
+  const phone = escHtml(params.phone);
+  const email = escHtml(params.email);
+  const dm = escHtml(params.deviceModel);
+  const snippet = escHtml(params.transcriptSnippet.slice(0, 8000));
+  const telHref = escHtml(params.phone.replace(/\s/g, ""));
+  const html = `<!DOCTYPE html>
+<html lang="el"><head><meta charset="UTF-8"><title>${escHtml(subject)}</title></head>
+<body style="margin:0;padding:0;background:#0d1117;font-family:Arial,Helvetica,sans-serif;color:#e0e0e0;">
+  <div style="max-width:560px;margin:0 auto;padding:20px;">
+    <div style="background:linear-gradient(135deg,#050C19,#0a1628);border:1px solid rgba(0,210,200,0.15);border-radius:16px;padding:28px 32px;margin-bottom:16px;text-align:center;">
+      <div style="font-size:28px;font-weight:900;margin-bottom:4px;"><span style="color:#00D2C8;">HiTech</span><span style="color:#fff;">Doctor</span></div>
+      <div style="font-size:12px;color:#666;">Νέο lead — AI Chatbot επισκευών</div>
+    </div>
+    <div style="background:#0a1628;border:1px solid rgba(0,210,200,0.1);border-radius:16px;padding:28px 32px;">
+      <h1 style="margin:0 0 16px 0;font-size:18px;font-weight:800;color:#fff;">Κλήση τεχνικού — στοιχεία πελάτη</h1>
+      <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">
+        <tr><td style="padding:8px 0;color:#888;width:36%;">Μοντέλο (εκτίμηση)</td><td style="padding:8px 0;color:#fff;font-weight:600;">${dm}</td></tr>
+        <tr><td style="padding:8px 0;color:#888;">Όνομα</td><td style="padding:8px 0;color:#fff;">${name}</td></tr>
+        <tr><td style="padding:8px 0;color:#888;">Τηλέφωνο</td><td style="padding:8px 0;"><a href="tel:${telHref}" style="color:#00D2C8;font-weight:700;text-decoration:none;">${phone}</a></td></tr>
+        <tr><td style="padding:8px 0;color:#888;">Email</td><td style="padding:8px 0;"><a href="mailto:${encodeURIComponent(params.email)}" style="color:#00D2C8;text-decoration:none;">${email}</a></td></tr>
+      </table>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.08);">
+        <p style="margin:0 0 8px 0;font-size:11px;color:#888;text-transform:uppercase;">Πρόσφατο απόσπασμα συνομιλίας</p>
+        <pre style="margin:0;font-size:12px;color:#ccc;white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,monospace;">${snippet}</pre>
+      </div>
+    </div>
+  </div>
+</body></html>`;
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: [ADMIN_EMAIL],
+      replyTo: params.email,
+      subject,
+      html,
+    });
+    if (error) console.error("[email] Repair chat lead error:", error);
+    else console.log(`[email] Repair chat lead sent (${params.deviceModel})`);
+  } catch (err) {
+    console.error("[email] Failed to send repair chat lead:", err);
+  }
+}
+
 export async function sendProductOfferInterestEmail(row: ProductOfferInterest): Promise<void> {
   const resend = getClient();
   if (!resend) {

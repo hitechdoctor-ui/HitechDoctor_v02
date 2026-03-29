@@ -10,9 +10,8 @@ import { HelmetProvider } from "react-helmet-async";
 // Global UI Components (always needed — keep eager)
 import { ScrollProgressBar } from "@/components/scroll-progress-bar";
 import { CookieBanner } from "@/components/cookie-banner";
-import { AccessibilityButton } from "@/components/accessibility-button";
 import { ExitIntentPopup } from "@/components/exit-intent-popup";
-import { SosButton } from "@/components/sos-button";
+import { FloatingActionStack } from "@/components/floating-action-stack";
 
 // Public Pages — lazy loaded (reload on stale chunk after deploy — see lazy-with-reload.ts)
 const Home = lazyWithReload(() => import("./pages/home"));
@@ -141,9 +140,8 @@ function GlobalComponents() {
     <Fragment>
       <ScrollProgressBar />
       <CookieBanner />
-      <AccessibilityButton />
       <ExitIntentPopup />
-      <SosButton />
+      <FloatingActionStack />
     </Fragment>
   );
 }
