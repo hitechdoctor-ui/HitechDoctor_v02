@@ -1,3 +1,4 @@
+import "dotenv/config";
 import OpenAI from "openai";
 import { storage } from "./storage";
 import { formatProductsForRepairCatalog, REPAIR_STATIC_CATALOG_TEXT, SITE_BASE } from "@shared/repair-catalog";

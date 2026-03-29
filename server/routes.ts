@@ -35,6 +35,7 @@ import bcrypt from "bcrypt";
 import { sendOrderStatusEmail } from "./nodemailer-mail";
 import { resolveCheckStatus } from "./check-status";
 import { refreshCompetitorPrices } from "./price-compare";
+import { APIError } from "openai";
 import { getRepairCatalogPromptBlock, runRepairAssistantChat } from "./chat-repair";
 import { splitAssistantReply, tryParseLeadFromText, guessDeviceModelFromMessages } from "@shared/repair-assistant";
 import { runSupplierSyncJob, syncJobs, newSyncJobId } from "./supplier-sync";
@@ -1199,6 +1200,23 @@ export async function registerRoutes(
       }
       if (err instanceof Error && err.message === "OPENAI_API_KEY_MISSING") {
         return res.status(503).json({ message: "Η υπηρεσία δεν είναι διαθέσιμη προσωρινά." });
+      }
+      if (err instanceof Error && err.message === "EMPTY_COMPLETION") {
+        console.error("[chat/repair-assistant] empty completion");
+        return res.status(503).json({ message: "Η υπηρεσία δεν απάντησε. Δοκιμάστε ξανά." });
+      }
+      if (err instanceof APIError) {
+        console.error("[chat/repair-assistant] OpenAI", err.status, err.message);
+        if (err.status === 401 || err.status === 403) {
+          return res.status(503).json({ message: "Η υπηρεσία AI δεν είναι ρυθμισμένη σωστά (κλειδί API)." });
+        }
+        if (err.status === 429) {
+          return res.status(429).json({ message: "Πολλά αιτήματα. Δοκιμάστε ξανά σε λίγα λεπτά." });
+        }
+        if (err.status === 404) {
+          return res.status(503).json({ message: "Το μοντέλο AI δεν είναι διαθέσιμο. Ελέγξτε OPENAI_API_MODEL." });
+        }
+        return res.status(500).json({ message: "Σφάλμα συνομιλίας" });
       }
       console.error("[chat/repair-assistant]", err);
       res.status(500).json({ message: "Σφάλμα συνομιλίας" });
