@@ -999,9 +999,83 @@ export async function registerRoutes(
       const user = await storage.getAdminByEmail(payload.email);
       if (!user) return res.status(401).json({ message: "Unauthorized" });
       if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
-      res.json(await storage.getRepairPriceOverrides());
+      res.json(await storage.getAllRepairPriceOverrides());
     } catch {
       res.status(401).json({ message: "Unauthorized" });
+    }
+  });
+
+  const repairPriceOverridePatchSchema = z
+    .object({
+      price: z.string().min(1).optional(),
+      purchaseCost: z.union([z.string(), z.null()]).optional(),
+      externalSku: z.union([z.string().max(512), z.null()]).optional(),
+    })
+    .refine((v) => v.price !== undefined || v.purchaseCost !== undefined || v.externalSku !== undefined, {
+      message: "Τουλάχιστον ένα πεδίο προς ενημέρωση",
+    });
+
+  app.patch("/api/admin/repair-price-overrides/:id", async (req, res) => {
+    const auth = req.headers.authorization || "";
+    const token = auth.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const decoded = Buffer.from(token, "base64").toString("utf8");
+      const payload = JSON.parse(decoded);
+      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
+      const user = await storage.getAdminByEmail(payload.email);
+      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const id = z.coerce.number().int().positive().parse(req.params.id);
+      const body = repairPriceOverridePatchSchema.parse(req.body);
+      const patch: {
+        price?: string;
+        purchaseCost?: string | null;
+        externalSku?: string | null;
+      } = {};
+      if (body.price !== undefined) patch.price = body.price;
+      if (body.purchaseCost !== undefined) patch.purchaseCost = body.purchaseCost;
+      if (body.externalSku !== undefined) {
+        const s = body.externalSku;
+        patch.externalSku = s === null || s.trim() === "" ? null : s.trim();
+      }
+      const row = await storage.updateRepairPriceOverrideById(id, patch);
+      if (!row) return res.status(404).json({ message: "Δεν βρέθηκε η εγγραφή" });
+      res.json(row);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0]?.message ?? "Μη έγκυρα δεδομένα" });
+      }
+      const pg = err as { code?: string };
+      if (pg.code === "23505") {
+        return res.status(409).json({ message: "Το external SKU υπάρχει ήδη σε άλλη εγγραφή." });
+      }
+      console.error("[admin/repair-price-overrides PATCH]", err);
+      res.status(500).json({ message: "Σφάλμα" });
+    }
+  });
+
+  app.delete("/api/admin/repair-price-overrides/:id", async (req, res) => {
+    const auth = req.headers.authorization || "";
+    const token = auth.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const decoded = Buffer.from(token, "base64").toString("utf8");
+      const payload = JSON.parse(decoded);
+      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
+      const user = await storage.getAdminByEmail(payload.email);
+      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const id = z.coerce.number().int().positive().parse(req.params.id);
+      const ok = await storage.deleteRepairPriceOverride(id);
+      if (!ok) return res.status(404).json({ message: "Δεν βρέθηκε η εγγραφή" });
+      res.status(204).send();
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0]?.message ?? "Μη έγκυρο id" });
+      }
+      console.error("[admin/repair-price-overrides DELETE]", err);
+      res.status(500).json({ message: "Σφάλμα" });
     }
   });
 
@@ -1076,6 +1150,27 @@ export async function registerRoutes(
       res.json(result);
     } catch (err) {
       console.error("[sync-fixmobile-pdf]", err);
+      res.status(500).json({ message: err instanceof Error ? err.message : "Σφάλμα" });
+    }
+  });
+
+  /** Πλήθος εγγραφών repair_price_overrides ανά service_key (πρόοδος αντιστοίχισης επισκευών) */
+  app.get("/api/admin/repair-price-override-stats", async (req, res) => {
+    const auth = req.headers.authorization || "";
+    const token = auth.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+    try {
+      const decoded = Buffer.from(token, "base64").toString("utf8");
+      const payload = JSON.parse(decoded);
+      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
+      const user = await storage.getAdminByEmail(payload.email);
+      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const stats = await storage.getRepairPriceOverrideStats();
+      console.log("[repair-price-override-stats]", JSON.stringify(stats));
+      res.json(stats);
+    } catch (err) {
+      console.error("[repair-price-override-stats]", err);
       res.status(500).json({ message: err instanceof Error ? err.message : "Σφάλμα" });
     }
   });

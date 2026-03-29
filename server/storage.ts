@@ -169,6 +169,16 @@ export interface IStorage {
   /** Όλες οι εγγραφές (για δημόσιο API τιμών επισκευής). */
   getAllRepairPriceOverrides(): Promise<RepairPriceOverride[]>;
   upsertRepairPriceOverride(data: InsertRepairPriceOverride): Promise<RepairPriceOverride>;
+  /** Πλήθος εγγραφών στον πίνακα repair_price_overrides ανά service_key (+ σύνολο). */
+  getRepairPriceOverrideStats(): Promise<{
+    total: number;
+    byServiceKey: { serviceKey: string; count: number }[];
+  }>;
+  updateRepairPriceOverrideById(
+    id: number,
+    patch: { price?: string; purchaseCost?: string | null; externalSku?: string | null }
+  ): Promise<RepairPriceOverride | undefined>;
+  deleteRepairPriceOverride(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -778,6 +788,56 @@ export class DatabaseStorage implements IStorage {
 
   async getAllRepairPriceOverrides(): Promise<RepairPriceOverride[]> {
     return await db.select().from(repairPriceOverrides).orderBy(desc(repairPriceOverrides.updatedAt));
+  }
+
+  async updateRepairPriceOverrideById(
+    id: number,
+    patch: { price?: string; purchaseCost?: string | null; externalSku?: string | null }
+  ): Promise<RepairPriceOverride | undefined> {
+    const [existing] = await db.select().from(repairPriceOverrides).where(eq(repairPriceOverrides.id, id)).limit(1);
+    if (!existing) return undefined;
+    const [row] = await db
+      .update(repairPriceOverrides)
+      .set({
+        ...(patch.price !== undefined ? { price: patch.price } : {}),
+        ...(patch.purchaseCost !== undefined ? { purchaseCost: patch.purchaseCost } : {}),
+        ...(patch.externalSku !== undefined ? { externalSku: patch.externalSku } : {}),
+        updatedAt: new Date(),
+      })
+      .where(eq(repairPriceOverrides.id, id))
+      .returning();
+    return row;
+  }
+
+  async deleteRepairPriceOverride(id: number): Promise<boolean> {
+    const r = await db.delete(repairPriceOverrides).where(eq(repairPriceOverrides.id, id)).returning({ id: repairPriceOverrides.id });
+    return r.length > 0;
+  }
+
+  async getRepairPriceOverrideStats(): Promise<{
+    total: number;
+    byServiceKey: { serviceKey: string; count: number }[];
+  }> {
+    const byServiceKeyRows = await db
+      .select({
+        serviceKey: repairPriceOverrides.serviceKey,
+        count: sql<number>`cast(count(*) as integer)`,
+      })
+      .from(repairPriceOverrides)
+      .groupBy(repairPriceOverrides.serviceKey)
+      .orderBy(repairPriceOverrides.serviceKey);
+
+    const [totalRow] = await db
+      .select({ c: sql<number>`cast(count(*) as integer)` })
+      .from(repairPriceOverrides);
+
+    return {
+      total: totalRow?.c ?? 0,
+      byServiceKey: byServiceKeyRows.map((r) => ({
+        serviceKey: r.serviceKey,
+        count: r.count,
+      })),
+    };
   }
 
   async upsertRepairPriceOverride(data: InsertRepairPriceOverride): Promise<RepairPriceOverride> {

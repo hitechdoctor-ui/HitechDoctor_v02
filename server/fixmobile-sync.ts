@@ -86,6 +86,17 @@ export type FixmobilePdfSyncResult = {
   upserted: number;
   unmatched: string[];
   errors: string[];
+  /** Σύνολο γραμμών τιμής που εξήχθησαν από τα δύο PDF */
+  totalPdfRows: number;
+  /** Σύνολο γραμμών PDF που ταιριάξαν με τον κατάλογο μοντέλων */
+  totalMatched: number;
+  /** Τα 5 πρώτα PDF κείμενα χωρίς αντιστοιχία (για διόρθωση ονομάτων) */
+  unmatchedSample: string[];
+  /** Κατάσταση πίνακα repair_price_overrides μετά το sync */
+  repairOverrideStats: {
+    total: number;
+    byServiceKey: { serviceKey: string; count: number }[];
+  };
 };
 
 const DEFAULT_WORK = 60;
@@ -93,6 +104,45 @@ const DEFAULT_VAT = 24;
 
 function netToSellingGross(netPartPrice: number): number {
   return computeSellingPrice(netPartPrice, DEFAULT_WORK, DEFAULT_VAT);
+}
+
+/**
+ * Εκτυπώνει στο console πίνακα στατιστικών μετά το συγχρονισμό PDF.
+ */
+export function logFixmobileSyncSummaryReport(
+  result: FixmobilePdfSyncResult,
+  options?: { repairOverrideStats?: FixmobilePdfSyncResult["repairOverrideStats"] }
+): void {
+  const stats = options?.repairOverrideStats ?? result.repairOverrideStats;
+  const sep = "────────────────────────────────────────────────────────────";
+
+  console.log("");
+  console.log(sep);
+  console.log("[fixmobile-sync] SUMMARY REPORT");
+  console.log(sep);
+  console.log("Από PDF");
+  console.log(`  Σύνολο γραμμών (προϊόντα/τιμές που βρέθηκαν):     ${result.totalPdfRows}`);
+  console.log(`  Επιτυχείς αντιστοιχίσεις (matching success):       ${result.totalMatched}`);
+  console.log(`    • Οθόνες (screen_standard):                      ${result.screensMatched}`);
+  console.log(`    • Μπαταρίες (battery_standard):                   ${result.batteriesMatched}`);
+  console.log(`  Μοναδικά SKU που upsert-άρτηκαν στη βάση:         ${result.upserted}`);
+  console.log("");
+  console.log("Πρώτα 5 κείμενα από PDF χωρίς αντιστοιχία SKU:");
+  if (result.unmatchedSample.length === 0) {
+    console.log("  (κανένα — όλες οι γραμμές ταιριάξαν ή δεν υπήρχαν αποτυχίες)");
+  } else {
+    result.unmatchedSample.forEach((s, i) => {
+      console.log(`  ${i + 1}. ${s}`);
+    });
+  }
+  console.log("");
+  console.log("repair_price_overrides — τρέχουσα κατάσταση DB (μετά το sync)");
+  console.log(`  Σύνολο εγγραφών:                                  ${stats.total}`);
+  for (const { serviceKey, count } of stats.byServiceKey) {
+    console.log(`    • ${serviceKey}: ${count}`);
+  }
+  console.log(sep);
+  console.log("");
 }
 
 /**
@@ -136,8 +186,14 @@ export async function runFixmobilePdfSyncFromDisk(): Promise<FixmobilePdfSyncRes
 
     const seen = new Map<string, InsertRepairPriceOverride>();
 
+    const srcTag = serviceKey === "screen_standard" ? "screens" : "batteries";
+    const logLabel = `fixmobile:${srcTag}`;
+
     for (const { model, netPrice } of rows) {
-      const hit = matchPdfModelToCatalog(model, catalog);
+      const hit = matchPdfModelToCatalog(model, catalog, {
+        serviceKey,
+        logLabel,
+      });
       if (!hit) {
         unmatched.push(`${serviceKey === "screen_standard" ? "[Οθόνη]" : "[Μπαταρία]"} ${model}`);
         continue;
@@ -147,7 +203,8 @@ export async function runFixmobilePdfSyncFromDisk(): Promise<FixmobilePdfSyncRes
       else batteriesMatched++;
 
       const gross = netToSellingGross(netPrice);
-      const sku = `fixmobile-pdf-${serviceKey}-${hit.brand}-${hit.modelSlug}`;
+      const sku = `${serviceKey}-${hit.brand}-${hit.modelSlug}`;
+      console.log(`[${logLabel}] → externalSku=${sku} modelId=${hit.modelSlug} netPurchase=${netPrice}`);
 
       seen.set(`${hit.brand}|${hit.modelSlug}|${serviceKey}`, {
         brand: hit.brand,
@@ -173,7 +230,21 @@ export async function runFixmobilePdfSyncFromDisk(): Promise<FixmobilePdfSyncRes
   await processFile(FIXMOBILE_SCREEN_PDF, "screen_standard");
   await processFile(FIXMOBILE_BATTERY_PDF, "battery_standard");
 
-  return {
+  const totalPdfRows = screensParsed + batteriesParsed;
+  const totalMatched = screensMatched + batteriesMatched;
+  const unmatchedSample = unmatched.slice(0, 5);
+
+  let repairOverrideStats: FixmobilePdfSyncResult["repairOverrideStats"] = {
+    total: 0,
+    byServiceKey: [],
+  };
+  try {
+    repairOverrideStats = await storage.getRepairPriceOverrideStats();
+  } catch (e) {
+    errors.push(`repair_price_overrides stats: ${e instanceof Error ? e.message : String(e)}`);
+  }
+
+  const result: FixmobilePdfSyncResult = {
     screensParsed,
     batteriesParsed,
     screensMatched,
@@ -181,5 +252,13 @@ export async function runFixmobilePdfSyncFromDisk(): Promise<FixmobilePdfSyncRes
     upserted,
     unmatched: unmatched.slice(0, 200),
     errors,
+    totalPdfRows,
+    totalMatched,
+    unmatchedSample,
+    repairOverrideStats,
   };
+
+  logFixmobileSyncSummaryReport(result);
+
+  return result;
 }

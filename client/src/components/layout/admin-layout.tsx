@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import type { LucideIcon } from "lucide-react";
-import { Package, Users, ShoppingCart, LayoutDashboard, LogOut, Wrench, Euro, Menu, X, Shield, Globe, MessageSquare, Lock, Mail, Eye, EyeOff, UserCog, Download, Link2, Tag, RefreshCw } from "lucide-react";
+import { Package, Users, ShoppingCart, LayoutDashboard, LogOut, Wrench, Euro, Menu, X, Shield, Globe, MessageSquare, Lock, Mail, Eye, EyeOff, UserCog, Download, Link2, Tag, RefreshCw, TableProperties } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect, useMemo, useRef } from "react";
@@ -232,6 +232,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         { href: "/admin/orders", label: "Παραγγελίες", icon: ShoppingCart },
         { href: "/admin/products", label: "Προϊόντα eShop", icon: Package },
         { href: "/admin/sync", label: "Supplier Sync", icon: RefreshCw },
+        { href: "/admin/repair-price-overrides", label: "Αντιστοιχίσεις επισκευών", icon: TableProperties },
         { href: "/admin/product-offer-interests", label: "Καλύτερη προσφορά", icon: Tag },
         { href: "/admin/oikonomika", label: "Οικονομικά", icon: Euro },
         { href: "/admin/ipsw-downloads", label: "IPSW λήψεις", icon: Download },

@@ -26,6 +26,60 @@ export function normalizeModelKey(s: string): string {
     .trim();
 }
 
+/** Λέξεις/μοτίβα από PDF (περιγραφές ανταλλακτικών) που δεν βοηθούν στο ταίριασμα με modelId — αφαιρούνται πριν τη σύγκριση. */
+const PDF_NOISE_PATTERNS: RegExp[] = [
+  /\bγνήσια\b/gi,
+  /\bγνησια\b/gi,
+  /\bμπαταρία\b/gi,
+  /\bμπαταρια\b/gi,
+  /\bοθόνη\b/gi,
+  /\bοθονη\b/gi,
+  /\bανταλλακτικό\b/gi,
+  /\bανταλλακτικο\b/gi,
+  /\bgenuine\b/gi,
+  /\boriginal\b/gi,
+  /\bbattery\b/gi,
+  /\bscreen\b/gi,
+  /\blcd\b/gi,
+  /\boled\b/gi,
+  /\bincell\b/gi,
+  /\bsoft\s*oled\b/gi,
+  /\bservice\s+pack\b/gi,
+  /\bμε\s+εγκατάσταση\b/gi,
+  /\bμε\s+τοποθέτηση\b/gi,
+  /\bμαύρο\b/gi,
+  /\bμαυρο\b/gi,
+  /\bμαύρη\b/gi,
+  /\bλευκό\b/gi,
+  /\bλευκο\b/gi,
+  /\bblack\b/gi,
+  /\bwhite\b/gi,
+  /\bspace\s*gray\b/gi,
+  /\bmidnight\b/gi,
+  /\bstarlight\b/gi,
+  /\bproduct\s*red\b/gi,
+  /\bpn\s*[:.]?\s*[a-z0-9][a-z0-9.-]{3,}\b/gi,
+  /\bapple\b/gi,
+];
+
+/**
+ * Καθαρίζει γραμμή PDF για fuzzy match (αφαιρεί «Γνήσια», «Μπαταρία», χρώματα, PN…).
+ */
+export function stripPdfProductNoise(raw: string): string {
+  let s = raw;
+  for (const re of PDF_NOISE_PATTERNS) {
+    s = s.replace(re, " ");
+  }
+  return normalizePdfNoiseWhitespace(s);
+}
+
+function normalizePdfNoiseWhitespace(s: string): string {
+  return s
+    .replace(/\s+/g, " ")
+    .replace(/^\s+|\s+$/g, "")
+    .trim();
+}
+
 export function buildRepairCatalog(): RepairCatalogRow[] {
   const rows: RepairCatalogRow[] = [];
 
@@ -83,12 +137,49 @@ export function getRepairCatalog(): RepairCatalogRow[] {
   return cachedCatalog;
 }
 
+export type MatchPdfModelOptions = {
+  /** Για ειδικούς κανόνες (π.χ. «iPhone 12» χωρίς Pro → iphone-12 στις μπαταρίες). */
+  serviceKey?: "screen_standard" | "battery_standard";
+  /** Πρόθεμα log στο terminal (π.χ. fixmobile:batteries). */
+  logLabel?: string;
+};
+
+/**
+ * Μπαταρία + «iPhone N» χωρίς Pro/Max/Mini/Plus → slug iphone-N (π.χ. battery_standard-iphone-12).
+ */
+function matchPlainIphoneBaseForBattery(
+  p: string,
+  catalog: RepairCatalogRow[]
+): RepairCatalogRow | null {
+  const m = p.match(/\biphone\s+(\d{1,2})(?!\s*(?:pro|max|mini|plus)\b)/);
+  if (!m) return null;
+  const slug = `iphone-${m[1]}`;
+  return catalog.find((r) => r.brand === "iphone" && r.modelSlug === slug) ?? null;
+}
+
 /**
  * Ταιριάζει γραμμή PDF (κείμενο μοντέλου) στο κατάλογο. Προτιμά πιο «μακριά» needle για αποφυγή S24 vs S24 Ultra.
  */
-export function matchPdfModelToCatalog(pdfModelLine: string, catalog = getRepairCatalog()): RepairCatalogRow | null {
-  const p = normalizeModelKey(pdfModelLine);
-  if (p.length < 4) return null;
+export function matchPdfModelToCatalog(
+  pdfModelLine: string,
+  catalog = getRepairCatalog(),
+  options?: MatchPdfModelOptions
+): RepairCatalogRow | null {
+  const log = (msg: string) => {
+    const prefix = options?.logLabel ? `[${options.logLabel}]` : "[repair-catalog]";
+    console.log(`${prefix} ${msg}`);
+  };
+
+  const stripped = stripPdfProductNoise(pdfModelLine);
+  const p = normalizeModelKey(stripped);
+  log(`PDF raw: ${JSON.stringify(pdfModelLine)}`);
+  log(`cleaned for match: ${JSON.stringify(stripped)}`);
+  log(`normalized key: ${JSON.stringify(p)}`);
+
+  if (p.length < 4) {
+    log("skip: normalized key too short");
+    return null;
+  }
 
   let best: { row: RepairCatalogRow; score: number } | null = null;
 
@@ -96,7 +187,10 @@ export function matchPdfModelToCatalog(pdfModelLine: string, catalog = getRepair
     for (const needle of row.needles) {
       const n = normalizeModelKey(needle);
       if (n.length < 4) continue;
-      if (p === n) return row;
+      if (p === n) {
+        log(`exact needle match → modelId=${row.modelSlug} brand=${row.brand} (needle=${JSON.stringify(needle)})`);
+        return row;
+      }
       if (p.includes(n)) {
         const score = n.length;
         if (!best || score > best.score) best = { row, score };
@@ -117,6 +211,23 @@ export function matchPdfModelToCatalog(pdfModelLine: string, catalog = getRepair
     }
   }
 
-  if (best && best.score >= 6) return best.row;
+  if (best && best.score >= 6) {
+    log(
+      `substring match → modelId=${best.row.modelSlug} brand=${best.row.brand} score=${best.score}`
+    );
+    return best.row;
+  }
+
+  if (options?.serviceKey === "battery_standard") {
+    const plain = matchPlainIphoneBaseForBattery(p, catalog);
+    if (plain) {
+      log(
+        `battery plain-iPhone rule → modelId=${plain.modelSlug} brand=${plain.brand} (iPhone N χωρίς Pro/Max/Mini/Plus)`
+      );
+      return plain;
+    }
+  }
+
+  log(`no match (best score was ${best ? best.score : "none"}, threshold 6)`);
   return null;
 }

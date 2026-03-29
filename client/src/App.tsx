@@ -81,6 +81,7 @@ const AdminUsersPage = lazyWithReload(() => import("./pages/admin/admin-users"))
 const AdminIpswDownloads = lazyWithReload(() => import("./pages/admin/ipsw-downloads"));
 const AdminProductOfferInterests = lazyWithReload(() => import("./pages/admin/product-offer-interests"));
 const AdminSupplierSync = lazyWithReload(() => import("./pages/admin/supplier-sync"));
+const AdminRepairPriceOverrides = lazyWithReload(() => import("./pages/admin/repair-price-overrides"));
 const AdminHubspotContacts = lazyWithReload(() => import("./pages/admin/hubspot-contacts"));
 
 function PageLoader() {
@@ -228,6 +229,7 @@ function Router() {
           <Route path="/admin/ipsw-downloads" component={AdminIpswDownloads} />
           <Route path="/admin/product-offer-interests" component={AdminProductOfferInterests} />
           <Route path="/admin/sync" component={AdminSupplierSync} />
+          <Route path="/admin/repair-price-overrides" component={AdminRepairPriceOverrides} />
           <Route component={NotFound} />
         </Switch>
       </Suspense>
