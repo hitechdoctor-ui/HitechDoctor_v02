@@ -11,6 +11,8 @@ import {
   productOfferInterests,
   boxnowDropoffRequests,
   ipswDownloadEvents,
+  siteAnalytics,
+  chatActivity,
   suppliers,
   supplierSyncItems,
   repairPriceOverrides,
@@ -44,7 +46,7 @@ import {
   type RepairPriceOverride,
   type InsertRepairPriceOverride,
 } from "@shared/schema";
-import { eq, desc, and, sql, lte, gte, count } from "drizzle-orm";
+import { eq, desc, and, sql, lte, gte, count, lt } from "drizzle-orm";
 import { queueHubSpotContactSync } from "./hubspot";
 
 export interface IStorage {
@@ -148,6 +150,31 @@ export interface IStorage {
     last30Days: number;
     byDevice: { deviceIdentifier: string; deviceName: string | null; count: number }[];
     recent: IpswDownloadEvent[];
+  }>;
+
+  trackPageVisit(data: {
+    sessionId: string;
+    pagePath: string;
+    referrer?: string | null;
+    userAgent?: string | null;
+  }): Promise<void>;
+
+  getAnalyticsStats(): Promise<{
+    today: number;
+    yesterday: number;
+    weekTotal: number;
+    monthTotal: number;
+    activeNow: number;
+    dailyLast7Days: { date: string; count: number }[];
+  }>;
+
+  getAnalyticsTopPages(period: "day" | "week" | "month" | "year"): Promise<{ path: string; count: number }[]>;
+
+  trackChatMessage(data: { sessionId: string; message: string }): Promise<void>;
+
+  getChatActivityStats(): Promise<{
+    today: number;
+    dailyLast7Days: { date: string; count: number }[];
   }>;
 
   // Suppliers & sync
@@ -702,6 +729,146 @@ export class DatabaseStorage implements IStorage {
       })),
       recent,
     };
+  }
+
+  // --- Site analytics & AI chat activity ---
+  async trackPageVisit(data: {
+    sessionId: string;
+    pagePath: string;
+    referrer?: string | null;
+    userAgent?: string | null;
+  }): Promise<void> {
+    await db.insert(siteAnalytics).values({
+      sessionId: data.sessionId.slice(0, 128),
+      pagePath: data.pagePath.slice(0, 2048),
+      referrer: data.referrer?.slice(0, 2048) ?? null,
+      userAgent: data.userAgent?.slice(0, 512) ?? null,
+    });
+  }
+
+  private startOfLocalDay(d: Date): Date {
+    const x = new Date(d);
+    x.setHours(0, 0, 0, 0);
+    return x;
+  }
+
+  private formatYmd(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+
+  async getAnalyticsStats(): Promise<{
+    today: number;
+    yesterday: number;
+    weekTotal: number;
+    monthTotal: number;
+    activeNow: number;
+    dailyLast7Days: { date: string; count: number }[];
+  }> {
+    const now = new Date();
+    const startToday = this.startOfLocalDay(now);
+    const startYesterday = new Date(startToday.getTime() - 86400000);
+    const startWeek = new Date(startToday.getTime() - 6 * 86400000);
+    const startMonth = new Date(startToday);
+    startMonth.setDate(1);
+    const activeSince = new Date(now.getTime() - 5 * 60 * 1000);
+
+    const countSince = async (from: Date, to?: Date) => {
+      const cond = to
+        ? and(gte(siteAnalytics.visitedAt, from), lt(siteAnalytics.visitedAt, to))
+        : gte(siteAnalytics.visitedAt, from);
+      const [r] = await db.select({ c: sql<number>`cast(count(*) as integer)` }).from(siteAnalytics).where(cond);
+      return r?.c ?? 0;
+    };
+
+    const today = await countSince(startToday);
+    const yesterday = await countSince(startYesterday, startToday);
+    const weekTotal = await countSince(startWeek);
+    const monthTotal = await countSince(startMonth);
+
+    const [activeRow] = await db
+      .select({ c: sql<number>`cast(count(distinct ${siteAnalytics.sessionId}) as integer)` })
+      .from(siteAnalytics)
+      .where(gte(siteAnalytics.visitedAt, activeSince));
+    const activeNow = activeRow?.c ?? 0;
+
+    const dailyLast7Days: { date: string; count: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const dayStart = new Date(startToday);
+      dayStart.setDate(dayStart.getDate() - i);
+      const dayEnd = new Date(dayStart);
+      dayEnd.setDate(dayEnd.getDate() + 1);
+      const c = await countSince(dayStart, dayEnd);
+      dailyLast7Days.push({ date: this.formatYmd(dayStart), count: c });
+    }
+
+    return { today, yesterday, weekTotal, monthTotal, activeNow, dailyLast7Days };
+  }
+
+  async getAnalyticsTopPages(period: "day" | "week" | "month" | "year"): Promise<{ path: string; count: number }[]> {
+    const now = new Date();
+    const startToday = this.startOfLocalDay(now);
+    let from = startToday;
+    if (period === "week") from = new Date(startToday.getTime() - 6 * 86400000);
+    else if (period === "month") {
+      from = new Date(startToday);
+      from.setDate(1);
+    } else if (period === "year") {
+      from = new Date(startToday.getFullYear(), 0, 1);
+    }
+
+    const rows = await db
+      .select({
+        path: siteAnalytics.pagePath,
+        cnt: count(),
+      })
+      .from(siteAnalytics)
+      .where(gte(siteAnalytics.visitedAt, from))
+      .groupBy(siteAnalytics.pagePath)
+      .orderBy(desc(count()))
+      .limit(10);
+
+    return rows.map((r) => ({ path: r.path, count: r.cnt }));
+  }
+
+  async trackChatMessage(data: { sessionId: string; message: string }): Promise<void> {
+    const msg = data.message.trim().slice(0, 4000);
+    if (!msg) return;
+    await db.insert(chatActivity).values({
+      sessionId: data.sessionId.slice(0, 128),
+      message: msg,
+    });
+  }
+
+  async getChatActivityStats(): Promise<{
+    today: number;
+    dailyLast7Days: { date: string; count: number }[];
+  }> {
+    const now = new Date();
+    const startToday = this.startOfLocalDay(now);
+
+    const countChatSince = async (from: Date, to?: Date) => {
+      const cond = to
+        ? and(gte(chatActivity.askedAt, from), lt(chatActivity.askedAt, to))
+        : gte(chatActivity.askedAt, from);
+      const [r] = await db.select({ c: sql<number>`cast(count(*) as integer)` }).from(chatActivity).where(cond);
+      return r?.c ?? 0;
+    };
+
+    const today = await countChatSince(startToday);
+    const dailyLast7Days: { date: string; count: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const dayStart = new Date(startToday);
+      dayStart.setDate(dayStart.getDate() - i);
+      const dayEnd = new Date(dayStart);
+      dayEnd.setDate(dayEnd.getDate() + 1);
+      const c = await countChatSince(dayStart, dayEnd);
+      dailyLast7Days.push({ date: this.formatYmd(dayStart), count: c });
+    }
+
+    return { today, dailyLast7Days };
   }
 
   // --- Suppliers & XML sync ---

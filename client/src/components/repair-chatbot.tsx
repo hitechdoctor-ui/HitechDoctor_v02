@@ -7,6 +7,7 @@ import { RepairRequestModal } from "@/components/repair-request-modal";
 import { MessageCircle, X, Send, Loader2, Bot, ArrowRight, Wrench } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { getAnalyticsSessionId } from "@/lib/analytics-session";
 import { OPEN_REPAIR_CHAT_EVENT } from "@/lib/repair-chat-events";
 import { COOKIE_CONSENT_EVENT } from "@/components/cookie-banner";
 import { resolveRepairSlugToPathWithFallbacks } from "@/lib/repair-slug-resolve";
@@ -222,7 +223,10 @@ export function RepairChatbot() {
     try {
       const res = await fetch("/api/chat/repair-assistant", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Session-Id": getAnalyticsSessionId(),
+        },
         body: JSON.stringify({ messages: next, serviceTermsAccepted: true }),
       });
       const data = (await res.json().catch(() => ({}))) as {

@@ -122,6 +122,36 @@ export const adminUsers = pgTable("admin_users", {
   createdAt: timestamp("created_at").defaultNow(),
 }, (t) => [uniqueIndex("admin_users_email_idx").on(t.email)]);
 
+// --- Site analytics (SPA page views, admin overview) ---
+export const siteAnalytics = pgTable(
+  "site_analytics",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    sessionId: text("session_id").notNull(),
+    pagePath: text("page_path").notNull(),
+    referrer: text("referrer"),
+    userAgent: text("user_agent"),
+    visitedAt: timestamp("visited_at").defaultNow(),
+  },
+  (t) => [
+    index("site_analytics_visited_at_idx").on(t.visitedAt),
+    index("site_analytics_page_path_idx").on(t.pagePath),
+    index("site_analytics_session_id_idx").on(t.sessionId),
+  ]
+);
+
+/** Ερωτήσεις χρηστών στον AI βοηθό επισκευών — για στατιστικά admin. */
+export const chatActivity = pgTable(
+  "chat_activity",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    sessionId: text("session_id").notNull(),
+    message: text("message").notNull(),
+    askedAt: timestamp("asked_at").defaultNow(),
+  },
+  (t) => [index("chat_activity_asked_at_idx").on(t.askedAt)]
+);
+
 // --- IPSW download tracking (public tool page) ---
 export const ipswDownloadEvents = pgTable("ipsw_download_events", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -294,6 +324,8 @@ export const insertRepairPriceOverrideSchema = createInsertSchema(repairPriceOve
 export type BoxnowDropoffRequest = typeof boxnowDropoffRequests.$inferSelect;
 export type InsertBoxnowDropoffRequest = InferInsertModel<typeof boxnowDropoffRequests>;
 export type IpswDownloadEvent = typeof ipswDownloadEvents.$inferSelect;
+export type SiteAnalyticsRow = typeof siteAnalytics.$inferSelect;
+export type ChatActivityRow = typeof chatActivity.$inferSelect;
 
 // Προσθήκη του Schema για το Checkout
 export const checkoutPayloadSchema = z.object({

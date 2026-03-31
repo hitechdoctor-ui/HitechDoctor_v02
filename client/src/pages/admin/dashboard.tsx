@@ -31,6 +31,7 @@ import { type RepairRequest, type Product, type ProductOfferInterest } from "@sh
 import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
+import { AnalyticsDashboard } from "@/components/admin/analytics-dashboard";
 
 // ── Status config ────────────────────────────────────────────────────────────
 const STATUSES = [
@@ -555,6 +556,8 @@ export default function AdminDashboard() {
         <h1 className="text-3xl font-display font-bold">Επισκόπηση</h1>
         <p className="text-muted-foreground mt-1">Αιτήματα επισκευής, προϊόντα eShop και στατιστικά</p>
       </div>
+
+      <AnalyticsDashboard />
 
       {/* ── Stats ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">

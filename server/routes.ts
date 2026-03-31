@@ -784,6 +784,32 @@ export async function registerRoutes(
     }
   });
 
+  /** Καταγραφή SPA επισκέψεων (δημόσιο, fire-and-forget) */
+  app.post("/api/analytics/track", async (req, res) => {
+    try {
+      const schema = z.object({
+        sessionId: z.string().min(8).max(128),
+        pagePath: z.string().min(1).max(2048),
+        referrer: z.string().max(2048).optional().nullable(),
+      });
+      const body = schema.parse(req.body);
+      const ua = typeof req.headers["user-agent"] === "string" ? req.headers["user-agent"] : null;
+      await storage.trackPageVisit({
+        sessionId: body.sessionId,
+        pagePath: body.pagePath,
+        referrer: body.referrer ?? null,
+        userAgent: ua,
+      });
+      res.status(204).end();
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0]?.message ?? "Invalid payload" });
+      }
+      console.error("[analytics/track]", err);
+      res.status(500).json({ message: "Σφάλμα" });
+    }
+  });
+
   /** IMEI lookup — IMEI.info API v4 (IMEI_INFO_API_KEY) or custom GET URL (IMEI_LOOKUP_URL_TEMPLATE). */
   app.post("/api/imei/lookup", async (req, res) => {
     try {
@@ -1192,6 +1218,47 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/admin/analytics/stats", async (req, res) => {
+    try {
+      const u = await getAdminUserFromRequest(req);
+      if (!u) return res.status(401).json({ message: "Unauthorized" });
+      if (u.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const stats = await storage.getAnalyticsStats();
+      res.json(stats);
+    } catch (err) {
+      console.error("[admin/analytics/stats]", err);
+      res.status(500).json({ message: "Σφάλμα" });
+    }
+  });
+
+  app.get("/api/admin/analytics/top-pages", async (req, res) => {
+    try {
+      const u = await getAdminUserFromRequest(req);
+      if (!u) return res.status(401).json({ message: "Unauthorized" });
+      if (u.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const q = z.enum(["day", "week", "month", "year"]).safeParse(req.query.period);
+      const period = q.success ? q.data : "week";
+      const rows = await storage.getAnalyticsTopPages(period);
+      res.json({ period, rows });
+    } catch (err) {
+      console.error("[admin/analytics/top-pages]", err);
+      res.status(500).json({ message: "Σφάλμα" });
+    }
+  });
+
+  app.get("/api/admin/analytics/chat-activity", async (req, res) => {
+    try {
+      const u = await getAdminUserFromRequest(req);
+      if (!u) return res.status(401).json({ message: "Unauthorized" });
+      if (u.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const stats = await storage.getChatActivityStats();
+      res.json(stats);
+    } catch (err) {
+      console.error("[admin/analytics/chat-activity]", err);
+      res.status(500).json({ message: "Σφάλμα" });
+    }
+  });
+
   /** eShop: «Θέλω καλύτερη προσφορά» — αποθήκευση + email διαχειριστή */
   app.post("/api/product-offer-interest", async (req, res) => {
     try {
@@ -1261,6 +1328,13 @@ export async function registerRoutes(
         return res.status(400).json({
           message: "Πρέπει να αποδεχτείτε τους Όρους Service και την Εγγύηση 3 μηνών για να στείλετε μήνυμα.",
         });
+      }
+      const hdrSid = req.headers["x-session-id"];
+      const sessionId =
+        typeof hdrSid === "string" && hdrSid.trim().length >= 8 ? hdrSid.trim().slice(0, 128) : "anonymous";
+      const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
+      if (lastUserMsg?.content) {
+        void storage.trackChatMessage({ sessionId, message: lastUserMsg.content }).catch(() => {});
       }
       const catalogBlock = await getRepairCatalogPromptBlock();
       const rawReply = await runRepairAssistantChat(messages, catalogBlock);
