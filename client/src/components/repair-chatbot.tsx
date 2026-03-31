@@ -196,19 +196,11 @@ export function RepairChatbot() {
   const [repairFormDeviceName, setRepairFormDeviceName] = useState("");
   const [showAttention, setShowAttention] = useState(false);
   const attentionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [scrollDir, setScrollDir] = useState<"up" | "down">("up");
-  const lastScrollYRef = useRef(0);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // ── Scroll detection (pageScrolled + direction) ───────────────────────────
+  // ── Scroll: μόνο για χρωματισμό του κουμπιού (όχι απόκρυψη του παραθύρου) ──
   useEffect(() => {
-    const onScroll = () => {
-      const y = window.scrollY;
-      setPageScrolled(y > 32);
-      if (y > lastScrollYRef.current + 10) setScrollDir("down");
-      else if (y < lastScrollYRef.current - 10) setScrollDir("up");
-      lastScrollYRef.current = y;
-    };
+    const onScroll = () => setPageScrolled(window.scrollY > 32);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -377,17 +369,11 @@ export function RepairChatbot() {
   }, [input, loading, messages, serviceTermsAccepted, toast]);
 
   return (
-    <div
-      className={cn(
-        "relative z-[158] flex flex-col items-end gap-2 pointer-events-none shrink-0 transition-transform duration-500 ease-in-out",
-        // Slide right only when chat is OPEN + scrolling down (FAB button stays visible as peek)
-        open && scrollDir === "down" && pageScrolled && "translate-x-[calc(100%-3.5rem)]"
-      )}
-    >
+    <div className="relative z-[158] flex flex-col items-end gap-2 pointer-events-none shrink-0">
       {/* Attention bubble: shown once after cookie consent + first scroll */}
       {showAttention && !open && (
         <div
-          className="pointer-events-auto animate-in slide-in-from-right-4 fade-in duration-500 flex items-center gap-2 rounded-xl border border-primary/30 bg-card/95 backdrop-blur-sm px-3 py-2 shadow-lg shadow-black/30 text-sm font-semibold text-foreground max-w-[200px]"
+          className="pointer-events-auto animate-in slide-in-from-bottom-2 fade-in duration-500 flex items-center gap-2 rounded-xl border border-primary/30 bg-card/95 backdrop-blur-sm px-3 py-2 shadow-lg shadow-black/30 text-sm font-semibold text-foreground max-w-[min(240px,calc(100vw-2rem))]"
           aria-hidden
         >
           <Bot className="w-4 h-4 text-primary shrink-0" />
@@ -396,7 +382,13 @@ export function RepairChatbot() {
       )}
       {open && (
         <div
-          className="pointer-events-auto w-[min(100vw-2rem,400px)] rounded-2xl border border-primary/20 bg-card/95 backdrop-blur-md shadow-[0_8px_40px_rgba(0,0,0,0.45)] flex flex-col overflow-hidden max-h-[min(70vh,560px)]"
+          className={cn(
+            "pointer-events-auto rounded-2xl border border-primary/20 bg-card/95 backdrop-blur-md flex flex-col overflow-hidden",
+            "shadow-[0_8px_40px_rgba(0,0,0,0.45)] max-sm:shadow-2xl",
+            /* Κινητό: πλάτος οθόνης με περιθώρια, πάνω από το κάτω μενού/FAB — όχι «κρυμμένο» στη γωνία */
+            "max-sm:fixed max-sm:z-[160] max-sm:left-3 max-sm:right-3 max-sm:mx-auto max-sm:bottom-[calc(5.25rem+env(safe-area-inset-bottom)+3.75rem)] max-sm:max-h-[min(72dvh,560px)] max-sm:w-auto max-sm:max-w-lg",
+            "sm:relative sm:w-[min(100vw-2rem,400px)] sm:max-h-[min(70vh,560px)]"
+          )}
           role="dialog"
           aria-label="Συνομιλία AI Doctor"
         >
