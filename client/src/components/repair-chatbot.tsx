@@ -23,17 +23,40 @@ function normalizeCtaHref(href: string): string {
   }
 }
 
-/** Ίδιο tab: μόνο path για SPA (χωρίς νέο παράθυρο). */
-function toAppPath(href: string): string {
-  const h = href.trim();
-  if (!h || h === "#") return "#";
-  if (h.startsWith("/")) return h;
-  try {
-    const u = new URL(h);
-    return u.pathname + u.search + u.hash;
-  } catch {
-    return h.startsWith("/") ? h : `/${h}`;
+function isInternalSiteHost(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  return (
+    h === "hitechdoctor.com" ||
+    h === "www.hitechdoctor.com" ||
+    h === "localhost" ||
+    h === "127.0.0.1"
+  );
+}
+
+/**
+ * Εσωτερικό → path για wouter `Link`. Εξωτερικό (Maps, κ.λπ.) → πλήρες URL για `<a target="_blank">`.
+ * Η παλιά λογική pathname-only έκοβε το host (π.χ. maps.app.goo.gl/xxx → `/xxx` → 404).
+ */
+function resolveChatLink(href: string): { kind: "internal"; to: string } | { kind: "external"; href: string } {
+  const raw = href.trim();
+  if (!raw || raw === "#") return { kind: "internal", to: "#" };
+  if (raw.startsWith("/") && !raw.startsWith("//")) {
+    return { kind: "internal", to: raw };
   }
+  let u: URL;
+  try {
+    u = new URL(raw);
+  } catch {
+    try {
+      u = new URL(raw, "https://hitechdoctor.com");
+    } catch {
+      return { kind: "internal", to: raw.startsWith("/") ? raw : `/${raw}` };
+    }
+  }
+  if (isInternalSiteHost(u.hostname)) {
+    return { kind: "internal", to: u.pathname + u.search + u.hash };
+  }
+  return { kind: "external", href: u.href };
 }
 
 const ctaBtnClass = cn(
@@ -76,11 +99,24 @@ function ChatMessageContent({ content }: { content: string }) {
   let m: RegExpExecArray | null;
   while ((m = MD_LINK.exec(content)) !== null) {
     if (m.index > last) parts.push(content.slice(last, m.index));
-    const href = toAppPath(m[2]);
+    const resolved = resolveChatLink(normalizeCtaHref(m[2]));
+    const linkClass = "text-primary underline underline-offset-2 hover:opacity-80";
     parts.push(
-      <Link key={m.index} href={href} className="text-primary underline underline-offset-2 hover:opacity-80">
-        {m[1]}
-      </Link>
+      resolved.kind === "external" ? (
+        <a
+          key={m.index}
+          href={resolved.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={linkClass}
+        >
+          {m[1]}
+        </a>
+      ) : (
+        <Link key={m.index} href={resolved.to} className={linkClass}>
+          {m[1]}
+        </Link>
+      )
     );
     last = m.index + m[0].length;
   }
@@ -258,12 +294,14 @@ export function RepairChatbot() {
         // Auto-navigate: if AI returned exactly 1 non-action CTA → go there directly
         const navCtas = (ctas ?? []).filter((c) => !c.action && c.href && c.href !== "#");
         if (navCtas.length === 1) {
-          const rawPath = toAppPath(normalizeCtaHref(navCtas[0].href));
-          if (rawPath.startsWith("/")) {
-            const slugMatch = rawPath.match(/^\/repair\/(.+)$/);
+          const resolved = resolveChatLink(normalizeCtaHref(navCtas[0].href));
+          if (resolved.kind === "external") {
+            setTimeout(() => window.open(resolved.href, "_blank", "noopener,noreferrer"), 900);
+          } else if (resolved.to.startsWith("/")) {
+            const slugMatch = resolved.to.match(/^\/repair\/(.+)$/);
             const finalPath = slugMatch
-              ? (resolveRepairSlugToPathWithFallbacks(slugMatch[1]) ?? rawPath)
-              : rawPath;
+              ? (resolveRepairSlugToPathWithFallbacks(slugMatch[1]) ?? resolved.to)
+              : resolved.to;
             if (finalPath !== "#") setTimeout(() => setLocation(finalPath), 900);
           }
         }
@@ -373,10 +411,24 @@ export function RepairChatbot() {
                           </Button>
                         );
                       }
-                      const path = toAppPath(normalizeCtaHref(c.href));
-                      if (path === "#") return null;
+                      const resolved = resolveChatLink(normalizeCtaHref(c.href));
+                      if (resolved.kind === "internal" && resolved.to === "#") return null;
+                      if (resolved.kind === "external") {
+                        return (
+                          <a
+                            key={j}
+                            href={resolved.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={ctaBtnClass}
+                          >
+                            <ArrowRight className="w-4 h-4 shrink-0 opacity-90" aria-hidden />
+                            {c.label}
+                          </a>
+                        );
+                      }
                       return (
-                        <Link key={j} href={path} className={ctaBtnClass}>
+                        <Link key={j} href={resolved.to} className={ctaBtnClass}>
                           <ArrowRight className="w-4 h-4 shrink-0 opacity-90" aria-hidden />
                           {c.label}
                         </Link>
