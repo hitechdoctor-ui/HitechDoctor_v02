@@ -32,6 +32,7 @@ import {
 import { Link } from "wouter";
 import { BLOG_POSTS, formatBlogDate } from "@/data/blog-posts";
 import { SpecialOffers } from "@/components/special-offers";
+import { RepairChatbot } from "@/components/repair-chatbot";
 import { requestOpenRepairChat } from "@/lib/repair-chat-events";
 const homeServices = [
   { icon: Smartphone, title: "Επισκευή Κινητών", href: "/services/episkeui-kiniton" },
@@ -395,6 +396,14 @@ export default function Home() {
         <ReviewsSection />
       </main>
       <Footer />
+
+      {/* AI Doctor: ίδιο δεξιό άκρο με FloatingActionStack, πάνω από SOS/Accessibility (~11rem) */}
+      <div
+        className="pointer-events-none fixed right-4 z-[150] bottom-[calc(5.25rem+env(safe-area-inset-bottom)+11rem)] sm:right-6 sm:bottom-[calc(1.5rem+11rem)] flex flex-col items-end gap-3"
+        aria-hidden={false}
+      >
+        <RepairChatbot />
+      </div>
     </div>
   );
 }

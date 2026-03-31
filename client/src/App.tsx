@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { usePageTracker } from "@/hooks/use-page-tracker";
 
 // Public Pages — lazy loaded (reload on stale chunk after deploy — see lazy-with-reload.ts)
-const Home = lazyWithReload(() => import("./pages/home"));
+const Home = lazyWithReload(() => import("./pages/home-page"));
 const Services = lazyWithReload(() => import("./pages/services"));
 const ServiceMobile = lazyWithReload(() => import("./pages/service-mobile"));
 const ServiceIphone = lazyWithReload(() => import("./pages/service-iphone"));
@@ -141,13 +141,15 @@ function ScrollToTop() {
 function GlobalComponents() {
   const [location] = useLocation();
   const isAdmin = location.startsWith("/admin");
+  const pathOnly = location.split("?")[0] || "/";
+  const isHome = pathOnly === "/";
   if (isAdmin) return null;
   return (
     <Fragment>
       <ScrollProgressBar />
       <CookieBanner />
       <ExitIntentPopup />
-      <FloatingActionStack />
+      <FloatingActionStack showRepairChat={!isHome} />
       <MobileBottomNav />
     </Fragment>
   );

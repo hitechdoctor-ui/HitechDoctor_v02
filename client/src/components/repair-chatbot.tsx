@@ -15,11 +15,43 @@ import { guessDeviceModelFromMessages, type RepairChatCta } from "@shared/repair
 
 type Turn = { role: "user" | "assistant"; content: string; ctas?: RepairChatCta[] };
 
+/**
+ * Το URL() με base χαλάει hosts χωρίς σχήμα: `maps.app.goo.gl/x` → `https://hitechdoctor.com/maps.app.goo.gl/x`.
+ */
+function coerceAmbiguousHref(raw: string): string {
+  const s = raw.trim();
+  if (!s || s === "#") return s;
+  if (/^https?:\/\//i.test(s)) return s;
+  if (s.startsWith("/") && !s.startsWith("//")) return s;
+  if (s.startsWith("//")) return `https:${s}`;
+  const lower = s.toLowerCase();
+  const mapOrGoogle =
+    lower.startsWith("maps.app.goo.gl") ||
+    lower.startsWith("goo.gl") ||
+    lower.startsWith("maps.google.") ||
+    lower.startsWith("www.google.com/maps") ||
+    lower.startsWith("google.com/maps");
+  const ourSite = lower.startsWith("hitechdoctor.com") || lower.startsWith("www.hitechdoctor.com");
+  if (mapOrGoogle || ourSite) {
+    return `https://${s.replace(/^\/+/, "")}`;
+  }
+  return s;
+}
+
 function normalizeCtaHref(href: string): string {
+  const coerced = coerceAmbiguousHref(href.trim());
+  if (!coerced || coerced === "#") return coerced;
+  if (coerced.startsWith("/") && !coerced.startsWith("//")) {
+    try {
+      return new URL(coerced, "https://hitechdoctor.com").href;
+    } catch {
+      return `https://hitechdoctor.com${coerced}`;
+    }
+  }
   try {
-    return new URL(href.trim(), "https://hitechdoctor.com").href;
+    return new URL(coerced).href;
   } catch {
-    return href.startsWith("http") ? href : `https://hitechdoctor.com${href.startsWith("/") ? href : `/${href}`}`;
+    return coerced.startsWith("http") ? coerced : `https://hitechdoctor.com/${coerced.replace(/^\/+/, "")}`;
   }
 }
 
@@ -63,8 +95,35 @@ const ctaBtnClass = cn(
   "inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold",
   "bg-gradient-to-r from-primary to-cyan-600 text-white shadow-md shadow-primary/25",
   "border border-primary/40 hover:opacity-95 transition-opacity",
-  "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-card text-center"
+  "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-card text-center",
+  "cursor-pointer"
 );
+
+/** AI μερικές φορές ξεχνά το action· κουμπιά τύπου «…Αίτημα Προσφοράς» προς σελίδες επισκευής → άνοιγμα φόρμας. */
+function shouldOpenRepairQuoteModal(cta: RepairChatCta): boolean {
+  if (cta.action === "repair_quote_modal") return true;
+  if (!/(αίτημα|προσφορά)/i.test(cta.label)) return false;
+  if (!/(επισκευ|desktop|laptop|υπολογιστ|κινητ|iphone|samsung|galaxy|tablet|mac|imac|dell|hp|lenovo)/i.test(cta.label)) {
+    return false;
+  }
+  const h = cta.href.trim();
+  if (h === "#" || h === "") return true;
+  try {
+    const u = new URL(normalizeCtaHref(h));
+    if (!isInternalSiteHost(u.hostname)) return false;
+    const p = u.pathname;
+    if (
+      p.startsWith("/services/episkeui-") ||
+      /^\/episkevi-/.test(p) ||
+      p.startsWith("/repair/")
+    ) {
+      return true;
+    }
+  } catch {
+    /* ignore */
+  }
+  return false;
+}
 
 const WELCOME =
   "Γεια σας! Είμαι ο HiTech Doctor. Περιγράψτε μου τι συμβαίνει με τη συσκευή σας (μάρκα, μοντέλο αν το ξέρετε, και το πρόβλημα) — θα σας κατευθύνω στην κατάλληλη επισκευή.";
@@ -291,8 +350,10 @@ export function RepairChatbot() {
         const ctas = data.ctas?.length ? data.ctas : undefined;
         setMessages([...next, { role: "assistant", content: data.reply, ctas }]);
 
-        // Auto-navigate: if AI returned exactly 1 non-action CTA → go there directly
-        const navCtas = (ctas ?? []).filter((c) => !c.action && c.href && c.href !== "#");
+        // Auto-navigate: αν 1 CTA πλοήγησης (όχι φόρμα προσφοράς / όχι #)
+        const navCtas = (ctas ?? []).filter(
+          (c) => !shouldOpenRepairQuoteModal(c) && c.href && c.href.trim() !== "#"
+        );
         if (navCtas.length === 1) {
           const resolved = resolveChatLink(normalizeCtaHref(navCtas[0].href));
           if (resolved.kind === "external") {
@@ -391,7 +452,7 @@ export function RepairChatbot() {
                 {m.role === "assistant" && m.ctas && m.ctas.length > 0 && (
                   <div className="mt-1.5 flex flex-col gap-1">
                     {m.ctas.map((c, j) => {
-                      if (c.action === "repair_quote_modal") {
+                      if (shouldOpenRepairQuoteModal(c)) {
                         return (
                           <Button
                             key={j}
@@ -421,6 +482,8 @@ export function RepairChatbot() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className={ctaBtnClass}
+                            onClick={(e) => e.stopPropagation()}
+                            onPointerDown={(e) => e.stopPropagation()}
                           >
                             <ArrowRight className="w-4 h-4 shrink-0 opacity-90" aria-hidden />
                             {c.label}

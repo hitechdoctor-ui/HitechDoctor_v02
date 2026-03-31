@@ -194,6 +194,10 @@ export function buildRepairAssistantSystemPrompt(catalogBlock: string): string {
 
 Τοποθέτησε το block ΠΑΝΤΑ στο τέλος της απάντησης όταν υπάρχει σχετικό link. Μέχρι 3 items.
 
+**Χάρτης Google:** Στο JSON του href βάλε **ΠΑΝΤΑ** πλήρες URL με \`https://\` (π.χ. \`https://maps.app.goo.gl/...\`). Ποτέ \`maps.app.goo.gl/...\` χωρίς σχήμα — χαλάει το κουμπί.
+
+**Αίτημα προσφοράς (desktop/laptop/κινητό/επισκευή):** Αν το κουμπί λέει «Αίτημα Προσφοράς» ή παρόμοιο, χρησιμοποίησε **ακριβώς** \`"href":"#","action":"repair_quote_modal"\` (όχι μόνο σύνδεσμο στη σελίδα υπηρεσίας χωρίς action).
+
 Για επισκευή μοντέλου:
 ---CTA---
 [{"label":"Σελίδα επισκευής Samsung Galaxy A56","href":"${SITE_BASE}/repair/samsung-a56-screen"}]

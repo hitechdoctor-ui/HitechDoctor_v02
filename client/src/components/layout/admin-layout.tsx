@@ -7,6 +7,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@shared/routes";
 import { getAdminAuthHeaders } from "@/lib/queryClient";
+import { notifyAdminAuthChange } from "@/lib/admin-auth-events";
 
 const STORAGE_KEY = "hitech_admin_token";
 /** Διακριτικός ήχος όταν αυξάνεται ο αριθμός μη ολοκληρωμένων παραγγελιών (public). */
@@ -47,6 +48,7 @@ function AdminLogin({ onLogin }: { onLogin: (token: string) => void }) {
       const data = await res.json();
       if (data.ok && data.token) {
         localStorage.setItem(STORAGE_KEY, data.token);
+        notifyAdminAuthChange();
         onLogin(data.token);
       } else {
         setError(data.message || "Λάθος email ή κωδικός");
@@ -140,7 +142,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     fetch("/api/admin/me", { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
       .then(d => {
-        if (!d.ok) { localStorage.removeItem(STORAGE_KEY); setToken(null); }
+        if (!d.ok) {
+          localStorage.removeItem(STORAGE_KEY);
+          notifyAdminAuthChange();
+          setToken(null);
+        }
         else setAdminInfo({ name: d.name, email: d.email, role: d.role });
       })
       .catch(() => {});
@@ -194,6 +200,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   const handleLogout = () => {
     localStorage.removeItem(STORAGE_KEY);
+    notifyAdminAuthChange();
     setToken(null);
   };
 

@@ -45,8 +45,11 @@ export function splitAssistantReply(raw: string): { displayText: string; ctas: R
               label: row.label.trim(),
               href: row.href.trim(),
             };
-            if (row.action === "repair_quote_modal") {
-              cta.action = "repair_quote_modal";
+            if (typeof row.action === "string") {
+              const a = row.action.trim().toLowerCase().replace(/[\s-]+/g, "_");
+              if (a === "repair_quote_modal" || a === "repair_quote") {
+                cta.action = "repair_quote_modal";
+              }
             }
             ctas.push(cta);
           }
@@ -95,6 +98,8 @@ export function guessDeviceModelFromMessages(messages: { role: string; content: 
     /Galaxy\s+[A-Z]?\s*[\d\w]+/i,
     /Samsung\s+Galaxy[\s\w]+/i,
     /Xiaomi\s+[\w\s+]+/i,
+    /(?:HP|Dell|Lenovo)\s+[\w\s-]+/i,
+    /(?:desktop|υπολογιστή|PC)\s+[\w\s-]+/i,
   ];
   for (const p of patterns) {
     const m = blob.match(p);
