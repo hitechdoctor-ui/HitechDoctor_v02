@@ -165,6 +165,11 @@ export function registerRedirects(app: Express): void {
       return res.redirect(301, "/eshop");
     }
 
+    /** WooCommerce / παλιές κατηγορίες προϊόντων */
+    if (path === "/product-category" || path.startsWith("/product-category/")) {
+      return res.redirect(301, "/eshop");
+    }
+
     if (path.startsWith("/products/")) {
       return res.redirect(301, "/eshop");
     }

@@ -105,6 +105,7 @@ async function checkSubscriptionExpiry() {
       res.status(status).json({ message });
     });
 
+    // Redirect middleware (registerRedirects) τρέχει πριν από static/Vite — τα GET/HEAD παλιών paths παίρνουν 301 πρώτα.
     if (process.env.NODE_ENV === "production") {
       serveStatic(app);
     } else {
