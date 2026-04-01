@@ -31,6 +31,8 @@ import {
 } from "./email";
 import { runImeiLookup } from "./imei-lookup";
 import { getClientIp, lookupGeoForIp, parseUserAgent } from "./analytics-enrichment";
+import { shouldSkipAnalyticsTrack } from "./analytics-filter";
+import { fetchGa4Summary, type Ga4Period } from "./ga4-admin";
 import { fetchHubSpotContacts } from "./hubspot";
 import bcrypt from "bcrypt";
 import { sendOrderStatusEmail } from "./nodemailer-mail";
@@ -840,10 +842,13 @@ export async function registerRoutes(
       });
       const body = schema.parse(req.body);
       const ua = typeof req.headers["user-agent"] === "string" ? req.headers["user-agent"] : null;
+      const ip = getClientIp(req);
+      if (shouldSkipAnalyticsTrack(ip, ua)) {
+        return res.status(204).end();
+      }
       const { osFamily, browserFamily } = parseUserAgent(ua);
       let geoCity: string | null = null;
       let geoRegion: string | null = null;
-      const ip = getClientIp(req);
       if (ip) {
         try {
           const g = await lookupGeoForIp(ip);
@@ -862,6 +867,7 @@ export async function registerRoutes(
         browserFamily,
         geoCity,
         geoRegion,
+        clientIp: ip,
       });
       res.status(204).end();
     } catch (err) {
@@ -1333,6 +1339,22 @@ export async function registerRoutes(
       res.json({ period, ...data });
     } catch (err) {
       console.error("[admin/analytics/insights]", err);
+      res.status(500).json({ message: "Σφάλμα" });
+    }
+  });
+
+  /** GA4 Data API (προαιρετικό): GA4_PROPERTY_ID + service account credentials */
+  app.get("/api/admin/analytics/ga4", async (req, res) => {
+    try {
+      const u = await getAdminUserFromRequest(req);
+      if (!u) return res.status(401).json({ message: "Unauthorized" });
+      if (u.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const q = z.enum(["day", "week", "month", "year"]).safeParse(req.query.period);
+      const period = (q.success ? q.data : "week") as Ga4Period;
+      const data = await fetchGa4Summary(period);
+      res.json(data);
+    } catch (err) {
+      console.error("[admin/analytics/ga4]", err);
       res.status(500).json({ message: "Σφάλμα" });
     }
   });

@@ -15,6 +15,7 @@ import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { GlobalOrganizationSchema } from "@/components/global-organization-schema";
 import { cn } from "@/lib/utils";
 import { usePageTracker } from "@/hooks/use-page-tracker";
+import { GoogleAnalytics } from "@/components/google-analytics";
 
 // Public Pages — lazy loaded (reload on stale chunk after deploy — see lazy-with-reload.ts)
 const Home = lazyWithReload(() => import("./pages/home-page"));
@@ -164,6 +165,7 @@ function Router() {
   const isAdmin = location.startsWith("/admin");
   return (
     <Fragment>
+      <GoogleAnalytics />
       {!isAdmin ? <GlobalOrganizationSchema /> : null}
       <ScrollToTop />
       <GlobalComponents />

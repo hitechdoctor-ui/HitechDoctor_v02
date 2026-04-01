@@ -46,7 +46,8 @@ import {
   type RepairPriceOverride,
   type InsertRepairPriceOverride,
 } from "@shared/schema";
-import { eq, desc, and, sql, lte, gte, count, lt, isNotNull } from "drizzle-orm";
+import { eq, desc, and, sql, lte, gte, count, lt, isNotNull, type SQL } from "drizzle-orm";
+import { siteAnalyticsDashboardFilter } from "./analytics-filter";
 import { queueHubSpotContactSync } from "./hubspot";
 
 export interface IStorage {
@@ -167,6 +168,7 @@ export interface IStorage {
     browserFamily: string;
     geoCity?: string | null;
     geoRegion?: string | null;
+    clientIp?: string | null;
   }): Promise<void>;
 
   getAnalyticsStats(): Promise<{
@@ -773,6 +775,7 @@ export class DatabaseStorage implements IStorage {
     browserFamily: string;
     geoCity?: string | null;
     geoRegion?: string | null;
+    clientIp?: string | null;
   }): Promise<void> {
     await db.insert(siteAnalytics).values({
       sessionId: data.sessionId.slice(0, 128),
@@ -783,6 +786,7 @@ export class DatabaseStorage implements IStorage {
       browserFamily: data.browserFamily.slice(0, 64),
       geoCity: data.geoCity?.slice(0, 128) ?? null,
       geoRegion: data.geoRegion?.slice(0, 128) ?? null,
+      clientIp: data.clientIp?.slice(0, 64) ?? null,
     });
   }
 
@@ -815,10 +819,12 @@ export class DatabaseStorage implements IStorage {
     startMonth.setDate(1);
     const activeSince = new Date(now.getTime() - 5 * 60 * 1000);
 
+    const analyticsVisitsFilter = siteAnalyticsDashboardFilter();
     const countSince = async (from: Date, to?: Date) => {
-      const cond = to
-        ? and(gte(siteAnalytics.visitedAt, from), lt(siteAnalytics.visitedAt, to))
+      let cond: SQL = to
+        ? and(gte(siteAnalytics.visitedAt, from), lt(siteAnalytics.visitedAt, to))!
         : gte(siteAnalytics.visitedAt, from);
+      if (analyticsVisitsFilter) cond = and(cond, analyticsVisitsFilter)!;
       const [r] = await db.select({ c: sql<number>`cast(count(*) as integer)` }).from(siteAnalytics).where(cond);
       return r?.c ?? 0;
     };
@@ -828,10 +834,13 @@ export class DatabaseStorage implements IStorage {
     const weekTotal = await countSince(startWeek);
     const monthTotal = await countSince(startMonth);
 
+    const activeCond = analyticsVisitsFilter
+      ? and(gte(siteAnalytics.visitedAt, activeSince), analyticsVisitsFilter)!
+      : gte(siteAnalytics.visitedAt, activeSince);
     const [activeRow] = await db
       .select({ c: sql<number>`cast(count(distinct ${siteAnalytics.sessionId}) as integer)` })
       .from(siteAnalytics)
-      .where(gte(siteAnalytics.visitedAt, activeSince));
+      .where(activeCond);
     const activeNow = activeRow?.c ?? 0;
 
     const dailyLast7Days: { date: string; count: number }[] = [];
@@ -859,13 +868,17 @@ export class DatabaseStorage implements IStorage {
       from = new Date(startToday.getFullYear(), 0, 1);
     }
 
+    const topFilter = siteAnalyticsDashboardFilter();
+    const periodCond = topFilter
+      ? and(gte(siteAnalytics.visitedAt, from), topFilter)!
+      : gte(siteAnalytics.visitedAt, from);
     const rows = await db
       .select({
         path: siteAnalytics.pagePath,
         cnt: count(),
       })
       .from(siteAnalytics)
-      .where(gte(siteAnalytics.visitedAt, from))
+      .where(periodCond)
       .groupBy(siteAnalytics.pagePath)
       .orderBy(desc(count()))
       .limit(10);
@@ -894,11 +907,15 @@ export class DatabaseStorage implements IStorage {
     topCities: { city: string; region: string | null; count: number }[];
   }> {
     const from = this.analyticsPeriodStart(period);
+    const insightsVisitsFilter = siteAnalyticsDashboardFilter();
+    const insightsBase = insightsVisitsFilter
+      ? and(gte(siteAnalytics.visitedAt, from), insightsVisitsFilter)!
+      : gte(siteAnalytics.visitedAt, from);
 
     const [totalRow] = await db
       .select({ c: sql<number>`cast(count(*) as integer)` })
       .from(siteAnalytics)
-      .where(gte(siteAnalytics.visitedAt, from));
+      .where(insightsBase);
     const totalInPeriod = totalRow?.c ?? 0;
 
     const osRows = await db
@@ -907,7 +924,7 @@ export class DatabaseStorage implements IStorage {
         cnt: count(),
       })
       .from(siteAnalytics)
-      .where(gte(siteAnalytics.visitedAt, from))
+      .where(insightsBase)
       .groupBy(siteAnalytics.osFamily)
       .orderBy(desc(count()));
 
@@ -917,10 +934,11 @@ export class DatabaseStorage implements IStorage {
         cnt: count(),
       })
       .from(siteAnalytics)
-      .where(gte(siteAnalytics.visitedAt, from))
+      .where(insightsBase)
       .groupBy(siteAnalytics.browserFamily)
       .orderBy(desc(count()));
 
+    const cityFilter = and(insightsBase, isNotNull(siteAnalytics.geoCity))!;
     const cityRows = await db
       .select({
         city: siteAnalytics.geoCity,
@@ -928,7 +946,7 @@ export class DatabaseStorage implements IStorage {
         cnt: count(),
       })
       .from(siteAnalytics)
-      .where(and(gte(siteAnalytics.visitedAt, from), isNotNull(siteAnalytics.geoCity)))
+      .where(cityFilter)
       .groupBy(siteAnalytics.geoCity, siteAnalytics.geoRegion)
       .orderBy(desc(count()))
       .limit(10);

@@ -11,7 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import { Link } from "wouter";
-import { Activity, BarChart3, Flame, MessageCircle, TrendingDown, TrendingUp, Users } from "lucide-react";
+import { Activity, BarChart3, Flame, LineChart, MessageCircle, TrendingDown, TrendingUp, Users } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getAdminAuthHeaders } from "@/lib/queryClient";
@@ -40,6 +40,16 @@ type ChatActivityStats = {
 type TopPagesResponse = {
   period: string;
   rows: { path: string; count: number }[];
+};
+
+type Ga4AdminResponse = {
+  configured: boolean;
+  period?: string;
+  activeUsers?: number;
+  screenPageViews?: number;
+  propertyId?: string;
+  reason?: string;
+  error?: string;
 };
 
 async function fetchAdminJson<T>(url: string): Promise<T | null> {
@@ -84,6 +94,12 @@ export function AnalyticsDashboard() {
     refetchInterval: 60_000,
   });
 
+  const ga4Q = useQuery({
+    queryKey: ["admin-analytics-ga4", topPeriod] as const,
+    queryFn: () => fetchAdminJson<Ga4AdminResponse>(`/api/admin/analytics/ga4?period=${topPeriod}`),
+    refetchInterval: 120_000,
+  });
+
   const chartData = useMemo(() => {
     const s = statsQ.data;
     const c = chatQ.data;
@@ -122,6 +138,14 @@ export function AnalyticsDashboard() {
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
             Επισκέψεις ιστοτόπου, AI chat και δημοφιλείς σελίδες (τελευταία ενημέρωση κάθε ~1 λεπτό)
+          </p>
+          <p className="text-[11px] text-muted-foreground/90 mt-2 max-w-3xl leading-relaxed border-l-2 border-primary/30 pl-3">
+            Τα νούμερα «Επισκέψεις» εδώ είναι{" "}
+            <span className="text-foreground/90 font-medium">πρώτο-πρόσωπο</span> (καταγραφή SPA στον server)· το
+            Google Analytics μετράει μόνο αν έχει οριστεί{" "}
+            <code className="text-[10px] bg-white/5 px-1 rounded">VITE_GA_MEASUREMENT_ID=G-…</code> στο build και ο
+            επισκέπτης έχει αποδεχτεί cookies ανάλυσης. Φίλτρα IP/health check: env{" "}
+            <code className="text-[10px] bg-white/5 px-1 rounded">ANALYTICS_EXCLUDE_IPS</code>.
           </p>
         </div>
         <Button variant="outline" size="sm" className="border-white/15 shrink-0 w-full sm:w-auto" asChild>
@@ -224,6 +248,46 @@ export function AnalyticsDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="bg-card/80 border-white/10 backdrop-blur-sm border-blue-500/15">
+        <CardHeader className="pb-2">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+            <div>
+              <CardTitle className="text-base font-display flex items-center gap-2">
+                <LineChart className="w-4 h-4 text-blue-400" aria-hidden />
+                Google Analytics 4 (Data API)
+              </CardTitle>
+              <CardDescription className="text-xs mt-1">
+                Ίδια περίοδο με «Top σελίδα» πάνω — απαιτεί{" "}
+                <code className="text-[10px] bg-white/5 px-1 rounded">GA4_PROPERTY_ID</code> (αριθμός property) + service
+                account στο GA4 ως Viewer.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="text-sm">
+          {ga4Q.isLoading ? (
+            <p className="text-muted-foreground">Φόρτωση GA4…</p>
+          ) : ga4Q.data?.configured === false ? (
+            <p className="text-muted-foreground leading-relaxed">
+              Δεν είναι ενεργό: {ga4Q.data?.reason ?? "λείπει ρύθμιση server env."}
+            </p>
+          ) : ga4Q.data?.error ? (
+            <p className="text-rose-300/95 text-xs leading-relaxed">Σφάλμα API: {ga4Q.data.error}</p>
+          ) : (
+            <div className="flex flex-wrap gap-6">
+              <div>
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Ενεργοί χρήστες</p>
+                <p className="text-2xl font-bold tabular-nums text-blue-200">{ga4Q.data?.activeUsers ?? "—"}</p>
+              </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Προβολές σελίδας (GA4)</p>
+                <p className="text-2xl font-bold tabular-nums text-blue-200">{ga4Q.data?.screenPageViews ?? "—"}</p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card className="bg-card/80 border-white/10 backdrop-blur-sm">
         <CardHeader className="pb-2">
