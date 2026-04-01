@@ -10,9 +10,46 @@ import { RepairRequestModal } from "@/components/repair-request-modal";
 import { Fragment, useState } from "react";
 import {
   Gamepad2, Wrench, CheckCircle2, AlertTriangle, Clock,
-  Phone, HardDrive, Zap, Wifi, ChevronRight, Shield, Star,
-  Disc3, Fan, Cable, CircuitBoard,
+  Phone, ChevronRight, Shield, Zap,
+  Disc3, Fan, Cable, CircuitBoard, MapPin, Package, ArrowRight,
 } from "lucide-react";
+
+/** JSON-LD: Local SEO + προσφορά controller για rich results */
+const PLAYSTATION_SERVICE_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  name: "Επισκευή PlayStation",
+  url: "https://hitechdoctor.com/services/episkeui-playstation",
+  description:
+    "Επισκευή κονσόλας και χειριστηρίων PlayStation PS3, PS4, PS5. Έδρα Μοσχάτο· εξυπηρέτηση Καλλιθέα, Ταύρος, Αθήνα· πανελλαδικά με Box Now.",
+  provider: {
+    "@type": "LocalBusiness",
+    name: "HiTech Doctor",
+    telephone: "+306981882005",
+    url: "https://hitechdoctor.com",
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "Μοσχάτο",
+      addressRegion: "Αττική",
+      addressCountry: "GR",
+    },
+  },
+  areaServed: [
+    { "@type": "Place", name: "Μοσχάτο" },
+    { "@type": "Place", name: "Καλλιθέα" },
+    { "@type": "Place", name: "Ταύρος" },
+    { "@type": "City", name: "Αθήνα" },
+    { "@type": "Country", name: "Ελλάδα" },
+  ],
+  offers: {
+    "@type": "Offer",
+    name: "Επισκευή χειριστηρίου DualSense PS5 (stick drift — ενδεικτική τιμή)",
+    price: "35.00",
+    priceCurrency: "EUR",
+    availability: "https://schema.org/InStock",
+    url: "https://hitechdoctor.com/services/episkeui-playstation",
+  },
+} as const;
 
 // ── PlayStation models ────────────────────────────────────────────────────────
 const PS_MODELS = [
@@ -109,8 +146,13 @@ const PS_MODELS = [
 
 // ── Controller repairs ────────────────────────────────────────────────────────
 const CONTROLLER_REPAIRS = [
-  { label: "Stick drift (αντικ. αναλόγων)", price: "€20–€30", icon: Gamepad2 },
-  { label: "Κολλημένα κουμπιά / triggers", price: "€15–€25", icon: Wrench },
+  {
+    label: "Stick drift DualSense PS5 (αντικ. αναλόγου)",
+    price: "€35",
+    icon: Gamepad2,
+    note: "Η πιο συχνή βλάβη — ενδεικτική τιμή· επιβεβαιώνεται μετά από έλεγχο",
+  },
+  { label: "Κολλημένα κουμπιά / L2–R2 (triggers)", price: "€15–€25", icon: Wrench },
   { label: "Επισκευή θύρας USB-C / micro-USB", price: "€20–€30", icon: Cable },
   { label: "Αντικατάσταση μπαταρίας", price: "€15–€25", icon: Zap },
 ];
@@ -141,6 +183,18 @@ const FAQ = [
     q: "Πόσος χρόνος χρειάζεται για την επισκευή;",
     a: "Οι περισσότερες επισκευές ολοκληρώνονται εντός 24–48 ωρών. Σε σύνθετες εργασίες πλακέτας (YLOD, HDMI PS5) μπορεί να χρειαστούν 2–3 εργάσιμες.",
   },
+  {
+    q: "Κάνετε επισκευή PlayStation στο Μοσχάτο ή μόνο στο κέντρο;",
+    a: "Η έδρα μας είναι στο Μοσχάτο — εκεί πραγματοποιείται το εργαστήριο. Εξυπηρετούμε άμεσα Καλλιθέα, Ταύρο και όλες τις γειτονικές περιοχές της Αθήνας· για service κονσόλας σε Καλλιθέα ή επισκευή PS5 στον Ταύρο, ένα τηλεφώνημα αρκεί για ραντεβού και χρόνο παράδοσης.",
+  },
+  {
+    q: "Μπορώ να στείλω την κονσόλα από επαρχία με Box Now;",
+    a: "Ναι. Καλύπτουμε όλη την Ελλάδα μέσω Box Now: συσκευάζετε τη συσκευή, την αφήνετε στο πλησιέστερο locker και την παραλαμβάνουμε εμείς. Η διαδικασία είναι γρήγορη και παρακολουθήσιμη — λεπτομέρειες στη σελίδα αποστολής συσκευών.",
+  },
+  {
+    q: "Ισχύει η τιμή €35 για το DualSense με stick drift;",
+    a: "Η €35 είναι η προνομιακή ενδεικτική τιμή για την τυπική αντικατάσταση αναλόγου (stick drift) στο PS5 DualSense, μετά από έλεγχο. Σε σπάνιες περιπτώσεις με επιπλέον φθορά η τελική προσφορά ενημερώνεται πριν ξεκινήσει η εργασία.",
+  },
 ];
 
 export default function ServicePlayStation() {
@@ -150,20 +204,16 @@ export default function ServicePlayStation() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Seo
-        title="Επισκευή PlayStation (PS5, PS4, PS3) Αθήνα | HiTech Doctor"
-        description="Επαγγελματική επισκευή PlayStation PS5, PS4 Pro, PS4 Slim, PS4, PS3 στην Αθήνα. HDMI port, ανεμιστήρας, μονάδα δίσκου, controller. Τιμές από €20. Εγγύηση εργασίας."
-        keywords="επισκευη playstation αθηνα, επισκευη ps5, επισκευη ps4, hdmi port playstation, ylod ps3, controller stick drift, επισκευη κονσολας"
+        title="Επισκευή PlayStation Μοσχάτο, Καλλιθέα, Ταύρος | PS5 PS4 PS3 | HiTech Doctor"
+        description="Επισκευή PlayStation στο Μοσχάτο με άμεση εξυπηρέτηση Καλλιθέα, Ταύρο και Αθήνα. Service κονσόλας & DualSense από €35. Πανελλαδικά με Box Now. HDMI, δίσκος, ανεμιστήρας, PS3 έως PS5."
         url="https://hitechdoctor.com/services/episkeui-playstation"
       />
       <Helmet>
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Service",
-          "name": "Επισκευή PlayStation",
-          "provider": { "@type": "LocalBusiness", "name": "HiTech Doctor", "telephone": "+306981882005" },
-          "areaServed": "Αθήνα",
-          "description": "Επισκευή PlayStation PS5, PS4, PS3 — HDMI, ανεμιστήρας, δίσκος, controller",
-        })}</script>
+        <meta
+          name="keywords"
+          content="επισκευή PlayStation Μοσχάτο, service κονσόλας Καλλιθέα, επισκευή PS5 Ταύρος, επισκευή PS4 Αθήνα, DualSense stick drift, Box Now επισκευή κονσόλας, επισκευή χειριστηρίου PS5"
+        />
+        <script type="application/ld+json">{JSON.stringify(PLAYSTATION_SERVICE_JSON_LD)}</script>
       </Helmet>
 
       <Navbar />
@@ -201,8 +251,10 @@ export default function ServicePlayStation() {
                 </div>
               </div>
               <p className="text-base text-muted-foreground leading-relaxed max-w-xl mb-6">
-                Επαγγελματική επισκευή <strong className="text-white">PS5, PS4 Pro, PS4 Slim, PS4 και PS3</strong> στην Αθήνα.
-                HDMI port, ανεμιστήρας, μονάδα δίσκου, controller stick drift — με εγγύηση εργασίας.
+                Επαγγελματική επισκευή <strong className="text-white">PS5, PS4 Pro, PS4 Slim, PS4 και PS3</strong> — από την κονσόλα
+                έως το χειριστήριο. Έδρα στο <strong className="text-white">Μοσχάτο</strong>, με γρήγορη πρόσβαση από{" "}
+                <strong className="text-white">Καλλιθέα, Ταύρο</strong> και όλες τις γειτονικές περιοχές της Αθήνας.
+                HDMI, δίσκος, ανεμιστήρας, DualSense — με εγγύηση εργασίας και δυνατότητα αποστολής πανελλαδικά με Box Now.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Button
@@ -215,7 +267,10 @@ export default function ServicePlayStation() {
                   Κλείστε Ραντεβού
                 </Button>
                 <a href="tel:6981882005">
-                  <Button variant="outline" className="h-11 px-6 border-white/20 hover:border-blue-400/50 gap-2">
+                  <Button
+                    variant="outline"
+                    className="h-11 px-6 gap-2 border-white/40 bg-white/10 text-white hover:bg-white/15 hover:text-white hover:border-sky-400/60 font-semibold [&_svg]:text-white"
+                  >
                     <Phone className="w-4 h-4" />
                     698 188 2005
                   </Button>
@@ -244,16 +299,73 @@ export default function ServicePlayStation() {
       </section>
 
       {/* HDMI alert banner */}
-      <div className="bg-amber-500/10 border-y border-amber-500/25 py-3">
+      <div className="bg-amber-950/50 border-y border-amber-500/35 py-3">
         <div className="container mx-auto px-4 max-w-5xl flex items-center gap-3">
-          <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
-          <p className="text-xs text-amber-200/80">
-            <strong className="text-amber-400">Πιο συχνή βλάβη:</strong> Χαλασμένη θύρα HDMI — ΔΕΝ χρειάζεται νέα κονσόλα! Επισκευάζουμε την ίδια την υποδοχή με microsoldeing από €50.
+          <AlertTriangle className="w-4 h-4 text-amber-300 shrink-0" />
+          <p className="text-xs text-amber-50/95 leading-relaxed">
+            <strong className="text-amber-300">Πιο συχνή βλάβη:</strong> Χαλασμένη θύρα HDMI — ΔΕΝ χρειάζεται νέα κονσόλα! Επισκευάζουμε την ίδια την υποδοχή με microsoldeing από €50.
           </p>
         </div>
       </div>
 
       <main className="container mx-auto px-4 max-w-5xl py-12 space-y-14">
+
+        {/* Local SEO + Box Now */}
+        <section className="rounded-3xl border border-white/10 bg-card/40 p-6 sm:p-8 space-y-8" aria-labelledby="ps-local-box-heading">
+          <h2 id="ps-local-box-heading" className="text-2xl sm:text-3xl font-display font-extrabold text-foreground leading-tight">
+            Επισκευή PlayStation στο Μοσχάτο &amp; Online μέσω Box Now
+          </h2>
+          <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+            <p>
+              Το εργαστήριό μας βρίσκεται στο <strong className="text-foreground">Μοσχάτο</strong> — εκεί γίνεται η διάγνωση,
+              η επισκευή και ο έλεγχος ποιότητας. Αν ψάχνετε για{" "}
+              <strong className="text-foreground">επισκευή PlayStation Μοσχάτο</strong>, μπορείτε να μας φέρετε τη συσκευή
+              απευθείας ή να κλείσετε ραντεβού για να μην περιμένετε. Εξυπηρετούμε καθημερινά γειτονικές περιοχές: για{" "}
+              <strong className="text-foreground">service κονσόλας Καλλιθέα</strong> ή{" "}
+              <strong className="text-foreground">επισκευή PS5 Ταύρος</strong> ο χρόνος πρόσβασης στο εργαστήριο είναι
+              ελάχιστος — τηλεφωνήστε και οργανώνουμε την παράδοση και την παραλαβή χωρίς καθυστερήσεις.
+            </p>
+            <p>
+              Αναλαμβάνουμε την <strong className="text-foreground">πλήρη γκάμα PlayStation</strong> από{" "}
+              <strong className="text-foreground">PS3 έως PS5</strong>: κονσόλες (HDMI, τροφοδοτικό, δίσκος, ανεμιστήρας,
+              YLOD) και χειριστήρια (DualSense, DualShock). Οι τεχνικοί μας εργάζονται με διαφανείς τιμές και γραπτή εγγύηση
+              εργασίας — χωρίς «κρυφά» κόστη πριν συμφωνήσετε.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-blue-500/25 bg-gradient-to-br from-blue-950/40 to-slate-950/40 p-6 sm:p-7 space-y-4">
+            <div className="flex items-center gap-2 text-blue-300">
+              <Package className="w-5 h-5 shrink-0" aria-hidden />
+              <h3 className="text-lg font-display font-bold text-white">Πανελλαδική εξυπηρέτηση με Box Now</h3>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Δεν μένετε κοντά στο Μοσχάτο; Στέλνουμε και παραλαμβάνουμε συσκευές από{" "}
+              <strong className="text-foreground">όλη την Ελλάδα</strong> μέσω{" "}
+              <strong className="text-foreground">Box Now</strong>: επιλέγετε locker κοντά σας, αφήνετε τη συσκευή
+              συσκευασμένη και η μεταφορά ολοκληρώνεται γρήγορα και με ιχνηλασιμότητα. Ιδανικό για κονσόλα ή χειριστήριο
+              χωρίς μετακίνηση στην Αθήνα.
+            </p>
+            <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside">
+              <li>Απλή διαδικασία: συσκευασία → πλησιέστερο locker → παραλαβή από εμάς.</li>
+              <li>Κατάλληλο για PS5, PS4, PS3 και χειριστήρια — ρωτήστε μας για οδηγίες συσκευασίας.</li>
+            </ul>
+            <Link href="/services/apostoli-syskevis">
+              <Button
+                className="w-full sm:w-auto h-12 px-6 font-bold border-0 gap-2"
+                style={{ background: "linear-gradient(135deg, #1d4ed8, #3b82f6)", boxShadow: "0 0 20px rgba(59,130,246,0.25)" }}
+                data-testid="button-ps-box-now-cta"
+              >
+                Στείλε τη συσκευή σου με Box Now
+                <ArrowRight className="w-4 h-4" aria-hidden />
+              </Button>
+            </Link>
+          </div>
+
+          <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <MapPin className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden />
+            <span>Φέρτε τη συσκευή στο εργαστήριο ή καλέστε για ραντεβού — 698&nbsp;188&nbsp;2005.</span>
+          </p>
+        </section>
 
         {/* PlayStation model cards */}
         <div className="space-y-6">
@@ -316,26 +428,46 @@ export default function ServicePlayStation() {
           ))}
         </div>
 
-        {/* Controller repairs */}
-        <div>
-          <h2 className="text-2xl font-display font-extrabold text-foreground mb-1">Επισκευή Controller</h2>
-          <p className="text-sm text-muted-foreground mb-5">
-            Stick drift, κολλημένα κουμπιά, χαλασμένη θύρα φόρτισης — ισχύει για DualSense (PS5) και DualShock (PS4).
+        {/* Controller repairs — DualSense focus */}
+        <section aria-labelledby="ps-dualsense-heading">
+          <h2 id="ps-dualsense-heading" className="text-2xl sm:text-3xl font-display font-extrabold text-foreground mb-3 leading-tight">
+            Επισκευή Controller PS5 με 35€
+          </h2>
+          <p className="text-sm text-muted-foreground mb-2 leading-relaxed max-w-3xl">
+            Το <strong className="text-foreground">DualSense</strong> είναι το χειριστήριο που «βλέπουμε» πιο συχνά στο
+            πάγκο: <strong className="text-foreground">stick drift</strong> (ο χαρακτήρας κινείται μόνος του), φθορά στα{" "}
+            <strong className="text-foreground">L2 / R2</strong>, κολλημένα κουμπιά ή προβλήματα στη θύρα φόρτισης. Η
+            εργασία γίνεται με εξειδικευμένα εργαλεία και έλεγχο πριν την παράδοση — όχι «μπαλώματα» που κρατούν λίγες μέρες.
+          </p>
+          <p className="text-sm text-muted-foreground mb-6 leading-relaxed max-w-3xl">
+            Για την τυπική αντικατάσταση αναλόγου (stick drift) στο PS5 DualSense προσφέρουμε{" "}
+            <strong className="text-primary text-base">προνομιακή τιμή 35€</strong> (ενδεικτική, μετά από έλεγχο).
+            Παράλληλα αναλαμβάνουμε <strong className="text-foreground">όλη τη γκάμα</strong> χειριστηρίων και κονσολών από{" "}
+            <strong className="text-foreground">PlayStation 3 έως PlayStation 5</strong> — δείτε αναλυτικά τις κατηγορίες
+            παρακάτω.
           </p>
           <div className="grid sm:grid-cols-2 gap-4">
             {CONTROLLER_REPAIRS.map((r) => (
-              <div key={r.label} className="flex items-center justify-between p-4 rounded-2xl border border-white/8 bg-card/50 hover:border-primary/30 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+              <div
+                key={r.label}
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 rounded-2xl border border-white/8 bg-card/50 hover:border-primary/30 transition-colors"
+              >
+                <div className="flex items-start gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 mt-0.5">
                     <r.icon className="w-4 h-4 text-primary" />
                   </div>
-                  <span className="text-sm text-foreground/90 font-medium">{r.label}</span>
+                  <div className="min-w-0">
+                    <span className="text-sm text-foreground/90 font-medium">{r.label}</span>
+                    {"note" in r && r.note ? (
+                      <p className="text-[10px] text-muted-foreground mt-1 leading-snug">{r.note}</p>
+                    ) : null}
+                  </div>
                 </div>
-                <span className="text-sm font-bold text-primary whitespace-nowrap ml-4">{r.price}</span>
+                <span className="text-sm font-bold text-primary whitespace-nowrap sm:text-right sm:pl-4">{r.price}</span>
               </div>
             ))}
           </div>
-        </div>
+        </section>
 
         {/* Common faults visual */}
         <div>
@@ -401,7 +533,10 @@ export default function ServicePlayStation() {
               Κλείστε Ραντεβού
             </Button>
             <a href="tel:6981882005">
-              <Button variant="outline" className="h-12 px-6 border-blue-500/30 hover:border-blue-400 gap-2 text-blue-300">
+              <Button
+                variant="outline"
+                className="h-12 px-6 gap-2 border-sky-400/50 bg-white/5 text-sky-100 hover:bg-white/10 hover:text-white hover:border-sky-300 font-semibold [&_svg]:text-sky-200"
+              >
                 <Phone className="w-4 h-4" />
                 698 188 2005
               </Button>
