@@ -113,11 +113,11 @@ function ExtraImagesManager({
                 #{idx + 1}{idx === 0 && <Star className="inline w-2.5 h-2.5 text-primary/50 ml-1" />}
               </span>
               <div className="flex flex-col gap-0.5 shrink-0">
-                <button type="button" onClick={() => moveUp(idx)} disabled={idx === 0} className="text-[10px] leading-none text-muted-foreground/50 hover:text-foreground disabled:opacity-20 px-1">▲</button>
-                <button type="button" onClick={() => moveDown(idx)} disabled={idx === images.length - 1} className="text-[10px] leading-none text-muted-foreground/50 hover:text-foreground disabled:opacity-20 px-1">▼</button>
+                <button type="button" onClick={() => moveUp(idx)} disabled={idx === 0} className="text-[10px] leading-none text-muted-foreground hover:text-foreground disabled:opacity-20 px-1" aria-label="Μετακίνηση εικόνας πάνω">▲</button>
+                <button type="button" onClick={() => moveDown(idx)} disabled={idx === images.length - 1} className="text-[10px] leading-none text-muted-foreground hover:text-foreground disabled:opacity-20 px-1" aria-label="Μετακίνηση εικόνας κάτω">▼</button>
               </div>
-              <button type="button" onClick={() => removeImage(idx)} className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full text-muted-foreground/50 hover:bg-red-500/20 hover:text-red-400 transition-all">
-                <X className="w-3 h-3" />
+              <button type="button" onClick={() => removeImage(idx)} className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full text-muted-foreground hover:bg-red-500/20 hover:text-red-400 transition-all" aria-label="Αφαίρεση εικόνας από τη λίστα">
+                <X className="w-3 h-3" aria-hidden />
               </button>
             </div>
           ))}
@@ -137,7 +137,7 @@ function ExtraImagesManager({
         </Button>
       </div>
       {images.length === 0 && <p className="text-[11px] text-muted-foreground/40 italic">Δεν έχουν προστεθεί επιπλέον φωτογραφίες ακόμη.</p>}
-      <p className="text-[11px] text-muted-foreground/50">Η πρώτη (#1) εμφανίζεται κύρια στο gallery. Χρησιμοποιήστε ▲▼ για αλλαγή σειράς.</p>
+      <p className="text-[11px] text-muted-foreground">Η πρώτη (#1) εμφανίζεται κύρια στο gallery. Χρησιμοποιήστε ▲▼ για αλλαγή σειράς.</p>
     </div>
   );
 }
@@ -699,10 +699,10 @@ export default function AdminProducts() {
                     <span className="ml-1.5 text-[9px] text-yellow-400/80 border border-yellow-400/20 bg-yellow-400/5 rounded px-1.5 py-0.5">κύρια</span>
                   </Label>
                   <Input className="bg-background text-sm" placeholder="https://... ή /images/photo.webp" {...form.register("imageUrl")} data-testid="input-product-image" />
-                  <p className="text-[10px] text-muted-foreground/50">Εμφανίζεται στη λίστα και στην κάρτα προϊόντος.</p>
+                  <p className="text-[10px] text-muted-foreground">Εμφανίζεται στη λίστα και στην κάρτα προϊόντος.</p>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground/60">Preview</Label>
+                  <Label className="text-xs text-muted-foreground">Preview</Label>
                   <div className="w-full h-28 rounded-xl bg-black/40 border border-white/10 overflow-hidden flex items-center justify-center">
                     {form.watch("imageUrl") ? (
                       <img src={form.watch("imageUrl") ?? ""} alt="preview" className="w-full h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
@@ -727,10 +727,10 @@ export default function AdminProducts() {
               <div className="flex items-center gap-2">
                 <AlignLeft className="w-3.5 h-3.5 text-primary" />
                 <Label className="text-sm font-semibold">Σύντομη Περιγραφή</Label>
-                <span className="text-[10px] text-muted-foreground/60 border border-white/10 rounded px-1.5 py-0.5">plain text</span>
+                <span className="text-[10px] text-muted-foreground border border-white/10 rounded px-1.5 py-0.5">plain text</span>
               </div>
               <Textarea className="bg-background resize-none text-sm" rows={3} placeholder="Μικρή περιγραφή για listings, κάρτες, meta description..." {...form.register("description")} data-testid="input-product-short-desc" />
-              <p className="text-[11px] text-muted-foreground/50">Εμφανίζεται στην κάρτα προϊόντος και στο meta description (SEO).</p>
+              <p className="text-[11px] text-muted-foreground">Εμφανίζεται στην κάρτα προϊόντος και στο meta description (SEO).</p>
             </div>
 
             {/* ── Full Description ── */}
@@ -741,7 +741,7 @@ export default function AdminProducts() {
                 <span className="text-[10px] text-primary/70 border border-primary/20 bg-primary/5 rounded px-1.5 py-0.5">rich text editor</span>
               </div>
               <RichTextEditor value={richContent} onChange={setRichContent} placeholder="Γράψτε λεπτομερή περιγραφή με μορφοποίηση, λίστες, τίτλους..." />
-              <p className="text-[11px] text-muted-foreground/50">Εμφανίζεται στη σελίδα του προϊόντος. Υποστηρίζει μορφοποίηση, λίστες, επικεφαλίδες.</p>
+              <p className="text-[11px] text-muted-foreground">Εμφανίζεται στη σελίδα του προϊόντος. Υποστηρίζει μορφοποίηση, λίστες, επικεφαλίδες.</p>
             </div>
 
             <div className="flex justify-end gap-2 pt-2 border-t border-white/8">
@@ -757,8 +757,12 @@ export default function AdminProducts() {
         {/* Search bar */}
         <div className="flex items-center gap-2 px-3 h-10 rounded-xl border border-white/10 bg-card hover:border-white/20 focus-within:border-primary/40 focus-within:shadow-[0_0_0_2px_rgba(0,210,200,0.1)] transition-all max-w-lg">
           <Search className="w-4 h-4 text-muted-foreground shrink-0" />
-          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Αναζήτηση ονόματος, κατηγορίας, μάρκας, τιμής…" className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/50" data-testid="input-product-search" />
-          {search && <button onClick={() => setSearch("")} className="text-muted-foreground hover:text-foreground"><X className="w-3.5 h-3.5" /></button>}
+          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Αναζήτηση ονόματος, κατηγορίας, μάρκας, τιμής…" className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground" data-testid="input-product-search" />
+          {search && (
+            <button type="button" onClick={() => setSearch("")} className="text-muted-foreground hover:text-foreground" aria-label="Καθαρισμός αναζήτησης">
+              <X className="w-3.5 h-3.5" aria-hidden />
+            </button>
+          )}
         </div>
 
         {/* Filter dropdowns */}
@@ -887,6 +891,7 @@ export default function AdminProducts() {
                       variant="ghost"
                       size="icon"
                       title="Refresh Prices"
+                      aria-label="Ανανέωση τιμών προϊόντος από προμηθευτή"
                       className="text-cyan-400/90 hover:text-cyan-300 hover:bg-cyan-500/10"
                       disabled={refreshingPrices}
                       onClick={async (e) => {
@@ -911,13 +916,13 @@ export default function AdminProducts() {
                       }}
                       data-testid={`btn-refresh-prices-${product.id}`}
                     >
-                      <RefreshCw className={`w-4 h-4 ${refreshingPrices ? "animate-spin" : ""}`} />
+                      <RefreshCw className={`w-4 h-4 ${refreshingPrices ? "animate-spin" : ""}`} aria-hidden />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(product)} data-testid={`btn-edit-product-${product.id}`}>
-                      <Edit className="w-4 h-4" />
+                    <Button variant="ghost" size="icon" onClick={() => openEdit(product)} data-testid={`btn-edit-product-${product.id}`} aria-label={`Επεξεργασία προϊόντος ${product.name}`}>
+                      <Edit className="w-4 h-4" aria-hidden />
                     </Button>
-                    <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/20 hover:text-destructive" onClick={() => handleDelete(product.id)} data-testid={`btn-delete-product-${product.id}`}>
-                      <Trash2 className="w-4 h-4" />
+                    <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/20 hover:text-destructive" onClick={() => handleDelete(product.id)} data-testid={`btn-delete-product-${product.id}`} aria-label={`Διαγραφή προϊόντος ${product.name}`}>
+                      <Trash2 className="w-4 h-4" aria-hidden />
                     </Button>
                   </TableCell>
                 </TableRow>

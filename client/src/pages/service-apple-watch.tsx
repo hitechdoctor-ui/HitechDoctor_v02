@@ -446,9 +446,9 @@ export default function ServiceAppleWatch() {
           data-testid="button-mobile-book">
           <Wrench className="w-4 h-4 mr-2" />Αίτημα Επισκευής
         </Button>
-        <a href="tel:+306981882005" className="shrink-0">
+        <a href="tel:+306981882005" className="shrink-0" aria-label="Κλήση στο 6981 882 005">
           <Button variant="outline" className="h-11 px-4 border-primary/30 text-primary" data-testid="button-mobile-call">
-            <Phone className="w-4 h-4" />
+            <Phone className="w-4 h-4" aria-hidden />
           </Button>
         </a>
       </div>

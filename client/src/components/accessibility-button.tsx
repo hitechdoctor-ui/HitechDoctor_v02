@@ -122,7 +122,7 @@ export function AccessibilityButton() {
         data-testid="btn-accessibility"
         className="relative z-[1] w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
       >
-        <Accessibility className="w-5 h-5" />
+        <Accessibility className="w-5 h-5" aria-hidden />
       </button>
 
       {/* Panel — αριστερά του κουμπιού ώστε να μην καλύπτει το AI */}
@@ -137,54 +137,56 @@ export function AccessibilityButton() {
                 <span className="text-sm font-bold">Προσβασιμότητα</span>
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={reset} className="text-[10px] text-muted-foreground/60 hover:text-primary transition-colors">Επαναφορά</button>
-                <button onClick={() => setOpen(false)} className="w-6 h-6 rounded-lg flex items-center justify-center hover:bg-white/10"><X className="w-3.5 h-3.5" /></button>
+                <button type="button" onClick={reset} className="text-[10px] text-muted-foreground hover:text-primary transition-colors">Επαναφορά</button>
+                <button type="button" onClick={() => setOpen(false)} className="w-6 h-6 rounded-lg flex items-center justify-center hover:bg-white/10" aria-label="Κλείσιμο πίνακα προσβασιμότητας"><X className="w-3.5 h-3.5" aria-hidden /></button>
               </div>
             </div>
 
             <div className="p-4 space-y-4 flex-1 min-h-0 overflow-y-auto">
               {/* Text */}
               <div>
-                <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-2 flex items-center gap-1.5"><Type className="w-3 h-3" />Κείμενο</p>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5"><Type className="w-3 h-3" aria-hidden />Κείμενο</p>
                 <div className="space-y-2">
                   {/* Font size */}
                   <div className="flex items-center justify-between bg-background/60 rounded-xl px-3 py-2">
                     <span className="text-xs text-muted-foreground">Μέγεθος Κειμένου</span>
                     <div className="flex items-center gap-2">
-                      <button onClick={() => setFontSize((v) => Math.max(80, v - 10))} className="w-6 h-6 rounded-lg bg-white/10 hover:bg-primary/20 flex items-center justify-center"><Minus className="w-3 h-3" /></button>
+                      <button type="button" onClick={() => setFontSize((v) => Math.max(80, v - 10))} className="w-6 h-6 rounded-lg bg-white/10 hover:bg-primary/20 flex items-center justify-center" aria-label="Μείωση μεγέθους κειμένου"><Minus className="w-3 h-3" aria-hidden /></button>
                       <span className="text-xs font-mono w-8 text-center">{fontSize}%</span>
-                      <button onClick={() => setFontSize((v) => Math.min(150, v + 10))} className="w-6 h-6 rounded-lg bg-white/10 hover:bg-primary/20 flex items-center justify-center"><Plus className="w-3 h-3" /></button>
+                      <button type="button" onClick={() => setFontSize((v) => Math.min(150, v + 10))} className="w-6 h-6 rounded-lg bg-white/10 hover:bg-primary/20 flex items-center justify-center" aria-label="Αύξηση μεγέθους κειμένου"><Plus className="w-3 h-3" aria-hidden /></button>
                     </div>
                   </div>
                   {/* Line height */}
                   <div className="flex items-center justify-between bg-background/60 rounded-xl px-3 py-2">
                     <span className="text-xs text-muted-foreground">Ύψος Γραμμής</span>
                     <div className="flex items-center gap-2">
-                      <button onClick={() => setLineHeight((v) => Math.max(80, v - 10))} className="w-6 h-6 rounded-lg bg-white/10 hover:bg-primary/20 flex items-center justify-center"><Minus className="w-3 h-3" /></button>
+                      <button type="button" onClick={() => setLineHeight((v) => Math.max(80, v - 10))} className="w-6 h-6 rounded-lg bg-white/10 hover:bg-primary/20 flex items-center justify-center" aria-label="Μείωση ύψους γραμμής"><Minus className="w-3 h-3" aria-hidden /></button>
                       <span className="text-xs font-mono w-8 text-center">{lineHeight}%</span>
-                      <button onClick={() => setLineHeight((v) => Math.min(200, v + 10))} className="w-6 h-6 rounded-lg bg-white/10 hover:bg-primary/20 flex items-center justify-center"><Plus className="w-3 h-3" /></button>
+                      <button type="button" onClick={() => setLineHeight((v) => Math.min(200, v + 10))} className="w-6 h-6 rounded-lg bg-white/10 hover:bg-primary/20 flex items-center justify-center" aria-label="Αύξηση ύψους γραμμής"><Plus className="w-3 h-3" aria-hidden /></button>
                     </div>
                   </div>
                   {/* Readable font */}
                   <button
+                    type="button"
                     onClick={() => toggle("readable",
                       () => document.documentElement.classList.add("a11y-readable"),
                       () => document.documentElement.classList.remove("a11y-readable")
                     )}
                     className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition-all ${active["readable"] ? "bg-primary/20 border border-primary/40 text-primary" : "bg-background/60 border border-transparent text-muted-foreground hover:border-white/15"}`}
                   >
-                    <Book className="w-3.5 h-3.5" />
+                    <Book className="w-3.5 h-3.5" aria-hidden />
                     Ευανάγνωστη Γραμματοσειρά
                   </button>
                   {/* Text align */}
                   <button
+                    type="button"
                     onClick={() => toggle("align",
                       () => document.documentElement.style.setProperty("--text-align", "left"),
                       () => document.documentElement.style.removeProperty("--text-align")
                     )}
                     className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition-all ${active["align"] ? "bg-primary/20 border border-primary/40 text-primary" : "bg-background/60 border border-transparent text-muted-foreground hover:border-white/15"}`}
                   >
-                    <AlignLeft className="w-3.5 h-3.5" />
+                    <AlignLeft className="w-3.5 h-3.5" aria-hidden />
                     Στοίχιση Κειμένου
                   </button>
                 </div>
@@ -192,15 +194,16 @@ export function AccessibilityButton() {
 
               {/* Visual */}
               <div>
-                <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-2 flex items-center gap-1.5"><Eye className="w-3 h-3" />Οπτικό</p>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5"><Eye className="w-3 h-3" aria-hidden />Οπτικό</p>
                 <div className="space-y-1.5">
                   {VISUAL_OPTIONS.map((o) => (
                     <button
+                      type="button"
                       key={o.key}
                       onClick={() => toggle(o.key, o.action, o.deaction)}
                       className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition-all ${active[o.key] ? "bg-primary/20 border border-primary/40 text-primary" : "bg-background/60 border border-transparent text-muted-foreground hover:border-white/15"}`}
                     >
-                      <o.icon className="w-3.5 h-3.5" />
+                      <o.icon className="w-3.5 h-3.5" aria-hidden />
                       {o.label}
                     </button>
                   ))}
@@ -209,15 +212,16 @@ export function AccessibilityButton() {
 
               {/* Orientation */}
               <div>
-                <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-2 flex items-center gap-1.5"><Navigation2 className="w-3 h-3" />Πλοήγηση</p>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5"><Navigation2 className="w-3 h-3" aria-hidden />Πλοήγηση</p>
                 <div className="space-y-1.5">
                   {ORIENT_OPTIONS.map((o) => (
                     <button
+                      type="button"
                       key={o.key}
                       onClick={() => toggle(o.key, o.action, o.deaction)}
                       className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition-all ${active[o.key] ? "bg-primary/20 border border-primary/40 text-primary" : "bg-background/60 border border-transparent text-muted-foreground hover:border-white/15"}`}
                     >
-                      <o.icon className="w-3.5 h-3.5" />
+                      <o.icon className="w-3.5 h-3.5" aria-hidden />
                       {o.label}
                     </button>
                   ))}

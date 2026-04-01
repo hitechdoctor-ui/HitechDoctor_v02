@@ -4,8 +4,7 @@ import { AccessibilityButton } from "@/components/accessibility-button";
 import { RepairChatbot } from "@/components/repair-chatbot";
 
 /**
- * Κάθετη στήλη FAB: τηλέφωνο, προσβασιμότητα, (προαιρετικά) AI Doctor.
- * Στην αρχική το RepairChatbot φορτώνεται από `home-page.tsx` πάνω από αυτή τη στήλη.
+ * Κάθετη στήλη FAB: τηλέφωνο, προσβασιμότητα, AI Doctor (RepairChatbot σε όλες τις δημόσιες σελίδες).
  * Στο eShop το κουμπί φίλτρων έχει z-[154] — `elevateZForOverlay` ανεβάζει τη στήλη ώστε το chat να μην καλύπτεται.
  */
 export function FloatingActionStack({

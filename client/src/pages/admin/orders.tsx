@@ -234,12 +234,12 @@ function SearchInput({ value, onChange }: { value: string; onChange: (v: string)
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Αναζήτηση πελάτη, email, #παραγγελία..."
-        className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none"
+        className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
         data-testid="input-orders-search"
       />
       {value && (
-        <button onClick={() => onChange("")} className="shrink-0">
-          <X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground transition-colors" />
+        <button type="button" onClick={() => onChange("")} className="shrink-0" aria-label="Καθαρισμός αναζήτησης">
+          <X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground transition-colors" aria-hidden />
         </button>
       )}
     </div>
@@ -469,8 +469,9 @@ function ManualOrderDialog({
                     className="shrink-0 text-muted-foreground hover:text-red-400"
                     onClick={() => removeLine(idx)}
                     disabled={lines.length <= 1}
+                    aria-label="Αφαίρεση γραμμής παραγγελίας"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-4 h-4" aria-hidden />
                   </Button>
                 </div>
               ))}
@@ -511,7 +512,7 @@ function OrderItemsRow({ orderId }: { orderId: number }) {
 
   return (
     <div className="py-3 pl-6 pr-4">
-      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-2">Προϊόντα παραγγελίας</p>
+      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Προϊόντα παραγγελίας</p>
       <div className="flex flex-col gap-1.5">
         {items.map((item) => (
           <div
@@ -578,7 +579,7 @@ function OrderRow({ order, onStatusChange }: { order: any; onStatusChange: (id: 
           <div className="flex items-center gap-2">
             {expanded
               ? <ChevronDown className="w-3.5 h-3.5 text-primary shrink-0" />
-              : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />}
+              : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
             <span className="text-xs font-mono text-muted-foreground">#{order.id}</span>
           </div>
         </td>
@@ -835,12 +836,12 @@ export default function AdminOrders() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/8 bg-white/2">
-                    <th className="pl-4 pr-3 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 w-20">#</th>
-                    <th className="pr-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Πελάτης</th>
-                    <th className="pr-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Ημερομηνία</th>
-                    <th className="pr-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Σύνολο</th>
-                    <th className="pr-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Κατάσταση</th>
-                    <th className="pr-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Εκτύπωση</th>
+                    <th className="pl-4 pr-3 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground w-20">#</th>
+                    <th className="pr-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Πελάτης</th>
+                    <th className="pr-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Ημερομηνία</th>
+                    <th className="pr-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Σύνολο</th>
+                    <th className="pr-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Κατάσταση</th>
+                    <th className="pr-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Εκτύπωση</th>
                   </tr>
                 </thead>
                 <tbody>

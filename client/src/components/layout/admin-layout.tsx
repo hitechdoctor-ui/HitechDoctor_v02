@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import type { LucideIcon } from "lucide-react";
-import { Package, Users, ShoppingCart, LayoutDashboard, LogOut, Wrench, Euro, Menu, X, Shield, Globe, MessageSquare, Lock, Mail, Eye, EyeOff, UserCog, Download, Link2, Tag, RefreshCw, TableProperties } from "lucide-react";
+import { Package, Users, ShoppingCart, LayoutDashboard, LogOut, Wrench, Euro, Menu, X, Shield, Globe, MessageSquare, Lock, Mail, Eye, EyeOff, UserCog, Download, Link2, Tag, RefreshCw, TableProperties, PieChart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect, useMemo, useRef } from "react";
@@ -100,8 +100,9 @@ function AdminLogin({ onLogin }: { onLogin: (token: string) => void }) {
               type="button"
               onClick={() => setShowPass(!showPass)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label={showPass ? "Απόκρυψη κωδικού" : "Εμφάνιση κωδικού"}
             >
-              {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showPass ? <EyeOff className="w-4 h-4" aria-hidden /> : <Eye className="w-4 h-4" aria-hidden />}
             </button>
           </div>
           {error && (
@@ -111,7 +112,7 @@ function AdminLogin({ onLogin }: { onLogin: (token: string) => void }) {
             {loading ? "Σύνδεση..." : "Σύνδεση"}
           </Button>
         </form>
-        <p className="text-center mt-6 text-xs text-muted-foreground/50">
+        <p className="text-center mt-6 text-xs text-muted-foreground">
           <Link href="/" className="hover:text-primary transition-colors">← Επιστροφή στο site</Link>
         </p>
       </div>
@@ -229,7 +230,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const adminNavBlocks: NavBlock[] = [
     {
       kind: "links",
-      items: [{ href: "/admin", label: "Dashboard", icon: LayoutDashboard }],
+      items: [
+        { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+        { href: "/admin/insights", label: "Analytics Insights", icon: PieChart },
+      ],
     },
     {
       kind: "group",

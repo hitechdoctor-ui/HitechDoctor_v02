@@ -211,7 +211,7 @@ function RepairItemsSection({ rep, customer }: { rep: RepairRequest; customer: C
         <div className="bg-white/3 border border-white/8 rounded-xl overflow-hidden mb-3">
           <div className="flex items-center gap-1.5 px-3 py-2 border-b border-white/8 bg-white/3">
             <List className="w-3 h-3 text-primary" />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Ανάλυση Εργασιών</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Ανάλυση Εργασιών</span>
           </div>
           <div className="divide-y divide-white/5">
             {items.map(item => (
@@ -242,11 +242,12 @@ function RepairItemsSection({ rep, customer }: { rep: RepairRequest; customer: C
       )}
 
       <button
+        type="button"
         onClick={() => printRepairInvoice(rep, customer, items)}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-primary/10 border border-white/10 hover:border-primary/30 text-muted-foreground hover:text-primary transition-all text-xs"
         data-testid={`btn-invoice-repair-${rep.id}`}
       >
-        <Printer className="w-3.5 h-3.5" />
+        <Printer className="w-3.5 h-3.5" aria-hidden />
         Εκτύπωση Δελτίου / PDF
       </button>
     </div>
@@ -375,7 +376,7 @@ export default function AdminCustomerDetail() {
             <div className="flex items-start gap-3">
               <Mail className="w-4 h-4 text-primary mt-0.5 shrink-0" />
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-bold mb-1">Email</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-1">Email</p>
                 <a href={`mailto:${customer.email}`} className="text-sm hover:text-primary transition-colors">{customer.email}</a>
               </div>
             </div>
@@ -383,7 +384,7 @@ export default function AdminCustomerDetail() {
               <div className="flex items-start gap-3">
                 <Phone className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-bold mb-1">Τηλέφωνο</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-1">Τηλέφωνο</p>
                   <a href={`tel:${customer.phone}`} className="text-sm hover:text-primary transition-colors">{customer.phone}</a>
                 </div>
               </div>
@@ -392,7 +393,7 @@ export default function AdminCustomerDetail() {
               <div className="flex items-start gap-3">
                 <MapPin className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-bold mb-1">Διεύθυνση</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-1">Διεύθυνση</p>
                   <p className="text-sm">{customer.address}</p>
                 </div>
               </div>
@@ -400,7 +401,7 @@ export default function AdminCustomerDetail() {
             <div className="flex items-start gap-3">
               <Euro className="w-4 h-4 text-primary mt-0.5 shrink-0" />
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 font-bold mb-1">Συνολικές Αγορές</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-1">Συνολικές Αγορές</p>
                 <p className="text-sm font-bold text-primary">{fmt(totalSpent)}</p>
               </div>
             </div>

@@ -34,12 +34,12 @@ export function Breadcrumb({ items, className = "" }: BreadcrumbProps) {
       />
       <nav
         aria-label="Breadcrumb"
-        className={`flex items-center gap-1.5 text-xs text-muted-foreground/70 flex-wrap ${className}`}
+        className={`flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap ${className}`}
       >
         {allItems.map((item, i) => (
           <Fragment key={i}>
-            {i > 0 && <ChevronRight className="w-3 h-3 text-muted-foreground/40 shrink-0" />}
-            {i === 0 && <Home className="w-3 h-3 shrink-0" />}
+            {i > 0 && <ChevronRight className="w-3 h-3 text-muted-foreground shrink-0" aria-hidden />}
+            {i === 0 && <Home className="w-3 h-3 shrink-0" aria-hidden />}
             {item.href && i < allItems.length - 1 ? (
               <Link href={item.href} className="hover:text-primary transition-colors">
                 {item.label}

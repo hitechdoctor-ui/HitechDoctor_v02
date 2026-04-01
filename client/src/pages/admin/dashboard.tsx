@@ -72,12 +72,12 @@ function SearchInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/60 outline-none"
+        className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground outline-none"
         data-testid={testId}
       />
       {value && (
-        <button onClick={() => onChange("")} className="shrink-0">
-          <X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground transition-colors" />
+        <button type="button" onClick={() => onChange("")} className="shrink-0" aria-label="Καθαρισμός αναζήτησης">
+          <X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground transition-colors" aria-hidden />
         </button>
       )}
     </div>

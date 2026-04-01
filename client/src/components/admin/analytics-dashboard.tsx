@@ -10,8 +10,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { Link } from "wouter";
 import { Activity, BarChart3, Flame, MessageCircle, TrendingDown, TrendingUp, Users } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { getAdminAuthHeaders } from "@/lib/queryClient";
 import {
   Select,
@@ -112,7 +114,7 @@ export function AnalyticsDashboard() {
 
   return (
     <div className="space-y-6 mb-8">
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
           <h2 className="text-lg font-display font-bold text-foreground flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-primary" aria-hidden />
@@ -122,6 +124,11 @@ export function AnalyticsDashboard() {
             Επισκέψεις ιστοτόπου, AI chat και δημοφιλείς σελίδες (τελευταία ενημέρωση κάθε ~1 λεπτό)
           </p>
         </div>
+        <Button variant="outline" size="sm" className="border-white/15 shrink-0 w-full sm:w-auto" asChild>
+          <Link href="/admin/insights" data-testid="btn-analytics-more-insights">
+            Περισσότερες Λεπτομέρειες
+          </Link>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">

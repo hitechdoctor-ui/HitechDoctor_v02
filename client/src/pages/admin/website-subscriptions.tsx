@@ -317,14 +317,14 @@ export default function AdminWebsiteSubscriptions() {
                       <td className="px-4 py-3 text-xs text-muted-foreground max-w-[140px] truncate">{sub.notes || "—"}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2 justify-end">
-                          <button onClick={() => printSubscription(sub)} className="p-1.5 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-primary transition-colors" title="Εκτύπωση" data-testid={`button-print-sub-${sub.id}`}>
-                            <Printer className="w-3.5 h-3.5" />
+                          <button type="button" onClick={() => printSubscription(sub)} className="p-1.5 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-primary transition-colors" title="Εκτύπωση" aria-label="Εκτύπωση συνδρομής ιστοσελίδας" data-testid={`button-print-sub-${sub.id}`}>
+                            <Printer className="w-3.5 h-3.5" aria-hidden />
                           </button>
-                          <button onClick={() => openEdit(sub)} className="p-1.5 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors" data-testid={`button-edit-websub-${sub.id}`}>
-                            <Pencil className="w-3.5 h-3.5" />
+                          <button type="button" onClick={() => openEdit(sub)} className="p-1.5 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors" aria-label="Επεξεργασία συνδρομής ιστοσελίδας" data-testid={`button-edit-websub-${sub.id}`}>
+                            <Pencil className="w-3.5 h-3.5" aria-hidden />
                           </button>
-                          <button onClick={() => setDeleteId(sub.id)} className="p-1.5 rounded-lg hover:bg-red-500/15 text-muted-foreground hover:text-red-400 transition-colors" data-testid={`button-delete-websub-${sub.id}`}>
-                            <Trash2 className="w-3.5 h-3.5" />
+                          <button type="button" onClick={() => setDeleteId(sub.id)} className="p-1.5 rounded-lg hover:bg-red-500/15 text-muted-foreground hover:text-red-400 transition-colors" aria-label="Διαγραφή συνδρομής ιστοσελίδας" data-testid={`button-delete-websub-${sub.id}`}>
+                            <Trash2 className="w-3.5 h-3.5" aria-hidden />
                           </button>
                         </div>
                       </td>

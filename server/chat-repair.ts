@@ -275,9 +275,36 @@ ${catalogBlock}
 
 export type ChatTurn = { role: "user" | "assistant"; content: string };
 
+/** Πλατφόρμα από `navigator.userAgent` (client) — ενσωματώνεται στο system prompt. */
+export type RepairChatClientContext = "ios" | "android" | "desktop";
+
+export function buildRepairChatClientContextPrompt(ctx: RepairChatClientContext): string {
+  if (ctx === "desktop") {
+    return `### ΠΕΛΑΤΗΣ — CONTEXT ΠΛΟΗΓΗΣΗΣ (User-Agent)
+Ο χρήστης φαίνεται να χρησιμοποιεί **desktop / laptop browser** — **όχι** κινητό iOS/Android στο χέρι.
+
+**Για προτάσεις eShop:** μείνε **γενικός**: laptop, κινητά, tablet, αξεσουάρ ανάλογα με την ερώτηση — **χωρίς** να υποθέτεις συγκεκριμένη μάρκα κινητού. Μην προτείνεις μόνο θήκες iPhone ή μόνο Samsung αν δεν το ζητάει ρητά ο χρήστης. Όταν αναφέρει μοντέλο, τότε εξειδίκευσε.`;
+  }
+  if (ctx === "ios") {
+    return `### ΠΕΛΑΤΗΣ — CONTEXT ΠΛΟΗΓΗΣΗΣ (User-Agent)
+Ο χρήστης πλοηγείται από **iOS (iPhone ή iPad)**.
+
+**Προσωποποίηση προτάσεων eShop:** όταν ρωτά για αξεσουάρ, προστασία οθόνης, φόρτιση, «τι να πάρω» χωρίς να έχει δηλώσει άλλη συσκευή, **δώσε προτεραιότητα** σε προϊόντα συμβατά με **iPhone/iPad** από τον κατάλογο: tempered glass & θήκες iPhone (ανά μοντέλο αν το αναφέρει), καλώδια/adapters (Lightning ή USB-C ανά γενιά), MagSafe όπου υπάρχει, AirPods αν ταιριάζει. Χρησιμοποίησε **μόνο** πραγματικούς συνδέσμους \`/eshop/{slug}\` από τα δεδομένα — όχι εικασίες.
+
+**Επισκευές:** όταν η συζήτηση αφορά τη συσκευή του, προτεραιότητα σε **επισκευές iPhone / iPad** όταν ταιριάζει το πρόβλημα.`;
+  }
+  return `### ΠΕΛΑΤΗΣ — CONTEXT ΠΛΟΗΓΗΣΗΣ (User-Agent)
+Ο χρήστης πλοηγείται από **Android** (κινητό ή tablet).
+
+**Προσωποποίηση προτάσεων eShop:** όταν ρωτά για αξεσουάρ, θήκες, τζάμια, φορτιστές κ.λπ. χωρίς να έχει δηλώσει Apple, **δώσε προτεραιότητα** σε είδη για **οικοσύστημα Android** (Samsung, Xiaomi, Redmi, POCO, USB-C, θήκες Android στον κατάλογο). Προτείνε πρώτα ό,τι ταιριάζει σε **Android**· μην οδηγείς σε αποκλειστικά Apple-only προϊόντα εκτός αν ρωτάει για iPhone. Μόνο πραγματικοί σύνδεσμοι \`/eshop/{slug}\`.
+
+**Επισκευές:** προτεραιότητα σε σελίδες επισκευής **Samsung / Xiaomi / Android** όταν το θέμα είναι κινητό Android.`;
+}
+
 export async function runRepairAssistantChat(
   messages: ChatTurn[],
-  catalogBlock: string
+  catalogBlock: string,
+  clientContext: RepairChatClientContext = "desktop"
 ): Promise<string> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey?.trim()) {
@@ -288,7 +315,8 @@ export async function runRepairAssistantChat(
   const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content?.trim() ?? "";
   const [products, overrides] = await Promise.all([storage.getProducts(), storage.getAllRepairPriceOverrides()]);
   const internalBlock = buildInternalSearchBlock(lastUser, products, overrides);
-  const system = `${buildRepairAssistantSystemPrompt(catalogBlock)}\n\n${internalBlock}`;
+  const contextBlock = buildRepairChatClientContextPrompt(clientContext);
+  const system = `${buildRepairAssistantSystemPrompt(catalogBlock)}\n\n${internalBlock}\n\n${contextBlock}`;
 
   const completion = await openai.chat.completions.create({
     model,

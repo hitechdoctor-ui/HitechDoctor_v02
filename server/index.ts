@@ -11,6 +11,8 @@ import { sendSubscriptionRenewalEmail } from "./email";
 import { seedProductsIfEmpty, seedAdminIfEmpty } from "./seed";
 
 const app = express();
+/** Για σωστό client IP πίσω από reverse proxy (π.χ. nginx) — χρησιμοποιείται στο analytics geolocation */
+app.set("trust proxy", 1);
 const httpServer = createServer(app);
 
 declare module "http" {

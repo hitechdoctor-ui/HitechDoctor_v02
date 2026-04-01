@@ -159,12 +159,12 @@ function SearchInput({ value, onChange }: { value: string; onChange: (v: string)
       <input
         type="text" value={value} onChange={(e) => onChange(e.target.value)}
         placeholder="Αναζήτηση πελάτη, συσκευής, serial..."
-        className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none"
+        className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
         data-testid="input-repair-search"
       />
       {value && (
-        <button onClick={() => onChange("")} className="shrink-0">
-          <X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground transition-colors" />
+        <button type="button" onClick={() => onChange("")} className="shrink-0" aria-label="Καθαρισμός αναζήτησης">
+          <X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground transition-colors" aria-hidden />
         </button>
       )}
     </div>
@@ -273,8 +273,8 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="bg-white/5 text-left">
-                            <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Περιγραφή</th>
-                            <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 text-right">Ποσό</th>
+                            <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Περιγραφή</th>
+                            <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground text-right">Ποσό</th>
                             <th className="px-3 py-2 w-16"></th>
                           </tr>
                         </thead>
@@ -300,12 +300,16 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
                                   <td className="px-3 py-2">
                                     <div className="flex gap-1">
                                       <button
+                                        type="button"
                                         onClick={() => updateItem.mutate({ id: item.id, description: editDesc, amount: parseFloat(editAmt).toFixed(2) })}
                                         className="text-[10px] px-2 py-1 rounded bg-primary/20 text-primary hover:bg-primary/30 transition-colors"
+                                        aria-label="Αποθήκευση γραμμής εργασίας"
                                       >✓</button>
                                       <button
+                                        type="button"
                                         onClick={() => setEditingItemId(null)}
                                         className="text-[10px] px-2 py-1 rounded bg-white/5 text-muted-foreground hover:bg-white/10 transition-colors"
+                                        aria-label="Ακύρωση επεξεργασίας γραμμής"
                                       >✗</button>
                                     </div>
                                   </td>
@@ -319,10 +323,12 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
                                   <td className="px-3 py-2.5 text-xs font-medium text-right">{fmt(parseFloat(item.amount))}</td>
                                   <td className="px-3 py-2.5">
                                     <button
+                                      type="button"
                                       onClick={() => deleteItem.mutate(item.id)}
                                       className="p-1.5 rounded-lg text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-all"
+                                      aria-label="Διαγραφή γραμμής εργασίας"
                                     >
-                                      <Trash2 className="w-3 h-3" />
+                                      <Trash2 className="w-3 h-3" aria-hidden />
                                     </button>
                                   </td>
                                 </>
@@ -333,7 +339,7 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
                         {items.length > 0 && (
                           <tfoot>
                             <tr className="bg-white/3 border-t border-white/10">
-                              <td className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Σύνολο (χωρίς ΦΠΑ)</td>
+                              <td className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Σύνολο (χωρίς ΦΠΑ)</td>
                               <td className="px-3 py-2 text-sm font-bold text-primary text-right">{fmt(itemsNetTotal)}</td>
                               <td></td>
                             </tr>
@@ -346,38 +352,39 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
                   {/* Add new item */}
                   <div className="flex gap-2 items-end">
                     <div className="flex-1">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-1 block">Περιγραφή</label>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Περιγραφή</label>
                       <input
                         value={newDesc}
                         onChange={e => setNewDesc(e.target.value)}
                         placeholder="π.χ. Αλλαγή οθόνης, Μπαταρία..."
-                        className="w-full h-9 px-3 text-xs bg-card border border-white/10 rounded-xl outline-none focus:border-primary/40 transition-colors text-foreground placeholder:text-muted-foreground/50"
+                        className="w-full h-9 px-3 text-xs bg-card border border-white/10 rounded-xl outline-none focus:border-primary/40 transition-colors text-foreground placeholder:text-muted-foreground"
                         data-testid={`input-item-desc-${req.id}`}
                         onKeyDown={e => { if (e.key === "Enter" && newDesc.trim() && newAmt) addItem.mutate(); }}
                       />
                     </div>
                     <div className="w-28">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-1 block">Ποσό (€)</label>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Ποσό (€)</label>
                       <input
                         type="number" step="0.01" min="0"
                         value={newAmt} onChange={e => setNewAmt(e.target.value)}
                         placeholder="0,00"
-                        className="w-full h-9 px-3 text-xs bg-card border border-white/10 rounded-xl outline-none focus:border-primary/40 transition-colors text-right text-foreground placeholder:text-muted-foreground/50"
+                        className="w-full h-9 px-3 text-xs bg-card border border-white/10 rounded-xl outline-none focus:border-primary/40 transition-colors text-right text-foreground placeholder:text-muted-foreground"
                         data-testid={`input-item-amount-${req.id}`}
                         onKeyDown={e => { if (e.key === "Enter" && newDesc.trim() && newAmt) addItem.mutate(); }}
                       />
                     </div>
                     <button
+                      type="button"
                       onClick={() => { if (newDesc.trim() && newAmt) addItem.mutate(); }}
                       disabled={!newDesc.trim() || !newAmt || addItem.isPending}
                       className="h-9 px-4 rounded-xl bg-primary/15 hover:bg-primary/25 border border-primary/30 text-primary text-xs font-semibold disabled:opacity-40 transition-all flex items-center gap-1.5"
                       data-testid={`btn-add-item-${req.id}`}
                     >
-                      <Plus className="w-3.5 h-3.5" />
+                      <Plus className="w-3.5 h-3.5" aria-hidden />
                       Προσθήκη
                     </button>
                   </div>
-                  <p className="text-[10px] text-muted-foreground/50 mt-1.5">Κλικ σε περιγραφή για επεξεργασία. Enter για γρήγορη αποθήκευση.</p>
+                  <p className="text-[10px] text-muted-foreground mt-1.5">Κλικ σε περιγραφή για επεξεργασία. Enter για γρήγορη αποθήκευση.</p>
                 </>
               )}
             </div>
@@ -393,7 +400,7 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
 
               {/* Manual price input box */}
               <div className="bg-card border border-white/10 rounded-2xl p-4 mb-4">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-2 block">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2 block">
                   {items.length > 0 ? "Χειροκίνητη τιμή (προαιρετικό)" : "Τιμή χωρίς ΦΠΑ (€)"}
                 </label>
                 <div className="flex gap-2 items-center mb-3">
@@ -409,6 +416,7 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
                     />
                   </div>
                   <button
+                    type="button"
                     onClick={() => {
                       const trimmed = manualPrice.trim();
                       const parsed = parseFloat(trimmed);
@@ -426,7 +434,7 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
                 {hasManualVal && items.length === 0 && (
                   <div className="grid grid-cols-2 gap-2">
                     <div className="bg-white/5 border border-white/8 rounded-xl px-3 py-2.5">
-                      <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-bold mb-0.5">Χωρίς ΦΠΑ</p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold mb-0.5">Χωρίς ΦΠΑ</p>
                       <p className="text-sm font-semibold text-foreground">{fmt(manualInputNet)}</p>
                     </div>
                     <div className="bg-primary/8 border border-primary/20 rounded-xl px-3 py-2.5">
@@ -473,11 +481,12 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
 
               {/* Print button */}
               <button
+                type="button"
                 onClick={() => printRepairInvoice(req, items)}
                 className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-primary/10 border border-white/10 hover:border-primary/30 text-muted-foreground hover:text-primary transition-all text-sm font-medium"
                 data-testid={`btn-invoice-panel-${req.id}`}
               >
-                <Printer className="w-4 h-4" />
+                <Printer className="w-4 h-4" aria-hidden />
                 Εκτύπωση Δελτίου / PDF
               </button>
             </div>
@@ -679,7 +688,7 @@ export default function AdminRepairRequests() {
                 <thead>
                   <tr className="border-b border-white/8 bg-white/2 text-left">
                     {["", "#", "Πελάτης", "Επικοινωνία", "Συσκευή", "Serial / Κωδικός", "Τιμή", "Ημερομηνία", "Υπεύθυνος", "Κατάσταση", ""].map((h, i) => (
-                      <th key={i} className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 whitespace-nowrap">{h}</th>
+                      <th key={i} className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -695,11 +704,14 @@ export default function AdminRepairRequests() {
                           {/* Expand toggle */}
                           <td className="px-3 py-4 w-10">
                             <button
+                              type="button"
                               onClick={() => toggleRow(req.id)}
                               className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${isExpanded ? "bg-primary/20 text-primary border border-primary/30" : "bg-white/5 text-muted-foreground hover:bg-white/10 border border-white/10"}`}
                               data-testid={`btn-expand-${req.id}`}
+                              aria-expanded={isExpanded}
+                              aria-label={isExpanded ? `Σύμπτυξη λεπτομερειών αιτήματος #${req.id}` : `Ανάπτυξη λεπτομερειών αιτήματος #${req.id}`}
                             >
-                              {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                              {isExpanded ? <ChevronUp className="w-3.5 h-3.5" aria-hidden /> : <ChevronDown className="w-3.5 h-3.5" aria-hidden />}
                             </button>
                           </td>
                           <td className="px-4 py-4">
@@ -753,7 +765,7 @@ export default function AdminRepairRequests() {
                                   <div className="text-xs font-medium text-foreground">
                                     {agreedIsGross ? fmt(gross) : fmt(net)}
                                   </div>
-                                  <div className="text-[10px] text-muted-foreground/50 font-normal">
+                                  <div className="text-[10px] text-muted-foreground font-normal">
                                     {agreedIsGross ? "με ΦΠΑ" : "χωρίς ΦΠΑ"}
                                   </div>
                                   <div className="text-[10px] text-primary/70">
@@ -819,11 +831,13 @@ export default function AdminRepairRequests() {
                           </td>
                           <td className="px-4 py-4">
                             <button
+                              type="button"
                               onClick={() => toggleRow(req.id)}
                               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary transition-all text-xs whitespace-nowrap font-medium"
                               data-testid={`btn-details-${req.id}`}
+                              aria-expanded={isExpanded}
                             >
-                              <Euro className="w-3 h-3" />
+                              <Euro className="w-3 h-3" aria-hidden />
                               Λεπτομέρειες
                             </button>
                           </td>

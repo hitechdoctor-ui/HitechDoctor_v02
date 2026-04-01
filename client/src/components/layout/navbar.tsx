@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { SiApple, SiSamsung, SiXiaomi, SiHuawei, SiOneplus } from "react-icons/si";
 import { GlobalSearch } from "@/components/global-search";
+import { NavbarAiChatBar } from "@/components/layout/navbar-ai-chat-bar";
 import { SiViber } from "react-icons/si";
 import { buildViberUrl } from "@/lib/viber";
 
@@ -628,6 +629,8 @@ export function Navbar() {
           </Sheet>
         </div>
       </div>
+
+      <NavbarAiChatBar />
 
       <CartDrawer open={isCartOpen} onOpenChange={setIsCartOpen} />
     </header>

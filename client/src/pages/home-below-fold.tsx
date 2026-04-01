@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BLOG_POSTS, formatBlogDate } from "@/data/blog-posts";
 import { SpecialOffers } from "@/components/special-offers";
-import { RepairChatbot } from "@/components/repair-chatbot";
 import { Globe, Search, ShoppingCart, Star, Code2, ArrowRight, Paintbrush } from "lucide-react";
 import { Link } from "wouter";
 
@@ -139,13 +138,6 @@ export default function HomeBelowFold() {
 
       <ReviewsSection />
       <Footer />
-
-      <div
-        className="pointer-events-none fixed right-4 z-[150] bottom-[calc(5.25rem+env(safe-area-inset-bottom)+11rem)] sm:right-6 sm:bottom-[calc(1.5rem+11rem)] flex flex-col items-end gap-3"
-        aria-hidden={false}
-      >
-        <RepairChatbot />
-      </div>
     </>
   );
 }

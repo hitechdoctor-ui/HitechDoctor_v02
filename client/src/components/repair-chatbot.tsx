@@ -8,7 +8,12 @@ import { MessageCircle, X, Send, Loader2, Bot, ArrowRight, Wrench } from "lucide
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { getAnalyticsSessionId } from "@/lib/analytics-session";
-import { OPEN_REPAIR_CHAT_EVENT } from "@/lib/repair-chat-events";
+import { OPEN_REPAIR_CHAT_EVENT, type OpenRepairChatDetail } from "@/lib/repair-chat-events";
+import {
+  detectRepairChatClientContext,
+  buildRepairChatContextualWelcome,
+  type RepairChatClientContext,
+} from "@/lib/repair-chat-device";
 import { COOKIE_CONSENT_EVENT } from "@/components/cookie-banner";
 import { resolveRepairSlugToPathWithFallbacks } from "@/lib/repair-slug-resolve";
 import { guessDeviceModelFromMessages, type RepairChatCta } from "@shared/repair-assistant";
@@ -198,6 +203,12 @@ export function RepairChatbot() {
   const [showAttention, setShowAttention] = useState(false);
   const attentionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const clientContextRef = useRef<RepairChatClientContext>("desktop");
+
+  useEffect(() => {
+    if (typeof navigator === "undefined") return;
+    clientContextRef.current = detectRepairChatClientContext(navigator.userAgent);
+  }, []);
 
   // ── Scroll: μόνο για χρωματισμό του κουμπιού (όχι απόκρυψη του παραθύρου) ──
   useEffect(() => {
@@ -247,9 +258,23 @@ export function RepairChatbot() {
     };
   }, []);
 
-  // ── Open from hero button ─────────────────────────────────────────────────
+  // ── Open από hero, mobile nav, μπάρα AI στο Navbar ─────────────────────────
   useEffect(() => {
-    const openFromHero = () => setOpen(true);
+    const openFromHero = (e: Event) => {
+      const detail = (e as CustomEvent<OpenRepairChatDetail>).detail ?? {};
+      setOpen(true);
+      const q = detail.draftQuery?.trim();
+      if (q) {
+        setInput(q);
+        return;
+      }
+      setMessages((prev) => {
+        if (prev.length > 0) return prev;
+        const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+        const ctx = detectRepairChatClientContext(ua);
+        return [{ role: "assistant" as const, content: buildRepairChatContextualWelcome(ctx) }];
+      });
+    };
     window.addEventListener(OPEN_REPAIR_CHAT_EVENT, openFromHero);
     return () => window.removeEventListener(OPEN_REPAIR_CHAT_EVENT, openFromHero);
   }, []);
@@ -336,7 +361,11 @@ export function RepairChatbot() {
           "Content-Type": "application/json",
           "X-Session-Id": getAnalyticsSessionId(),
         },
-        body: JSON.stringify({ messages: next, serviceTermsAccepted: true }),
+        body: JSON.stringify({
+          messages: next,
+          serviceTermsAccepted: true,
+          clientContext: clientContextRef.current,
+        }),
       });
       const data = (await res.json().catch(() => ({}))) as {
         reply?: string;

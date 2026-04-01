@@ -30,6 +30,7 @@ import {
   sendRepairChatLeadEmail,
 } from "./email";
 import { runImeiLookup } from "./imei-lookup";
+import { getClientIp, lookupGeoForIp, parseUserAgent } from "./analytics-enrichment";
 import { fetchHubSpotContacts } from "./hubspot";
 import bcrypt from "bcrypt";
 import { sendOrderStatusEmail } from "./nodemailer-mail";
@@ -784,7 +785,7 @@ export async function registerRoutes(
     }
   });
 
-  /** Καταγραφή SPA επισκέψεων (δημόσιο, fire-and-forget) */
+  /** Καταγραφή SPA επισκέψεων (δημόσιο) — UA/OS/browser + geolocation (ipapi.co) από IP */
   app.post("/api/analytics/track", async (req, res) => {
     try {
       const schema = z.object({
@@ -794,11 +795,28 @@ export async function registerRoutes(
       });
       const body = schema.parse(req.body);
       const ua = typeof req.headers["user-agent"] === "string" ? req.headers["user-agent"] : null;
+      const { osFamily, browserFamily } = parseUserAgent(ua);
+      let geoCity: string | null = null;
+      let geoRegion: string | null = null;
+      const ip = getClientIp(req);
+      if (ip) {
+        try {
+          const g = await lookupGeoForIp(ip);
+          geoCity = g.city;
+          geoRegion = g.region;
+        } catch {
+          /* geolocation optional */
+        }
+      }
       await storage.trackPageVisit({
         sessionId: body.sessionId,
         pagePath: body.pagePath,
         referrer: body.referrer ?? null,
         userAgent: ua,
+        osFamily,
+        browserFamily,
+        geoCity,
+        geoRegion,
       });
       res.status(204).end();
     } catch (err) {
@@ -1259,6 +1277,21 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/admin/analytics/insights", async (req, res) => {
+    try {
+      const u = await getAdminUserFromRequest(req);
+      if (!u) return res.status(401).json({ message: "Unauthorized" });
+      if (u.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const q = z.enum(["day", "week", "month", "year"]).safeParse(req.query.period);
+      const period = q.success ? q.data : "month";
+      const data = await storage.getAnalyticsInsights(period);
+      res.json({ period, ...data });
+    } catch (err) {
+      console.error("[admin/analytics/insights]", err);
+      res.status(500).json({ message: "Σφάλμα" });
+    }
+  });
+
   /** eShop: «Θέλω καλύτερη προσφορά» — αποθήκευση + email διαχειριστή */
   app.post("/api/product-offer-interest", async (req, res) => {
     try {
@@ -1322,8 +1355,10 @@ export async function registerRoutes(
           .min(1)
           .max(28),
         serviceTermsAccepted: z.boolean(),
+        /** Πλατφόρμα από navigator.userAgent (client) — ενσωματώνεται στο system prompt */
+        clientContext: z.enum(["ios", "android", "desktop"]).optional(),
       });
-      const { messages, serviceTermsAccepted } = schema.parse(req.body);
+      const { messages, serviceTermsAccepted, clientContext } = schema.parse(req.body);
       if (!serviceTermsAccepted) {
         return res.status(400).json({
           message: "Πρέπει να αποδεχτείτε τους Όρους Service και την Εγγύηση 3 μηνών για να στείλετε μήνυμα.",
@@ -1337,7 +1372,7 @@ export async function registerRoutes(
         void storage.trackChatMessage({ sessionId, message: lastUserMsg.content }).catch(() => {});
       }
       const catalogBlock = await getRepairCatalogPromptBlock();
-      const rawReply = await runRepairAssistantChat(messages, catalogBlock);
+      const rawReply = await runRepairAssistantChat(messages, catalogBlock, clientContext ?? "desktop");
       const { displayText, ctas } = splitAssistantReply(rawReply);
 
       let reply = displayText;

@@ -279,11 +279,11 @@ export default function AdminAntivirusSubscriptions() {
                       <td className="px-4 py-3">{statusLabel(sub.status)}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2 justify-end">
-                          <button onClick={() => openEdit(sub)} className="p-1.5 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors" data-testid={`button-edit-sub-${sub.id}`}>
-                            <Pencil className="w-3.5 h-3.5" />
+                          <button type="button" onClick={() => openEdit(sub)} className="p-1.5 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors" aria-label="Επεξεργασία συνδρομής antivirus" data-testid={`button-edit-sub-${sub.id}`}>
+                            <Pencil className="w-3.5 h-3.5" aria-hidden />
                           </button>
-                          <button onClick={() => setDeleteId(sub.id)} className="p-1.5 rounded-lg hover:bg-red-500/15 text-muted-foreground hover:text-red-400 transition-colors" data-testid={`button-delete-sub-${sub.id}`}>
-                            <Trash2 className="w-3.5 h-3.5" />
+                          <button type="button" onClick={() => setDeleteId(sub.id)} className="p-1.5 rounded-lg hover:bg-red-500/15 text-muted-foreground hover:text-red-400 transition-colors" aria-label="Διαγραφή συνδρομής antivirus" data-testid={`button-delete-sub-${sub.id}`}>
+                            <Trash2 className="w-3.5 h-3.5" aria-hidden />
                           </button>
                         </div>
                       </td>

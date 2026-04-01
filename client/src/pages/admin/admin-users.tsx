@@ -208,8 +208,9 @@ export default function AdminUsersPage() {
                   type="button"
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                   onClick={() => setShowPass(!showPass)}
+                  aria-label={showPass ? "Απόκρυψη κωδικού" : "Εμφάνιση κωδικού"}
                 >
-                  {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPass ? <EyeOff className="w-4 h-4" aria-hidden /> : <Eye className="w-4 h-4" aria-hidden />}
                 </button>
               </div>
             </div>
@@ -262,8 +263,9 @@ export default function AdminUsersPage() {
                   type="button"
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                   onClick={() => setShowNewPass(!showNewPass)}
+                  aria-label={showNewPass ? "Απόκρυψη νέου κωδικού" : "Εμφάνιση νέου κωδικού"}
                 >
-                  {showNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showNewPass ? <EyeOff className="w-4 h-4" aria-hidden /> : <Eye className="w-4 h-4" aria-hidden />}
                 </button>
               </div>
             </div>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Seo } from "@/components/seo";
+import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,6 +58,7 @@ export default function CheckStatusPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Navbar />
       <Seo
         title="Έλεγχος κατάστασης παραγγελίας / επισκευής"
         description="Εισάγετε Ticket ID και email για να δείτε την πρόοδο."

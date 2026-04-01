@@ -72,6 +72,7 @@ const RepairRedirect = lazyWithReload(() => import("./pages/repair-redirect"));
 
 // Admin Pages — lazy loaded (biggest win: never loaded for public visitors)
 const AdminDashboard = lazyWithReload(() => import("./pages/admin/dashboard"));
+const AdminInsights = lazyWithReload(() => import("./pages/admin/insights"));
 const AdminProducts = lazyWithReload(() => import("./pages/admin/products"));
 const AdminOrders = lazyWithReload(() => import("./pages/admin/orders"));
 const AdminCustomers = lazyWithReload(() => import("./pages/admin/customers"));
@@ -144,17 +145,13 @@ function GlobalComponents() {
   const [location] = useLocation();
   const isAdmin = location.startsWith("/admin");
   const pathOnly = location.split("?")[0] || "/";
-  const isHome = pathOnly === "/";
   const isEshopListing = pathOnly === "/eshop";
   if (isAdmin) return null;
   return (
     <Fragment>
       <ScrollProgressBar />
       <CookieBanner />
-      <FloatingActionStack
-        showRepairChat={!isHome}
-        elevateZForOverlay={isEshopListing}
-      />
+      <FloatingActionStack showRepairChat elevateZForOverlay={isEshopListing} />
       <MobileBottomNav />
     </Fragment>
   );
@@ -228,6 +225,7 @@ function Router() {
           <Route path="/oroi-chrisis" component={TermsOfUse} />
           <Route path="/prosvassimotita" component={AccessibilityStatement} />
           <Route path="/repair/:slug" component={RepairRedirect} />
+          <Route path="/admin/insights" component={AdminInsights} />
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/admin/repair-requests" component={AdminRepairRequests} />
           <Route path="/admin/website-inquiries" component={AdminWebsiteInquiries} />

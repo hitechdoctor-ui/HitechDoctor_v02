@@ -46,7 +46,7 @@ import {
   type RepairPriceOverride,
   type InsertRepairPriceOverride,
 } from "@shared/schema";
-import { eq, desc, and, sql, lte, gte, count, lt } from "drizzle-orm";
+import { eq, desc, and, sql, lte, gte, count, lt, isNotNull } from "drizzle-orm";
 import { queueHubSpotContactSync } from "./hubspot";
 
 export interface IStorage {
@@ -157,6 +157,10 @@ export interface IStorage {
     pagePath: string;
     referrer?: string | null;
     userAgent?: string | null;
+    osFamily: string;
+    browserFamily: string;
+    geoCity?: string | null;
+    geoRegion?: string | null;
   }): Promise<void>;
 
   getAnalyticsStats(): Promise<{
@@ -169,6 +173,13 @@ export interface IStorage {
   }>;
 
   getAnalyticsTopPages(period: "day" | "week" | "month" | "year"): Promise<{ path: string; count: number }[]>;
+
+  getAnalyticsInsights(period: "day" | "week" | "month" | "year"): Promise<{
+    totalInPeriod: number;
+    byOs: { name: string; count: number }[];
+    byBrowser: { name: string; count: number }[];
+    topCities: { city: string; region: string | null; count: number }[];
+  }>;
 
   trackChatMessage(data: { sessionId: string; message: string }): Promise<void>;
 
@@ -737,12 +748,20 @@ export class DatabaseStorage implements IStorage {
     pagePath: string;
     referrer?: string | null;
     userAgent?: string | null;
+    osFamily: string;
+    browserFamily: string;
+    geoCity?: string | null;
+    geoRegion?: string | null;
   }): Promise<void> {
     await db.insert(siteAnalytics).values({
       sessionId: data.sessionId.slice(0, 128),
       pagePath: data.pagePath.slice(0, 2048),
       referrer: data.referrer?.slice(0, 2048) ?? null,
       userAgent: data.userAgent?.slice(0, 512) ?? null,
+      osFamily: data.osFamily.slice(0, 64),
+      browserFamily: data.browserFamily.slice(0, 64),
+      geoCity: data.geoCity?.slice(0, 128) ?? null,
+      geoRegion: data.geoRegion?.slice(0, 128) ?? null,
     });
   }
 
@@ -831,6 +850,80 @@ export class DatabaseStorage implements IStorage {
       .limit(10);
 
     return rows.map((r) => ({ path: r.path, count: r.cnt }));
+  }
+
+  private analyticsPeriodStart(period: "day" | "week" | "month" | "year"): Date {
+    const now = new Date();
+    const startToday = this.startOfLocalDay(now);
+    let from = startToday;
+    if (period === "week") from = new Date(startToday.getTime() - 6 * 86400000);
+    else if (period === "month") {
+      from = new Date(startToday);
+      from.setDate(1);
+    } else if (period === "year") {
+      from = new Date(startToday.getFullYear(), 0, 1);
+    }
+    return from;
+  }
+
+  async getAnalyticsInsights(period: "day" | "week" | "month" | "year"): Promise<{
+    totalInPeriod: number;
+    byOs: { name: string; count: number }[];
+    byBrowser: { name: string; count: number }[];
+    topCities: { city: string; region: string | null; count: number }[];
+  }> {
+    const from = this.analyticsPeriodStart(period);
+
+    const [totalRow] = await db
+      .select({ c: sql<number>`cast(count(*) as integer)` })
+      .from(siteAnalytics)
+      .where(gte(siteAnalytics.visitedAt, from));
+    const totalInPeriod = totalRow?.c ?? 0;
+
+    const osRows = await db
+      .select({
+        key: siteAnalytics.osFamily,
+        cnt: count(),
+      })
+      .from(siteAnalytics)
+      .where(gte(siteAnalytics.visitedAt, from))
+      .groupBy(siteAnalytics.osFamily)
+      .orderBy(desc(count()));
+
+    const browserRows = await db
+      .select({
+        key: siteAnalytics.browserFamily,
+        cnt: count(),
+      })
+      .from(siteAnalytics)
+      .where(gte(siteAnalytics.visitedAt, from))
+      .groupBy(siteAnalytics.browserFamily)
+      .orderBy(desc(count()));
+
+    const cityRows = await db
+      .select({
+        city: siteAnalytics.geoCity,
+        region: siteAnalytics.geoRegion,
+        cnt: count(),
+      })
+      .from(siteAnalytics)
+      .where(and(gte(siteAnalytics.visitedAt, from), isNotNull(siteAnalytics.geoCity)))
+      .groupBy(siteAnalytics.geoCity, siteAnalytics.geoRegion)
+      .orderBy(desc(count()))
+      .limit(10);
+
+    const label = (v: string | null, fallback: string) => (v && v.trim() ? v.trim() : fallback);
+
+    return {
+      totalInPeriod,
+      byOs: osRows.map((r) => ({ name: label(r.key, "Χωρίς καταγραφή"), count: r.cnt })),
+      byBrowser: browserRows.map((r) => ({ name: label(r.key, "Χωρίς καταγραφή"), count: r.cnt })),
+      topCities: cityRows.map((r) => ({
+        city: r.city ?? "",
+        region: r.region,
+        count: r.cnt,
+      })),
+    };
   }
 
   async trackChatMessage(data: { sessionId: string; message: string }): Promise<void> {
