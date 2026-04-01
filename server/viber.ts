@@ -1,11 +1,13 @@
 import { createRequire } from "node:module";
+import { join } from "node:path";
 import type { Express, NextFunction, Request, Response } from "express";
 import { storage } from "./storage";
 import type { Order, RepairRequest } from "@shared/schema";
 
-const require = createRequire(import.meta.url);
+/** `import.meta.url` στο bundled `dist/index.cjs` δίνει ERR_INVALID_ARG_VALUE στο createRequire (Railway). Το package.json ρίζας είναι σταθερό anchor. */
+const requireViber = createRequire(join(process.cwd(), "package.json"));
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const ViberBot = require("viber-bot") as {
+const ViberBot = requireViber("viber-bot") as {
   Bot: new (config: {
     authToken: string;
     name: string;

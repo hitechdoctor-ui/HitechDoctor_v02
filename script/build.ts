@@ -4,10 +4,14 @@ import { rm, readFile } from "fs/promises";
 
 // server deps to bundle to reduce openat(2) syscalls
 // which helps cold start times
+//
+// Πάντα external (δεν μπαίνουν εδώ — φορτώνονται από node_modules στο runtime):
+// - connect-pg-simple (__dirname + table.sql)
+// - viber-bot (CommonJS, middleware)
+// - passport-google-oauth20 (strategy + OAuth ροή)
 const allowlist = [
   "@google/generative-ai",
   "axios",
-  // connect-pg-simple: ΜΗΝ bundle — διαβάζει table.sql με __dirname· στο bundle γίνεται /dist/table.sql → ENOENT
   "cors",
   "date-fns",
   "drizzle-orm",
@@ -21,9 +25,8 @@ const allowlist = [
   "nanoid",
   "nodemailer",
   "openai",
-    "passport",
-    "passport-google-oauth20",
-    "passport-local",
+  "passport",
+  "passport-local",
   "pg",
   "stripe",
   "uuid",
