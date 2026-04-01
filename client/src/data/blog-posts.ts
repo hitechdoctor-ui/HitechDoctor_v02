@@ -109,7 +109,7 @@ export const BLOG_POSTS: BlogPost[] = [
     authorRole: "Τεχνικοί Επισκευής Κινητών",
     date: "2026-02-28",
     readTime: 6,
-    image: "https://images.unsplash.com/photo-1601784551446-20c9e07cd8d3?auto=format&fit=crop&q=80&w=800",
+    image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&q=80&w=800",
     category: "Σύγκριση",
     tags: ["Samsung", "iPhone", "σύγκριση", "κόστος επισκευής"],
     relatedSlugs: ["pote-na-alaxeis-mpataria-iphone", "iphone-15-vs-14-axizei-h-anabathmisi"],

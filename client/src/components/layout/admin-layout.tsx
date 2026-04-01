@@ -1,15 +1,16 @@
 import { Link, useLocation } from "wouter";
 import type { LucideIcon } from "lucide-react";
-import { Package, Users, ShoppingCart, LayoutDashboard, LogOut, Wrench, Euro, Menu, X, Shield, Globe, MessageSquare, Lock, Mail, Eye, EyeOff, UserCog, Download, Link2, Tag, RefreshCw, TableProperties, PieChart } from "lucide-react";
+import { Package, Users, ShoppingCart, LayoutDashboard, LogOut, Wrench, Euro, Menu, X, Shield, Globe, MessageSquare, Lock, UserCog, Download, Link2, Tag, RefreshCw, TableProperties, PieChart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@shared/routes";
 import { getAdminAuthHeaders } from "@/lib/queryClient";
 import { notifyAdminAuthChange } from "@/lib/admin-auth-events";
+import { ADMIN_TOKEN_STORAGE_KEY } from "@/lib/admin-auth-storage";
+import { AdminAuthPanel, decodeAdminToken } from "@/pages/auth-page";
 
-const STORAGE_KEY = "hitech_admin_token";
+const STORAGE_KEY = ADMIN_TOKEN_STORAGE_KEY;
 /** Διακριτικός ήχος όταν αυξάνεται ο αριθμός μη ολοκληρωμένων παραγγελιών (public). */
 const OPEN_ORDERS_NOTIFICATION_MP3 = "/notification.mp3";
 
@@ -28,106 +29,6 @@ function linkIsActive(href: string, location: string): boolean {
   return location.startsWith(href);
 }
 
-function AdminLogin({ onLogin }: { onLogin: (token: string) => void }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPass, setShowPass] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    try {
-      const res = await fetch("/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      if (data.ok && data.token) {
-        localStorage.setItem(STORAGE_KEY, data.token);
-        notifyAdminAuthChange();
-        onLogin(data.token);
-      } else {
-        setError(data.message || "Λάθος email ή κωδικός");
-      }
-    } catch {
-      setError("Σφάλμα σύνδεσης — δοκιμάστε ξανά");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-primary/15 border border-primary/30 flex items-center justify-center mx-auto mb-4">
-            <Lock className="w-6 h-6 text-primary" />
-          </div>
-          <h1 className="text-2xl font-display font-bold text-foreground">HiTech Admin</h1>
-          <p className="text-sm text-muted-foreground mt-1">Σύνδεση με email και κωδικό</p>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-            <Input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="pl-9"
-              required
-              autoComplete="email"
-              data-testid="input-admin-email"
-            />
-          </div>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-            <Input
-              type={showPass ? "text" : "password"}
-              placeholder="Κωδικός"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="pl-9 pr-10"
-              required
-              autoComplete="current-password"
-              data-testid="input-admin-password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPass(!showPass)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-              aria-label={showPass ? "Απόκρυψη κωδικού" : "Εμφάνιση κωδικού"}
-            >
-              {showPass ? <EyeOff className="w-4 h-4" aria-hidden /> : <Eye className="w-4 h-4" aria-hidden />}
-            </button>
-          </div>
-          {error && (
-            <p className="text-sm text-red-400 text-center bg-red-400/10 border border-red-400/20 rounded-lg py-2 px-3">{error}</p>
-          )}
-          <Button type="submit" className="w-full h-11" disabled={loading} data-testid="button-admin-login">
-            {loading ? "Σύνδεση..." : "Σύνδεση"}
-          </Button>
-        </form>
-        <p className="text-center mt-6 text-xs text-muted-foreground">
-          <Link href="/" className="hover:text-primary transition-colors">← Επιστροφή στο site</Link>
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function decodeAdminToken(token: string | null): { name?: string; email?: string; role?: string } {
-  if (!token) return {};
-  try {
-    const decoded = atob(token);
-    return JSON.parse(decoded);
-  } catch { return {}; }
-}
-
 export function AdminLayout({ children }: AdminLayoutProps) {
   const [location, setLocation] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -137,6 +38,24 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const [adminInfo, setAdminInfo] = useState(() => decodeAdminToken(
     (() => { try { return localStorage.getItem(STORAGE_KEY); } catch { return null; } })()
   ));
+
+  /** Token από Google OAuth redirect (#hitech_google_auth=...) */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hash = window.location.hash;
+    const prefix = "#hitech_google_auth=";
+    if (!hash.startsWith(prefix)) return;
+    try {
+      const raw = decodeURIComponent(hash.slice(prefix.length));
+      localStorage.setItem(STORAGE_KEY, raw);
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      notifyAdminAuthChange();
+      setToken(raw);
+      setAdminInfo(decodeAdminToken(raw));
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   useEffect(() => {
     if (!token) return;
@@ -219,7 +138,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     prevOpenOrdersRef.current = openOrdersCount;
   }, [openOrdersCount, token, adminInfo?.role]);
 
-  if (!token) return <AdminLogin onLogin={(t) => { setToken(t); setAdminInfo(decodeAdminToken(t)); }} />;
+  if (!token) {
+    return (
+      <AdminAuthPanel
+        onLogin={(t) => {
+          setToken(t);
+          setAdminInfo(decodeAdminToken(t));
+        }}
+      />
+    );
+  }
 
   const handleLogout = () => {
     localStorage.removeItem(STORAGE_KEY);

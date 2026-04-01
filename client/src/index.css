@@ -229,6 +229,100 @@
     box-shadow: inset 0 0 0 1px rgba(0, 210, 200, 0.04);
   }
 
+  /* Navbar AI bar — ήπια κίνηση για προσοχή (παύση σε focus & prefers-reduced-motion) */
+  @keyframes navbar-ai-ambient-light {
+    0%,
+    100% {
+      opacity: 0.42;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.82;
+      transform: scale(1.03);
+    }
+  }
+  @keyframes navbar-ai-ambient-dark {
+    0%,
+    100% {
+      opacity: 0.35;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.78;
+      transform: scale(1.035);
+    }
+  }
+  @keyframes navbar-ai-sparkle-nudge {
+    0%,
+    100% {
+      transform: scale(1) rotate(0deg);
+      opacity: 1;
+    }
+    40% {
+      transform: scale(1.08) rotate(-6deg);
+      opacity: 0.92;
+    }
+    70% {
+      transform: scale(1.05) rotate(5deg);
+      opacity: 1;
+    }
+  }
+  .navbar-ai-chat-wrap {
+    position: relative;
+  }
+  .navbar-ai-ambient-glow {
+    pointer-events: none;
+    position: absolute;
+    left: -12px;
+    right: -12px;
+    top: -8px;
+    bottom: -6px;
+    z-index: 0;
+    border-radius: 2rem;
+    background: linear-gradient(
+      125deg,
+      rgba(0, 165, 160, 0.4) 0%,
+      rgba(34, 211, 238, 0.22) 42%,
+      rgba(0, 165, 160, 0.32) 100%
+    );
+    filter: blur(16px);
+    animation: navbar-ai-ambient-light 3.6s ease-in-out infinite;
+  }
+  .dark .navbar-ai-ambient-glow {
+    background: linear-gradient(
+      125deg,
+      rgba(0, 210, 200, 0.32) 0%,
+      rgba(34, 211, 238, 0.14) 45%,
+      rgba(0, 175, 195, 0.28) 100%
+    );
+    animation-name: navbar-ai-ambient-dark;
+  }
+  .navbar-ai-chat-wrap:focus-within .navbar-ai-ambient-glow {
+    animation-play-state: paused;
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  .navbar-ai-sparkle-icon {
+    animation: navbar-ai-sparkle-nudge 4s ease-in-out infinite;
+  }
+  .navbar-ai-chat-wrap:focus-within .navbar-ai-sparkle-icon {
+    animation-play-state: paused;
+  }
+  .navbar-ai-chat-wrap-collapsed .navbar-ai-ambient-glow,
+  .navbar-ai-chat-wrap-collapsed .navbar-ai-sparkle-icon {
+    animation-play-state: paused;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .navbar-ai-ambient-glow {
+      animation: none !important;
+      opacity: 0.4;
+      transform: none;
+    }
+    .navbar-ai-sparkle-icon {
+      animation: none !important;
+    }
+  }
+
   /* Gradient text — ASUS cyan */
   .gradient-text {
     @apply text-transparent bg-clip-text;

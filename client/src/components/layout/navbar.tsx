@@ -21,7 +21,6 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import { SiApple, SiSamsung, SiXiaomi, SiHuawei, SiOneplus } from "react-icons/si";
-import { GlobalSearch } from "@/components/global-search";
 import { NavbarAiChatBar } from "@/components/layout/navbar-ai-chat-bar";
 import { SiViber } from "react-icons/si";
 import { buildViberUrl } from "@/lib/viber";
@@ -437,9 +436,6 @@ export function Navbar() {
 
         {/* Right side — search + cart + mobile hamburger */}
         <div className="flex items-center gap-3">
-          {/* Desktop search */}
-          <GlobalSearch className="hidden md:block w-56 lg:w-72" />
-
           <a
             href={buildViberUrl()}
             target="_blank"
@@ -476,10 +472,6 @@ export function Navbar() {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="bg-background border-white/10 overflow-y-auto">
-              {/* Mobile search */}
-              <div className="mt-12 mb-4">
-                <GlobalSearch placeholder="Αναζήτηση..." />
-              </div>
               <a
                 href={buildViberUrl()}
                 target="_blank"

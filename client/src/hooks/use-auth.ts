@@ -1,7 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { ADMIN_AUTH_CHANGE_EVENT } from "@/lib/admin-auth-events";
-
-const ADMIN_TOKEN_KEY = "hitech_admin_token";
+import { ADMIN_TOKEN_STORAGE_KEY } from "@/lib/admin-auth-storage";
 
 /** Σταθερό snapshot για άκυρο base64/JSON — όχι νέο `{}` σε κάθε getSnapshot (βλ. React #185). */
 const INVALID_TOKEN_USER = Object.freeze({}) as AuthUser;
@@ -36,7 +35,7 @@ function parseTokenToUser(raw: string): AuthUser {
 function readUserFromStorage(): AuthUser | null {
   if (typeof window === "undefined") return null;
   try {
-    const t = localStorage.getItem(ADMIN_TOKEN_KEY);
+    const t = localStorage.getItem(ADMIN_TOKEN_STORAGE_KEY);
     const raw = t?.trim() ?? "";
     if (!raw) {
       snapshotCache = null;

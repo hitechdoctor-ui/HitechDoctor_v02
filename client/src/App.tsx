@@ -69,6 +69,7 @@ const TermsOfUse = lazyWithReload(() => import("./pages/terms-of-use"));
 const AccessibilityStatement = lazyWithReload(() => import("./pages/accessibility-statement"));
 const NotFound = lazyWithReload(() => import("./pages/not-found"));
 const RepairRedirect = lazyWithReload(() => import("./pages/repair-redirect"));
+const AuthPage = lazyWithReload(() => import("./pages/auth-page"));
 
 // Admin Pages — lazy loaded (biggest win: never loaded for public visitors)
 const AdminDashboard = lazyWithReload(() => import("./pages/admin/dashboard"));
@@ -225,6 +226,7 @@ function Router() {
           <Route path="/oroi-chrisis" component={TermsOfUse} />
           <Route path="/prosvassimotita" component={AccessibilityStatement} />
           <Route path="/repair/:slug" component={RepairRedirect} />
+          <Route path="/auth" component={AuthPage} />
           <Route path="/admin/insights" component={AdminInsights} />
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/admin/repair-requests" component={AdminRepairRequests} />

@@ -230,20 +230,6 @@ export default function Home() {
               </Link>
             ))}
           </div>
-
-          <div className="text-center mt-10">
-            <Link href="/services">
-              <Button
-                size="lg"
-                variant="outline"
-                className="h-12 px-8 border-primary/30 text-primary"
-                data-testid="button-all-services"
-              >
-                Δες όλες τις Υπηρεσίες
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
-          </div>
         </section>
 
         {/* ── CTA banner ── */}
@@ -254,7 +240,7 @@ export default function Home() {
         >
           <div className="absolute inset-0 circuit-bg opacity-60 pointer-events-none" />
           <div className="container mx-auto px-4 text-center relative">
-            <h2 className="text-3xl font-display font-bold text-foreground mb-4">Κάτι Χάλασε; Είμαστε Εδώ.</h2>
+            <h2 className="text-3xl font-display font-bold text-foreground mb-4">uBreak i Fix</h2>
             <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
               Φέρε τη συσκευή σου ή επικοινώνησε μαζί μας για δωρεάν αξιολόγηση — χωρίς δεσμεύσεις.
             </p>

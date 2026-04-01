@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChatWindow } from "@/components/chat/ChatWindow";
 import { RepairRequestModal } from "@/components/repair-request-modal";
-import { MessageCircle, X, Send, Loader2, Bot, ArrowRight, Wrench } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, Bot, ArrowRight, Wrench, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { getAnalyticsSessionId } from "@/lib/analytics-session";
@@ -18,6 +18,10 @@ import { COOKIE_CONSENT_EVENT } from "@/components/cookie-banner";
 import { resolveRepairSlugToPathWithFallbacks } from "@/lib/repair-slug-resolve";
 import { guessDeviceModelFromMessages, type RepairChatCta } from "@shared/repair-assistant";
 import { getVisitStoreUpsellCopy, resolveRepairSubmitUpsell } from "@/lib/repair-submit-upsell";
+import {
+  getNavbarAiBarCollapsed,
+  subscribeNavbarAiBarCollapsed,
+} from "@/lib/navbar-ai-bar-dock";
 
 type Turn = { role: "user" | "assistant"; content: string; ctas?: RepairChatCta[] };
 
@@ -193,6 +197,8 @@ export function RepairChatbot() {
   const { toast } = useToast();
   const [loc, setLocation] = useLocation();
   const [open, setOpen] = useState(false);
+  const openRef = useRef(false);
+  openRef.current = open;
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Turn[]>([]);
   const [loading, setLoading] = useState(false);
@@ -203,7 +209,12 @@ export function RepairChatbot() {
   const [showAttention, setShowAttention] = useState(false);
   const attentionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [navbarAiBarCollapsed, setNavbarAiBarCollapsed] = useState(getNavbarAiBarCollapsed);
   const clientContextRef = useRef<RepairChatClientContext>("desktop");
+
+  useEffect(() => {
+    return subscribeNavbarAiBarCollapsed(setNavbarAiBarCollapsed);
+  }, []);
 
   useEffect(() => {
     if (typeof navigator === "undefined") return;
@@ -292,9 +303,8 @@ export function RepairChatbot() {
 
           const newTurn: Turn = { role: "assistant", content: msg.text, ctas: msg.ctas };
           setMessages((prev) => [...prev, newTurn]);
-          // Open chat to show the proactive message
-          setOpen(true);
-          setUnreadCount(0);
+          // Χωρίς αυτόματο άνοιγμα — μόνο badge αν το chat είναι κλειστό
+          if (!openRef.current) setUnreadCount((n) => n + 1);
           break;
         }
       }
@@ -457,11 +467,11 @@ export function RepairChatbot() {
               type="button"
               variant="ghost"
               size="icon"
-              className="shrink-0 h-8 w-8"
+              className="shrink-0 h-10 w-10 rounded-xl text-foreground hover:bg-white/10"
               onClick={() => setOpen(false)}
               aria-label="Κλείσιμο"
             >
-              <X className="w-4 h-4" />
+              <X className="h-5 w-5 stroke-[2.5]" aria-hidden />
             </Button>
           </div>
 
@@ -607,6 +617,14 @@ export function RepairChatbot() {
         {unreadCount > 0 && !open && (
           <span className="absolute -top-1 -right-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-md animate-in zoom-in duration-300">
             {unreadCount}
+          </span>
+        )}
+        {navbarAiBarCollapsed && !open && (
+          <span
+            className="pointer-events-none absolute -left-0.5 -top-0.5 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-primary/40 bg-gradient-to-br from-primary/90 to-cyan-600 text-primary-foreground shadow-md motion-safe:animate-pulse"
+            aria-hidden
+          >
+            <Sparkles className="h-2.5 w-2.5" strokeWidth={2.5} />
           </span>
         )}
       <Button

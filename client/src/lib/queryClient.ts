@@ -1,11 +1,10 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-
-const HITECH_ADMIN_TOKEN_KEY = "hitech_admin_token";
+import { ADMIN_TOKEN_STORAGE_KEY } from "@/lib/admin-auth-storage";
 
 /** Authorization header για κλήσεις admin API όταν υπάρχει token στο localStorage. */
 export function getAdminAuthHeaders(): Record<string, string> {
   try {
-    const token = localStorage.getItem(HITECH_ADMIN_TOKEN_KEY);
+    const token = localStorage.getItem(ADMIN_TOKEN_STORAGE_KEY);
     if (!token) return {};
     return { Authorization: `Bearer ${token}` };
   } catch {

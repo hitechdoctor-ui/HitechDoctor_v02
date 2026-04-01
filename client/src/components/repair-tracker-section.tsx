@@ -40,7 +40,7 @@ export function RepairTrackerSection() {
   return (
     <section
       id="repair-tracker"
-      className="scroll-mt-24 rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8"
+      className="mx-auto w-full max-w-xl scroll-mt-24 rounded-2xl border border-border bg-card p-6 shadow-sm md:p-8"
       aria-labelledby="repair-tracker-heading"
     >
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-6">
