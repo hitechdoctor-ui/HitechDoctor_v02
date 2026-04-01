@@ -12,7 +12,12 @@ const ViberBot = requireViber("viber-bot") as {
     authToken: string;
     name: string;
     avatar: string;
-    logger?: { debug: (...a: unknown[]) => void; warn: (...a: unknown[]) => void; error: (...a: unknown[]) => void };
+    logger?: {
+      info: (...a: unknown[]) => void;
+      debug: (...a: unknown[]) => void;
+      warn: (...a: unknown[]) => void;
+      error: (...a: unknown[]) => void;
+    };
   }) => ViberBotInstance;
   Events: { MESSAGE_RECEIVED: string };
   Message: { Text: new (text: string) => { verifyMessage: () => void; toJson: () => unknown } };
@@ -58,8 +63,12 @@ const ORDER_STATUS_EL: Record<string, string> = {
 
 let botInstance: ViberBotInstance | null = null;
 
+/** Το viber-bot καλεί info/debug/warn/error — χωρίς `info` σκάει στο setWebhook (Railway). */
 function viberLogger() {
   return {
+    info: (...args: unknown[]) => {
+      if (process.env.VIBER_DEBUG === "1") console.info("[viber]", ...args);
+    },
     debug: (...args: unknown[]) => {
       if (process.env.VIBER_DEBUG === "1") console.debug("[viber]", ...args);
     },
