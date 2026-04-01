@@ -1,0 +1,14 @@
+---
+description: Συγχρονισμός AI repair chat με αλλαγές στο hitechdoctor.com
+globs: client/**/*.tsx, client/**/*.ts, shared/**/*.ts, server/chat-repair.ts
+---
+
+# AI chat ↔ ιστότοπος
+
+Όταν αλλάζεις **πολιτικές, νομικές σελίδες, FAQ, στοιχεία επιχείρησης (footer/επικοινωνία), routes, ώρες, τηλέφωνο, διεύθυνση, εγγύηση, BoxNow, eShop copy** ή άλλο **βασικό περιεχόμενο** που θα πρέπει να ξέρει ο βοηθός:
+
+1. Ενημέρωσε **`shared/repair-catalog.ts`** — ειδικά το `REPAIR_STATIC_CATALOG_TEXT` (και αν χρειάζεται `formatProductsForRepairCatalog` / σχόλια).
+2. Έλεγξε **`server/chat-repair.ts`** — `buildRepairAssistantSystemPrompt`: νέες **ενότητες πρόθεσης**, **CTA παραδείγματα**, και οτιδήποτε αντιφάσκει με τον κατάλογο.
+3. Αν προστίθενται νέες δημόσιες σελίδες για αναζήτηση, ενημέρωσε και **`client/src/lib/global-search-index.ts`** ώστε να ευθυγραμμίζεται με το site search.
+
+Ο κατάλογος που στέλνεται στο μοντέλο χτίζεται από `getRepairCatalogPromptBlock()` + το static κείμενο· **πρέπει** να ταιριάζει με ό,τι βλέπει ο χρήστης στο site.

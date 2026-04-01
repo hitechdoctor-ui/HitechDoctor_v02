@@ -69,13 +69,15 @@ export function buildGlobalSearchIndex(): GlobalSearchIndexEntry[] {
   );
 
   entries.push(
-    { name: "Σχετικά με εμάς", href: "/about", sub: "Η ιστορία μας", category: "page" },
+    { name: "Σχετικά με εμάς", href: "/sxetika-me-mas", sub: "Η ιστορία μας", category: "page" },
     { name: "Επικοινωνία", href: "/contact", sub: "Τηλέφωνο & Διεύθυνση", category: "page" },
     { name: "Συχνές Ερωτήσεις (FAQ)", href: "/faq", sub: "Απαντήσεις σε ερωτήσεις", category: "page" },
     { name: "eShop", href: "/eshop", sub: "Αξεσουάρ · Κινητά · Laptops", category: "page" },
     { name: "Blog — Συμβουλές & Οδηγοί", href: "/blog", sub: "Άρθρα για κινητά & επισκευή", category: "page" },
-    { name: "Τρόποι Πληρωμής", href: "/payment-methods", sub: "Κάρτα · Μετρητά · Δόσεις", category: "page" },
-    { name: "Όροι Υπηρεσιών", href: "/oroi-episkeuis", sub: "Πολιτική επισκευής", category: "page" },
+    { name: "Τρόποι Πληρωμής", href: "/tropoi-pliromis", sub: "Κάρτα · Μετρητά · Δόσεις", category: "page" },
+    { name: "Πολιτική Επιστροφών", href: "/politiki-epistrofon", sub: "eShop & υπαναχώρηση 14 ημερών", category: "page", keywords: "επιστροφη χρηματα υπαναχωρηση εγγυηση αγορας" },
+    { name: "Όροι Χρήσης", href: "/oroi-chrisis", sub: "Ιστότοπος & eShop", category: "page", keywords: "terms χρηση site eshop" },
+    { name: "Όροι Επισκευής", href: "/oroi-episkeuis", sub: "Τεχνικός έλεγχος & συσκευή", category: "page", keywords: "gdpr συσκευη επισκευη οροι" },
   );
 
   for (const series of IPHONE_SERIES) {

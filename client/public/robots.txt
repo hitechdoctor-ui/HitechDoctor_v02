@@ -1,6 +1,4 @@
-# https://www.robotstxt.org/robotstxt.html
-# Μόνο τυπικές οδηγίες User-agent / Allow / Disallow / Sitemap.
-# (Η γραμμή "Content-Signal:" ΔΕΝ είναι έγκυρη στο robots.txt — προκαλεί σφάλμα στο PageSpeed / validators.)
+# Cloudflare-Ignore-Managed-Content: true
 
 User-agent: *
 Allow: /
