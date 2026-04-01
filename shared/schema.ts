@@ -1,7 +1,29 @@
-import { pgTable, text, integer, timestamp, numeric, boolean, uniqueIndex, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  integer,
+  timestamp,
+  numeric,
+  boolean,
+  uniqueIndex,
+  index,
+  json,
+} from "drizzle-orm/pg-core";
 import type { InferInsertModel } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// --- express-session (connect-pg-simple) ---
+/** Ίδιο shape με `table.sql` / connect-pg-simple — ώστε το `drizzle-kit push` να μην θεωρεί τον πίνακα «ξένο» και να μην προτείνει διαγραφή. */
+export const sessionTable = pgTable(
+  "session",
+  {
+    sid: text("sid").primaryKey().notNull(),
+    sess: json("sess").notNull(),
+    expire: timestamp("expire", { precision: 6, mode: "date", withTimezone: false }).notNull(),
+  },
+  (t) => [index("IDX_session_expire").on(t.expire)],
+);
 
 // --- Products ---
 export const products = pgTable("products", {
