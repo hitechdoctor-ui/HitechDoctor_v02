@@ -12,6 +12,7 @@
     "sync:fixmobile-pdf": "tsx script/sync-fixmobile-pdf.ts"
   },
   "dependencies": {
+    "@google-analytics/data": "^4.12.1",
     "@hookform/resolvers": "^3.10.0",
     "@jridgewell/trace-mapping": "^0.3.25",
     "@radix-ui/react-accordion": "^1.2.4",
