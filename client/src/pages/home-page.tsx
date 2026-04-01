@@ -1,6 +1,5 @@
+import { lazy, Suspense } from "react";
 import { Navbar } from "@/components/layout/navbar";
-import { Footer } from "@/components/layout/footer";
-import { ReviewsSection } from "@/components/reviews-section";
 import { Seo } from "@/components/seo";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
@@ -21,19 +20,12 @@ import {
   Wrench,
   ScanLine,
   Cpu,
-  Globe,
-  Code2,
-  Search,
-  ShoppingCart,
-  Star,
-  Paintbrush,
   Bot,
 } from "lucide-react";
 import { Link } from "wouter";
-import { BLOG_POSTS, formatBlogDate } from "@/data/blog-posts";
-import { SpecialOffers } from "@/components/special-offers";
-import { RepairChatbot } from "@/components/repair-chatbot";
 import { requestOpenRepairChat } from "@/lib/repair-chat-events";
+
+const HomeBelowFold = lazy(() => import("./home-below-fold"));
 const homeServices = [
   { icon: Smartphone, title: "Επισκευή Κινητών", href: "/services/episkeui-kiniton" },
   { icon: Tablet, title: "Επισκευή Tablet", href: "/services#episkeui-tablet" },
@@ -165,9 +157,11 @@ export default function Home() {
                 src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=900"
                 alt="Επισκευή τεχνολογίας — μητρική πλακέτα ASUS"
                 className="w-full aspect-[4/3] object-cover"
+                width={900}
+                height={675}
                 loading="eager"
                 fetchPriority="high"
-                decoding="sync"
+                decoding="async"
               />
               <div className="absolute inset-0 bg-gradient-to-tr from-background/80 via-background/20 to-transparent" />
               {/* Floating stat */}
