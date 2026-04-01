@@ -140,13 +140,16 @@ async function checkSubscriptionExpiry() {
       () => {
         log(`serving on port ${port} — Host: ${host}`);
 
+        // Webhook URL = `${origin}/api/viber/webhook`. Για production: ορίστε
+        // VIBER_PUBLIC_BASE_URL=https://www.hitechdoctor.com ώστε να ταιριάζει με το Viber Admin (όχι μόνο το *.railway.app).
         const viberBase =
           process.env.VIBER_PUBLIC_BASE_URL?.trim() ||
           process.env.PUBLIC_APP_URL?.trim() ||
           process.env.RAILWAY_PUBLIC_DOMAIN?.trim();
         if (viberBase) {
-          const origin = viberBase.startsWith("http") ? viberBase : `https://${viberBase}`;
-          scheduleViberWebhookRegistration(origin);
+          const origin = viberBase.replace(/\/$/, "");
+          const normalized = origin.startsWith("http") ? origin : `https://${origin}`;
+          scheduleViberWebhookRegistration(normalized);
         } else if (process.env.VIBER_AUTH_TOKEN?.trim()) {
           log(
             "VIBER_AUTH_TOKEN ορίστηκε αλλά λείπει VIBER_PUBLIC_BASE_URL (ή PUBLIC_APP_URL / RAILWAY_PUBLIC_DOMAIN) — το setWebhook δεν εκτελέστηκε.",
