@@ -30,7 +30,8 @@
     --secondary-foreground: 220 50% 18%;
 
     --muted: 220 15% 93%;
-    --muted-foreground: 220 14% 46%;
+    /* Σκοτεινότερο κείμενο σε light mode για WCAG contrast σε λευκό φόντο */
+    --muted-foreground: 220 16% 38%;
 
     --accent: 185 100% 36%;
     --accent-foreground: 0 0% 100%;
@@ -110,7 +111,8 @@
     --secondary-foreground: 195 80% 95%;
 
     --muted: 220 40% 12%;
-    --muted-foreground: 210 25% 55%;
+    /* Ανώτερη φωτεινότητα σε dark mode για αναγνωσιμότητα πάνω σε σκούρο φόντο */
+    --muted-foreground: 210 18% 72%;
 
     --accent: 185 100% 42%;
     --accent-foreground: 220 50% 5%;

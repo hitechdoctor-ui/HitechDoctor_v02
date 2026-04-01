@@ -1,4 +1,4 @@
-import { useState, Fragment } from "react";
+import { useState } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Seo } from "@/components/seo";
@@ -21,24 +21,31 @@ const FAQS = [
   { q: "Τι ώρες λειτουργείτε;", a: "Δευτέρα–Παρασκευή: 10:00–19:00. Σάββατο: 10:00–16:00. Κυριακή: Κλειστά. Ειδικά ωράρια τις ημέρες αργιών — ελέγξτε την επικοινωνία μας." },
 ];
 
-function FAQItem({ q, a }: { q: string; a: string }) {
+function FAQItem({ panelId, q, a }: { panelId: string; q: string; a: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className={`border border-white/8 rounded-xl overflow-hidden transition-all ${open ? "border-primary/30 bg-card" : "bg-card/50 hover:border-white/15"}`}>
+    <article
+      className={`rounded-xl border transition-colors ${open ? "border-primary/30 bg-card" : "border-white/8 bg-card/50 hover:border-white/15"}`}
+    >
       <button
+        type="button"
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center justify-between gap-4 p-5 text-left"
         aria-expanded={open}
+        aria-controls={panelId}
       >
-        <span className="text-sm font-semibold text-foreground">{q}</span>
-        <ChevronDown className={`w-4 h-4 text-primary shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+        <span className="text-sm font-semibold text-foreground pr-2">{q}</span>
+        <ChevronDown
+          className={`w-4 h-4 text-primary shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+          aria-hidden
+        />
       </button>
-      {open && (
-        <div className="px-5 pb-5">
-          <p className="text-sm text-muted-foreground leading-relaxed">{a}</p>
-        </div>
-      )}
-    </div>
+      {open ? (
+        <p id={panelId} className="text-sm text-muted-foreground leading-relaxed px-5 pb-5 pt-0">
+          {a}
+        </p>
+      ) : null}
+    </article>
   );
 }
 
@@ -73,20 +80,22 @@ export default function FAQ() {
         </div>
       </section>
 
-      <section className="py-16">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="space-y-3 mb-12">
-            {FAQS.map((f, i) => <FAQItem key={i} q={f.q} a={f.a} />)}
-          </div>
+      <section className="py-16 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <ul className="list-none p-0 m-0 space-y-3 mb-12">
+          {FAQS.map((f, i) => (
+            <li key={i}>
+              <FAQItem panelId={`faq-panel-${i}`} q={f.q} a={f.a} />
+            </li>
+          ))}
+        </ul>
 
-          <div className="bg-gradient-to-br from-primary/10 to-blue-500/5 border border-primary/20 rounded-2xl p-6 text-center">
-            <h2 className="font-bold mb-2">Δεν βρήκες απάντηση;</h2>
-            <p className="text-sm text-muted-foreground mb-4">Επικοινωνήστε μαζί μας — θα απαντήσουμε μέσα σε λίγα λεπτά.</p>
-            <Link href="/epikoinonia">
-              <Button className="bg-primary text-primary-foreground">Επικοινωνία</Button>
-            </Link>
-          </div>
-        </div>
+        <aside className="bg-gradient-to-br from-primary/10 to-blue-500/5 border border-primary/20 rounded-2xl p-6 text-center">
+          <h2 className="font-bold text-foreground mb-2">Δεν βρήκες απάντηση;</h2>
+          <p className="text-sm text-muted-foreground mb-4">Επικοινωνήστε μαζί μας — θα απαντήσουμε μέσα σε λίγα λεπτά.</p>
+          <Link href="/epikoinonia">
+            <Button className="bg-primary text-primary-foreground">Επικοινωνία</Button>
+          </Link>
+        </aside>
       </section>
 
       <ReviewsSection />

@@ -1,10 +1,16 @@
+# https://www.robotstxt.org/robotstxt.html
+# Μόνο τυπικές οδηγίες User-agent / Allow / Disallow / Sitemap.
+# (Η γραμμή "Content-Signal:" ΔΕΝ είναι έγκυρη στο robots.txt — προκαλεί σφάλμα στο PageSpeed / validators.)
+
 User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /checkout
 
-# Αποκλεισμός AI Bots (Προαιρετικό αλλά προτείνεται)
-User-agent: GPTBot
-Disallow: /
+User-agent: Googlebot
+Allow: /
 
-Sitemap: https://www.hitechdoctor.com/sitemap.xml
+User-agent: Googlebot-Image
+Allow: /
+
+Sitemap: https://hitechdoctor.com/sitemap.xml

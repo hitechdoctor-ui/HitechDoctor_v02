@@ -110,7 +110,7 @@ export default function HomeBelowFold() {
                     <div className="aspect-[16/9] overflow-hidden bg-black/40">
                       <img
                         src={post.image}
-                        alt=""
+                        alt={post.title}
                         loading="lazy"
                         decoding="async"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
