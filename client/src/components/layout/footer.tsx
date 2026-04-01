@@ -172,29 +172,29 @@ export function Footer() {
             </div>
 
             <div className="flex items-center gap-3">
-              <a href="https://facebook.com/hitechdoctor" target="_blank" rel="noopener noreferrer" aria-label="Facebook" data-testid="footer-social-facebook"
+              <a href="https://facebook.com/hitechdoctor" target="_blank" rel="noopener noreferrer" aria-label="Facebook — HiTech Doctor" data-testid="footer-social-facebook"
                 className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:border-blue-500/40 hover:bg-blue-500/10 transition-all">
-                <Facebook className="w-3.5 h-3.5 text-muted-foreground" />
+                <Facebook className="w-3.5 h-3.5 text-muted-foreground" aria-hidden />
               </a>
-              <a href="https://instagram.com/hitechdoctor" target="_blank" rel="noopener noreferrer" aria-label="Instagram" data-testid="footer-social-instagram"
+              <a href="https://instagram.com/hitechdoctor" target="_blank" rel="noopener noreferrer" aria-label="Instagram — HiTech Doctor" data-testid="footer-social-instagram"
                 className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:border-pink-500/40 hover:bg-pink-500/10 transition-all">
-                <Instagram className="w-3.5 h-3.5 text-muted-foreground" />
+                <Instagram className="w-3.5 h-3.5 text-muted-foreground" aria-hidden />
               </a>
-              <a href="https://tiktok.com/@hitechdoctor" target="_blank" rel="noopener noreferrer" aria-label="TikTok" data-testid="footer-social-tiktok"
+              <a href="https://tiktok.com/@hitechdoctor" target="_blank" rel="noopener noreferrer" aria-label="TikTok — HiTech Doctor" data-testid="footer-social-tiktok"
                 className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:border-white/30 hover:bg-white/10 transition-all">
-                <SiTiktok className="w-3.5 h-3.5 text-muted-foreground" />
+                <SiTiktok className="w-3.5 h-3.5 text-muted-foreground" aria-hidden />
               </a>
-              <a href={buildViberUrl()} target="_blank" rel="noopener noreferrer" aria-label="Viber" data-testid="footer-social-viber"
+              <a href={buildViberUrl()} target="_blank" rel="noopener noreferrer" aria-label="Viber — HiTech Doctor" data-testid="footer-social-viber"
                 className="w-8 h-8 rounded-lg bg-[#7360f2]/15 border border-[#7360f2]/35 flex items-center justify-center hover:border-[#7360f2]/55 hover:bg-[#7360f2]/25 transition-all">
-                <SiViber className="w-3.5 h-3.5 text-[#7360f2]" />
+                <SiViber className="w-3.5 h-3.5 text-[#7360f2]" aria-hidden />
               </a>
             </div>
           </div>
 
           {/* Dynamic eShop column */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 mb-4 flex items-center gap-2">
-              <Package className="w-3.5 h-3.5 text-primary" />
+            <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4 flex items-center gap-2">
+              <Package className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden />
               eShop
             </h3>
             <ul className="space-y-2.5">
@@ -220,7 +220,7 @@ export function Footer() {
           {/* Static nav menus */}
           {NAV_MENUS.map((menu) => (
             <div key={menu.title}>
-              <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 mb-4">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">
                 {menu.title}
               </h3>
               <ul className="space-y-2.5">
@@ -232,7 +232,7 @@ export function Footer() {
                       data-testid={`footer-link-${l.label.toLowerCase().replace(/\s+/g, "-")}`}
                     >
                       {l.label}
-                      {l.external && <ExternalLink className="w-2.5 h-2.5 opacity-0 group-hover:opacity-60 transition-opacity" />}
+                      {l.external && <ExternalLink className="w-2.5 h-2.5 opacity-0 group-hover:opacity-60 transition-opacity" aria-hidden />}
                     </Link>
                   </li>
                 ))}
@@ -247,32 +247,40 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="mt-8 pt-6 border-t border-white/6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-muted-foreground/50">
+          <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} HiTech Doctor. Με επιφύλαξη παντός δικαιώματος. Design & Development by{" "}
-            <a href="https://hitechdoctor.com" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+            <a href="https://hitechdoctor.com" target="_blank" rel="noopener noreferrer" className="text-foreground/90 underline-offset-2 hover:text-primary hover:underline transition-colors">
               HiTech Doctor
             </a>
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5">
-            <Link href="/politiki-epistrofon" className="text-xs text-muted-foreground/60 hover:text-primary transition-colors">
+            <Link href="/politiki-epistrofon" className="text-xs text-muted-foreground hover:text-primary transition-colors">
               Πολιτική Επιστροφών
             </Link>
-            <span className="text-xs text-muted-foreground/30 hidden sm:inline">|</span>
-            <Link href="/oroi-chrisis" className="text-xs text-muted-foreground/60 hover:text-primary transition-colors">
+            <span className="text-xs text-muted-foreground/45 hidden sm:inline" aria-hidden>
+              |
+            </span>
+            <Link href="/oroi-chrisis" className="text-xs text-muted-foreground hover:text-primary transition-colors">
               Όροι Χρήσης
             </Link>
-            <span className="text-xs text-muted-foreground/30 hidden sm:inline">|</span>
-            <Link href="/oroi-episkeuis" className="text-xs text-muted-foreground/50 hover:text-primary transition-colors">
-              <Shield className="w-3 h-3 inline mr-1" />
+            <span className="text-xs text-muted-foreground/45 hidden sm:inline" aria-hidden>
+              |
+            </span>
+            <Link href="/oroi-episkeuis" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+              <Shield className="w-3 h-3 inline mr-1 align-[-0.125em]" aria-hidden />
               Όροι επισκευής
             </Link>
-            <span className="text-xs text-muted-foreground/30 hidden sm:inline">|</span>
-            <Link href="/politiki-cookies" className="text-xs text-muted-foreground/50 hover:text-primary transition-colors">
+            <span className="text-xs text-muted-foreground/45 hidden sm:inline" aria-hidden>
+              |
+            </span>
+            <Link href="/politiki-cookies" className="text-xs text-muted-foreground hover:text-primary transition-colors">
               Cookies
             </Link>
-            <span className="text-xs text-muted-foreground/30 hidden sm:inline">|</span>
-            <Link href="/eshop" className="text-xs text-muted-foreground/50 hover:text-primary transition-colors">
-              <Package className="w-3 h-3 inline mr-1" />
+            <span className="text-xs text-muted-foreground/45 hidden sm:inline" aria-hidden>
+              |
+            </span>
+            <Link href="/eshop" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+              <Package className="w-3 h-3 inline mr-1 align-[-0.125em]" aria-hidden />
               eShop
             </Link>
           </div>

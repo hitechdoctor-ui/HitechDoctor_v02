@@ -158,7 +158,7 @@ export function Navbar() {
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30 group-hover:bg-primary/30 transition-colors">
+          <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30 group-hover:bg-primary/30 transition-colors" aria-hidden>
             <Wrench className="w-5 h-5 text-primary" />
           </div>
           <div>
@@ -453,12 +453,13 @@ export function Navbar() {
 
           {/* Cart — icon only, primary color */}
           <button
-            className="relative p-2 rounded-xl border border-white/10 hover:border-primary/50 bg-white/5 hover:bg-primary/10 transition-all"
+            type="button"
+            className="relative p-2 rounded-xl border border-white/10 hover:border-primary/50 bg-white/5 hover:bg-primary/10 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             onClick={() => setIsCartOpen(true)}
             aria-label="Καλάθι αγορών"
             data-testid="btn-cart"
           >
-            <ShoppingCart className="w-5 h-5 text-primary" />
+            <ShoppingCart className="w-5 h-5 text-primary" aria-hidden />
             {cartCount > 0 && (
               <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center font-bold animate-in zoom-in">
                 {cartCount}
@@ -508,15 +509,19 @@ export function Navbar() {
                 {/* Mobile: Υπηρεσίες */}
                 <div>
                   <button
+                    type="button"
                     onClick={() => setMobileServicesOpen((v) => !v)}
                     className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium transition-colors ${isActive("/services") ? "text-primary bg-primary/10" : "text-foreground hover:bg-white/5"}`}
+                    aria-expanded={mobileServicesOpen}
+                    aria-controls="nav-mobile-services-panel"
+                    id="nav-mobile-services-trigger"
                   >
-                    <Zap className="w-5 h-5" />
+                    <Zap className="w-5 h-5 shrink-0" aria-hidden />
                     Υπηρεσίες
-                    <ChevronRight className={`w-4 h-4 ml-auto transition-transform ${mobileServicesOpen ? "rotate-90" : ""}`} />
+                    <ChevronRight className={`w-4 h-4 ml-auto transition-transform shrink-0 ${mobileServicesOpen ? "rotate-90" : ""}`} aria-hidden />
                   </button>
                   {mobileServicesOpen && (
-                    <div className="ml-8 mt-1 flex flex-col gap-1">
+                    <div id="nav-mobile-services-panel" role="region" aria-labelledby="nav-mobile-services-trigger" className="ml-8 mt-1 flex flex-col gap-1">
                       <p className="text-[10px] font-bold text-muted-foreground px-3 py-1 uppercase tracking-wider">Επισκευή Κινητών</p>
                       {PHONE_BRANDS.map((brand) => (
                         <Link key={brand.name} href={brand.href} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 text-sm text-foreground">
@@ -557,15 +562,19 @@ export function Navbar() {
                 {/* Mobile: eShop */}
                 <div>
                   <button
+                    type="button"
                     onClick={() => setMobileEshopOpen((v) => !v)}
                     className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium transition-colors ${isActive("/eshop") ? "text-primary bg-primary/10" : "text-foreground hover:bg-white/5"}`}
+                    aria-expanded={mobileEshopOpen}
+                    aria-controls="nav-mobile-eshop-panel"
+                    id="nav-mobile-eshop-trigger"
                   >
-                    <Package className="w-5 h-5" />
+                    <Package className="w-5 h-5 shrink-0" aria-hidden />
                     eShop
-                    <ChevronRight className={`w-4 h-4 ml-auto transition-transform ${mobileEshopOpen ? "rotate-90" : ""}`} />
+                    <ChevronRight className={`w-4 h-4 ml-auto transition-transform shrink-0 ${mobileEshopOpen ? "rotate-90" : ""}`} aria-hidden />
                   </button>
                   {mobileEshopOpen && (
-                    <div className="ml-8 mt-1 flex flex-col gap-1">
+                    <div id="nav-mobile-eshop-panel" role="region" aria-labelledby="nav-mobile-eshop-trigger" className="ml-8 mt-1 flex flex-col gap-1">
                       {eshopCategories.map((cat) => (
                         <Link key={cat.label} href={cat.href} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 text-sm text-foreground">
                           <cat.icon className={`w-4 h-4 ${cat.color}`} />
@@ -583,15 +592,19 @@ export function Navbar() {
                 {/* Mobile: Info */}
                 <div>
                   <button
+                    type="button"
                     onClick={() => setMobileInfoOpen((v) => !v)}
                     className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium transition-colors text-foreground hover:bg-white/5"
+                    aria-expanded={mobileInfoOpen}
+                    aria-controls="nav-mobile-info-panel"
+                    id="nav-mobile-info-trigger"
                   >
-                    <Info className="w-5 h-5" />
+                    <Info className="w-5 h-5 shrink-0" aria-hidden />
                     Info
-                    <ChevronRight className={`w-4 h-4 ml-auto transition-transform ${mobileInfoOpen ? "rotate-90" : ""}`} />
+                    <ChevronRight className={`w-4 h-4 ml-auto transition-transform shrink-0 ${mobileInfoOpen ? "rotate-90" : ""}`} aria-hidden />
                   </button>
                   {mobileInfoOpen && (
-                    <div className="ml-8 mt-1 flex flex-col gap-1">
+                    <div id="nav-mobile-info-panel" role="region" aria-labelledby="nav-mobile-info-trigger" className="ml-8 mt-1 flex flex-col gap-1">
                       <Link href="/sxetika-me-mas" className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/5 text-sm text-foreground">
                         <ShieldCheck className="w-4 h-4 text-primary" />
                         Σχετικά με εμάς

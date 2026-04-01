@@ -66,7 +66,7 @@ export function CookieBanner() {
 
           {/* Details (expandable) */}
           {showDetails && (
-            <div className="mb-3 p-3 rounded-xl bg-background/60 border border-white/8 text-xs text-muted-foreground space-y-2">
+            <div id="cookie-banner-details" className="mb-3 p-3 rounded-xl bg-background/60 border border-white/8 text-xs text-muted-foreground space-y-2">
               <div className="flex items-start gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-green-400 shrink-0 mt-0.5" />
                 <div><span className="font-semibold text-foreground">Απαραίτητα Cookies</span> — Απαιτούνται για τη λειτουργία του site. Πάντα ενεργά.</div>
@@ -85,29 +85,34 @@ export function CookieBanner() {
           {/* Actions */}
           <div className="flex flex-wrap items-center gap-2">
             <Button
+              type="button"
               onClick={accept}
               className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-4 text-xs font-semibold flex-1 sm:flex-none"
               data-testid="btn-cookie-accept"
             >
-              <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+              <CheckCircle2 className="w-3.5 h-3.5 mr-1.5 shrink-0" aria-hidden />
               Αποδοχή Όλων
             </Button>
             <Button
+              type="button"
               onClick={reject}
               variant="outline"
               className="border-white/15 hover:border-white/30 h-8 px-4 text-xs flex-1 sm:flex-none"
               data-testid="btn-cookie-reject"
             >
-              <XCircle className="w-3.5 h-3.5 mr-1.5" />
+              <XCircle className="w-3.5 h-3.5 mr-1.5 shrink-0" aria-hidden />
               Μόνο Απαραίτητα
             </Button>
             <Button
+              type="button"
               onClick={() => setShowDetails((v) => !v)}
               variant="ghost"
               className="h-8 px-3 text-xs text-muted-foreground hover:text-foreground ml-auto"
               data-testid="btn-cookie-settings"
+              aria-expanded={showDetails}
+              aria-controls="cookie-banner-details"
             >
-              <Settings2 className="w-3.5 h-3.5 mr-1" />
+              <Settings2 className="w-3.5 h-3.5 mr-1 shrink-0" aria-hidden />
               Ρυθμίσεις
             </Button>
           </div>

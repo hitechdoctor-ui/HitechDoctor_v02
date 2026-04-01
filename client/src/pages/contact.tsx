@@ -198,7 +198,7 @@ export default function Contact() {
                     </div>
                   ))}
                 </div>
-                <p className="text-[11px] text-muted-foreground/50 mt-3 pt-3 border-t border-white/8">
+                <p className="text-[11px] text-muted-foreground mt-3 pt-3 border-t border-white/8">
                   * Εκτός αδείας / αργιών. Για επείγοντα καλέστε στο{" "}
                   <a href="tel:+306981882005" className="text-primary hover:underline">698 188 2005</a>.
                 </p>
@@ -230,38 +230,47 @@ export default function Contact() {
                 ) : (
                   <form onSubmit={handleSubmit} className="flex flex-col gap-3">
                     <div>
-                      <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1 block">Όνομα</label>
+                      <label htmlFor="contact-name" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 block">
+                        Όνομα
+                      </label>
                       <input
+                        id="contact-name"
                         type="text"
                         required
                         data-testid="input-contact-name"
                         value={form.name}
                         onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                         placeholder="Το όνομά σας"
-                        className="w-full h-10 rounded-xl bg-white/5 border border-white/10 px-3 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 transition-colors"
+                        className="w-full h-10 rounded-xl bg-white/5 border border-white/10 px-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1 block">Τηλέφωνο</label>
+                      <label htmlFor="contact-phone" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 block">
+                        Τηλέφωνο
+                      </label>
                       <input
+                        id="contact-phone"
                         type="tel"
                         data-testid="input-contact-phone"
                         value={form.phone}
                         onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
                         placeholder="69x xxx xxxx"
-                        className="w-full h-10 rounded-xl bg-white/5 border border-white/10 px-3 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 transition-colors"
+                        className="w-full h-10 rounded-xl bg-white/5 border border-white/10 px-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1 block">Μήνυμα</label>
+                      <label htmlFor="contact-message" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 block">
+                        Μήνυμα
+                      </label>
                       <textarea
+                        id="contact-message"
                         required
                         rows={3}
                         data-testid="input-contact-message"
                         value={form.message}
                         onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
                         placeholder="Περιγράψτε το πρόβλημά σας..."
-                        className="w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 transition-colors resize-none"
+                        className="w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 transition-colors resize-none"
                       />
                     </div>
 
@@ -310,7 +319,7 @@ export default function Contact() {
             </h2>
             <dl className="grid gap-3 text-sm text-muted-foreground">
               <div>
-                <dt className="text-[11px] uppercase tracking-wider text-muted-foreground/50 mb-0.5">Επωνυμία</dt>
+                <dt className="text-[11px] uppercase tracking-wider text-muted-foreground mb-0.5">Επωνυμία</dt>
                 <dd className="text-foreground font-medium">
                   {BUSINESS_REGISTERED_NAME}
                   {BUSINESS_REGISTERED_NAME !== BUSINESS_TRADE_NAME && (
@@ -319,16 +328,16 @@ export default function Contact() {
                 </dd>
               </div>
               <div>
-                <dt className="text-[11px] uppercase tracking-wider text-muted-foreground/50 mb-0.5">Διεύθυνση</dt>
+                <dt className="text-[11px] uppercase tracking-wider text-muted-foreground mb-0.5">Διεύθυνση</dt>
                 <dd>{formatBusinessAddressOneLine()}</dd>
               </div>
               <div>
-                <dt className="text-[11px] uppercase tracking-wider text-muted-foreground/50 mb-0.5">ΓΕΜΗ</dt>
+                <dt className="text-[11px] uppercase tracking-wider text-muted-foreground mb-0.5">ΓΕΜΗ</dt>
                 <dd className="font-mono text-primary/90">{BUSINESS_GEMI}</dd>
               </div>
               {BUSINESS_AFM ? (
                 <div>
-                  <dt className="text-[11px] uppercase tracking-wider text-muted-foreground/50 mb-0.5">ΑΦΜ & ΔΟΥ</dt>
+                  <dt className="text-[11px] uppercase tracking-wider text-muted-foreground mb-0.5">ΑΦΜ & ΔΟΥ</dt>
                   <dd>
                     <span className="font-mono">{BUSINESS_AFM}</span>
                     {BUSINESS_DOU ? <span> — ΔΟΥ {BUSINESS_DOU}</span> : null}
@@ -336,14 +345,14 @@ export default function Contact() {
                 </div>
               ) : (
                 <div>
-                  <dt className="text-[11px] uppercase tracking-wider text-muted-foreground/50 mb-0.5">ΑΦΜ & ΔΟΥ</dt>
+                  <dt className="text-[11px] uppercase tracking-wider text-muted-foreground mb-0.5">ΑΦΜ & ΔΟΥ</dt>
                   <dd className="text-xs text-muted-foreground/70">
                     Εμφανίζονται στα εκδιδόμενα παραστατικά. Για δημοσίευση στο site ορίστε VITE_BUSINESS_AFM / VITE_BUSINESS_DOU στο build ή επικοινωνήστε στο info@hitechdoctor.com.
                   </dd>
                 </div>
               )}
               <div>
-                <dt className="text-[11px] uppercase tracking-wider text-muted-foreground/50 mb-0.5">Ωράριο</dt>
+                <dt className="text-[11px] uppercase tracking-wider text-muted-foreground mb-0.5">Ωράριο</dt>
                 <dd>{BUSINESS_HOURS_SUMMARY}</dd>
               </div>
             </dl>

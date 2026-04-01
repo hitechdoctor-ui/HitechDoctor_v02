@@ -47,6 +47,7 @@ export function MobileBottomNav() {
           type="button"
           onClick={() => requestOpenRepairChat()}
           className="flex min-h-[48px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 touch-manipulation text-muted-foreground transition-colors active:bg-white/5"
+          aria-label="Άνοιγμα συνομιλίας AI Doctor"
         >
           <MessageCircle className="h-5 w-5 shrink-0" aria-hidden />
           <span className="text-[10px] font-semibold leading-tight">Chat</span>

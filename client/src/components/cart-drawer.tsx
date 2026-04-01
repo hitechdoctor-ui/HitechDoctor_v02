@@ -60,27 +60,35 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                         )}
                       </div>
                       <button
+                        type="button"
                         onClick={() => removeItem(item.product.id, item.selectedModel)}
-                        className="text-muted-foreground hover:text-destructive transition-colors"
+                        className="text-muted-foreground hover:text-destructive transition-colors p-1 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                        aria-label={`Αφαίρεση «${item.product.name}» από το καλάθι`}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-4 h-4" aria-hidden />
                       </button>
                     </div>
                     <div className="flex items-center justify-between mt-2">
                       <div className="flex items-center gap-2 bg-black/40 rounded-lg p-1">
                         <button
+                          type="button"
                           onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.selectedModel)}
-                          className="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded"
+                          className="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                           disabled={item.quantity <= 1}
+                          aria-label="Μείωση ποσότητας"
                         >
-                          <Minus className="w-3 h-3" />
+                          <Minus className="w-3 h-3" aria-hidden />
                         </button>
-                        <span className="text-sm font-medium w-4 text-center">{item.quantity}</span>
+                        <span className="text-sm font-medium w-4 text-center" aria-live="polite">
+                          {item.quantity}
+                        </span>
                         <button
+                          type="button"
                           onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.selectedModel)}
-                          className="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded"
+                          className="w-6 h-6 flex items-center justify-center hover:bg-white/10 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                          aria-label="Αύξηση ποσότητας"
                         >
-                          <Plus className="w-3 h-3" />
+                          <Plus className="w-3 h-3" aria-hidden />
                         </button>
                       </div>
                       <p className="font-semibold text-primary">

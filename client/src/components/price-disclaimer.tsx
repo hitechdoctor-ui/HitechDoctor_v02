@@ -9,7 +9,7 @@ type PriceDisclaimerProps = {
 };
 
 /**
- * Διακριτική σημείωση για μεταβολές τιμών — μικρή τυπογραφία, χαμηλή αντίθεση.
+ * Διακριτική σημείωση για μεταβολές τιμών — μικρή τυπογραφία, επαρκής αντίθεση (WCAG).
  */
 export function PriceDisclaimer({ className, emphasis }: PriceDisclaimerProps) {
   return (
@@ -17,7 +17,7 @@ export function PriceDisclaimer({ className, emphasis }: PriceDisclaimerProps) {
       role="note"
       className={cn(
         "text-[0.65rem] sm:text-[10px] leading-snug tracking-wide",
-        emphasis ? "text-muted-foreground/70" : "text-muted-foreground/50",
+        emphasis ? "text-muted-foreground font-medium" : "text-muted-foreground",
         className,
       )}
     >
