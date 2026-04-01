@@ -226,7 +226,7 @@ export default function ServicePlayStation() {
         <div className="absolute inset-0 circuit-bg opacity-30 pointer-events-none" />
         <div className="container mx-auto px-4 max-w-5xl relative">
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60 mb-6" aria-label="Breadcrumb">
+          <nav className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-6" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-primary transition-colors">Αρχική</Link>
             <ChevronRight className="w-3 h-3" />
             <Link href="/services" className="hover:text-primary transition-colors">Υπηρεσίες</Link>
@@ -412,11 +412,11 @@ export default function ServicePlayStation() {
                 {model.repairs.map((r, i) => (
                   <div key={i} className="flex items-center justify-between px-6 py-3.5 hover:bg-white/3 transition-colors">
                     <div className="flex items-center gap-3">
-                      <Wrench className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
+                      <Wrench className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                       <div>
                         <span className="text-sm text-foreground/90 font-medium">{r.label}</span>
                         {r.note && (
-                          <span className="ml-2 text-[10px] text-muted-foreground/60 italic">{r.note}</span>
+                          <span className="ml-2 text-[10px] text-muted-foreground italic">{r.note}</span>
                         )}
                       </div>
                     </div>
@@ -543,15 +543,15 @@ export default function ServicePlayStation() {
             </a>
           </div>
           <div className="flex items-center justify-center gap-4 mt-4">
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60">
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />
               Δωρεάν αξιολόγηση
             </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60">
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <Shield className="w-3.5 h-3.5 text-blue-400" />
               Εγγύηση εργασίας 6 μήνες
             </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60">
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <Clock className="w-3.5 h-3.5 text-blue-400" />
               Παράδοση 24–48h
             </div>

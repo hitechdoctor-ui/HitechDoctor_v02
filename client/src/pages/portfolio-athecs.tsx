@@ -154,7 +154,7 @@ export default function PortfolioAthEcs() {
       >
         <div className="absolute inset-0 circuit-bg opacity-20 pointer-events-none" />
         <div className="container mx-auto px-4 max-w-6xl relative">
-          <nav className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60 mb-6" aria-label="Breadcrumb">
+          <nav className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-6" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-primary transition-colors">Αρχική</Link>
             <ChevronRight className="w-3 h-3" />
             <Link href="/web-designer" className="hover:text-primary transition-colors">Web Designer</Link>
@@ -214,7 +214,7 @@ export default function PortfolioAthEcs() {
 
             <div className="p-6 rounded-3xl border border-amber-500/20"
               style={{ background: "rgba(201,162,39,0.04)" }}>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-5 text-center">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-5 text-center">
                 Google Lighthouse Scores
               </p>
               <div className="grid grid-cols-4 gap-4">
@@ -228,7 +228,7 @@ export default function PortfolioAthEcs() {
                   <strong>Bilingual EN/GR</strong> — hreflang tags, dual meta sets, language switcher
                 </p>
               </div>
-              <p className="text-center text-[10px] text-muted-foreground/50 mt-3">Μετρήθηκε με Google Lighthouse · Desktop mode</p>
+              <p className="text-center text-[10px] text-muted-foreground mt-3">Μετρήθηκε με Google Lighthouse · Desktop mode</p>
             </div>
           </div>
         </div>
@@ -256,7 +256,7 @@ export default function PortfolioAthEcs() {
                   <div className="w-2.5 h-2.5 rounded-full bg-emerald-400/50" />
                   <div className="flex-1 mx-3 h-5 rounded bg-white/6 flex items-center px-2 gap-1">
                     <Lock className="w-2.5 h-2.5 text-emerald-400" />
-                    <span className="text-[9px] text-muted-foreground/60 font-mono">ath-ecs.gr{page.path}</span>
+                    <span className="text-[9px] text-muted-foreground font-mono">ath-ecs.gr{page.path}</span>
                   </div>
                 </div>
                 <div className="overflow-hidden">
@@ -350,7 +350,7 @@ export default function PortfolioAthEcs() {
             </p>
           </div>
           <div className="mb-8 p-5 rounded-2xl border border-white/8 bg-card/40">
-            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 mb-4">Target Keywords</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Target Keywords</p>
             <div className="flex flex-wrap gap-2">
               {SEO_KEYWORDS.map((kw) => (
                 <div key={kw} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-amber-500/25 bg-amber-500/8 text-xs text-amber-400 font-medium">
@@ -472,7 +472,7 @@ export default function PortfolioAthEcs() {
             </a>
           </div>
           <div className="mt-5">
-            <Link href="/web-designer" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-amber-400 transition-colors">
+            <Link href="/web-designer" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-amber-400 transition-colors">
               <ArrowRight className="w-3.5 h-3.5" />
               Δείτε όλο το portfolio
             </Link>

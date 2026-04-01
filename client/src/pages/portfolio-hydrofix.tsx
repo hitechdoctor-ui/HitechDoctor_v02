@@ -146,7 +146,7 @@ export default function PortfolioHydrofix() {
         <div className="absolute inset-0 circuit-bg opacity-25 pointer-events-none" />
         <div className="container mx-auto px-4 max-w-6xl relative">
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60 mb-6" aria-label="Breadcrumb">
+          <nav className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-6" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-primary transition-colors">Αρχική</Link>
             <ChevronRight className="w-3 h-3" />
             <Link href="/web-designer" className="hover:text-primary transition-colors">Web Designer</Link>
@@ -199,7 +199,7 @@ export default function PortfolioHydrofix() {
             {/* Lighthouse scores hero */}
             <div className="p-6 rounded-3xl border border-white/10"
               style={{ background: "rgba(255,255,255,0.02)" }}>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-5 text-center">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-5 text-center">
                 Google Lighthouse Scores
               </p>
               <div className="grid grid-cols-4 gap-4">
@@ -207,7 +207,7 @@ export default function PortfolioHydrofix() {
                   <ScoreCircle key={s.label} score={s.score} color={s.color} label={s.label} />
                 ))}
               </div>
-              <p className="text-center text-[10px] text-muted-foreground/50 mt-4">
+              <p className="text-center text-[10px] text-muted-foreground mt-4">
                 Μετρήθηκε με Google Lighthouse · Desktop mode
               </p>
             </div>
@@ -239,7 +239,7 @@ export default function PortfolioHydrofix() {
                   <div className="w-2.5 h-2.5 rounded-full bg-emerald-400/50" />
                   <div className="flex-1 mx-3 h-5 rounded bg-white/6 flex items-center px-2 gap-1">
                     <Lock className="w-2.5 h-2.5 text-emerald-400" />
-                    <span className="text-[9px] text-muted-foreground/60 font-mono">hydrofix.gr{page.path}</span>
+                    <span className="text-[9px] text-muted-foreground font-mono">hydrofix.gr{page.path}</span>
                   </div>
                 </div>
                 {/* Screenshot */}
@@ -341,7 +341,7 @@ export default function PortfolioHydrofix() {
 
           {/* Target keywords */}
           <div className="mb-8 p-5 rounded-2xl border border-white/8 bg-card/40">
-            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 mb-4">Λέξεις-κλειδιά στόχος (Keywords)</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Λέξεις-κλειδιά στόχος (Keywords)</p>
             <div className="flex flex-wrap gap-2">
               {SEO_KEYWORDS.map((kw) => (
                 <div key={kw} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-primary/25 bg-primary/8 text-xs text-primary font-medium">
@@ -448,7 +448,7 @@ export default function PortfolioHydrofix() {
             </a>
           </div>
           <div className="mt-5">
-            <Link href="/web-designer" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-primary transition-colors">
+            <Link href="/web-designer" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors">
               <ArrowRight className="w-3.5 h-3.5" />
               Δείτε όλο το portfolio
             </Link>

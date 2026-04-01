@@ -585,7 +585,7 @@ export default function OnePlusRepairDetail() {
             data-testid="button-mobile-book">
             <Wrench className="mr-2 h-4 w-4" />Αίτημα Επισκευής
           </Button>
-          <a href="tel:+306981882005" className="shrink-0">
+          <a href="tel:+306981882005" className="shrink-0" aria-label="Κλήση στο 6981 882 005">
             <Button variant="outline" className={REPAIR_OUTLINE_CALL} data-testid="button-mobile-call">
               <Phone className="h-4 w-4" />
             </Button>

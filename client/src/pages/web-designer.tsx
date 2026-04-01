@@ -213,7 +213,7 @@ export default function WebDesigner() {
 
         <div className="container mx-auto px-4 max-w-6xl relative">
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60 mb-8" aria-label="Breadcrumb">
+          <nav className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-8" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-primary transition-colors">Αρχική</Link>
             <ChevronRight className="w-3 h-3" />
             <Link href="/sxetika-me-mas" className="hover:text-primary transition-colors">Info</Link>
@@ -306,7 +306,7 @@ export default function WebDesigner() {
                     <span className="text-base text-amber-300/70 font-bold">/χρόνο</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground/50 line-through">€500/χρόνο</span>
+                    <span className="text-sm text-muted-foreground line-through">€500/χρόνο</span>
                     <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase tracking-widest">
                       -70%
                     </span>
