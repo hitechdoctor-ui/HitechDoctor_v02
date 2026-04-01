@@ -5,6 +5,15 @@ import { RepairTrackerSection } from "@/components/repair-tracker-section";
 import { Wrench, Package, Shield, Phone, Mail, MapPin, Facebook, Instagram, ExternalLink, Smartphone, Cable, Laptop, Monitor } from "lucide-react";
 import { SiTiktok, SiViber } from "react-icons/si";
 import { buildViberUrl } from "@/lib/viber";
+import {
+  BUSINESS_REGISTERED_NAME,
+  BUSINESS_TRADE_NAME,
+  BUSINESS_GEMI,
+  BUSINESS_AFM,
+  BUSINESS_DOU,
+  formatBusinessAddressOneLine,
+  BUSINESS_HOURS_SUMMARY,
+} from "@/lib/business-info";
 
 const NAV_MENUS = [
   {
@@ -31,6 +40,8 @@ const NAV_MENUS = [
   {
     title: "Νομικά & Βοήθεια",
     links: [
+      { label: "Πολιτική Επιστροφών",      href: "/politiki-epistrofon", external: false },
+      { label: "Όροι Χρήσης",              href: "/oroi-chrisis",        external: false },
       { label: "Τρόποι Πληρωμής",         href: "/tropoi-pliromis",   external: false },
       { label: "Όροι Επισκευής",           href: "/oroi-episkeuis",    external: false },
       { label: "Πολιτική Cookies",         href: "/politiki-cookies",  external: false },
@@ -42,7 +53,7 @@ const NAV_MENUS = [
 const CONTACT = [
   { icon: Phone, label: "Τηλέφωνο", value: "698 188 2005",      href: "tel:6981882005" },
   { icon: Mail,  label: "Email",    value: "info@hitechdoctor.com", href: "mailto:info@hitechdoctor.com" },
-  { icon: MapPin,label: "Διεύθυνση",value: "Βρείτε μας στον χάρτη", href: "/epikoinonia" },
+  { icon: MapPin,label: "Διεύθυνση",value: formatBusinessAddressOneLine(), href: "/epikoinonia" },
 ];
 
 // ── Meta για κατηγορίες — ίδιο με navbar ──────────────────────────────────────
@@ -107,9 +118,44 @@ export function Footer() {
               Επαγγελματική επισκευή κινητών, tablet, laptop και gaming console.
               Αξεσουάρ iPhone υψηλής ποιότητας. Εγγύηση εργασίας 6 μήνες.
             </p>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 mb-4">
-              <span className="text-[10px] text-muted-foreground/60">Αρ. ΓΕΜΗ:</span>
-              <span className="text-[10px] font-mono font-semibold text-primary/80">56870309000</span>
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 mb-4 space-y-2 text-[11px] text-muted-foreground leading-relaxed">
+              <p className="text-foreground font-semibold text-xs">Στοιχεία επιχείρησης</p>
+              <p>
+                <span className="text-muted-foreground/70">Επωνυμία: </span>
+                {BUSINESS_REGISTERED_NAME}
+                {BUSINESS_REGISTERED_NAME !== BUSINESS_TRADE_NAME && (
+                  <span className="text-muted-foreground/60"> ({BUSINESS_TRADE_NAME})</span>
+                )}
+              </p>
+              <p className="flex items-start gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                <span>{formatBusinessAddressOneLine()}</span>
+              </p>
+              <p>
+                <span className="text-muted-foreground/70">Αρ. ΓΕΜΗ: </span>
+                <span className="font-mono text-primary/80">{BUSINESS_GEMI}</span>
+              </p>
+              {BUSINESS_AFM ? (
+                <p>
+                  <span className="text-muted-foreground/70">ΑΦΜ: </span>
+                  <span className="font-mono">{BUSINESS_AFM}</span>
+                  {BUSINESS_DOU ? (
+                    <>
+                      <span className="text-muted-foreground/50"> · </span>
+                      <span className="text-muted-foreground/70">ΔΟΥ: </span>
+                      <span>{BUSINESS_DOU}</span>
+                    </>
+                  ) : null}
+                </p>
+              ) : (
+                <p className="text-muted-foreground/55 text-[10px]">
+                  ΑΦΜ και ΔΟΥ: αναγράφονται στα εκδιδόμενα παραστατικά· διατίθενται και κατόπιν αιτήματος στο {CONTACT[1].value}.
+                </p>
+              )}
+              <p className="text-muted-foreground/80 pt-1 border-t border-white/6">
+                <span className="text-muted-foreground/70">Ωράριο: </span>
+                {BUSINESS_HOURS_SUMMARY}
+              </p>
             </div>
 
             <div className="space-y-2.5 mb-5">
@@ -207,16 +253,24 @@ export function Footer() {
               HiTech Doctor
             </a>
           </p>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5">
+            <Link href="/politiki-epistrofon" className="text-xs text-muted-foreground/60 hover:text-primary transition-colors">
+              Πολιτική Επιστροφών
+            </Link>
+            <span className="text-xs text-muted-foreground/30 hidden sm:inline">|</span>
+            <Link href="/oroi-chrisis" className="text-xs text-muted-foreground/60 hover:text-primary transition-colors">
+              Όροι Χρήσης
+            </Link>
+            <span className="text-xs text-muted-foreground/30 hidden sm:inline">|</span>
             <Link href="/oroi-episkeuis" className="text-xs text-muted-foreground/50 hover:text-primary transition-colors">
               <Shield className="w-3 h-3 inline mr-1" />
-              Όροι & GDPR
+              Όροι επισκευής
             </Link>
-            <span className="text-xs text-muted-foreground/30">|</span>
+            <span className="text-xs text-muted-foreground/30 hidden sm:inline">|</span>
             <Link href="/politiki-cookies" className="text-xs text-muted-foreground/50 hover:text-primary transition-colors">
               Cookies
             </Link>
-            <span className="text-xs text-muted-foreground/30">|</span>
+            <span className="text-xs text-muted-foreground/30 hidden sm:inline">|</span>
             <Link href="/eshop" className="text-xs text-muted-foreground/50 hover:text-primary transition-colors">
               <Package className="w-3 h-3 inline mr-1" />
               eShop

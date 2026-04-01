@@ -12,6 +12,7 @@ import { ScrollProgressBar } from "@/components/scroll-progress-bar";
 import { CookieBanner } from "@/components/cookie-banner";
 import { FloatingActionStack } from "@/components/floating-action-stack";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
+import { GlobalOrganizationSchema } from "@/components/global-organization-schema";
 import { cn } from "@/lib/utils";
 import { usePageTracker } from "@/hooks/use-page-tracker";
 
@@ -63,6 +64,8 @@ const About = lazyWithReload(() => import("./pages/about"));
 const FAQ = lazyWithReload(() => import("./pages/faq"));
 const PaymentMethods = lazyWithReload(() => import("./pages/payment-methods"));
 const CookiesPolicy = lazyWithReload(() => import("./pages/cookies-policy"));
+const ReturnsPolicy = lazyWithReload(() => import("./pages/returns-policy"));
+const TermsOfUse = lazyWithReload(() => import("./pages/terms-of-use"));
 const AccessibilityStatement = lazyWithReload(() => import("./pages/accessibility-statement"));
 const NotFound = lazyWithReload(() => import("./pages/not-found"));
 const RepairRedirect = lazyWithReload(() => import("./pages/repair-redirect"));
@@ -163,6 +166,7 @@ function Router() {
   const isAdmin = location.startsWith("/admin");
   return (
     <Fragment>
+      {!isAdmin ? <GlobalOrganizationSchema /> : null}
       <ScrollToTop />
       <GlobalComponents />
       <div
@@ -220,6 +224,8 @@ function Router() {
           <Route path="/faq" component={FAQ} />
           <Route path="/tropoi-pliromis" component={PaymentMethods} />
           <Route path="/politiki-cookies" component={CookiesPolicy} />
+          <Route path="/politiki-epistrofon" component={ReturnsPolicy} />
+          <Route path="/oroi-chrisis" component={TermsOfUse} />
           <Route path="/prosvassimotita" component={AccessibilityStatement} />
           <Route path="/repair/:slug" component={RepairRedirect} />
           <Route path="/admin" component={AdminDashboard} />

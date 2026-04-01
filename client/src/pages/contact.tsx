@@ -10,6 +10,16 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import QRCode from "react-qr-code";
+import {
+  buildLocalBusinessJsonLd,
+  BUSINESS_REGISTERED_NAME,
+  BUSINESS_TRADE_NAME,
+  BUSINESS_GEMI,
+  BUSINESS_AFM,
+  BUSINESS_DOU,
+  formatBusinessAddressOneLine,
+  BUSINESS_HOURS_SUMMARY,
+} from "@/lib/business-info";
 
 const HOURS = [
   { day: "Δευτέρα – Παρασκευή", time: "10:00 – 19:00", open: true },
@@ -60,41 +70,7 @@ EMAIL:info@hitechdoctor.com
 URL:https://hitechdoctor.com
 END:VCARD`;
 
-const localBusinessSchema = {
-  "@context": "https://schema.org",
-  "@type": "LocalBusiness",
-  "name": "HiTech Doctor",
-  "description": "Επαγγελματική επισκευή κινητών τηλεφώνων, tablet και laptop στην Αθήνα.",
-  "url": "https://hitechdoctor.com",
-  "telephone": "+306981882005",
-  "email": "info@hitechdoctor.com",
-  "address": {
-    "@type": "PostalAddress",
-    "streetAddress": "Στρατηγού Μακρυγιάννη 109",
-    "addressLocality": "Μοσχάτο",
-    "postalCode": "18345",
-    "addressCountry": "GR",
-  },
-  "geo": {
-    "@type": "GeoCoordinates",
-    "latitude": 37.9528736,
-    "longitude": 23.6792087,
-  },
-  "openingHoursSpecification": [
-    {
-      "@type": "OpeningHoursSpecification",
-      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-      "opens": "10:00",
-      "closes": "19:00",
-    },
-    {
-      "@type": "OpeningHoursSpecification",
-      "dayOfWeek": "Saturday",
-      "opens": "10:00",
-      "closes": "16:00",
-    },
-  ],
-};
+const localBusinessSchema = buildLocalBusinessJsonLd();
 
 export default function Contact() {
   const [form, setForm] = useState({ name: "", phone: "", message: "", gdpr: false });
@@ -302,7 +278,7 @@ export default function Contact() {
                       />
                       <label htmlFor="gdpr-consent" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
                         Συμφωνώ με τους{" "}
-                        <Link href="/oroi-episkeuis" target="_blank" className="text-primary hover:underline">Όρους Χρήσης</Link>
+                        <Link href="/oroi-chrisis" target="_blank" className="text-primary hover:underline">Όρους Χρήσης</Link>
                         {" "}και την{" "}
                         <Link href="/politiki-cookies" target="_blank" className="text-primary hover:underline">Πολιτική Απορρήτου</Link>
                         {" "}και δίνω τη συγκατάθεσή μου για επεξεργασία των δεδομένων μου.
@@ -322,6 +298,55 @@ export default function Contact() {
                 )}
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* ── Επωνυμία / νομικά (διαφάνεια) ───────────────────────────── */}
+        <section className="container mx-auto px-4 pb-12 max-w-4xl">
+          <div className="glass-panel border border-white/8 rounded-2xl p-6">
+            <h2 className="text-lg font-display font-bold mb-4 flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-primary" />
+              Στοιχεία επιχείρησης
+            </h2>
+            <dl className="grid gap-3 text-sm text-muted-foreground">
+              <div>
+                <dt className="text-[11px] uppercase tracking-wider text-muted-foreground/50 mb-0.5">Επωνυμία</dt>
+                <dd className="text-foreground font-medium">
+                  {BUSINESS_REGISTERED_NAME}
+                  {BUSINESS_REGISTERED_NAME !== BUSINESS_TRADE_NAME && (
+                    <span className="text-muted-foreground font-normal"> — εμπορική επωνυμία: {BUSINESS_TRADE_NAME}</span>
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[11px] uppercase tracking-wider text-muted-foreground/50 mb-0.5">Διεύθυνση</dt>
+                <dd>{formatBusinessAddressOneLine()}</dd>
+              </div>
+              <div>
+                <dt className="text-[11px] uppercase tracking-wider text-muted-foreground/50 mb-0.5">ΓΕΜΗ</dt>
+                <dd className="font-mono text-primary/90">{BUSINESS_GEMI}</dd>
+              </div>
+              {BUSINESS_AFM ? (
+                <div>
+                  <dt className="text-[11px] uppercase tracking-wider text-muted-foreground/50 mb-0.5">ΑΦΜ & ΔΟΥ</dt>
+                  <dd>
+                    <span className="font-mono">{BUSINESS_AFM}</span>
+                    {BUSINESS_DOU ? <span> — ΔΟΥ {BUSINESS_DOU}</span> : null}
+                  </dd>
+                </div>
+              ) : (
+                <div>
+                  <dt className="text-[11px] uppercase tracking-wider text-muted-foreground/50 mb-0.5">ΑΦΜ & ΔΟΥ</dt>
+                  <dd className="text-xs text-muted-foreground/70">
+                    Εμφανίζονται στα εκδιδόμενα παραστατικά. Για δημοσίευση στο site ορίστε VITE_BUSINESS_AFM / VITE_BUSINESS_DOU στο build ή επικοινωνήστε στο info@hitechdoctor.com.
+                  </dd>
+                </div>
+              )}
+              <div>
+                <dt className="text-[11px] uppercase tracking-wider text-muted-foreground/50 mb-0.5">Ωράριο</dt>
+                <dd>{BUSINESS_HOURS_SUMMARY}</dd>
+              </div>
+            </dl>
           </div>
         </section>
 

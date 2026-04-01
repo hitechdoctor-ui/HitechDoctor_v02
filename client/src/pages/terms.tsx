@@ -1,7 +1,7 @@
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Seo } from "@/components/seo";
-import { Shield, FileText, Lock, UserCheck, AlertTriangle, CheckSquare } from "lucide-react";
+import { Shield, FileText, Lock, UserCheck, AlertTriangle, CheckSquare, Wrench } from "lucide-react";
 
 export default function Terms() {
   return (
