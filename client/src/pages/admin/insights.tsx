@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-import { ArrowLeft, Globe2, MapPin, MonitorSmartphone, PieChart as PieChartIcon } from "lucide-react";
+import { ArrowLeft, Flame, Globe2, MapPin, MonitorSmartphone, PieChart as PieChartIcon } from "lucide-react";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Seo } from "@/components/seo";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,6 +36,11 @@ type InsightsResponse = {
   byOs: { name: string; count: number }[];
   byBrowser: { name: string; count: number }[];
   topCities: { city: string; region: string | null; count: number }[];
+};
+
+type TopPagesResponse = {
+  period: string;
+  rows: { path: string; count: number }[];
 };
 
 const PIE_COLORS_OS = [
@@ -69,6 +74,15 @@ async function fetchInsights(period: string): Promise<InsightsResponse | null> {
   return res.json() as Promise<InsightsResponse>;
 }
 
+async function fetchTopPages(period: string): Promise<TopPagesResponse | null> {
+  const res = await fetch(`/api/admin/analytics/top-pages?period=${period}`, {
+    headers: getAdminAuthHeaders(),
+  });
+  if (res.status === 401 || res.status === 403) return null;
+  if (!res.ok) throw new Error(await res.text());
+  return res.json() as Promise<TopPagesResponse>;
+}
+
 function withPercent(rows: { name: string; count: number }[], total: number) {
   const t = total > 0 ? total : 1;
   return rows.map((r) => ({
@@ -86,7 +100,14 @@ export default function AdminAnalyticsInsights() {
     refetchInterval: 120_000,
   });
 
+  const topPagesQ = useQuery({
+    queryKey: ["admin-analytics-top-pages", period] as const,
+    queryFn: () => fetchTopPages(period),
+    refetchInterval: 120_000,
+  });
+
   const total = q.data?.totalInPeriod ?? 0;
+  const topPageRows = topPagesQ.data?.rows ?? [];
   const osData = useMemo(() => withPercent(q.data?.byOs ?? [], total), [q.data?.byOs, total]);
   const browserData = useMemo(() => withPercent(q.data?.byBrowser ?? [], total), [q.data?.byBrowser, total]);
 
@@ -117,8 +138,8 @@ export default function AdminAnalyticsInsights() {
             Analytics — Λεπτομέρειες
           </h1>
           <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-            Κατανομή λειτουργικού συστήματος και browser από User-Agent, και κορυφαίες πόλεις από IP (
-            <span className="text-foreground/90">ipapi.co</span>
+            Κατανομή λειτουργικού συστήματος και browser από User-Agent, top σελίδες επισκεψιμότητας και κορυφαίες
+            πόλεις από IP (<span className="text-foreground/90">ipapi.co</span>
             ). Νέες επισκέψεις εμπλουτίζουν τα στατιστικά.
           </p>
         </div>
@@ -245,6 +266,49 @@ export default function AdminAnalyticsInsights() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="bg-card/80 border-white/10 mb-8">
+        <CardHeader>
+          <CardTitle className="text-base font-display flex items-center gap-2">
+            <Flame className="w-4 h-4 text-amber-400" aria-hidden />
+            Top 10 σελίδων επισκεψιμότητας
+          </CardTitle>
+          <CardDescription>
+            Διαδρομές (path) με τις περισσότερες εμφανίσεις SPA για την επιλεγμένη περίοδο — ίδια λογική με το κύριο
+            Dashboard Analytics.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {topPagesQ.isLoading ? (
+            <p className="text-sm text-muted-foreground py-8 text-center">Φόρτωση…</p>
+          ) : topPageRows.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-8 text-center">
+              Δεν υπάρχουν καταγραφές σελίδων για την περίοδο.
+            </p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="border-white/10 hover:bg-transparent">
+                  <TableHead className="w-12">#</TableHead>
+                  <TableHead>Διαδρομή</TableHead>
+                  <TableHead className="text-right">Εμφανίσεις</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {topPageRows.map((row, i) => (
+                  <TableRow key={`${row.path}-${i}`} className="border-white/8">
+                    <TableCell className="text-muted-foreground font-mono text-xs">{i + 1}</TableCell>
+                    <TableCell>
+                      <code className="text-sm font-medium text-foreground/95 break-all">{row.path}</code>
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums font-semibold text-primary">{row.count}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
 
       <Card className="bg-card/80 border-white/10">
         <CardHeader>

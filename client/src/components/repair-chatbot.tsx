@@ -4,10 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChatWindow } from "@/components/chat/ChatWindow";
 import { RepairRequestModal } from "@/components/repair-request-modal";
-import { MessageCircle, X, Send, Loader2, Bot, ArrowRight, Wrench, Sparkles } from "lucide-react";
+import {
+  normalizeCtaHref,
+  REPAIR_CHAT_WELCOME,
+  RepairAssistantMessageRow,
+  resolveChatLink,
+  shouldOpenRepairQuoteModal,
+} from "@/components/repair-chat-markup";
+import { MessageCircle, X, Send, Loader2, Bot, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { getAnalyticsSessionId } from "@/lib/analytics-session";
+import { fetchRepairAssistantReply, type RepairAssistantTurn } from "@/lib/repair-assistant-api";
 import { OPEN_REPAIR_CHAT_EVENT, type OpenRepairChatDetail } from "@/lib/repair-chat-events";
 import {
   detectRepairChatClientContext,
@@ -16,127 +23,17 @@ import {
 } from "@/lib/repair-chat-device";
 import { COOKIE_CONSENT_EVENT } from "@/components/cookie-banner";
 import { resolveRepairSlugToPathWithFallbacks } from "@/lib/repair-slug-resolve";
-import { guessDeviceModelFromMessages, type RepairChatCta } from "@shared/repair-assistant";
+import type { RepairChatCta } from "@shared/repair-assistant";
+import { guessDeviceModelFromMessages } from "@shared/repair-assistant";
 import { getVisitStoreUpsellCopy, resolveRepairSubmitUpsell } from "@/lib/repair-submit-upsell";
 import {
   getNavbarAiBarCollapsed,
   subscribeNavbarAiBarCollapsed,
 } from "@/lib/navbar-ai-bar-dock";
 
-type Turn = { role: "user" | "assistant"; content: string; ctas?: RepairChatCta[] };
+type Turn = RepairAssistantTurn;
 
-/**
- * Το URL() με base χαλάει hosts χωρίς σχήμα: `maps.app.goo.gl/x` → `https://hitechdoctor.com/maps.app.goo.gl/x`.
- */
-function coerceAmbiguousHref(raw: string): string {
-  const s = raw.trim();
-  if (!s || s === "#") return s;
-  if (/^https?:\/\//i.test(s)) return s;
-  if (s.startsWith("/") && !s.startsWith("//")) return s;
-  if (s.startsWith("//")) return `https:${s}`;
-  const lower = s.toLowerCase();
-  const mapOrGoogle =
-    lower.startsWith("maps.app.goo.gl") ||
-    lower.startsWith("goo.gl") ||
-    lower.startsWith("maps.google.") ||
-    lower.startsWith("www.google.com/maps") ||
-    lower.startsWith("google.com/maps");
-  const ourSite = lower.startsWith("hitechdoctor.com") || lower.startsWith("www.hitechdoctor.com");
-  if (mapOrGoogle || ourSite) {
-    return `https://${s.replace(/^\/+/, "")}`;
-  }
-  return s;
-}
-
-function normalizeCtaHref(href: string): string {
-  const coerced = coerceAmbiguousHref(href.trim());
-  if (!coerced || coerced === "#") return coerced;
-  if (coerced.startsWith("/") && !coerced.startsWith("//")) {
-    try {
-      return new URL(coerced, "https://hitechdoctor.com").href;
-    } catch {
-      return `https://hitechdoctor.com${coerced}`;
-    }
-  }
-  try {
-    return new URL(coerced).href;
-  } catch {
-    return coerced.startsWith("http") ? coerced : `https://hitechdoctor.com/${coerced.replace(/^\/+/, "")}`;
-  }
-}
-
-function isInternalSiteHost(hostname: string): boolean {
-  const h = hostname.toLowerCase();
-  return (
-    h === "hitechdoctor.com" ||
-    h === "www.hitechdoctor.com" ||
-    h === "localhost" ||
-    h === "127.0.0.1"
-  );
-}
-
-/**
- * Εσωτερικό → path για wouter `Link`. Εξωτερικό (Maps, κ.λπ.) → πλήρες URL για `<a target="_blank">`.
- * Η παλιά λογική pathname-only έκοβε το host (π.χ. maps.app.goo.gl/xxx → `/xxx` → 404).
- */
-function resolveChatLink(href: string): { kind: "internal"; to: string } | { kind: "external"; href: string } {
-  const raw = href.trim();
-  if (!raw || raw === "#") return { kind: "internal", to: "#" };
-  if (raw.startsWith("/") && !raw.startsWith("//")) {
-    return { kind: "internal", to: raw };
-  }
-  let u: URL;
-  try {
-    u = new URL(raw);
-  } catch {
-    try {
-      u = new URL(raw, "https://hitechdoctor.com");
-    } catch {
-      return { kind: "internal", to: raw.startsWith("/") ? raw : `/${raw}` };
-    }
-  }
-  if (isInternalSiteHost(u.hostname)) {
-    return { kind: "internal", to: u.pathname + u.search + u.hash };
-  }
-  return { kind: "external", href: u.href };
-}
-
-const ctaBtnClass = cn(
-  "inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold",
-  "bg-gradient-to-r from-primary to-cyan-600 text-white shadow-md shadow-primary/25",
-  "border border-primary/40 hover:opacity-95 transition-opacity",
-  "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-card text-center",
-  "cursor-pointer"
-);
-
-/** AI μερικές φορές ξεχνά το action· κουμπιά τύπου «…Αίτημα Προσφοράς» προς σελίδες επισκευής → άνοιγμα φόρμας. */
-function shouldOpenRepairQuoteModal(cta: RepairChatCta): boolean {
-  if (cta.action === "repair_quote_modal") return true;
-  if (!/(αίτημα|προσφορά)/i.test(cta.label)) return false;
-  if (!/(επισκευ|desktop|laptop|υπολογιστ|κινητ|iphone|samsung|galaxy|tablet|mac|imac|dell|hp|lenovo)/i.test(cta.label)) {
-    return false;
-  }
-  const h = cta.href.trim();
-  if (h === "#" || h === "") return true;
-  try {
-    const u = new URL(normalizeCtaHref(h));
-    if (!isInternalSiteHost(u.hostname)) return false;
-    const p = u.pathname;
-    if (
-      p.startsWith("/services/episkeui-") ||
-      /^\/episkevi-/.test(p) ||
-      p.startsWith("/repair/")
-    ) {
-      return true;
-    }
-  } catch {
-    /* ignore */
-  }
-  return false;
-}
-
-const WELCOME =
-  "Γεια σας! Είμαι ο HiTech Doctor. Περιγράψτε μου τι συμβαίνει με τη συσκευή σας (μάρκα, μοντέλο αν το ξέρετε, και το πρόβλημα) — θα σας κατευθύνω στην κατάλληλη επισκευή.";
+const WELCOME = REPAIR_CHAT_WELCOME;
 
 const INTRO_SESSION_KEY = "htd_chat_intro_done";
 const COOKIE_STORE_KEY = "htd_cookie_consent";
@@ -159,39 +56,6 @@ const PROACTIVE_MSGS: Array<{ key: string; depth: number; text: string; ctas?: R
     text: "Μπορώ να σας βοηθήσω με κάτι; Ρωτήστε με για τιμές, ώρες λειτουργίας ή οτιδήποτε άλλο!",
   },
 ];
-
-/** Αποδίδει markdown links [text](url) ως κλικαρίσιμα links χωρίς να σπάσει το layout */
-function ChatMessageContent({ content }: { content: string }) {
-  const MD_LINK = /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g;
-  const parts: React.ReactNode[] = [];
-  let last = 0;
-  let m: RegExpExecArray | null;
-  while ((m = MD_LINK.exec(content)) !== null) {
-    if (m.index > last) parts.push(content.slice(last, m.index));
-    const resolved = resolveChatLink(normalizeCtaHref(m[2]));
-    const linkClass = "text-primary underline underline-offset-2 hover:opacity-80";
-    parts.push(
-      resolved.kind === "external" ? (
-        <a
-          key={m.index}
-          href={resolved.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={linkClass}
-        >
-          {m[1]}
-        </a>
-      ) : (
-        <Link key={m.index} href={resolved.to} className={linkClass}>
-          {m[1]}
-        </Link>
-      )
-    );
-    last = m.index + m[0].length;
-  }
-  if (last < content.length) parts.push(content.slice(last));
-  return <>{parts}</>;
-}
 
 export function RepairChatbot() {
   const { toast } = useToast();
@@ -365,25 +229,12 @@ export function RepairChatbot() {
     setMessages(next);
     setLoading(true);
     try {
-      const res = await fetch("/api/chat/repair-assistant", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Session-Id": getAnalyticsSessionId(),
-        },
-        body: JSON.stringify({
-          messages: next,
-          serviceTermsAccepted: true,
-          clientContext: clientContextRef.current,
-        }),
+      const data = await fetchRepairAssistantReply({
+        messages: next,
+        serviceTermsAccepted: true,
+        clientContext: clientContextRef.current,
       });
-      const data = (await res.json().catch(() => ({}))) as {
-        reply?: string;
-        message?: string;
-        ctas?: RepairChatCta[];
-        leadEmailSent?: boolean;
-      };
-      if (!res.ok) {
+      if (!data.ok) {
         toast({
           variant: "destructive",
           title: "Σφάλμα",
@@ -427,7 +278,7 @@ export function RepairChatbot() {
     } finally {
       setLoading(false);
     }
-  }, [input, loading, messages, serviceTermsAccepted, toast]);
+  }, [input, loading, messages, serviceTermsAccepted, toast, setLocation]);
 
   return (
     <div className="relative z-[158] flex flex-col items-end gap-2 pointer-events-none shrink-0">
@@ -491,68 +342,16 @@ export function RepairChatbot() {
               </div>
             )}
             {messages.map((m, i) => (
-              <div
+              <RepairAssistantMessageRow
                 key={`${m.role}-${i}-${m.content.slice(0, 24)}`}
-                data-chat-message
-                className={cn(
-                  "rounded-xl px-2.5 py-2 text-sm leading-snug whitespace-pre-wrap break-words [&_p]:my-0.5 [&_p+p]:mt-1",
-                  m.role === "user"
-                    ? "ml-5 bg-primary/15 border border-primary/25 text-foreground"
-                    : "mr-3 bg-muted/30 border border-white/8 text-foreground"
-                )}
-              >
-                <ChatMessageContent content={m.content} />
-                {m.role === "assistant" && m.ctas && m.ctas.length > 0 && (
-                  <div className="mt-1.5 flex flex-col gap-1">
-                    {m.ctas.map((c, j) => {
-                      if (shouldOpenRepairQuoteModal(c)) {
-                        return (
-                          <Button
-                            key={j}
-                            type="button"
-                            className={ctaBtnClass}
-                            onClick={() => {
-                              setRepairFormDeviceName(
-                                guessDeviceModelFromMessages(
-                                  messages.map((t) => ({ role: t.role, content: t.content }))
-                                )
-                              );
-                              setRepairFormOpen(true);
-                            }}
-                          >
-                            <Wrench className="w-4 h-4 shrink-0 opacity-90" aria-hidden />
-                            {c.label}
-                          </Button>
-                        );
-                      }
-                      const resolved = resolveChatLink(normalizeCtaHref(c.href));
-                      if (resolved.kind === "internal" && resolved.to === "#") return null;
-                      if (resolved.kind === "external") {
-                        return (
-                          <a
-                            key={j}
-                            href={resolved.href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={ctaBtnClass}
-                            onClick={(e) => e.stopPropagation()}
-                            onPointerDown={(e) => e.stopPropagation()}
-                          >
-                            <ArrowRight className="w-4 h-4 shrink-0 opacity-90" aria-hidden />
-                            {c.label}
-                          </a>
-                        );
-                      }
-                      return (
-                        <Link key={j} href={resolved.to} className={ctaBtnClass}>
-                          <ArrowRight className="w-4 h-4 shrink-0 opacity-90" aria-hidden />
-                          {c.label}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+                turn={m}
+                onRepairQuoteCta={() => {
+                  setRepairFormDeviceName(
+                    guessDeviceModelFromMessages(messages.map((t) => ({ role: t.role, content: t.content })))
+                  );
+                  setRepairFormOpen(true);
+                }}
+              />
             ))}
           </ChatWindow>
 
