@@ -17,8 +17,9 @@ import { useState, useMemo, useEffect } from "react";
 import {
   ShoppingCart, Euro, CheckCircle2, XCircle, Clock, AlertCircle,
   ChevronDown, ChevronRight, Mail, Package, Search, X,
-  User, Printer, Download, Plus, Trash2, Check,
+  User, Printer, Download, Plus, Trash2, Check, MessageSquare,
 } from "lucide-react";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { exportToCsv, formatDateEl } from "@/lib/csv-export";
 import { apiRequest } from "@/lib/queryClient";
@@ -658,6 +659,24 @@ function OrderRow({ order, onStatusChange }: { order: any; onStatusChange: (id: 
       {expanded && (
         <tr className="border-b border-white/6 bg-white/2">
           <td colSpan={6}>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-6 pt-3 pb-2 text-[11px] text-muted-foreground border-b border-white/6">
+              <MessageSquare className="w-3.5 h-3.5 text-[#7360f2] shrink-0" aria-hidden />
+              {order.customerViberUserId ? (
+                <span>
+                  Ειδοποιήσεις Viber για παραγγελίες:{" "}
+                  <span className="text-emerald-400/90 font-medium">ενεργές</span> (συνδεδεμένο προφίλ πελάτη).
+                </span>
+              ) : (
+                <span>
+                  Ειδοποιήσεις Viber:{" "}
+                  <span className="text-amber-400/90">όχι</span> — ορίστε Viber User ID στην{" "}
+                  <Link href={`/admin/customers/${order.customerId}`} className="text-primary hover:underline font-medium">
+                    καρτέλα πελάτη
+                  </Link>
+                  .
+                </span>
+              )}
+            </div>
             <OrderItemsRow orderId={order.id} />
           </td>
         </tr>

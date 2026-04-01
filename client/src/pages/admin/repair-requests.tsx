@@ -2,6 +2,8 @@ import { AdminLayout } from "@/components/layout/admin-layout";
 import { Seo } from "@/components/seo";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -9,13 +11,13 @@ import {
 import {
   Wrench, AlertCircle, Clock, CheckCircle2, XCircle,
   Search, X, Phone, Mail, Smartphone, Hash, Lock, Printer, Euro,
-  ChevronDown, ChevronUp, Plus, Trash2, Package, Download,
+  ChevronDown, ChevronUp, Plus, Trash2, Package, Download, MessageSquare,
 } from "lucide-react";
 import { exportToCsv, formatDateEl } from "@/lib/csv-export";
 import { apiRequest, getAdminAuthHeaders, invalidateRepairFinancialQueries } from "@/lib/queryClient";
 import { type RepairRequest, type RepairItem } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useMemo, Fragment } from "react";
+import { useState, useMemo, useEffect, Fragment } from "react";
 
 const VAT_RATE = 0.24;
 const fmt = (n: number) => n.toFixed(2).replace(".", ",") + " €";
@@ -181,6 +183,11 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [editDesc, setEditDesc] = useState("");
   const [editAmt, setEditAmt] = useState("");
+  const [viberUserIdDraft, setViberUserIdDraft] = useState(req.viberUserId ?? "");
+
+  useEffect(() => {
+    setViberUserIdDraft(req.viberUserId ?? "");
+  }, [req.id, req.viberUserId]);
 
   const { data: items = [], isLoading } = useQuery<RepairItem[]>({
     queryKey: ["/api/repair-requests", req.id, "items"],
@@ -235,6 +242,16 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
       invalidateRepairFinancialQueries(queryClient);
       toast({ title: "Αποθηκεύτηκε", description: "Η τιμή ενημερώθηκε." });
     },
+  });
+
+  const saveViberUserId = useMutation({
+    mutationFn: (viberUserId: string | null) =>
+      apiRequest("PATCH", `/api/repair-requests/${req.id}`, { viberUserId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/repair-requests"] });
+      toast({ title: "Αποθηκεύτηκε", description: "Το Viber ID αποθηκεύτηκε." });
+    },
+    onError: () => toast({ title: "Σφάλμα", description: "Αδυναμία αποθήκευσης.", variant: "destructive" }),
   });
 
   const itemsNetTotal = items.reduce((s, i) => s + parseFloat(i.amount), 0);
@@ -478,6 +495,39 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
                   </div>
                 </div>
               )}
+
+              <div className="mt-4 rounded-2xl border border-white/10 bg-card/40 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <MessageSquare className="w-4 h-4 text-[#7360f2]" aria-hidden />
+                  <h3 className="text-sm font-display font-bold">Viber (ειδοποιήσεις)</h3>
+                </div>
+                <p className="text-[10px] text-muted-foreground mb-2 leading-relaxed">
+                  Μοναδικό Viber user id για αποστολή ενημερώσεων κατάστασης. Ο πελάτης μπορεί να το συνδέσει αυτόματα στέλνοντας{" "}
+                  <span className="font-mono text-foreground/90">REPR{req.id}</span> στο bot. Το τηλέφωνο παραμένει στο κύριο αίτημα.
+                </p>
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Viber User ID</Label>
+                <div className="flex gap-2 mt-1">
+                  <Input
+                    value={viberUserIdDraft}
+                    onChange={(e) => setViberUserIdDraft(e.target.value)}
+                    placeholder="π.χ. από Viber / webhook"
+                    className="h-9 text-xs bg-background border-white/10"
+                    data-testid={`input-viber-repair-${req.id}`}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="shrink-0 h-9 text-xs"
+                    disabled={saveViberUserId.isPending}
+                    onClick={() =>
+                      saveViberUserId.mutate(viberUserIdDraft.trim() === "" ? null : viberUserIdDraft.trim())
+                    }
+                  >
+                    Αποθήκευση
+                  </Button>
+                </div>
+              </div>
 
               {/* Print button */}
               <button

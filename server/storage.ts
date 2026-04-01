@@ -66,6 +66,10 @@ export interface IStorage {
   upsertCustomerByEmail(name: string, email: string, phone?: string | null): Promise<Customer>;
   getCustomerSubscriptions(email: string): Promise<Subscription[]>;
   getCustomerInquiries(email: string): Promise<WebsiteInquiry[]>;
+  updateCustomer(
+    id: number,
+    data: Partial<Pick<Customer, "name" | "phone" | "address" | "viberUserId">>
+  ): Promise<Customer>;
 
   // Orders
   getOrders(): Promise<any[]>;
@@ -73,6 +77,7 @@ export interface IStorage {
     order: Order;
     customerName: string;
     customerEmail: string;
+    customerViberUserId: string | null;
   } | undefined>;
   getOrderItems(orderId: number): Promise<any[]>;
   createOrder(payload: CheckoutPayload): Promise<Order>;
@@ -92,6 +97,7 @@ export interface IStorage {
       price?: string | null;
       priceIncludesVat?: boolean;
       assignedToUserId?: number | null;
+      viberUserId?: string | null;
     }
   ): Promise<RepairRequest>;
 
@@ -330,12 +336,22 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(websiteInquiries.createdAt));
   }
 
+  async updateCustomer(
+    id: number,
+    data: Partial<Pick<Customer, "name" | "phone" | "address" | "viberUserId">>
+  ): Promise<Customer> {
+    const [updated] = await db.update(customers).set(data).where(eq(customers.id, id)).returning();
+    if (!updated) throw new Error("Customer not found");
+    return updated;
+  }
+
   // --- Orders ---
   async getOrders(): Promise<any[]> {
     const results = await db.select({
       order: orders,
       customerName: customers.name,
       customerEmail: customers.email,
+      customerViberUserId: customers.viberUserId,
     })
     .from(orders)
     .innerJoin(customers, eq(orders.customerId, customers.id))
@@ -345,6 +361,7 @@ export class DatabaseStorage implements IStorage {
       ...row.order,
       customerName: row.customerName,
       customerEmail: row.customerEmail,
+      customerViberUserId: row.customerViberUserId ?? null,
     }));
   }
 
@@ -352,11 +369,13 @@ export class DatabaseStorage implements IStorage {
     order: Order;
     customerName: string;
     customerEmail: string;
+    customerViberUserId: string | null;
   } | undefined> {
     const rows = await db.select({
       order: orders,
       customerName: customers.name,
       customerEmail: customers.email,
+      customerViberUserId: customers.viberUserId,
     })
       .from(orders)
       .innerJoin(customers, eq(orders.customerId, customers.id))
@@ -368,6 +387,7 @@ export class DatabaseStorage implements IStorage {
       order: row.order,
       customerName: row.customerName,
       customerEmail: row.customerEmail,
+      customerViberUserId: row.customerViberUserId ?? null,
     };
   }
 
@@ -495,6 +515,7 @@ export class DatabaseStorage implements IStorage {
       price?: string | null;
       priceIncludesVat?: boolean;
       assignedToUserId?: number | null;
+      viberUserId?: string | null;
     }
   ): Promise<RepairRequest> {
     const [updated] = await db.update(repairRequests)

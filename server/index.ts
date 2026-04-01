@@ -3,6 +3,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import compression from "compression";
 import { registerRedirects } from "./redirects";
 import { setupGoogleOAuth } from "./google-oauth";
+import { registerViberWebhook, scheduleViberWebhookRegistration } from "./viber";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
@@ -15,6 +16,8 @@ const app = express();
 /** Για σωστό client IP πίσω από reverse proxy (π.χ. nginx) — χρησιμοποιείται στο analytics geolocation */
 app.set("trust proxy", 1);
 const httpServer = createServer(app);
+/** Πριν το express.json — το Viber HMAC πρέπει να υπολογίζεται στο raw σώμα (βλ. viber-bot middleware). */
+registerViberWebhook(app);
 
 declare module "http" {
   interface IncomingMessage {
@@ -136,6 +139,20 @@ async function checkSubscriptionExpiry() {
       },
       () => {
         log(`serving on port ${port} — Host: ${host}`);
+
+        const viberBase =
+          process.env.VIBER_PUBLIC_BASE_URL?.trim() ||
+          process.env.PUBLIC_APP_URL?.trim() ||
+          process.env.RAILWAY_PUBLIC_DOMAIN?.trim();
+        if (viberBase) {
+          const origin = viberBase.startsWith("http") ? viberBase : `https://${viberBase}`;
+          scheduleViberWebhookRegistration(origin);
+        } else if (process.env.VIBER_AUTH_TOKEN?.trim()) {
+          log(
+            "VIBER_AUTH_TOKEN ορίστηκε αλλά λείπει VIBER_PUBLIC_BASE_URL (ή PUBLIC_APP_URL / RAILWAY_PUBLIC_DOMAIN) — το setWebhook δεν εκτελέστηκε.",
+            "express"
+          );
+        }
         
         // Άνοιγμα browser μόνο τοπικά
         if (process.env.NODE_ENV === "development" && process.env.OPEN_BROWSER !== "0") {

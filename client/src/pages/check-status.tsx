@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Search, Package, Wrench, CheckCircle2, Circle, AlertCircle } from "lucide-react";
 import { Link } from "wouter";
+import { buildViberUrl } from "@/lib/viber";
+import { SiViber } from "react-icons/si";
 
 type Step = { label: string; state: "done" | "current" | "pending" };
 
@@ -199,6 +201,34 @@ export default function CheckStatusPage() {
                   </div>
                 </>
               )}
+
+              {result.kind === "repair" && !result.cancelled && (() => {
+                const m = result.ticket.match(/REPR-(\d+)/i);
+                const num = m ? parseInt(m[1], 10) : NaN;
+                const code = Number.isFinite(num) ? `REPR${num}` : null;
+                if (!code) return null;
+                return (
+                  <div className="rounded-xl border border-[#7360f2]/25 bg-[#7360f2]/5 px-4 py-3 text-sm">
+                    <p className="font-semibold text-foreground flex items-center gap-2 mb-1">
+                      <SiViber className="w-4 h-4 shrink-0" style={{ color: "#7360f2" }} aria-hidden />
+                      Ειδοποιήσεις στο Viber
+                    </p>
+                    <p className="text-muted-foreground text-xs leading-relaxed mb-2">
+                      Ανοίξτε το Viber μας και στείλτε ακριβώς το κείμενο{" "}
+                      <span className="font-mono text-foreground">{code}</span> για να λαμβάνετε αυτόματα ενημερώσεις
+                      κατάστασης για αυτή την επισκευή.
+                    </p>
+                    <a
+                      href={buildViberUrl(code)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-xs font-medium text-[#7360f2] hover:underline"
+                    >
+                      Άνοιγμα Viber με προσυμπληρωμένο μήνυμα
+                    </a>
+                  </div>
+                );
+              })()}
             </CardContent>
           </Card>
         )}

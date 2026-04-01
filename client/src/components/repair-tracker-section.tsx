@@ -51,7 +51,14 @@ export function RepairTrackerSection() {
           >
             Έλεγχος Κατάστασης Επισκευής
           </h2>
-          <p className="text-sm text-muted-foreground">Εισάγετε το Ticket ID για να δείτε την πρόοδο</p>
+          <p className="text-sm text-muted-foreground">
+            Για πραγματική κατάσταση χρησιμοποιήστε τη σελίδα{" "}
+            <a href="/check-status" className="text-primary font-medium hover:underline">
+              Έλεγχος κατάστασης
+            </a>
+            . Για αυτόματες ειδοποιήσεις Viber, ανοίξτε το chat μας και στείλτε τον κωδικό{" "}
+            <span className="font-mono text-foreground/90">REPR</span> με τον αριθμό αιτήματός σας.
+          </p>
         </div>
         <a
           href={buildViberUrl()}
@@ -60,7 +67,7 @@ export function RepairTrackerSection() {
           className="inline-flex items-center gap-2 self-start rounded-xl border border-[#7360f2]/30 bg-[#7360f2]/8 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-[#7360f2]/15"
         >
           <SiViber className="h-4 w-4 shrink-0" style={{ color: VIBER_HEX }} />
-          <span className="text-[13px] leading-snug">Ενημερώσεις μέσω Viber</span>
+          <span className="text-[13px] leading-snug">Άνοιγμα Viber (HiTech Doctor)</span>
         </a>
       </div>
 

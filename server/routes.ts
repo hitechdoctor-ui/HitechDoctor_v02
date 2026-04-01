@@ -34,6 +34,7 @@ import { getClientIp, lookupGeoForIp, parseUserAgent } from "./analytics-enrichm
 import { fetchHubSpotContacts } from "./hubspot";
 import bcrypt from "bcrypt";
 import { sendOrderStatusEmail } from "./nodemailer-mail";
+import { notifyOrderStatusChange, notifyRepairStatusChange } from "./viber";
 import { resolveCheckStatus } from "./check-status";
 import { refreshCompetitorPrices } from "./price-compare";
 import { APIError } from "openai";
@@ -365,6 +366,29 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/customers/:id", async (req, res) => {
+    try {
+      const u = await getAdminUserFromRequest(req);
+      if (u?.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const id = parseInt(req.params.id);
+      const body = z
+        .object({
+          name: z.string().min(1).optional(),
+          phone: z.string().max(32).nullable().optional(),
+          address: z.string().max(500).nullable().optional(),
+          viberUserId: z.string().max(128).nullable().optional(),
+        })
+        .parse(req.body);
+      const customer = await storage.updateCustomer(id, body);
+      res.json(customer);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      res.status(404).json({ message: "Customer not found" });
+    }
+  });
+
   // --- Orders & Checkout API ---
   app.get(api.orders.list.path, async (req, res) => {
     try {
@@ -451,6 +475,14 @@ export async function registerRoutes(
           status: order.status,
         }).catch((e) => console.error("[order-status-email]", e));
       }
+      if (before.order.status !== order.status) {
+        notifyOrderStatusChange(
+          order,
+          before.customerViberUserId,
+          order.status,
+          before.order.status
+        ).catch((e) => console.error("[order-status-viber]", e));
+      }
       res.json(order);
     } catch (err) {
       res.status(404).json({ message: "Order not found" });
@@ -504,6 +536,7 @@ export async function registerRoutes(
         price: z.string().nullable().optional(),
         priceIncludesVat: z.boolean().optional(),
         assignedToUserId: z.number().int().positive().nullable().optional(),
+        viberUserId: z.string().max(128).nullable().optional(),
       });
       const data = schema.parse(req.body);
       if (data.price !== undefined && data.priceIncludesVat === undefined) {
@@ -517,7 +550,13 @@ export async function registerRoutes(
         assignedToUserId !== undefined
           ? { ...rest, assignedToUserId }
           : rest;
+      const prevStatus = repair.status;
       const request = await storage.updateRepairRequest(id, payload);
+      if (payload.status !== undefined && payload.status !== prevStatus) {
+        notifyRepairStatusChange(request, prevStatus, payload.status).catch((e) =>
+          console.error("[repair-status-viber]", e)
+        );
+      }
       res.json(request);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -536,7 +575,13 @@ export async function registerRoutes(
       if (!repair) return res.status(404).json({ message: "Repair request not found" });
       if (!staffMayEditRepair(actor, repair)) return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const { status } = z.object({ status: z.string() }).parse(req.body);
+      const prevStatus = repair.status;
       const request = await storage.updateRepairRequestStatus(id, status);
+      if (status !== prevStatus) {
+        notifyRepairStatusChange(request, prevStatus, status).catch((e) =>
+          console.error("[repair-status-viber]", e)
+        );
+      }
       res.json(request);
     } catch (err) {
       if (err instanceof z.ZodError) {

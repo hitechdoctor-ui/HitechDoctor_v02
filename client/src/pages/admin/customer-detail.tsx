@@ -1,6 +1,6 @@
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Seo } from "@/components/seo";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -9,7 +9,12 @@ import {
   Shield, Globe, MessageSquare,
 } from "lucide-react";
 import { type Customer, type RepairRequest, type RepairItem, type Subscription, type WebsiteInquiry } from "@shared/schema";
-import { getAdminAuthHeaders } from "@/lib/queryClient";
+import { apiRequest, getAdminAuthHeaders } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 
 const VAT_RATE = 0.24;
 const fmt = (n: number) => n.toFixed(2).replace(".", ",") + " €";
@@ -258,6 +263,9 @@ function RepairItemsSection({ rep, customer }: { rep: RepairRequest; customer: C
 export default function AdminCustomerDetail() {
   const { id } = useParams<{ id: string }>();
   const customerId = parseInt(id);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [viberUserIdDraft, setViberUserIdDraft] = useState("");
 
   const { data: customer, isLoading: loadingCustomer } = useQuery<Customer>({
     queryKey: ["/api/customers", customerId],
@@ -314,6 +322,21 @@ export default function AdminCustomerDetail() {
       return res.json();
     },
     enabled: !!customer,
+  });
+
+  useEffect(() => {
+    if (customer) setViberUserIdDraft(customer.viberUserId ?? "");
+  }, [customer?.id, customer?.viberUserId]);
+
+  const saveViberMutation = useMutation({
+    mutationFn: (viberUserId: string | null) =>
+      apiRequest("PATCH", `/api/customers/${customerId}`, { viberUserId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/customers", customerId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+      toast({ title: "Αποθηκεύτηκε", description: "Το Viber ID ενημερώθηκε." });
+    },
+    onError: () => toast({ title: "Σφάλμα", variant: "destructive" }),
   });
 
   if (loadingCustomer) {
@@ -389,6 +412,39 @@ export default function AdminCustomerDetail() {
                 </div>
               </div>
             )}
+            <div className="flex items-start gap-3 sm:col-span-2 lg:col-span-2">
+              <MessageSquare className="w-4 h-4 text-[#7360f2] mt-0.5 shrink-0" aria-hidden />
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-1">Viber User ID</p>
+                <p className="text-[10px] text-muted-foreground mb-2">
+                  Για ειδοποιήσεις παραγγελιών· ο πελάτης μπορεί να το συνδέσει μέσω του Viber bot (REPR# για επισκευή).
+                </p>
+                <div className="flex flex-wrap gap-2 items-end">
+                  <div className="flex-1 min-w-[200px]">
+                    <Label htmlFor="customer-viber-id" className="sr-only">Viber User ID</Label>
+                    <Input
+                      id="customer-viber-id"
+                      value={viberUserIdDraft}
+                      onChange={(e) => setViberUserIdDraft(e.target.value)}
+                      placeholder="Μοναδικό id χρήστη Viber"
+                      className="h-9 text-sm bg-background border-white/10"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    className="h-9"
+                    disabled={saveViberMutation.isPending}
+                    onClick={() =>
+                      saveViberMutation.mutate(viberUserIdDraft.trim() === "" ? null : viberUserIdDraft.trim())
+                    }
+                  >
+                    Αποθήκευση Viber
+                  </Button>
+                </div>
+              </div>
+            </div>
             {customer.address && (
               <div className="flex items-start gap-3">
                 <MapPin className="w-4 h-4 text-primary mt-0.5 shrink-0" />

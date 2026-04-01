@@ -45,6 +45,8 @@ export const customers = pgTable("customers", {
   name: text("name").notNull(),
   email: text("email").notNull(),
   phone: text("phone"),
+  /** Viber unique user id (από webhook όταν ο πελάτης μηνύμα στο bot) — για ειδοποιήσεις κατάστασης */
+  viberUserId: text("viber_user_id"),
   address: text("address"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (t) => [uniqueIndex("customers_email_idx").on(t.email)]);
@@ -79,6 +81,8 @@ export const repairRequests = pgTable("repair_requests", {
   deviceCode: text("device_code"),
   notes: text("notes"),
   status: text("status").notNull().default("pending"),
+  /** Προαιρετικό Viber user id για αυτό το αίτημα (ή συμπλήρωση από διαχειριστή / bot REPR#) */
+  viberUserId: text("viber_user_id"),
   price: numeric("price"),
   priceIncludesVat: boolean("price_includes_vat").default(false),
   /** Διαχειριστής / προσωπικό στο οποίο έχει ανατεθεί το αίτημα (ρόλος staff βλέπει μόνο τα δικά του). */
@@ -279,7 +283,7 @@ export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, cre
 export const insertOrderItemSchema = createInsertSchema(orderItems).omit({ id: true }) as z.ZodTypeAny;
 export const insertRepairItemSchema = createInsertSchema(repairItems).omit({ id: true, createdAt: true }) as z.ZodTypeAny;
 export const insertRepairRequestSchema = createInsertSchema(repairRequests)
-  .omit({ id: true, createdAt: true, assignedToUserId: true }) as z.ZodTypeAny;
+  .omit({ id: true, createdAt: true, assignedToUserId: true, viberUserId: true }) as z.ZodTypeAny;
 /** JSON requests send ISO date strings; drizzle-zod expects Date objects — coerce so POST /api/subscriptions validates. */
 export const insertSubscriptionSchema = createInsertSchema(subscriptions)
   .omit({ id: true, createdAt: true })
