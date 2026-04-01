@@ -10,7 +10,6 @@ import { HelmetProvider } from "react-helmet-async";
 // Global UI Components (always needed — keep eager)
 import { ScrollProgressBar } from "@/components/scroll-progress-bar";
 import { CookieBanner } from "@/components/cookie-banner";
-import { ExitIntentPopup } from "@/components/exit-intent-popup";
 import { FloatingActionStack } from "@/components/floating-action-stack";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { cn } from "@/lib/utils";
@@ -143,13 +142,16 @@ function GlobalComponents() {
   const isAdmin = location.startsWith("/admin");
   const pathOnly = location.split("?")[0] || "/";
   const isHome = pathOnly === "/";
+  const isEshopListing = pathOnly === "/eshop";
   if (isAdmin) return null;
   return (
     <Fragment>
       <ScrollProgressBar />
       <CookieBanner />
-      <ExitIntentPopup />
-      <FloatingActionStack showRepairChat={!isHome} />
+      <FloatingActionStack
+        showRepairChat={!isHome}
+        elevateZForOverlay={isEshopListing}
+      />
       <MobileBottomNav />
     </Fragment>
   );
