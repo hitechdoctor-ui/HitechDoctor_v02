@@ -18,6 +18,8 @@ function normalizePath(path: string): string {
 
 /** Ακριβείς αντιστοιχίσεις (κανονικοποιημένο path → νέο path). */
 const EXACT_REDIRECTS: Record<string, string> = {
+  /** robots.txt → στατικό αρχείο (αποφυγή injection / διαφορετικού περιεχομένου στο URL /robots.txt) */
+  "/robots.txt": "/robots-static.txt",
   "/contact-us": "/contact",
   "/pages/contact-us": "/contact",
   "/pages/contact": "/contact",
