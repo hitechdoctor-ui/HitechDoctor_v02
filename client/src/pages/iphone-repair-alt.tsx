@@ -117,6 +117,12 @@ export default function IPhoneRepairAlt() {
   const [selectedBatteryTier, setSelectedBatteryTier] = useState(1);
   const [activeAnchor, setActiveAnchor] = useState("othoni");
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalTemperedGlass, setModalTemperedGlass] = useState<boolean | undefined>(undefined);
+
+  const openRepairModal = (offerTemperedGlass: boolean) => {
+    setModalTemperedGlass(offerTemperedGlass);
+    setModalOpen(true);
+  };
   const [anchorSticky, setAnchorSticky] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
 
@@ -326,7 +332,7 @@ export default function IPhoneRepairAlt() {
                 <div className="flex items-center gap-3">
                   <span className="text-2xl font-extrabold text-primary">€{screenPrice}</span>
                   <Button
-                    onClick={() => setModalOpen(true)}
+                    onClick={() => openRepairModal(true)}
                     className="h-9 px-5 font-semibold border-0 text-sm"
                     style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
                     data-testid="button-book-screen"
@@ -369,7 +375,7 @@ export default function IPhoneRepairAlt() {
                 <div className="flex items-center gap-3">
                   <span className="text-2xl font-extrabold text-primary">€{batteryPrice}</span>
                   <Button
-                    onClick={() => setModalOpen(true)}
+                    onClick={() => openRepairModal(true)}
                     className="h-9 px-5 font-semibold border-0 text-sm"
                     style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
                     data-testid="button-book-battery"
@@ -418,7 +424,7 @@ export default function IPhoneRepairAlt() {
                 </div>
                 <div className="mt-4 pt-4 border-t border-white/8">
                   <Button
-                    onClick={() => setModalOpen(true)}
+                    onClick={() => openRepairModal(false)}
                     className="w-full sm:w-auto h-10 px-8 font-semibold border-0"
                     style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
                     data-testid="button-book-port"
@@ -471,7 +477,7 @@ export default function IPhoneRepairAlt() {
                   ))}
                 </div>
                 <Button
-                  onClick={() => setModalOpen(true)}
+                  onClick={() => openRepairModal(activeAnchor === "othoni" || activeAnchor === "mpataria")}
                   className="w-full h-11 mt-5 font-bold border-0"
                   style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
                   data-testid="button-sidebar-book"
@@ -530,7 +536,7 @@ export default function IPhoneRepairAlt() {
         {/* ── Mobile sticky CTA ── */}
         <div id="rantevou-mobile" className="lg:hidden fixed bottom-0 left-0 right-0 z-40 p-3 bg-background/95 backdrop-blur-md border-t border-white/10 flex gap-2">
           <Button
-            onClick={() => setModalOpen(true)}
+            onClick={() => openRepairModal(activeAnchor === "othoni" || activeAnchor === "mpataria")}
             className="flex-1 h-11 font-bold border-0"
             style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
             data-testid="button-mobile-book"
@@ -552,8 +558,12 @@ export default function IPhoneRepairAlt() {
       <Footer />
       <RepairRequestModal
         open={modalOpen}
-        onOpenChange={setModalOpen}
+        onOpenChange={(o) => {
+          setModalOpen(o);
+          if (!o) setModalTemperedGlass(undefined);
+        }}
         defaultDeviceName={model.name}
+        temperedGlassOffer={modalTemperedGlass}
       />
     </div>
   );

@@ -468,6 +468,7 @@ export default function TabletRepairDetail() {
         }}
         defaultDeviceName={`${brand.name}`}
         defaultTotalInclVat={modalDefaultTotal}
+        temperedGlassOffer={false}
       />
     </div>
   );

@@ -453,7 +453,12 @@ export default function ServiceAppleWatch() {
         </a>
       </div>
 
-      <RepairRequestModal open={modalOpen} onOpenChange={setModalOpen} defaultDeviceName="Apple Watch" />
+      <RepairRequestModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        defaultDeviceName="Apple Watch"
+        temperedGlassOffer={false}
+      />
     </div>
   );
 }

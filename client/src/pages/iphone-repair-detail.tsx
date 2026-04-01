@@ -689,6 +689,7 @@ export default function IPhoneRepairDetail() {
         onOpenChange={setModalOpen}
         defaultDeviceName={model.name}
         defaultTotalInclVat={selectedTotalInclVat}
+        temperedGlassOffer={activeTab === "screen" || activeTab === "battery"}
       />
     </div>
   );

@@ -518,6 +518,7 @@ export default function LaptopRepairDetail() {
         }}
         defaultDeviceName={`${brand.name} laptop`}
         defaultTotalInclVat={modalDefaultTotal}
+        temperedGlassOffer={false}
       />
     </div>
   );

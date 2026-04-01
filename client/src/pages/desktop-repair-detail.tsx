@@ -554,6 +554,7 @@ export default function DesktopRepairDetail() {
         }}
         defaultDeviceName={`${brand.name} desktop`}
         defaultTotalInclVat={modalDefaultTotal}
+        temperedGlassOffer={false}
       />
     </div>
   );

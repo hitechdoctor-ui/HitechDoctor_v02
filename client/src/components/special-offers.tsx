@@ -216,6 +216,8 @@ export function SpecialOffers() {
         open={modalOpen}
         onOpenChange={setModalOpen}
         defaultDeviceName="Business Refresh — Αναβάθμιση PC"
+        temperedGlassOffer={false}
+        visitStoreVariant="computer"
       />
     </section>
   );

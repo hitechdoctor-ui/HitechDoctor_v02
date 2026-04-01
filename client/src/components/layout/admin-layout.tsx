@@ -180,6 +180,28 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     return ordersList.filter((o) => o.status !== "completed").length;
   }, [ordersList]);
 
+  const { data: repairRequestsList } = useQuery({
+    queryKey: ["/api/admin/repair-requests"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/repair-requests", {
+        headers: getAdminAuthHeaders(),
+      });
+      if (!res.ok) throw new Error("Failed to fetch repair requests");
+      return res.json() as Promise<{ status?: string }[]>;
+    },
+    enabled: !!token,
+    refetchInterval: 30_000,
+    staleTime: 0,
+  });
+
+  /** Αιτήματα που δεν έχουν ολοκληρωθεί (ούτε ακυρωθεί) — το badge μένει μέχρι να κλείσουν όλα */
+  const openRepairRequestsCount = useMemo(() => {
+    if (!Array.isArray(repairRequestsList)) return 0;
+    return repairRequestsList.filter(
+      (r) => r.status !== "completed" && r.status !== "cancelled"
+    ).length;
+  }, [repairRequestsList]);
+
   const prevOpenOrdersRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -329,6 +351,15 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                     >
                       <link.icon className="w-4 h-4 shrink-0 opacity-90" />
                       <span className="flex-1 truncate text-left leading-snug">{link.label}</span>
+                      {link.href === "/admin/repair-requests" && openRepairRequestsCount > 0 && (
+                        <span
+                          className="shrink-0 min-h-[1.25rem] min-w-[1.25rem] px-1.5 rounded-full bg-sky-400 text-black text-[10px] font-bold leading-none flex items-center justify-center tabular-nums shadow-sm ring-1 ring-sky-600/30"
+                          aria-label={`${openRepairRequestsCount} αιτήματα επισκευής χωρίς ολοκλήρωση`}
+                          data-testid="badge-admin-open-repair-requests"
+                        >
+                          {openRepairRequestsCount > 99 ? "99+" : openRepairRequestsCount}
+                        </span>
+                      )}
                     </Link>
                   );
                 })}

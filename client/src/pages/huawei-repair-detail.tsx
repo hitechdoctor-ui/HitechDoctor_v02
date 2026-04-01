@@ -149,10 +149,12 @@ export default function HuaweiRepairDetail() {
   const series = findHuaweiSeriesForModel(modelSlug);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalDefaultTotal, setModalDefaultTotal] = useState<number | undefined>();
+  const [modalTemperedGlass, setModalTemperedGlass] = useState<boolean | undefined>(undefined);
   const [selectedScreenTier, setSelectedScreenTier] = useState<"genuine" | "oem">("genuine");
 
-  const openRepairModal = (totalInclVat: number) => {
+  const openRepairModal = (totalInclVat: number, offerTemperedGlass: boolean) => {
     setModalDefaultTotal(totalInclVat);
+    setModalTemperedGlass(offerTemperedGlass);
     setModalOpen(true);
   };
 
@@ -300,7 +302,7 @@ export default function HuaweiRepairDetail() {
                   price={model.screenPrice}
                   note={`Γνήσιο panel · ${model.screen}`}
                   highlight
-                  onBook={() => openRepairModal(activeScreenPrice)}
+                  onBook={() => openRepairModal(activeScreenPrice, true)}
                 />
                 {hasOEM && (
                   <PriceRow
@@ -308,11 +310,11 @@ export default function HuaweiRepairDetail() {
                     label="Αλλαγή Οθόνης — OEM"
                     price={model.screenPriceOEM!}
                     note="OEM υψηλής ποιότητας · οικονομική επιλογή"
-                    onBook={() => openRepairModal(activeScreenPrice)}
+                    onBook={() => openRepairModal(activeScreenPrice, true)}
                   />
                 )}
-                <PriceRow icon={Battery} label="Αλλαγή Μπαταρίας" price={model.batteryPrice} note="Γνήσια ή premium ποιότητας" onBook={() => openRepairModal(model.batteryPrice)} />
-                <PriceRow icon={Zap}     label="Επισκευή Θύρας USB-C" price={model.portPrice} note="Αντικατάσταση ή καθαρισμός θύρας φόρτισης" onBook={() => openRepairModal(model.portPrice)} />
+                <PriceRow icon={Battery} label="Αλλαγή Μπαταρίας" price={model.batteryPrice} note="Γνήσια ή premium ποιότητας" onBook={() => openRepairModal(model.batteryPrice, true)} />
+                <PriceRow icon={Zap}     label="Επισκευή Θύρας USB-C" price={model.portPrice} note="Αντικατάσταση ή καθαρισμός θύρας φόρτισης" onBook={() => openRepairModal(model.portPrice, false)} />
               </div>
               <PriceDisclaimer className="mt-3" />
               <div className="grid grid-cols-3 gap-3 mt-6">
@@ -390,7 +392,7 @@ export default function HuaweiRepairDetail() {
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
                   <span className="text-2xl font-extrabold text-primary">€{activeScreenPrice}</span>
-                  <Button onClick={() => openRepairModal(activeScreenPrice)} className={REPAIR_CTA_GRADIENT}
+                  <Button onClick={() => openRepairModal(activeScreenPrice, true)} className={REPAIR_CTA_GRADIENT}
                     style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
                     data-testid="button-book-screen">
                     Κλείσε Ραντεβού
@@ -436,7 +438,7 @@ export default function HuaweiRepairDetail() {
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
                   <span className="text-2xl font-extrabold text-primary">€{model.batteryPrice}</span>
-                  <Button onClick={() => openRepairModal(model.batteryPrice)} className={REPAIR_CTA_GRADIENT}
+                  <Button onClick={() => openRepairModal(model.batteryPrice, true)} className={REPAIR_CTA_GRADIENT}
                     style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
                     data-testid="button-book-battery">
                     Κλείσε Ραντεβού
@@ -474,7 +476,7 @@ export default function HuaweiRepairDetail() {
             <section id="section-form" className="p-6 rounded-2xl border border-white/10 bg-card">
               <h2 className="text-xl font-display font-bold text-foreground mb-1">Αίτημα Επισκευής — {model.name}</h2>
               <p className="text-sm text-muted-foreground mb-5">Συμπληρώστε τη φόρμα και θα επικοινωνήσουμε μαζί σας εντός 30 λεπτών.</p>
-              <Button onClick={() => openRepairModal(activeScreenPrice)} className={`${REPAIR_CTA_WIDE} shadow-[0_0_24px_rgba(0,210,200,0.25)]`}
+              <Button onClick={() => openRepairModal(activeScreenPrice, true)} className={`${REPAIR_CTA_WIDE} shadow-[0_0_24px_rgba(0,210,200,0.25)]`}
                 style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
                 data-testid="button-open-repair-form">
                 <Wrench className="w-4 h-4 mr-2" />Άνοιξε τη Φόρμα Επισκευής
@@ -556,7 +558,7 @@ export default function HuaweiRepairDetail() {
                     <span className="font-bold text-foreground">€{model.portPrice}</span>
                   </div>
                 </div>
-                <Button onClick={() => openRepairModal(activeScreenPrice)} className={`${REPAIR_CTA_FULL} mb-2 shadow-[0_0_20px_rgba(0,210,200,0.25)]`}
+                <Button onClick={() => openRepairModal(activeScreenPrice, true)} className={`${REPAIR_CTA_FULL} mb-2 shadow-[0_0_20px_rgba(0,210,200,0.25)]`}
                   style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
                   data-testid="button-sidebar-book">
                   <Wrench className="w-4 h-4 mr-2" />Κλείσε Ραντεβού
@@ -578,7 +580,7 @@ export default function HuaweiRepairDetail() {
 
         {/* Mobile sticky CTA */}
         <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 z-[130] flex gap-2 border-t border-primary/20 bg-background/95 p-3 backdrop-blur lg:hidden">
-          <Button onClick={() => openRepairModal(activeScreenPrice)} className={REPAIR_CTA_FLEX}
+          <Button onClick={() => openRepairModal(activeScreenPrice, true)} className={REPAIR_CTA_FLEX}
             style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
             data-testid="button-mobile-book">
             <Wrench className="mr-2 h-4 w-4" />Αίτημα Επισκευής
@@ -600,10 +602,14 @@ export default function HuaweiRepairDetail() {
         open={modalOpen}
         onOpenChange={(o) => {
           setModalOpen(o);
-          if (!o) setModalDefaultTotal(undefined);
+          if (!o) {
+            setModalDefaultTotal(undefined);
+            setModalTemperedGlass(undefined);
+          }
         }}
         defaultDeviceName={model.name}
         defaultTotalInclVat={modalDefaultTotal}
+        temperedGlassOffer={modalTemperedGlass}
       />
     </div>
   );

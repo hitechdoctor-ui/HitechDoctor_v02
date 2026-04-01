@@ -431,6 +431,7 @@ export default function ServicePlayStation() {
         open={modalOpen}
         onOpenChange={setModalOpen}
         defaultDeviceName="PlayStation"
+        temperedGlassOffer={false}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -12,13 +12,18 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
 } from "@/components/ui/form";
-import { CheckCircle2, Wrench, Smartphone, Hash, Lock, Phone, Mail, User, Shield, ExternalLink } from "lucide-react";
+import { CheckCircle2, Wrench, Smartphone, Hash, Lock, Phone, Mail, User, Shield, ExternalLink, MapPin } from "lucide-react";
 import { apiRequest, invalidateRepairFinancialQueries } from "@/lib/queryClient";
 import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { insertRepairRequestSchema } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { RepairPriceBreakdownCard } from "@/components/repair-price-breakdown";
+import {
+  getVisitStoreUpsellCopy,
+  resolveRepairSubmitUpsell,
+  type VisitStoreVariant,
+} from "@/lib/repair-submit-upsell";
 
 type FormValues = z.infer<typeof insertRepairRequestSchema>;
 
@@ -30,6 +35,14 @@ interface RepairRequestModalProps {
   defaultTotalInclVat?: number;
   /** Callback όταν κλείνει το modal μετά από επιτυχημένη υποβολή */
   onSubmitSuccess?: () => void;
+  /**
+   * true = προσφορά τζαμιού −50% (κινητό, αλλαγή οθόνης/μπαταρίας).
+   * false = μήνυμα «επισκεφτείτε το κατάστημα».
+   * undefined = αυτόματη εκτίμηση από URL + πεδία φόρμας.
+   */
+  temperedGlassOffer?: boolean;
+  /** Όταν δεν εμφανίζεται το τζάμι, fine-tune του μηνύματος καταστήματος */
+  visitStoreVariant?: VisitStoreVariant;
 }
 
 export function RepairRequestModal({
@@ -38,7 +51,11 @@ export function RepairRequestModal({
   defaultDeviceName = "",
   defaultTotalInclVat,
   onSubmitSuccess,
+  temperedGlassOffer,
+  visitStoreVariant,
 }: RepairRequestModalProps) {
+  const [loc] = useLocation();
+  const pathOnly = (loc.split("?")[0] || "/").trim() || "/";
   const [submitted, setSubmitted] = useState(false);
   const [submittedRequestId, setSubmittedRequestId] = useState<number | null>(null);
   const [gdprConsent, setGdprConsent] = useState(false);
@@ -134,6 +151,22 @@ export function RepairRequestModal({
     mutation.mutate(data);
   }
 
+  const submitUpsell = useMemo(() => {
+    if (!submitted) return null;
+    return resolveRepairSubmitUpsell({
+      pathname: pathOnly,
+      deviceName: form.getValues("deviceName") ?? "",
+      notes: form.getValues("notes") ?? "",
+      temperedGlassOffer,
+      visitStoreVariant,
+    });
+  }, [submitted, pathOnly, temperedGlassOffer, visitStoreVariant, submittedRequestId, form]);
+
+  const visitAfterSubmitCopy =
+    submitUpsell?.kind === "visit"
+      ? getVisitStoreUpsellCopy(submitUpsell.variant, submittedRequestId)
+      : null;
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="bg-background border border-white/10 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
@@ -148,37 +181,58 @@ export function RepairRequestModal({
                 Λάβαμε το αίτημά σας. Θα επικοινωνήσουμε μαζί σας το συντομότερο για να κλείσουμε ραντεβού.
               </p>
             </div>
-            <div className="w-full rounded-xl border border-primary/25 bg-primary/5 px-4 py-3 text-left">
-              <div className="flex items-start gap-3">
-                <div className="shrink-0 w-9 h-9 rounded-lg bg-primary/15 border border-primary/30 flex items-center justify-center">
-                  <Shield className="w-4 h-4 text-primary" aria-hidden />
-                </div>
-                <div className="min-w-0 space-y-1">
-                  <p className="text-sm font-semibold text-foreground">Προσφορά: νέο τζάμι προστασίας −50%</p>
-                  <p className="text-xs text-muted-foreground leading-snug">
-                    Με την ολοκλήρωση της επισκευής σας, μπορείτε να προσθέσετε καινούργιο tempered glass (τζάμι
-                    προστασίας) με{" "}
-                    <span className="text-foreground font-semibold">έκπτωση 50%</span> στην τιμή του καταστήματος.
-                    {submittedRequestId != null ? (
-                      <>
-                        {" "}
-                        Αναφέρετε το αίτημα <span className="text-foreground font-mono">#{submittedRequestId}</span> στο
-                        κατάστημα ή κατά την παράδοση της συσκευής.
-                      </>
-                    ) : (
-                      <> Αναφέρετε το online αίτημά σας στο κατάστημα ή κατά την παράδοση της συσκευής.</>
-                    )}
-                  </p>
-                  <Link
-                    href="/eshop?tab=screen-protectors"
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline pt-1"
-                  >
-                    Δείτε τζάμια προστασίας στο eShop
-                    <ExternalLink className="w-3 h-3" aria-hidden />
-                  </Link>
+            {submitUpsell?.kind === "tempered" ? (
+              <div className="w-full rounded-xl border border-primary/25 bg-primary/5 px-4 py-3 text-left">
+                <div className="flex items-start gap-3">
+                  <div className="shrink-0 w-9 h-9 rounded-lg bg-primary/15 border border-primary/30 flex items-center justify-center">
+                    <Shield className="w-4 h-4 text-primary" aria-hidden />
+                  </div>
+                  <div className="min-w-0 space-y-1">
+                    <p className="text-sm font-semibold text-foreground">Προσφορά: νέο τζάμι προστασίας −50%</p>
+                    <p className="text-xs text-muted-foreground leading-snug">
+                      Με την ολοκλήρωση της επισκευής σας (αλλαγή οθόνης ή μπαταρίας στο κινητό), μπορείτε να
+                      προσθέσετε καινούργιο tempered glass (τζάμι προστασίας) με{" "}
+                      <span className="text-foreground font-semibold">έκπτωση 50%</span> στην τιμή του καταστήματος.
+                      {submittedRequestId != null ? (
+                        <>
+                          {" "}
+                          Αναφέρετε το αίτημα <span className="text-foreground font-mono">#{submittedRequestId}</span> στο
+                          κατάστημα ή κατά την παράδοση της συσκευής.
+                        </>
+                      ) : (
+                        <> Αναφέρετε το online αίτημά σας στο κατάστημα ή κατά την παράδοση της συσκευής.</>
+                      )}
+                    </p>
+                    <Link
+                      href="/eshop?tab=screen-protectors"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline pt-1"
+                    >
+                      Δείτε τζάμια προστασίας στο eShop
+                      <ExternalLink className="w-3 h-3" aria-hidden />
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : visitAfterSubmitCopy ? (
+              <div className="w-full rounded-xl border border-primary/25 bg-primary/5 px-4 py-3 text-left">
+                <div className="flex items-start gap-3">
+                  <div className="shrink-0 w-9 h-9 rounded-lg bg-primary/15 border border-primary/30 flex items-center justify-center">
+                    <MapPin className="w-4 h-4 text-primary" aria-hidden />
+                  </div>
+                  <div className="min-w-0 space-y-1">
+                    <p className="text-sm font-semibold text-foreground">{visitAfterSubmitCopy.title}</p>
+                    <p className="text-xs text-muted-foreground leading-snug">{visitAfterSubmitCopy.body}</p>
+                    <Link
+                      href={visitAfterSubmitCopy.linkHref}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline pt-1"
+                    >
+                      {visitAfterSubmitCopy.linkLabel}
+                      <ExternalLink className="w-3 h-3" aria-hidden />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ) : null}
             <Button
               onClick={() => handleClose(false)}
               className="mt-2 border-0"

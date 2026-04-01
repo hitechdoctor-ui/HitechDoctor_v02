@@ -12,6 +12,7 @@ import { OPEN_REPAIR_CHAT_EVENT } from "@/lib/repair-chat-events";
 import { COOKIE_CONSENT_EVENT } from "@/components/cookie-banner";
 import { resolveRepairSlugToPathWithFallbacks } from "@/lib/repair-slug-resolve";
 import { guessDeviceModelFromMessages, type RepairChatCta } from "@shared/repair-assistant";
+import { getVisitStoreUpsellCopy, resolveRepairSubmitUpsell } from "@/lib/repair-submit-upsell";
 
 type Turn = { role: "user" | "assistant"; content: string; ctas?: RepairChatCta[] };
 
@@ -185,7 +186,7 @@ function ChatMessageContent({ content }: { content: string }) {
 
 export function RepairChatbot() {
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
+  const [loc, setLocation] = useLocation();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Turn[]>([]);
@@ -278,19 +279,40 @@ export function RepairChatbot() {
     return () => window.removeEventListener("scroll", check);
   }, []);
 
-  // ── Post-form upsell message in chat ─────────────────────────────────────
+  // ── Post-form upsell message in chat (ίδια λογική με το modal επιτυχίας) ──
   const handleRepairFormSuccess = useCallback(() => {
     const deviceName = repairFormDeviceName || "τη συσκευή σας";
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "assistant" as const,
-        content: `Επειδή η οθόνη του ${deviceName} είναι ακριβή, προτείνω να βάλουμε και ένα Crystal Clear Tempered Glass με την επισκευή για 100% προστασία· δείτε και μια θήκη στο eShop μας για πλήρη προστασία.`,
-        ctas: [{ label: "Τζάμια προστασίας −50%", href: "https://hitechdoctor.com/eshop?tab=screen-protectors" }],
-      },
-    ]);
+    const pathOnly = (loc.split("?")[0] || "/").trim() || "/";
+    const notesFromChat = messages.map((m) => m.content).join("\n");
+    const upsell = resolveRepairSubmitUpsell({
+      pathname: pathOnly,
+      deviceName,
+      notes: notesFromChat,
+      temperedGlassOffer: undefined,
+    });
+
+    if (upsell.kind === "tempered") {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant" as const,
+          content: `Με την ολοκλήρωση της επισκευής (αλλαγή οθόνης ή μπαταρίας) στο ${deviceName}, μπορείτε να προσθέσετε νέο tempered glass με έκπτωση 50% στο κατάστημα· δείτε επίσης θήκες στο eShop για πλήρη προστασία.`,
+          ctas: [{ label: "Τζάμια προστασίας −50%", href: "https://hitechdoctor.com/eshop?tab=screen-protectors" }],
+        },
+      ]);
+    } else {
+      const v = getVisitStoreUpsellCopy(upsell.variant, null);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant" as const,
+          content: v.body.trim(),
+          ctas: [{ label: v.linkLabel, href: v.linkHref }],
+        },
+      ]);
+    }
     setOpen(true);
-  }, [repairFormDeviceName]);
+  }, [repairFormDeviceName, loc, messages]);
 
   const send = useCallback(async () => {
     const text = input.trim();
