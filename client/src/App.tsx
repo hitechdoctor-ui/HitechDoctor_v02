@@ -54,6 +54,7 @@ const PortfolioAthEcs = lazyWithReload(() => import("./pages/portfolio-athecs"))
 const PortfolioNikosapost = lazyWithReload(() => import("./pages/portfolio-nikosapost"));
 const PortfolioMetamorfosi = lazyWithReload(() => import("./pages/portfolio-metamorfosi"));
 const EShop = lazyWithReload(() => import("./pages/eshop"));
+const EshopHome = lazyWithReload(() => import("./pages/eshop-home"));
 const ProductDetail = lazyWithReload(() => import("./pages/product-detail"));
 const Checkout = lazyWithReload(() => import("./pages/checkout"));
 const CheckStatusPage = lazyWithReload(() => import("./pages/check-status"));
@@ -211,6 +212,7 @@ function Router() {
           <Route path="/episkevi-desktop/:slug" component={DesktopRepairDetail} />
           <Route path="/services/episkeui-tablet" component={ServiceTablet} />
           <Route path="/episkevi-tablet/:slug" component={TabletRepairDetail} />
+          <Route path="/eshop-home" component={EshopHome} />
           <Route path="/eshop" component={EShop} />
           <Route path="/eshop/:slug" component={ProductDetail} />
           <Route path="/checkout" component={Checkout} />
