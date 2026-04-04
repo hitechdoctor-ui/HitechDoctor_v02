@@ -3,8 +3,8 @@ import {
   ShoppingCart, Wrench, Package, ShieldCheck, Menu, Zap,
   Smartphone, ChevronRight, Hammer, Laptop, Monitor, Watch,
   Gamepad2, Tablet, LogIn, MapPin, Shield, Cable, Tag, Info,
-  MessageCircle, HelpCircle, Globe, Download,   ScanSearch,
-  Truck,
+  MessageCircle, HelpCircle, Globe, Download, ScanSearch,
+  Truck, Code2,
 } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -236,6 +236,21 @@ export function Navbar() {
                             </Link>
                           ))}
                         </div>
+
+                        {/* Κατασκευή Ιστοσελίδων CTA */}
+                        <Link
+                          href="/web-designer"
+                          data-testid="nav-web-designer"
+                          className="group mt-2 flex items-center gap-2.5 px-3 py-2.5 rounded-xl border border-primary/30 bg-primary/5 hover:bg-primary/12 hover:border-primary/50 transition-all duration-200"
+                        >
+                          <div className="w-7 h-7 rounded-lg bg-primary/15 border border-primary/30 flex items-center justify-center shrink-0 group-hover:bg-primary/25 transition-colors">
+                            <Code2 className="w-3.5 h-3.5 text-primary" />
+                          </div>
+                          <span className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors leading-tight">
+                            Κατασκευή Ιστοσελίδων
+                          </span>
+                          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors ml-auto shrink-0" />
+                        </Link>
                       </div>
 
                       <div className="w-px bg-white/8 self-stretch" />
@@ -522,6 +537,14 @@ export function Navbar() {
                           {brand.name}
                         </Link>
                       ))}
+                      <Link
+                        href="/web-designer"
+                        data-testid="nav-mobile-web-designer"
+                        className="flex items-center gap-3 px-3 py-2 rounded-xl border border-primary/30 bg-primary/5 hover:bg-primary/12 text-sm text-foreground font-semibold mt-1"
+                      >
+                        <Code2 className="w-4 h-4 text-primary shrink-0" />
+                        Κατασκευή Ιστοσελίδων
+                      </Link>
                       <div className="mt-1 pt-1 border-t border-white/8">
                         <p className="text-[10px] font-bold text-muted-foreground px-3 py-1 uppercase tracking-wider">Άλλες Υπηρεσίες</p>
                         {OTHER_SERVICES.map((svc) => (
