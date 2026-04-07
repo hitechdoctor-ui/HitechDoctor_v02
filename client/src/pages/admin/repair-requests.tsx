@@ -4,10 +4,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   Wrench, AlertCircle, Clock, CheckCircle2, XCircle,
   Search, X, Phone, Mail, Smartphone, Hash, Lock, Printer, Euro,
@@ -184,6 +187,12 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
   const [editDesc, setEditDesc] = useState("");
   const [editAmt, setEditAmt] = useState("");
   const [viberUserIdDraft, setViberUserIdDraft] = useState(req.viberUserId ?? "");
+  const [completeOpen, setCompleteOpen] = useState(false);
+  const [receiptEmail, setReceiptEmail] = useState(req.email ?? "");
+  const [receiptFinalPrice, setReceiptFinalPrice] = useState(req.price ?? "");
+  const [receiptWorkDesc, setReceiptWorkDesc] = useState(req.notes ?? "");
+  const [receiptWarrantyMonths, setReceiptWarrantyMonths] = useState<number>(3);
+  const [sendViaViber, setSendViaViber] = useState(false);
 
   useEffect(() => {
     setViberUserIdDraft(req.viberUserId ?? "");
@@ -262,6 +271,54 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
 
   const manualInputNet = parseFloat(manualPrice);
   const hasManualVal = manualPrice !== "" && !isNaN(manualInputNet) && manualInputNet > 0;
+
+  useEffect(() => {
+    // Keep defaults in sync when the panel opens / data changes.
+    setReceiptEmail(req.email ?? "");
+    if (items.length > 0) {
+      setReceiptFinalPrice(itemsNetTotal.toFixed(2));
+      if (!receiptWorkDesc || receiptWorkDesc.trim() === "" || receiptWorkDesc === (req.notes ?? "")) {
+        const lines = items.map((i) => `• ${i.description} — ${fmt(parseFloat(i.amount))}`).join("\n");
+        setReceiptWorkDesc(lines || (req.notes ?? ""));
+      }
+    } else if (req.price) {
+      setReceiptFinalPrice(String(req.price));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [req.id, req.email, req.notes, req.price, items.length]);
+
+  const completeAndReceipt = useMutation({
+    mutationFn: async () => {
+      const finalPrice = parseFloat(String(receiptFinalPrice).replace(",", "."));
+      if (!Number.isFinite(finalPrice) || finalPrice <= 0) {
+        throw new Error("Μη έγκυρη τελική τιμή");
+      }
+      const payload = {
+        finalPrice,
+        workDescription: receiptWorkDesc.trim(),
+        warrantyMonths: receiptWarrantyMonths,
+        customerEmail: receiptEmail.trim(),
+        sendViber: sendViaViber,
+      };
+      const res = await apiRequest("POST", `/api/admin/repair-requests/${req.id}/complete-and-receipt`, payload);
+      return res.json();
+    },
+    onSuccess: async (res: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/repair-requests"] });
+      invalidateRepairFinancialQueries(queryClient);
+      setCompleteOpen(false);
+      const receiptUrl = res?.receipt?.receiptUrl as string | undefined;
+      toast({
+        title: "Ολοκληρώθηκε",
+        description: receiptUrl ? "Η απόδειξη εκδόθηκε και στάλθηκε με email." : "Η απόδειξη εκδόθηκε.",
+      });
+      if (receiptUrl) window.open(receiptUrl, "_blank", "noopener,noreferrer");
+    },
+    onError: (e: any) => {
+      const msg = e?.message || "Αδυναμία ολοκλήρωσης.";
+      toast({ title: "Σφάλμα", description: msg, variant: "destructive" });
+    },
+  });
 
   return (
     <tr>
@@ -539,6 +596,113 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
                 <Printer className="w-4 h-4" aria-hidden />
                 Εκτύπωση Δελτίου / PDF
               </button>
+
+              <button
+                type="button"
+                onClick={() => setCompleteOpen(true)}
+                className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary/15 hover:bg-primary/25 border border-primary/30 text-primary transition-all text-sm font-semibold"
+                data-testid={`btn-complete-receipt-${req.id}`}
+              >
+                <CheckCircle2 className="w-4 h-4" aria-hidden />
+                Ολοκλήρωση & Έκδοση Απόδειξης
+              </button>
+
+              <Dialog open={completeOpen} onOpenChange={setCompleteOpen}>
+                <DialogContent className="max-w-lg max-h-[92vh] overflow-y-auto border-white/10 bg-card">
+                  <DialogHeader>
+                    <DialogTitle>Ολοκλήρωση & Έκδοση Απόδειξης</DialogTitle>
+                  </DialogHeader>
+
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs">Τελική Τιμή (χωρίς ΦΠΑ)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={receiptFinalPrice}
+                          onChange={(e) => setReceiptFinalPrice(e.target.value)}
+                          className="mt-1 h-10"
+                          placeholder="π.χ. 25.00"
+                          data-testid={`input-receipt-price-${req.id}`}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Διάρκεια Εγγύησης (μήνες)</Label>
+                        <Input
+                          type="number"
+                          step="1"
+                          min="0"
+                          max="60"
+                          value={receiptWarrantyMonths}
+                          onChange={(e) => setReceiptWarrantyMonths(parseInt(e.target.value || "0", 10))}
+                          className="mt-1 h-10"
+                          placeholder="π.χ. 3"
+                          data-testid={`input-receipt-warranty-${req.id}`}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-xs">Email πελάτη</Label>
+                      <Input
+                        value={receiptEmail}
+                        onChange={(e) => setReceiptEmail(e.target.value)}
+                        className="mt-1 h-10"
+                        placeholder="customer@email.com"
+                        data-testid={`input-receipt-email-${req.id}`}
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="text-xs">Περιγραφή Εργασιών</Label>
+                      <Textarea
+                        value={receiptWorkDesc}
+                        onChange={(e) => setReceiptWorkDesc(e.target.value)}
+                        className="mt-1 min-h-[120px]"
+                        placeholder="Περιγράψτε συνοπτικά τις εργασίες που έγιναν..."
+                        data-testid={`input-receipt-workdesc-${req.id}`}
+                      />
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        Θα εμφανιστεί στην ηλεκτρονική απόδειξη και στο email.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        checked={sendViaViber}
+                        onCheckedChange={(v) => setSendViaViber(Boolean(v))}
+                        id={`chk-viber-${req.id}`}
+                        disabled={!((req.viberUserId ?? "").trim())}
+                      />
+                      <Label htmlFor={`chk-viber-${req.id}`} className={`text-xs ${!((req.viberUserId ?? "").trim()) ? "text-muted-foreground" : ""}`}>
+                        Αποστολή link απόδειξης και μέσω Viber {((req.viberUserId ?? "").trim()) ? "" : "(δεν έχει συνδεθεί Viber ID)"}
+                      </Label>
+                    </div>
+                  </div>
+
+                  <DialogFooter className="gap-2 sm:gap-0">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => setCompleteOpen(false)}
+                      disabled={completeAndReceipt.isPending}
+                    >
+                      Ακύρωση
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => completeAndReceipt.mutate()}
+                      disabled={completeAndReceipt.isPending || receiptEmail.trim() === "" || receiptWorkDesc.trim() === "" || String(receiptFinalPrice).trim() === ""}
+                      className="gap-2"
+                      data-testid={`btn-confirm-complete-${req.id}`}
+                    >
+                      {completeAndReceipt.isPending ? "Αποθήκευση..." : "Ολοκλήρωση & Αποστολή"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </div>

@@ -1,8 +1,9 @@
 import { Resend } from "resend";
-import type { RepairRequest, Subscription, WebsiteInquiry, ProductOfferInterest, BoxnowDropoffRequest } from "@shared/schema";
+import type { RepairReceipt, RepairRequest, Subscription, WebsiteInquiry, ProductOfferInterest, BoxnowDropoffRequest } from "@shared/schema";
 
 const FROM_EMAIL = "HiTech Doctor <noreply@hitechdoctor.com>";
 const ADMIN_EMAIL = "info@hitechdoctor.com";
+const DEFAULT_GOOGLE_REVIEW_URL = "https://g.page/r/CdfDDY1VPmuKEAE/review";
 
 function escHtml(s: string): string {
   return s
@@ -200,6 +201,104 @@ function buildWebsiteInquiryEmail(inq: WebsiteInquiry): string {
 </body></html>`;
 }
 
+function buildRepairReceiptEmail(params: {
+  repair: RepairRequest;
+  receipt: RepairReceipt;
+  receiptUrl: string;
+  googleReviewUrl: string | null;
+}): string {
+  const r = params.repair;
+  const rec = params.receipt;
+  const net = parseFloat(rec.finalPrice);
+  const vat = net * VAT_RATE;
+  const gross = net * (1 + VAT_RATE);
+  const warrantyMonths = Number(rec.warrantyMonths ?? 0);
+  const warrantyLabel =
+    warrantyMonths > 0
+      ? `${warrantyMonths} ${warrantyMonths === 1 ? "μήνας" : "μήνες"}`
+      : "Χωρίς εγγύηση";
+
+  const safeWork = escHtml(rec.workDescription || "");
+  const receiptUrl = escHtml(params.receiptUrl);
+  const reviewUrl = params.googleReviewUrl?.trim() ? escHtml(params.googleReviewUrl.trim()) : null;
+
+  const warrantyBadge = `
+    <div style="margin:18px 0 0 0;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.35);border-radius:14px;padding:14px 16px;">
+      <div style="font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#86efac;margin-bottom:6px;">Warranty</div>
+      <div style="font-size:14px;font-weight:800;color:#dcfce7;">Εγγύηση επισκευής: ${escHtml(warrantyLabel)}</div>
+      <div style="font-size:11px;color:#86efac;opacity:0.9;margin-top:6px;">Κρατήστε την απόδειξη για μελλοντική εξυπηρέτηση.</div>
+    </div>`;
+
+  const reviewCta = reviewUrl
+    ? `<div style="margin:18px 0 0 0;background:rgba(0,210,200,0.10);border:1px solid rgba(0,210,200,0.25);border-radius:14px;padding:16px;">
+        <div style="font-size:13px;font-weight:900;color:#00D2C8;margin-bottom:8px;">Πες μας τη γνώμη σου για την επισκευή</div>
+        <div style="font-size:12px;color:#cbd5e1;margin-bottom:12px;line-height:1.5;">
+          Αν μείνατε ευχαριστημένοι, μια σύντομη κριτική στο Google μας βοηθάει να συνεχίσουμε να προσφέρουμε κορυφαία εξυπηρέτηση.
+        </div>
+        <a href="${reviewUrl}" style="display:inline-block;background:linear-gradient(135deg,#00D2C8,#0099b8);color:#001014;font-weight:900;font-size:14px;text-decoration:none;border-radius:12px;padding:14px 20px;">
+          Αφήστε κριτική για την επισκευή σας
+        </a>
+      </div>`
+    : "";
+
+  return `<!DOCTYPE html>
+<html lang="el"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Απόδειξη Επισκευής</title></head>
+<body style="margin:0;padding:0;background:#0d1117;font-family:Arial,Helvetica,sans-serif;color:#e0e0e0;">
+  <div style="max-width:640px;margin:0 auto;padding:22px;">
+    <div style="background:linear-gradient(135deg,#050C19,#0a1628);border:1px solid rgba(0,210,200,0.15);border-radius:18px;padding:26px 28px;margin-bottom:14px;text-align:center;">
+      <div style="font-size:28px;font-weight:900;margin-bottom:4px;"><span style="color:#00D2C8;">HiTech</span><span style="color:#fff;">Doctor</span></div>
+      <div style="font-size:12px;color:#666;">Ηλεκτρονική Απόδειξη Επισκευής</div>
+    </div>
+
+    <div style="background:#0a1628;border:1px solid rgba(255,255,255,0.06);border-radius:18px;padding:24px 26px;">
+      <h1 style="margin:0 0 10px 0;font-size:18px;font-weight:900;color:#fff;">Ολοκλήρωση επισκευής — ${INVOICE_NUM(r.id)}</h1>
+      <p style="margin:0 0 18px 0;font-size:13px;color:#9aa3af;">Σας ευχαριστούμε που μας εμπιστευτήκατε. Παρακάτω θα βρείτε τις λεπτομέρειες.</p>
+
+      <div style="background:#050C19;border-radius:14px;padding:16px;margin-bottom:14px;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;">
+          <tr><td style="padding:6px 0;color:#7c8591;width:42%;">Πελάτης</td><td style="padding:6px 0;color:#fff;font-weight:700;">${escHtml(`${r.firstName} ${r.lastName}`)}</td></tr>
+          <tr><td style="padding:6px 0;color:#7c8591;">Συσκευή</td><td style="padding:6px 0;color:#e5e7eb;">${escHtml(r.deviceName)}</td></tr>
+          <tr><td style="padding:6px 0;color:#7c8591;">Serial</td><td style="padding:6px 0;color:#cbd5e1;font-family:ui-monospace,monospace;">${escHtml(r.serialNumber)}</td></tr>
+        </table>
+      </div>
+
+      <div style="background:#050C19;border-radius:14px;padding:16px;margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#00D2C8;margin-bottom:10px;">Περιγραφή Εργασιών</div>
+        <div style="font-size:13px;color:#e5e7eb;white-space:pre-wrap;line-height:1.55;">${safeWork}</div>
+      </div>
+
+      <div style="background:#050C19;border-radius:14px;padding:16px;">
+        <div style="font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#00D2C8;margin-bottom:10px;">Χρέωση</div>
+        <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;">
+          <tr><td style="padding:6px 0;color:#7c8591;">Υποσύνολο (χωρίς ΦΠΑ)</td><td style="padding:6px 0;text-align:right;color:#fff;font-weight:700;">${fmt(net)}</td></tr>
+          <tr><td style="padding:6px 0;color:#7c8591;">ΦΠΑ 24%</td><td style="padding:6px 0;text-align:right;color:#cbd5e1;">${fmt(vat)}</td></tr>
+          <tr style="border-top:1px solid rgba(0,210,200,0.15);">
+            <td style="padding:10px 0 4px 0;color:#00D2C8;font-weight:900;">Σύνολο (με ΦΠΑ)</td>
+            <td style="padding:10px 0 4px 0;text-align:right;color:#00D2C8;font-weight:900;font-size:18px;">${fmt(gross)}</td>
+          </tr>
+        </table>
+      </div>
+
+      ${warrantyBadge}
+
+      <div style="text-align:center;margin-top:18px;">
+        <a href="${receiptUrl}" style="display:inline-block;background:#111827;border:1px solid rgba(255,255,255,0.08);color:#e5e7eb;font-weight:800;font-size:13px;text-decoration:none;border-radius:12px;padding:12px 18px;">
+          Άνοιγμα ηλεκτρονικής απόδειξης
+        </a>
+        <div style="margin-top:10px;font-size:10px;color:#6b7280;">Αν δεν ανοίγει, αντιγράψτε: ${receiptUrl}</div>
+      </div>
+
+      ${reviewCta}
+    </div>
+
+    <div style="text-align:center;padding:14px 10px;">
+      <div style="font-size:11px;color:#4b5563;">© 2026 HiTech Doctor — hitechdoctor.com</div>
+      <div style="font-size:10px;color:#374151;margin-top:4px;">Τηλ: 6981882005 • Email: info@hitechdoctor.com</div>
+    </div>
+  </div>
+</body></html>`;
+}
+
 export async function sendRepairConfirmationEmail(req: RepairRequest): Promise<void> {
   const resend = getClient();
   if (!resend) {
@@ -218,6 +317,41 @@ export async function sendRepairConfirmationEmail(req: RepairRequest): Promise<v
     else console.log(`[email] Confirmation sent to ${req.email} (${INVOICE_NUM(req.id)})`);
   } catch (err) {
     console.error("[email] Failed to send:", err);
+  }
+}
+
+export async function sendRepairReceiptEmail(params: {
+  repair: RepairRequest;
+  receipt: RepairReceipt;
+  receiptUrl: string;
+}): Promise<void> {
+  const resend = getClient();
+  if (!resend) {
+    console.log("[email] RESEND_API_KEY not set — skipping repair receipt email");
+    return;
+  }
+  const googleReviewUrl =
+    process.env.GOOGLE_REVIEW_URL?.trim() ||
+    process.env.GOOGLE_REVIEW_LINK?.trim() ||
+    DEFAULT_GOOGLE_REVIEW_URL;
+  const html = buildRepairReceiptEmail({
+    repair: params.repair,
+    receipt: params.receipt,
+    receiptUrl: params.receiptUrl,
+    googleReviewUrl,
+  });
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: [params.receipt.customerEmail],
+      bcc: [ADMIN_EMAIL],
+      subject: `Απόδειξη επισκευής ${INVOICE_NUM(params.repair.id)} — HiTech Doctor`,
+      html,
+    });
+    if (error) console.error("[email] Repair receipt error:", error);
+    else console.log(`[email] Repair receipt sent to ${params.receipt.customerEmail} (${INVOICE_NUM(params.repair.id)})`);
+  } catch (err) {
+    console.error("[email] Failed to send repair receipt:", err);
   }
 }
 

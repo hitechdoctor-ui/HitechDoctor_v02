@@ -120,6 +120,30 @@ export const repairItems = pgTable("repair_items", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// --- Repair Receipts (Service completion & e-receipt) ---
+export const repairReceipts = pgTable(
+  "repair_receipts",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    repairRequestId: integer("repair_request_id").notNull(),
+    /** Public, unguessable token for receipt URL */
+    token: text("token").notNull(),
+    customerEmail: text("customer_email").notNull(),
+    /** Final price without VAT (consistent with existing repair.price + line items amounts) */
+    finalPrice: numeric("final_price").notNull(),
+    workDescription: text("work_description").notNull(),
+    /** Warranty duration in months */
+    warrantyMonths: integer("warranty_months").notNull().default(0),
+    issuedAt: timestamp("issued_at").defaultNow(),
+    emailedAt: timestamp("emailed_at"),
+    viberSentAt: timestamp("viber_sent_at"),
+  },
+  (t) => [
+    uniqueIndex("repair_receipts_token_idx").on(t.token),
+    index("repair_receipts_repair_request_idx").on(t.repairRequestId),
+  ]
+);
+
 // --- Subscriptions ---
 export const subscriptions = pgTable("subscriptions", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -347,6 +371,7 @@ export type Order = typeof orders.$inferSelect;
 export type OrderItem = typeof orderItems.$inferSelect;
 export type RepairRequest = typeof repairRequests.$inferSelect;
 export type RepairItem = typeof repairItems.$inferSelect;
+export type RepairReceipt = typeof repairReceipts.$inferSelect;
 export type Subscription = typeof subscriptions.$inferSelect;
 export type AdminUser = typeof adminUsers.$inferSelect;
 export type WebsiteInquiry = typeof websiteInquiries.$inferSelect;
