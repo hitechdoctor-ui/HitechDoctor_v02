@@ -1,10 +1,8 @@
 import { Resend } from "resend";
 import type { RepairReceipt, RepairRequest, Subscription, WebsiteInquiry, ProductOfferInterest, BoxnowDropoffRequest } from "@shared/schema";
 
-/** Branded sender (requires verified domain on Resend). */
+/** Branded sender (domain verified in Resend). */
 const FROM_EMAIL_BRANDED = "HiTech Doctor <noreply@hitechdoctor.com>";
-/** Resend default sender (works without verified domain). */
-const FROM_EMAIL_FALLBACK = "HiTech Doctor <onboarding@resend.dev>";
 const ADMIN_EMAIL = "info@hitechdoctor.com";
 const DEFAULT_GOOGLE_REVIEW_URL = "https://g.page/r/CdfDDY1VPmuKEAE/review";
 
@@ -23,43 +21,6 @@ function getClient() {
   const key = process.env.RESEND_API_KEY;
   if (!key) return null;
   return new Resend(key);
-}
-
-function looksLikeUnverifiedDomain(err: unknown): boolean {
-  const msg =
-    typeof err === "string"
-      ? err
-      : err && typeof err === "object" && "message" in err && typeof (err as any).message === "string"
-        ? String((err as any).message)
-        : "";
-  const lower = msg.toLowerCase();
-  return lower.includes("unverified") || (lower.includes("verify") && lower.includes("domain"));
-}
-
-async function sendResendEmailWithFromFallback(
-  resend: Resend,
-  params: Parameters<Resend["emails"]["send"]>[0]
-): Promise<{ ok: true } | { ok: false; error: unknown }> {
-  const preferredFrom = process.env.RESEND_FROM?.trim() || FROM_EMAIL_BRANDED;
-  const fallbackFrom = process.env.RESEND_FROM_FALLBACK?.trim() || FROM_EMAIL_FALLBACK;
-
-  const first = await resend.emails.send({ ...params, from: preferredFrom });
-  if (!first.error) return { ok: true };
-
-  console.error("[email] Resend error:", first.error);
-
-  if (looksLikeUnverifiedDomain(first.error)) {
-    console.warn(
-      "[email] Unverified domain for FROM address. Falling back to onboarding@resend.dev. " +
-        "Verify your domain in Resend to use noreply@hitechdoctor.com."
-    );
-    const second = await resend.emails.send({ ...params, from: fallbackFrom });
-    if (!second.error) return { ok: true };
-    console.error("[email] Resend fallback error:", second.error);
-    return { ok: false, error: second.error };
-  }
-
-  return { ok: false, error: first.error };
 }
 
 function buildConfirmationEmail(req: RepairRequest): string {
@@ -346,14 +307,16 @@ export async function sendRepairConfirmationEmail(req: RepairRequest): Promise<v
     return;
   }
   try {
-    const result = await sendResendEmailWithFromFallback(resend, {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL_BRANDED,
       to: [req.email],
       bcc: [ADMIN_EMAIL],
       subject: `Αίτημα Επισκευής ${INVOICE_NUM(req.id)} — HiTech Doctor`,
       html: buildConfirmationEmail(req),
       replyTo: ADMIN_EMAIL,
     });
-    if (result.ok) console.log(`[email] Confirmation sent to ${req.email} (${INVOICE_NUM(req.id)})`);
+    if (error) console.error("[email] Resend error:", error);
+    else console.log(`[email] Confirmation sent to ${req.email} (${INVOICE_NUM(req.id)})`);
   } catch (err) {
     console.error("[email] Failed to send:", err);
   }
@@ -380,14 +343,16 @@ export async function sendRepairReceiptEmail(params: {
     googleReviewUrl,
   });
   try {
-    const result = await sendResendEmailWithFromFallback(resend, {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL_BRANDED,
       to: [params.receipt.customerEmail],
       bcc: [ADMIN_EMAIL],
       subject: `Απόδειξη επισκευής ${INVOICE_NUM(params.repair.id)} — HiTech Doctor`,
       html,
       replyTo: ADMIN_EMAIL,
     });
-    if (result.ok) console.log(`[email] Repair receipt sent to ${params.receipt.customerEmail} (${INVOICE_NUM(params.repair.id)})`);
+    if (error) console.error("[email] Repair receipt error:", error);
+    else console.log(`[email] Repair receipt sent to ${params.receipt.customerEmail} (${INVOICE_NUM(params.repair.id)})`);
   } catch (err) {
     console.error("[email] Failed to send repair receipt:", err);
   }

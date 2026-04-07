@@ -229,6 +229,7 @@ export async function registerRoutes(
         warrantyMonths: z.coerce.number().int().min(0).max(60).default(0),
         customerEmail: z.string().email(),
         sendViber: z.boolean().optional().default(false),
+        manualViberUserId: z.string().max(128).nullable().optional(),
       }).parse(req.body);
 
       const finalPrice =
@@ -267,7 +268,9 @@ export async function registerRoutes(
 
       // Optional Viber send (if linked).
       if (body.sendViber) {
+        const manual = body.manualViberUserId?.trim();
         const receiver =
+          (manual && manual.length > 0 ? manual : null) ||
           updated.viberUserId?.trim() ||
           (await storage.getCustomerByEmail(updated.email))?.viberUserId?.trim() ||
           null;

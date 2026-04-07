@@ -193,6 +193,7 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
   const [receiptWorkDesc, setReceiptWorkDesc] = useState(req.notes ?? "");
   const [receiptWarrantyMonths, setReceiptWarrantyMonths] = useState<number>(3);
   const [sendViaViber, setSendViaViber] = useState(false);
+  const [manualViberId, setManualViberId] = useState("");
 
   useEffect(() => {
     setViberUserIdDraft(req.viberUserId ?? "");
@@ -293,12 +294,14 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
       if (!Number.isFinite(finalPrice) || finalPrice <= 0) {
         throw new Error("Μη έγκυρη τελική τιμή");
       }
+      const manualViberUserId = manualViberId.trim() === "" ? null : manualViberId.trim();
       const payload = {
         finalPrice,
         workDescription: receiptWorkDesc.trim(),
         warrantyMonths: receiptWarrantyMonths,
         customerEmail: receiptEmail.trim(),
         sendViber: sendViaViber,
+        manualViberUserId,
       };
       const res = await apiRequest("POST", `/api/admin/repair-requests/${req.id}/complete-and-receipt`, payload);
       return res.json();
@@ -674,11 +677,25 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
                         checked={sendViaViber}
                         onCheckedChange={(v) => setSendViaViber(Boolean(v))}
                         id={`chk-viber-${req.id}`}
-                        disabled={!((req.viberUserId ?? "").trim())}
+                        disabled={!((req.viberUserId ?? "").trim()) && manualViberId.trim() === ""}
                       />
                       <Label htmlFor={`chk-viber-${req.id}`} className={`text-xs ${!((req.viberUserId ?? "").trim()) ? "text-muted-foreground" : ""}`}>
                         Αποστολή link απόδειξης και μέσω Viber {((req.viberUserId ?? "").trim()) ? "" : "(δεν έχει συνδεθεί Viber ID)"}
                       </Label>
+                    </div>
+
+                    <div>
+                      <Label className="text-xs">Χειροκίνητο Viber ID (προαιρετικό)</Label>
+                      <Input
+                        value={manualViberId}
+                        onChange={(e) => setManualViberId(e.target.value)}
+                        className="mt-1 h-10"
+                        placeholder="π.χ. viber user id"
+                        data-testid={`input-receipt-manual-viber-${req.id}`}
+                      />
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        Αν συμπληρωθεί, το σύστημα θα στείλει την απόδειξη σε αυτό το Viber ID (χωρίς να χρειάζεται να είναι αποθηκευμένο στο αίτημα).
+                      </p>
                     </div>
                   </div>
 
