@@ -1,0 +1,29 @@
+# https://hitechdoctor.com/robots.txt — κανονικό όνομα αρχείου για crawlers (όχι μόνο robots-static.txt)
+User-agent: *
+Allow: /
+
+# Δημόσιο περιεχόμενο: επισκευές, eShop, blog, σελίδες υπηρεσιών — επιτρέπονται ρητά
+Allow: /services
+Allow: /episkevi-
+Allow: /eshop
+Allow: /repair/
+Allow: /blog
+Allow: /portfolio/
+
+# Διαχείριση & λογαριασμός
+Disallow: /admin
+Disallow: /auth
+
+# Checkout: συνήθως δεν ευεργετεί το SEO (αφαιρέστε τη γραμμή αν θέλετε crawl)
+Disallow: /checkout
+
+# APIs
+Disallow: /api/
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
+Sitemap: https://hitechdoctor.com/sitemap.xml

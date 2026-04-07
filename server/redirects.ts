@@ -82,6 +82,30 @@ const EXACT_REDIRECTS: Record<string, string> = {
   "/product/episkevi-mpataria-laptop": "/services/episkeui-laptop",
   "/product/episkevi-pliktrologiou-laptop": "/services/episkeui-laptop",
   "/product/episkevi-laptop-service": "/services/episkeui-laptop",
+  "/shop": "/eshop",
+  "/store": "/eshop",
+  "/catalog": "/eshop",
+  "/catalogue": "/eshop",
+  "/all-products": "/eshop",
+  "/search": "/services",
+  "/search-results": "/services",
+  "/fix-phone": "/services/episkeui-kiniton",
+  "/cell-phone-repair": "/services/episkeui-kiniton",
+  "/mobile-repair": "/services/episkeui-kiniton",
+  "/smartphone-repair": "/services/episkeui-kiniton",
+  "/laptop-repair-service": "/services/episkeui-laptop",
+  "/blogs": "/blog",
+  "/blog/category": "/blog",
+  "/news": "/blog",
+  "/articles": "/blog",
+  "/my-account": "/auth",
+  "/account": "/auth",
+  "/customer/account": "/auth",
+  "/login": "/auth",
+  "/sign-in": "/auth",
+  "/register": "/auth",
+  "/policies/privacy-policy": "/politiki-cookies",
+  "/policies/terms-of-service": "/oroi-episkeuis",
 };
 
 const IPHONE_SLUG_ALIASES: Record<string, string> = {
@@ -136,12 +160,18 @@ export function registerRedirects(app: Express): void {
       raw.startsWith("/node_modules") ||
       raw.startsWith("/src/") ||
       raw.startsWith("/assets/") ||
-      raw.match(/\.(js|css|map|ico|png|jpg|jpeg|webp|svg|woff2?|ttf|eot)$/i)
+      raw.startsWith("/.well-known/") ||
+      raw.match(/\.(js|css|map|ico|png|jpg|jpeg|webp|svg|avif|woff2?|ttf|eot)$/i)
     ) {
       return next();
     }
 
     const path = normalizePath(raw);
+
+    /** Στατικά αρχεία με λάθος path (π.χ. /favicon.ico χωρίς match) — άφησε στο static */
+    if (path === "/robots.txt" || path === "/sitemap.xml" || path === "/sitemap_index.xml") {
+      return next();
+    }
     const direct = EXACT_REDIRECTS[path];
     if (direct) {
       return res.redirect(301, direct);
@@ -197,6 +227,38 @@ export function registerRedirects(app: Express): void {
 
     if (path.startsWith("/pages/") && path !== "/pages") {
       return res.redirect(301, "/");
+    }
+
+    /** Shopify / WooCommerce blogs */
+    if (path.startsWith("/blogs/")) {
+      return res.redirect(301, "/blog");
+    }
+
+    /** WordPress-style archives /yyyy/mm/… */
+    if (/^\/\d{4}\/\d{2}(\/|$)/.test(path)) {
+      return res.redirect(301, "/blog");
+    }
+
+    /** Στατικές επεκτάσεις παλιών CMS → αρχική (μετά από strip .html δοκιμή exact map) */
+    if (/\.html?$/i.test(path)) {
+      const noExt = path.replace(/\.html?$/i, "");
+      const mapped = EXACT_REDIRECTS[noExt];
+      if (mapped) return res.redirect(301, mapped);
+      return res.redirect(301, "/");
+    }
+    if (/\.(php|asp|aspx)$/i.test(path)) {
+      return res.redirect(301, "/");
+    }
+
+    /** Generic repair-ish paths (αγγλικά / mixed) — όχι /repair/:slug (canonical redirect στο SPA) */
+    if (
+      !path.startsWith("/repair/") &&
+      path.includes("repair") &&
+      (path.includes("iphone") || path.includes("samsung") || path.includes("mobile") || path.includes("phone"))
+    ) {
+      if (path.includes("iphone")) return res.redirect(301, "/services/episkeui-iphone");
+      if (path.includes("samsung")) return res.redirect(301, "/services/episkeui-samsung");
+      return res.redirect(301, "/services/episkeui-kiniton");
     }
 
     next();
