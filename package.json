@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "NODE_ENV=development tsx server/index.ts",
     "build": "tsx script/build.ts",
-    "start": "NODE_ENV=production node dist/index.cjs",
+    "start:server": "NODE_ENV=production node dist/index.cjs",
+    "db:push:if-configured": "node -e \"if(!process.env.DATABASE_URL){console.log('[db:push] skip (DATABASE_URL not set)');process.exit(0)}require('child_process').execSync('npx drizzle-kit push',{stdio:'inherit'})\"",
+    "start": "npm run db:push:if-configured && npm run start:server",
     "check": "tsc",
     "db:push": "drizzle-kit push",
     "sync:fixmobile-pdf": "tsx script/sync-fixmobile-pdf.ts"
