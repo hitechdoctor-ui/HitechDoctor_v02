@@ -1,10 +1,27 @@
+import { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { getClientLegacyRedirect } from "@/lib/legacy-client-redirect";
 
 export default function NotFound() {
+  const [loc, setLocation] = useLocation();
+
+  useEffect(() => {
+    const target = getClientLegacyRedirect(loc);
+    if (target) setLocation(target, { replace: true });
+  }, [loc, setLocation]);
+
+  if (getClientLegacyRedirect(loc)) {
+    return (
+      <div className="min-h-screen w-full bg-background flex items-center justify-center">
+        <span className="sr-only">Ανακατεύθυνση…</span>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen w-full bg-background">
       <Navbar />

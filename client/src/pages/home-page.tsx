@@ -66,6 +66,12 @@ const serviceCards = [
   { icon: Wrench, label: "Διαγνωστικός Έλεγχος", href: "/services#diagnostiko", color: "text-emerald-400", bg: "bg-emerald-400/10 border-emerald-400/25" },
 ];
 
+/** LCP: μικρότερο αρχείο σε mobile, μεγαλύτερο σε desktop — ίδιο photo id */
+const HERO_IMG_MOBILE =
+  "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=75&w=720";
+const HERO_IMG_DESKTOP =
+  "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=900";
+
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
@@ -88,12 +94,7 @@ export default function Home() {
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
         <meta name="keywords" content="επισκευή κινητών Αθήνα, IT support, επισκευή laptop, επισκευή tablet, ανάκτηση δεδομένων, HiTech Doctor" />
         <link rel="canonical" href="https://hitechdoctor.com" />
-        <link
-          rel="preload"
-          as="image"
-          href="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&amp;fit=crop&amp;q=80&amp;w=900"
-          fetchPriority="high"
-        />
+        <link rel="preload" as="image" href={HERO_IMG_MOBILE} fetchPriority="high" />
       </Helmet>
 
       {/* Background ambient glows */}
@@ -124,8 +125,11 @@ export default function Home() {
 
       <main>
         {/* ── Hero ── */}
-        <section className="container mx-auto px-4 pt-10 pb-24 lg:pt-16 lg:pb-32 grid lg:grid-cols-2 gap-14 items-center" aria-label="Hero section">
-          <div className="flex flex-col items-start gap-6 z-10">
+        <section
+          className="container mx-auto px-4 pt-10 pb-24 lg:pt-16 lg:pb-32 grid lg:grid-cols-2 gap-10 lg:gap-14 items-center"
+          aria-label="Hero section"
+        >
+          <div className="flex flex-col items-start gap-6 z-10 order-2 lg:order-1 w-full max-w-full">
             <Badge
               variant="outline"
               className="border-primary/30 bg-primary/10 text-primary px-4 py-1.5 text-sm font-semibold tracking-wide"
@@ -190,13 +194,15 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Hero image */}
-          <div className="relative z-10 hidden lg:block">
-            <div className="relative w-full max-w-[560px] mx-auto rounded-3xl tech-glow pcb-border overflow-hidden">
+          {/* Hero image — ορατό και σε mobile για καλύτερο LCP· desktop παραμένει full-width στο grid */}
+          <div className="relative z-10 order-1 lg:order-2 w-full max-w-[560px] mx-auto lg:max-w-[560px]">
+            <div className="relative w-full rounded-2xl lg:rounded-3xl tech-glow pcb-border overflow-hidden">
               <img
-                src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=900"
+                src={HERO_IMG_MOBILE}
+                srcSet={`${HERO_IMG_MOBILE} 720w, ${HERO_IMG_DESKTOP} 900w`}
+                sizes="(max-width: 1023px) min(100vw, 42rem), 560px"
                 alt="Επισκευή τεχνολογίας — μητρική πλακέτα ASUS"
-                className="w-full aspect-[4/3] object-cover"
+                className="w-full aspect-[4/3] max-h-[min(38vh,260px)] sm:max-h-[min(42vh,300px)] object-cover lg:max-h-none"
                 width={900}
                 height={675}
                 loading="eager"
