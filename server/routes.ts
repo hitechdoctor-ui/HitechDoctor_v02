@@ -28,6 +28,7 @@ import {
   sendProductOfferInterestEmail,
   sendBoxnowDropoffEmail,
   sendRepairChatLeadEmail,
+  sendRepairReceiptEmail,
 } from "./email";
 import { runImeiLookup } from "./imei-lookup";
 import { getClientIp, lookupGeoForIp, parseUserAgent } from "./analytics-enrichment";
@@ -36,7 +37,7 @@ import { fetchGa4Summary, type Ga4Period } from "./ga4-admin";
 import { fetchHubSpotContacts } from "./hubspot";
 import bcrypt from "bcrypt";
 import { sendOrderStatusEmail } from "./nodemailer-mail";
-import { notifyOrderStatusChange, notifyRepairStatusChange } from "./viber";
+import { notifyOrderStatusChange, notifyRepairStatusChange, sendViberText } from "./viber";
 import { resolveCheckStatus } from "./check-status";
 import { refreshCompetitorPrices } from "./price-compare";
 import { APIError } from "openai";
@@ -73,6 +74,14 @@ async function getAdminUserFromRequest(req: Request): Promise<AdminUser | null> 
 function staffMayEditRepair(user: AdminUser, repair: Pick<RepairRequest, "assignedToUserId">): boolean {
   if (user.role !== "staff") return true;
   return repair.assignedToUserId != null && repair.assignedToUserId === user.id;
+}
+
+const DEFAULT_GOOGLE_REVIEW_URL = "https://g.page/r/CdfDDY1VPmuKEAE/review";
+
+function publicBaseUrl(): string {
+  const u = process.env.SITE_URL || process.env.PUBLIC_APP_URL || process.env.VITE_SITE_URL;
+  if (u) return u.replace(/\/$/, "");
+  return "http://localhost:5000";
 }
 
 export async function registerRoutes(
@@ -200,6 +209,83 @@ export async function registerRoutes(
     } catch (error) {
       console.error("[admin/repair-requests]", error);
       res.status(500).json({ message: "Failed to fetch repair requests" });
+    }
+  });
+
+  /** Ολοκλήρωση επισκευής + έκδοση ηλεκτρονικής απόδειξης + αποστολή email (+ προαιρετικά Viber). */
+  app.post("/api/admin/repair-requests/:id/complete-and-receipt", async (req, res) => {
+    try {
+      const id = z.coerce.number().int().positive().parse(req.params.id);
+      const actor = await getAdminUserFromRequest(req);
+      if (!actor) return res.status(401).json({ message: "Σύνδεση απαιτείται" });
+
+      const repair = await storage.getRepairRequestById(id);
+      if (!repair) return res.status(404).json({ message: "Repair request not found" });
+      if (!staffMayEditRepair(actor, repair)) return res.status(403).json({ message: "Δεν επιτρέπεται" });
+
+      const body = z.object({
+        finalPrice: z.union([z.number().positive(), z.string().min(1)]),
+        workDescription: z.string().min(3).max(8000),
+        warrantyMonths: z.coerce.number().int().min(0).max(60).default(0),
+        customerEmail: z.string().email(),
+        sendViber: z.boolean().optional().default(false),
+      }).parse(req.body);
+
+      const finalPrice =
+        typeof body.finalPrice === "number"
+          ? body.finalPrice
+          : parseFloat(String(body.finalPrice).replace(",", "."));
+      if (!Number.isFinite(finalPrice) || finalPrice <= 0) {
+        return res.status(400).json({ message: "Μη έγκυρη τελική τιμή" });
+      }
+
+      // Persist completion details onto existing repair request (price) + mark completed.
+      // Price is stored without VAT (consistent with rest of CRM + finance pages).
+      const updated = await storage.updateRepairRequest(id, {
+        price: finalPrice.toFixed(2),
+        priceIncludesVat: false,
+        status: "completed",
+      });
+
+      const token = randomBytes(18).toString("hex");
+      const receipt = await storage.createRepairReceipt({
+        repairRequestId: id,
+        token,
+        customerEmail: body.customerEmail.trim(),
+        finalPrice: finalPrice.toFixed(2),
+        workDescription: body.workDescription.trim(),
+        warrantyMonths: body.warrantyMonths,
+      });
+
+      const receiptUrl = `${publicBaseUrl()}/receipt/${encodeURIComponent(token)}`;
+
+      // Email in background; best-effort bookkeeping.
+      const emailedAt = new Date();
+      sendRepairReceiptEmail({ repair: updated, receipt, receiptUrl })
+        .then(() => storage.markRepairReceiptEmailed(receipt.id, emailedAt).catch(() => {}))
+        .catch((e) => console.error("[repair-receipt-email]", e));
+
+      // Optional Viber send (if linked).
+      if (body.sendViber) {
+        const receiver =
+          updated.viberUserId?.trim() ||
+          (await storage.getCustomerByEmail(updated.email))?.viberUserId?.trim() ||
+          null;
+        if (receiver) {
+          const code = `REPR-${String(updated.id).padStart(4, "0")}`;
+          const msg = `HiTech Doctor — Απόδειξη επισκευής ${code}\n${receiptUrl}`;
+          const viberAt = new Date();
+          sendViberText(receiver, msg)
+            .then(() => storage.markRepairReceiptViberSent(receipt.id, viberAt).catch(() => {}))
+            .catch((e) => console.error("[repair-receipt-viber]", e));
+        }
+      }
+
+      res.status(201).json({ ok: true, repair: updated, receipt: { id: receipt.id, token: receipt.token, receiptUrl } });
+    } catch (err) {
+      if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
+      console.error("[complete-and-receipt]", err);
+      res.status(500).json({ message: "Σφάλμα έκδοσης απόδειξης" });
     }
   });
 
@@ -503,6 +589,100 @@ export async function registerRoutes(
       res.json(requests);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch repair requests" });
+    }
+  });
+
+  /** Δημόσια ηλεκτρονική απόδειξη (HTML). */
+  app.get("/receipt/:token", async (req, res) => {
+    try {
+      const token = z.string().min(10).max(200).parse(req.params.token);
+      const receipt = await storage.getRepairReceiptByToken(token);
+      if (!receipt) return res.status(404).send("Not found");
+      const repair = await storage.getRepairRequestById(receipt.repairRequestId);
+      if (!repair) return res.status(404).send("Not found");
+
+      const net = Number(receipt.finalPrice);
+      const vat = net * 0.24;
+      const gross = net * 1.24;
+      const warrantyMonths = Number(receipt.warrantyMonths ?? 0);
+      const warrantyText =
+        warrantyMonths > 0 ? `${warrantyMonths} ${warrantyMonths === 1 ? "μήνας" : "μήνες"} εγγύηση` : "Χωρίς εγγύηση";
+      const googleReviewUrl =
+        process.env.GOOGLE_REVIEW_URL?.trim() ||
+        process.env.GOOGLE_REVIEW_LINK?.trim() ||
+        DEFAULT_GOOGLE_REVIEW_URL;
+
+      const esc = (s: string) =>
+        s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      const fmt = (n: number) => (Number.isFinite(n) ? n.toFixed(2).replace(".", ",") : "0,00") + " €";
+
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.send(`<!DOCTYPE html>
+<html lang="el"><head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Απόδειξη ${`REPR-${String(repair.id).padStart(4, "0")}`} — HiTech Doctor</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; background:#0b1020; color:#e5e7eb; }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 22px; }
+    .card { background: linear-gradient(180deg, rgba(5,12,25,0.9), rgba(10,22,40,0.9)); border:1px solid rgba(0,210,200,0.18); border-radius:18px; padding:22px; box-shadow: 0 30px 90px rgba(0,0,0,0.35); }
+    .brand { font-weight: 900; font-size: 26px; letter-spacing: -0.5px; }
+    .brand .a { color:#00D2C8; }
+    .brand .b { color:#fff; }
+    .sub { color:#94a3b8; font-size: 12px; margin-top: 6px; }
+    .grid { display:grid; grid-template-columns: 1fr; gap: 14px; margin-top: 16px; }
+    @media (min-width: 780px) { .grid { grid-template-columns: 1.1fr 0.9fr; } }
+    .panel { background: rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px; }
+    .h { font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color:#00D2C8; margin-bottom: 10px; }
+    .row { display:flex; justify-content:space-between; gap: 10px; padding: 6px 0; border-bottom: 1px dashed rgba(255,255,255,0.08); }
+    .row:last-child { border-bottom: none; }
+    .k { color:#94a3b8; font-size: 12px; }
+    .v { color:#e5e7eb; font-size: 12px; font-weight: 600; text-align:right; }
+    .big { font-size: 18px; font-weight: 900; color:#00D2C8; }
+    .warranty { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.35); color:#dcfce7; border-radius: 14px; padding: 12px 14px; margin-top: 10px; }
+    .btn { display:inline-block; text-decoration:none; font-weight: 900; border-radius: 12px; padding: 12px 16px; }
+    .btn-primary { background: linear-gradient(135deg,#00D2C8,#0099b8); color:#001014; }
+    .btn-ghost { background: rgba(255,255,255,0.06); color:#e5e7eb; border: 1px solid rgba(255,255,255,0.10); }
+    .footer { text-align:center; color:#64748b; font-size: 11px; margin-top: 14px; }
+    pre { margin:0; white-space:pre-wrap; line-height: 1.5; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; color:#e5e7eb; }
+  </style>
+</head><body>
+  <div class="wrap">
+    <div class="card">
+      <div class="brand"><span class="a">HiTech</span><span class="b">Doctor</span></div>
+      <div class="sub">Ηλεκτρονική απόδειξη επισκευής • Ticket: <strong>${`REPR-${String(repair.id).padStart(4, "0")}`}</strong></div>
+      <div class="grid">
+        <div class="panel">
+          <div class="h">Στοιχεία επισκευής</div>
+          <div class="row"><div class="k">Πελάτης</div><div class="v">${esc(`${repair.firstName} ${repair.lastName}`)}</div></div>
+          <div class="row"><div class="k">Email</div><div class="v">${esc(receipt.customerEmail)}</div></div>
+          <div class="row"><div class="k">Συσκευή</div><div class="v">${esc(repair.deviceName)}</div></div>
+          <div class="row"><div class="k">Serial</div><div class="v">${esc(repair.serialNumber)}</div></div>
+          <div class="warranty"><strong>Warranty:</strong> ${esc(warrantyText)}</div>
+        </div>
+        <div class="panel">
+          <div class="h">Χρέωση</div>
+          <div class="row"><div class="k">Υποσύνολο (χωρίς ΦΠΑ)</div><div class="v">${fmt(net)}</div></div>
+          <div class="row"><div class="k">ΦΠΑ 24%</div><div class="v">${fmt(vat)}</div></div>
+          <div class="row" style="padding-top:10px;"><div class="k"><strong>Σύνολο (με ΦΠΑ)</strong></div><div class="v big">${fmt(gross)}</div></div>
+          <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+            <a class="btn btn-ghost" href="javascript:window.print()">Εκτύπωση / Αποθήκευση PDF</a>
+            ${googleReviewUrl ? `<a class="btn btn-primary" href="${esc(googleReviewUrl)}" target="_blank" rel="noopener noreferrer">Αφήστε μας μια κριτική</a>` : ""}
+          </div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:14px;">
+        <div class="h">Περιγραφή εργασιών</div>
+        <pre>${esc(receipt.workDescription)}</pre>
+      </div>
+      <div class="footer">HiTech Doctor • 6981882005 • info@hitechdoctor.com</div>
+    </div>
+  </div>
+</body></html>`);
+    } catch (err) {
+      console.error("[receipt]", err);
+      res.status(500).send("Error");
     }
   });
 

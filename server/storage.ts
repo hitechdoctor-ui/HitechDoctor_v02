@@ -6,6 +6,7 @@ import {
   orderItems,
   repairRequests,
   repairItems,
+  repairReceipts,
   subscriptions,
   websiteInquiries,
   productOfferInterests,
@@ -29,6 +30,7 @@ import {
   type InsertRepairRequest,
   type RepairItem,
   type InsertRepairItem,
+  type RepairReceipt,
   type Subscription,
   type InsertSubscription,
   type WebsiteInquiry,
@@ -109,6 +111,19 @@ export interface IStorage {
   getCompletedRepairRevenueRows(): Promise<
     { id: number; createdAt: Date; total: number; customerName: string; email: string }[]
   >;
+  // Repair Receipts
+  createRepairReceipt(data: {
+    repairRequestId: number;
+    token: string;
+    customerEmail: string;
+    finalPrice: string;
+    workDescription: string;
+    warrantyMonths: number;
+  }): Promise<RepairReceipt>;
+  getRepairReceiptByToken(token: string): Promise<RepairReceipt | undefined>;
+  getLatestRepairReceipt(repairRequestId: number): Promise<RepairReceipt | undefined>;
+  markRepairReceiptEmailed(id: number, at: Date): Promise<void>;
+  markRepairReceiptViberSent(id: number, at: Date): Promise<void>;
   createRepairItem(data: InsertRepairItem): Promise<RepairItem>;
   updateRepairItem(id: number, data: { description?: string; amount?: string }): Promise<RepairItem>;
   deleteRepairItem(id: number): Promise<void>;
@@ -576,6 +591,49 @@ export class DatabaseStorage implements IStorage {
       rows.push({ id: r.id, createdAt: r.createdAt, total, customerName, email: r.email });
     }
     return rows;
+  }
+
+  // --- Repair Receipts ---
+  async createRepairReceipt(data: {
+    repairRequestId: number;
+    token: string;
+    customerEmail: string;
+    finalPrice: string;
+    workDescription: string;
+    warrantyMonths: number;
+  }): Promise<RepairReceipt> {
+    const [created] = await db.insert(repairReceipts).values({
+      repairRequestId: data.repairRequestId,
+      token: data.token,
+      customerEmail: data.customerEmail,
+      finalPrice: data.finalPrice,
+      workDescription: data.workDescription,
+      warrantyMonths: data.warrantyMonths,
+    }).returning();
+    return created;
+  }
+
+  async getRepairReceiptByToken(token: string): Promise<RepairReceipt | undefined> {
+    const [row] = await db.select().from(repairReceipts).where(eq(repairReceipts.token, token)).limit(1);
+    return row;
+  }
+
+  async getLatestRepairReceipt(repairRequestId: number): Promise<RepairReceipt | undefined> {
+    const [row] = await db
+      .select()
+      .from(repairReceipts)
+      .where(eq(repairReceipts.repairRequestId, repairRequestId))
+      .orderBy(desc(repairReceipts.issuedAt))
+      .limit(1);
+    return row;
+  }
+
+  async markRepairReceiptEmailed(id: number, at: Date): Promise<void> {
+    await db.update(repairReceipts).set({ emailedAt: at }).where(eq(repairReceipts.id, id));
+  }
+
+  async markRepairReceiptViberSent(id: number, at: Date): Promise<void> {
+    await db.update(repairReceipts).set({ viberSentAt: at }).where(eq(repairReceipts.id, id));
   }
 
   // --- Subscriptions ---
