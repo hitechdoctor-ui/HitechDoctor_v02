@@ -47,16 +47,19 @@ export function formatBusinessAddressOneLine(): string {
   return `${BUSINESS_STREET_ADDRESS}, ${BUSINESS_ADDRESS_LOCALITY} ${BUSINESS_POSTAL_CODE}, ${BUSINESS_ADDRESS_REGION}, Ελλάδα`;
 }
 
-export function buildOrganizationJsonLd(): Record<string, unknown> {
-  const org: Record<string, unknown> = {
+export function buildLocalBusinessJsonLd(): Record<string, unknown> {
+  const merged: Record<string, unknown> = {
     "@context": "https://schema.org",
-    "@type": "Organization",
+    "@type": ["LocalBusiness", "Organization"],
+    additionalType: "https://schema.org/MobilePhoneRepair",
     name: BUSINESS_REGISTERED_NAME,
     alternateName: BUSINESS_TRADE_NAME,
-    url: BUSINESS_SITE_URL,
-    logo: `${BUSINESS_SITE_URL}/favicon.png`,
-    email: BUSINESS_EMAIL,
+    url: BUSINESS_SITE_URL_WWW,
+    image: `${BUSINESS_SITE_URL_WWW}/favicon.png`,
+    logo: `${BUSINESS_SITE_URL_WWW}/favicon.png`,
+    priceRange: "££",
     telephone: BUSINESS_PHONE_E164,
+    email: BUSINESS_EMAIL,
     address: {
       "@type": "PostalAddress",
       streetAddress: BUSINESS_STREET_ADDRESS,
@@ -64,45 +67,6 @@ export function buildOrganizationJsonLd(): Record<string, unknown> {
       addressRegion: BUSINESS_ADDRESS_REGION,
       postalCode: BUSINESS_POSTAL_CODE,
       addressCountry: BUSINESS_COUNTRY_CODE,
-    },
-    contactPoint: [
-      {
-        "@type": "ContactPoint",
-        telephone: BUSINESS_PHONE_E164,
-        email: BUSINESS_EMAIL,
-        contactType: "customer service",
-        areaServed: "GR",
-        availableLanguage: ["Greek", "el"],
-      },
-    ],
-    identifier: {
-      "@type": "PropertyValue",
-      name: "ΓΕΜΗ",
-      value: BUSINESS_GEMI,
-    },
-  };
-  if (BUSINESS_AFM) {
-    org.taxID = BUSINESS_AFM;
-  }
-  return org;
-}
-
-export function buildLocalBusinessJsonLd(): Record<string, unknown> {
-  return {
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    additionalType: "https://schema.org/MobilePhoneRepair",
-    name: "HiTech Doctor",
-    url: BUSINESS_SITE_URL_WWW,
-    image: `${BUSINESS_SITE_URL_WWW}/favicon.png`,
-    priceRange: "££",
-    telephone: BUSINESS_PHONE_E164,
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: BUSINESS_STREET_ADDRESS,
-      addressLocality: BUSINESS_ADDRESS_LOCALITY,
-      postalCode: BUSINESS_POSTAL_CODE,
-      addressCountry: "GR",
     },
     hasMap: BUSINESS_MAPS_URL,
     geo: {
@@ -123,5 +87,27 @@ export function buildLocalBusinessJsonLd(): Record<string, unknown> {
     ],
     areaServed: "Athens, Greece",
     sameAs: BUSINESS_SAME_AS,
+
+    contactPoint: [
+      {
+        "@type": "ContactPoint",
+        telephone: BUSINESS_PHONE_E164,
+        email: BUSINESS_EMAIL,
+        contactType: "customer service",
+        areaServed: "GR",
+        availableLanguage: ["Greek", "el"],
+      },
+    ],
+    identifier: {
+      "@type": "PropertyValue",
+      name: "ΓΕΜΗ",
+      value: BUSINESS_GEMI,
+    },
   };
+
+  if (BUSINESS_AFM) {
+    merged.taxID = BUSINESS_AFM;
+  }
+
+  return merged;
 }

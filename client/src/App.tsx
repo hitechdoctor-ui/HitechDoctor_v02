@@ -12,7 +12,6 @@ import { ScrollProgressBar } from "@/components/scroll-progress-bar";
 import { CookieBanner } from "@/components/cookie-banner";
 import { FloatingActionStack } from "@/components/floating-action-stack";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
-import { GlobalOrganizationSchema } from "@/components/global-organization-schema";
 import { GlobalLocalBusinessSchema } from "@/components/global-localbusiness-schema";
 import { cn } from "@/lib/utils";
 import { usePageTracker } from "@/hooks/use-page-tracker";
@@ -168,7 +167,6 @@ function Router() {
   return (
     <Fragment>
       <GoogleAnalytics />
-      {!isAdmin ? <GlobalOrganizationSchema /> : null}
       {!isAdmin ? <GlobalLocalBusinessSchema /> : null}
       <ScrollToTop />
       <GlobalComponents />
