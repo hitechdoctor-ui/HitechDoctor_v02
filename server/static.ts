@@ -55,6 +55,14 @@ export function serveStatic(app: Express) {
     );
   }
 
+  // Explicit index route: inject JSON-LD before the app loads (Google can see without JS).
+  app.get("/", async (_req, res) => {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    const indexPath = path.resolve(distPath, "index.html");
+    const html = await fs.promises.readFile(indexPath, "utf-8");
+    res.status(200).set({ "Content-Type": "text/html" }).send(injectLocalBusinessJsonLdIntoHead(html));
+  });
+
   // Assets with content hashes: 1 year immutable cache
   app.use(
     "/assets",
@@ -67,6 +75,7 @@ export function serveStatic(app: Express) {
   // Other static files (favicon, images, etc) — but NOT index.html (no-cache)
   app.use(
     express.static(distPath, {
+      index: false,
       maxAge: "7d",
       setHeaders: (res, filePath) => {
         if (filePath.endsWith("index.html")) {
