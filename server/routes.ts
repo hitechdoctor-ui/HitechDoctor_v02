@@ -89,6 +89,102 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
 
+  /** Dynamic sitemap.xml (SEO) */
+  app.get("/sitemap.xml", async (_req, res) => {
+    try {
+      const base = "https://www.hitechdoctor.com";
+
+      // --- Static pages (keep in sync with App routes) ---
+      const staticPaths = [
+        "/",
+        "/services",
+        "/services/episkeui-iphone",
+        "/services/episkeui-samsung",
+        "/services/episkeui-xiaomi",
+        "/services/episkeui-huawei",
+        "/services/episkeui-oneplus",
+        "/services/episkeui-kiniton",
+        "/services/episkeui-laptop",
+        "/services/episkeui-tablet",
+        "/services/episkeui-desktop",
+        "/eshop",
+        "/blog",
+        "/check-status",
+        "/contact",
+        "/sxetika-me-mas",
+        "/faq",
+        "/tropoi-pliromis",
+        "/oroi-episkeuis",
+        "/politiki-cookies",
+        "/politiki-epistrofon",
+        "/oroi-chrisis",
+        "/prosvassimotita",
+        "/apple-service",
+        "/web-designer",
+        "/services/imei-check",
+        "/services/ipsw-download",
+        "/services/apostoli-syskevis",
+      ];
+
+      // --- Repair detail pages (device slugs from data lists) ---
+      // These live in the client data layer today; we import them for sitemap completeness.
+      const [{ IPHONE_SERIES }, { SAMSUNG_SERIES }] = await Promise.all([
+        import("../client/src/data/iphone-devices"),
+        import("../client/src/data/samsung-devices"),
+      ]);
+      const iphoneModelSlugs: string[] = (IPHONE_SERIES ?? [])
+        .flatMap((s: any) => (s?.models ?? []).map((m: any) => m?.slug).filter(Boolean));
+      const samsungModelSlugs: string[] = (SAMSUNG_SERIES ?? [])
+        .flatMap((s: any) => (s?.models ?? []).map((m: any) => m?.slug).filter(Boolean));
+
+      const repairPaths = [
+        ...iphoneModelSlugs.map((slug) => `/episkevi-iphone/${slug}`),
+        ...samsungModelSlugs.map((slug) => `/episkevi-samsung/${slug}`),
+      ];
+
+      // --- Blog posts ---
+      // Blog posts are currently stored in the app data layer; if/when moved to DB, replace this import with a DB query.
+      const { BLOG_POSTS } = await import("../client/src/data/blog-posts");
+      const blogPaths: string[] = (BLOG_POSTS ?? [])
+        .map((p: any) => p?.slug)
+        .filter(Boolean)
+        .map((slug: string) => `/blog/${slug}`);
+
+      // --- eShop products (DB) ---
+      const products = await storage.getProducts();
+      const productPaths: string[] = (products ?? [])
+        .map((p: any) => p?.slug)
+        .filter((s: unknown) => typeof s === "string" && s.trim().length > 0)
+        .map((slug: string) => `/eshop/${slug}`);
+
+      const urls = Array.from(
+        new Set([...staticPaths, ...repairPaths, ...blogPaths, ...productPaths])
+      );
+
+      const escXml = (s: string) =>
+        s
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&apos;");
+
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>\n` +
+        `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+        urls
+          .map((p) => `  <url><loc>${escXml(`${base}${p}`)}</loc></url>`)
+          .join("\n") +
+        `\n</urlset>\n`;
+
+      res.setHeader("Content-Type", "application/xml; charset=utf-8");
+      res.setHeader("Cache-Control", "public, max-age=1800"); // 30 minutes
+      res.send(xml);
+    } catch (err) {
+      console.error("[sitemap.xml]", err);
+      res.status(500).send("Sitemap error");
+    }
+  });
+
   // --- Δημόσιες τιμές επισκευής (από PDF sync / XML sync overrides) ---
   app.get("/api/repair-prices", async (_req, res) => {
     try {
