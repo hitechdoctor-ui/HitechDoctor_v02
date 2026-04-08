@@ -22,7 +22,7 @@ export function Breadcrumb({ items, className = "" }: BreadcrumbProps) {
       "@type": "ListItem",
       "position": i + 1,
       "name": item.label,
-      "item": item.href ? `https://hitechdoctor.com${item.href}` : undefined,
+      "item": `https://www.hitechdoctor.com${item.href ?? ""}`,
     })),
   };
 
