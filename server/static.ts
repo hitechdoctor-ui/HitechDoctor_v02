@@ -6,6 +6,7 @@ const LOCALBUSINESS_JSON_LD = JSON.stringify({
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
   name: "HiTech Doctor",
+  image: "https://www.hitechdoctor.com/favicon.png",
   telephone: "+306981882005",
   priceRange: "££",
   address: {
