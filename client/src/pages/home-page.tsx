@@ -72,16 +72,6 @@ const HERO_IMG_MOBILE =
 const HERO_IMG_DESKTOP =
   "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=900";
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "LocalBusiness",
-  "name": "HiTech Doctor",
-  "url": "https://hitechdoctor.com",
-  "description": "Εξειδικευμένες επισκευές κινητών, tablet, laptop. IT Support, ανάκτηση δεδομένων και εγκατάσταση δικτύων.",
-  "image": "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=1200",
-  "@id": "https://hitechdoctor.com",
-};
-
 export default function Home() {
   return (
     <div className="min-h-screen bg-background circuit-bg relative overflow-hidden">
@@ -91,7 +81,6 @@ export default function Home() {
         url="https://hitechdoctor.com"
       />
       <Helmet>
-        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
         <meta name="keywords" content="επισκευή κινητών Αθήνα, IT support, επισκευή laptop, επισκευή tablet, ανάκτηση δεδομένων, HiTech Doctor" />
         <link rel="canonical" href="https://hitechdoctor.com" />
         <link rel="preload" as="image" href={HERO_IMG_MOBILE} fetchPriority="high" />
