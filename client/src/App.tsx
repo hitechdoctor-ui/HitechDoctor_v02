@@ -13,6 +13,7 @@ import { CookieBanner } from "@/components/cookie-banner";
 import { FloatingActionStack } from "@/components/floating-action-stack";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { GlobalOrganizationSchema } from "@/components/global-organization-schema";
+import { GlobalLocalBusinessSchema } from "@/components/global-localbusiness-schema";
 import { cn } from "@/lib/utils";
 import { usePageTracker } from "@/hooks/use-page-tracker";
 import { GoogleAnalytics } from "@/components/google-analytics";
@@ -168,6 +169,7 @@ function Router() {
     <Fragment>
       <GoogleAnalytics />
       {!isAdmin ? <GlobalOrganizationSchema /> : null}
+      {!isAdmin ? <GlobalLocalBusinessSchema /> : null}
       <ScrollToTop />
       <GlobalComponents />
       <div

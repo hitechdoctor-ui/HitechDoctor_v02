@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import QRCode from "react-qr-code";
 import {
-  buildLocalBusinessJsonLd,
   BUSINESS_REGISTERED_NAME,
   BUSINESS_TRADE_NAME,
   BUSINESS_GEMI,
@@ -70,8 +69,6 @@ EMAIL:info@hitechdoctor.com
 URL:https://hitechdoctor.com
 END:VCARD`;
 
-const localBusinessSchema = buildLocalBusinessJsonLd();
-
 export default function Contact() {
   const [form, setForm] = useState({ name: "", phone: "", message: "", gdpr: false });
   const [sent, setSent] = useState(false);
@@ -89,7 +86,6 @@ export default function Contact() {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} />
       <Helmet>
         <title>Επικοινωνία | HiTech Doctor – Επισκευές Κινητών & Τεχνολογία</title>
         <meta name="description" content="Επικοινωνήστε με το HiTech Doctor. Τηλέφωνο, Viber, email και χάρτης. Επισκευές κινητών, tablet, laptop και gaming console." />

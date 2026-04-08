@@ -22,6 +22,14 @@ export const BUSINESS_PHONE_DISPLAY = "698 188 2005";
 export const BUSINESS_PHONE_E164 = "+306981882005";
 export const BUSINESS_EMAIL = "info@hitechdoctor.com";
 export const BUSINESS_SITE_URL = "https://hitechdoctor.com";
+export const BUSINESS_SITE_URL_WWW = "https://www.hitechdoctor.com";
+
+/** Social profiles for schema.org `sameAs` */
+export const BUSINESS_SAME_AS: string[] = [
+  "https://facebook.com/hitechdoctor",
+  "https://instagram.com/hitechdoctor",
+  "https://tiktok.com/@hitechdoctor",
+];
 
 export const BUSINESS_GEO = {
   latitude: 37.9528736,
@@ -82,40 +90,38 @@ export function buildOrganizationJsonLd(): Record<string, unknown> {
 export function buildLocalBusinessJsonLd(): Record<string, unknown> {
   return {
     "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    name: BUSINESS_REGISTERED_NAME,
-    alternateName: BUSINESS_TRADE_NAME,
-    description: "Επαγγελματική επισκευή κινητών τηλεφώνων, tablet και laptop στην Αθήνα.",
-    url: BUSINESS_SITE_URL,
+    "@type": ["LocalBusiness", "MobilePhoneRepair"],
+    name: "HiTech Doctor",
+    url: BUSINESS_SITE_URL_WWW,
+    image: `${BUSINESS_SITE_URL_WWW}/favicon.png`,
+    priceRange: "££",
     telephone: BUSINESS_PHONE_E164,
-    email: BUSINESS_EMAIL,
     address: {
       "@type": "PostalAddress",
       streetAddress: BUSINESS_STREET_ADDRESS,
       addressLocality: BUSINESS_ADDRESS_LOCALITY,
       addressRegion: BUSINESS_ADDRESS_REGION,
       postalCode: BUSINESS_POSTAL_CODE,
-      addressCountry: BUSINESS_COUNTRY_CODE,
+      addressCountry: "Greece",
     },
+    hasMap: BUSINESS_MAPS_URL,
     geo: {
       "@type": "GeoCoordinates",
       latitude: BUSINESS_GEO.latitude,
       longitude: BUSINESS_GEO.longitude,
     },
-    openingHoursSpecification: [
-      {
-        "@type": "OpeningHoursSpecification",
-        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-        opens: "10:00",
-        closes: "19:00",
-      },
-      {
-        "@type": "OpeningHoursSpecification",
-        dayOfWeek: "Saturday",
-        opens: "10:00",
-        closes: "16:00",
-      },
+    openingHours: [
+      "Mo 10:00-15:00",
+      "We 10:00-15:00",
+      "Sa 10:00-15:00",
+      "Tu 10:00-14:00",
+      "Th 10:00-14:00",
+      "Fr 10:00-14:00",
+      "Tu 17:30-21:00",
+      "Th 17:30-21:00",
+      "Fr 17:30-21:00",
     ],
-    ...(BUSINESS_AFM ? { taxID: BUSINESS_AFM } : {}),
+    areaServed: "Athens, Greece",
+    sameAs: BUSINESS_SAME_AS,
   };
 }
