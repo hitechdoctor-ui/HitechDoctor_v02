@@ -90,7 +90,8 @@ export function buildOrganizationJsonLd(): Record<string, unknown> {
 export function buildLocalBusinessJsonLd(): Record<string, unknown> {
   return {
     "@context": "https://schema.org",
-    "@type": ["LocalBusiness", "MobilePhoneRepair"],
+    "@type": "LocalBusiness",
+    additionalType: "https://schema.org/MobilePhoneRepair",
     name: "HiTech Doctor",
     url: BUSINESS_SITE_URL_WWW,
     image: `${BUSINESS_SITE_URL_WWW}/favicon.png`,
@@ -100,9 +101,8 @@ export function buildLocalBusinessJsonLd(): Record<string, unknown> {
       "@type": "PostalAddress",
       streetAddress: BUSINESS_STREET_ADDRESS,
       addressLocality: BUSINESS_ADDRESS_LOCALITY,
-      addressRegion: BUSINESS_ADDRESS_REGION,
       postalCode: BUSINESS_POSTAL_CODE,
-      addressCountry: "Greece",
+      addressCountry: "GR",
     },
     hasMap: BUSINESS_MAPS_URL,
     geo: {
