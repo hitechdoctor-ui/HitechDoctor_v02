@@ -175,13 +175,14 @@ function Seo15ProMax() {
         Επιλογές Ανταλλακτικού για Αντικατάσταση Οθόνης iPhone 15 Pro Max
       </h3>
       <ul className="list-disc pl-5 space-y-1 text-sm">
-        <li><strong>Γνήσια Οθόνη Apple OEM / OLED</strong> — από <strong>€418</strong> (100% αυθεντική εικόνα, Face ID/TrueDepth, εγγύηση 24 μηνών)</li>
-        <li><strong>Refurbished Premium</strong> — από <strong>€330</strong> (προτεινόμενο: ισοδύναμη καθημερινή εμπειρία, Face ID συμβατό, εγγύηση 12 μηνών)</li>
-        <li><strong>Standard</strong> — από <strong>€220</strong> (οικονομική επιλογή με βασική εγγύηση)</li>
+        <li>Γνήσια — από €418 (100% αυθεντική εικόνα, Face ID/TrueDepth πλήρης λειτουργία, εγγύηση 24 μηνών)</li>
+        <li>Refurbished Premium — από €330 (προτεινόμενο: ισοδύναμη καθημερινή εμπειρία, Face ID συμβατό, εγγύηση 12 μηνών)</li>
+        <li>Standard — από €220 (οικονομική επιλογή με βασική εγγύηση)</li>
       </ul>
       <p>
-        Δεν ξέρεις τι είναι ακριβώς η Refurbished οθόνη; Δες τον οδηγό μας{" "}
-        <a href="/blog/refurbished-othones-iphone-ti-einai">Refurbished Οθόνες iPhone: Τι Είναι & Αξίζουν;</a>.
+        💡 Δεν ξέρεις τι είναι ακριβώς η Refurbished οθόνη; Διάβασε τον οδηγό μας:{" "}
+        <a href="/blog/refurbished-othones-iphone-ti-einai">Refurbished Οθόνες iPhone: Τι Είναι & Αξίζουν;</a>
+        ;
       </p>
 
       <h2 className="text-xl font-display font-bold text-foreground mt-8 mb-3">
@@ -244,8 +245,11 @@ function Seo15ProMax() {
         <li>Δωρεάν τεχνική διάγνωση — ακόμα κι αν δεν προχωρήσεις</li>
       </ul>
       <p>
-        Δες πώς κάνουμε επισκευές iPhone στο κανάλι μας:{" "}
-        <a href="https://www.youtube.com/@HitechDoctor">youtube.com/@HitechDoctor</a>
+        📺 Δες πώς κάνουμε επισκευές iPhone στο κανάλι μας:{" "}
+        <a href="https://www.youtube.com/@HitechDoctor" target="_blank" rel="noopener">
+          youtube.com/@HitechDoctor
+        </a>
+        {" "}— opens in new tab
       </p>
 
       <h2 className="text-xl font-display font-bold text-foreground mt-8 mb-3">
