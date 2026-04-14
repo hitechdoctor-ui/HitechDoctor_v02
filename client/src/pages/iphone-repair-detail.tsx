@@ -158,6 +158,121 @@ function Seo13() {
   );
 }
 
+function Seo15ProMax() {
+  return (
+    <div className="prose prose-sm prose-invert max-w-none mt-10 text-muted-foreground leading-relaxed">
+      <h2 className="text-xl font-display font-bold text-foreground mb-3">
+        Αλλαγή Οθόνης iPhone 15 Pro Max στο Μοσχάτο
+      </h2>
+      <p>
+        Η αλλαγή οθόνης iPhone 15 Pro Max είναι η πιο συχνή επισκευή κινητού που πραγματοποιούμε καθημερινά στο εξειδικευμένο κέντρο service του HiTech Doctor, στο Μοσχάτο. Εξυπηρετούμε άμεσα Μοσχάτο, Ταύρο, Καλλιθέα και Πειραιά — και για όλη την υπόλοιπη Ελλάδα παραλαμβάνουμε και παραδίδουμε μέσω Box Now σε 24 ώρες.
+      </p>
+      <p>
+        Είτε έχεις σπασμένη οθόνη iPhone 15 Pro Max μετά από πτώση, είτε χρειάζεσαι αντικατάσταση οθόνης λόγω νεκρών pixels, κακής αφής ή αποχρωματισμού — κάνουμε την επισκευή σε 30 λεπτά με γραπτή εγγύηση και δωρεάν τεχνική διάγνωση.
+      </p>
+
+      <h3 className="text-lg font-display font-bold text-foreground mt-6 mb-2">
+        Επιλογές Ανταλλακτικού για Αντικατάσταση Οθόνης iPhone 15 Pro Max
+      </h3>
+      <ul className="list-disc pl-5 space-y-1 text-sm">
+        <li><strong>Γνήσια Οθόνη Apple OEM / OLED</strong> — από <strong>€418</strong> (100% αυθεντική εικόνα, Face ID/TrueDepth, εγγύηση 24 μηνών)</li>
+        <li><strong>Refurbished Premium</strong> — από <strong>€330</strong> (προτεινόμενο: ισοδύναμη καθημερινή εμπειρία, Face ID συμβατό, εγγύηση 12 μηνών)</li>
+        <li><strong>Standard</strong> — από <strong>€220</strong> (οικονομική επιλογή με βασική εγγύηση)</li>
+      </ul>
+      <p>
+        Δεν ξέρεις τι είναι ακριβώς η Refurbished οθόνη; Δες τον οδηγό μας{" "}
+        <a href="/blog/refurbished-othones-iphone-ti-einai">Refurbished Οθόνες iPhone: Τι Είναι & Αξίζουν;</a>.
+      </p>
+
+      <h2 className="text-xl font-display font-bold text-foreground mt-8 mb-3">
+        Αλλαγή Μπαταρίας iPhone 15 Pro Max στο Μοσχάτο
+      </h2>
+      <p>
+        Εκτός από την επισκευή οθόνης, η αλλαγή μπαταρίας iPhone 15 Pro Max είναι η δεύτερη πιο συχνή επισκευή στο HiTech Doctor. Αν το iPhone σου δεν κρατάει μπαταρία, κλείνει ξαφνικά ή φορτίζει αργά — η αντικατάσταση μπαταρίας είναι η πιο γρήγορη και οικονομική λύση.
+      </p>
+      <p>
+        Η μπαταρία iPhone 15 Pro Max έχει χωρητικότητα 4.422 mAh. Όταν η υγεία μπαταρίας (Battery Health) πέσει κάτω από 80%, η Apple συστήνει αντικατάσταση.
+      </p>
+      <h3 className="text-lg font-display font-bold text-foreground mt-6 mb-2">
+        Πότε χρειάζεσαι αλλαγή μπαταρίας iPhone 15 Pro Max;
+      </h3>
+      <ul className="list-disc pl-5 space-y-1 text-sm">
+        <li>Το iPhone κλείνει μόνο του ακόμα και με 20–30% φόρτιση</li>
+        <li>Η υγεία μπαταρίας είναι κάτω από 80%</li>
+        <li>Αδειάζει μέσα σε λίγες ώρες</li>
+        <li>Φορτίζει πολύ αργά ή δεν φορτίζει καθόλου</li>
+        <li>Ζεσταίνεται υπερβολικά κατά τη φόρτιση</li>
+        <li>Η μπαταρία έχει φουσκώσει (επείγον)</li>
+      </ul>
+      <p>
+        Η αλλαγή μπαταρίας iPhone 15 Pro Max ολοκληρώνεται σε 30 λεπτά, με δωρεάν έλεγχο υγείας πριν και μετά.
+      </p>
+
+      <h2 className="text-xl font-display font-bold text-foreground mt-8 mb-3">
+        Τι περιλαμβάνει κάθε επισκευή iPhone 15 Pro Max
+      </h2>
+      <ul className="list-disc pl-5 space-y-1 text-sm">
+        <li>Δωρεάν τεχνική διάγνωση πριν από κάθε εργασία</li>
+        <li>Αλλαγή οθόνης ή μπαταρίας με ανταλλακτικά υψηλής ποιότητας</li>
+        <li>Έλεγχος Face ID, αισθητήρων και πλήρους λειτουργίας μετά την επισκευή</li>
+        <li>Γραπτή εγγύηση 6 έως 24 μήνες (ανάλογα με το ανταλλακτικό)</li>
+        <li>Παράδοση σε 30 λεπτά (μπορείς να περιμένεις στο κατάστημα)</li>
+        <li>Τελική τιμή με ανταλλακτικό + εργασία + εγγύηση (χωρίς κρυφές χρεώσεις)</li>
+      </ul>
+
+      <h2 className="text-xl font-display font-bold text-foreground mt-8 mb-3">
+        Περιοχές που εξυπηρετούμε — Service iPhone κοντά σας
+      </h2>
+      <p>
+        Το κατάστημά μας βρίσκεται στο Μοσχάτο (Στρατηγού Μακρυγιάννη 109, 18345) και εξυπηρετούμε άμεσα Μοσχάτο, Ταύρο, Καλλιθέα και Πειραιά.
+      </p>
+      <h3 className="text-lg font-display font-bold text-foreground mt-6 mb-2">
+        Πανελλαδική αποστολή μέσω Box Now
+      </h3>
+      <p>
+        Για όλη την υπόλοιπη Ελλάδα παραλαμβάνουμε και παραδίδουμε μέσω Box Now. Η επισκευή γίνεται την ίδια μέρα παραλαβής και επιστρέφεται σε 24 ώρες.
+      </p>
+
+      <h2 className="text-xl font-display font-bold text-foreground mt-8 mb-3">
+        Γιατί να επιλέξεις το HiTech Doctor για service iPhone στο Μοσχάτο;
+      </h2>
+      <ul className="list-disc pl-5 space-y-1 text-sm">
+        <li>Εξειδίκευση σε επισκευή iPhone, Samsung, iPad, PlayStation</li>
+        <li>Αποτέλεσμα σε 30 λεπτά — επί τόπου</li>
+        <li>Γραπτή εγγύηση σε κάθε επισκευή</li>
+        <li>Διαφανείς τιμές χωρίς εκπλήξεις</li>
+        <li>Δωρεάν τεχνική διάγνωση — ακόμα κι αν δεν προχωρήσεις</li>
+      </ul>
+      <p>
+        Δες πώς κάνουμε επισκευές iPhone στο κανάλι μας:{" "}
+        <a href="https://www.youtube.com/@HitechDoctor">youtube.com/@HitechDoctor</a>
+      </p>
+
+      <h2 className="text-xl font-display font-bold text-foreground mt-8 mb-3">
+        Συχνές Ερωτήσεις — Επισκευή iPhone 15 Pro Max
+      </h2>
+      <h3 className="text-lg font-display font-bold text-foreground mt-5 mb-2">
+        Πόσο κοστίζει η αλλαγή οθόνης iPhone 15 Pro Max;
+      </h3>
+      <p>
+        Η αντικατάσταση οθόνης iPhone 15 Pro Max ξεκινά από €220 (Standard), €330 (Refurbished Premium — προτεινόμενο) και €418 (Γνήσια Apple OEM). Στην τιμή περιλαμβάνεται ανταλλακτικό, εργασία και εγγύηση.
+      </p>
+      <h3 className="text-lg font-display font-bold text-foreground mt-5 mb-2">
+        Χάνεται το Face ID μετά από αλλαγή οθόνης;
+      </h3>
+      <p>
+        Όχι. Με τα κατάλληλα ανταλλακτικά και σωστή εγκατάσταση, το Face ID διατηρείται πλήρως. Πάντα γίνεται έλεγχος Face ID μετά την επισκευή.
+      </p>
+      <h3 className="text-lg font-display font-bold text-foreground mt-5 mb-2">
+        Πόσο χρόνο παίρνει η επισκευή;
+      </h3>
+      <p>
+        Και η αλλαγή οθόνης και η αλλαγή μπαταρίας ολοκληρώνονται σε 30 λεπτά. Μπορείς να περιμένεις στο κατάστημά μας στο Μοσχάτο.
+      </p>
+    </div>
+  );
+}
+
 function SeoLoremIpsum({ model }: { model: IPhoneModel }) {
   return (
     <div className="prose prose-sm prose-invert max-w-none mt-8 text-muted-foreground leading-relaxed">
@@ -287,8 +402,13 @@ export default function IPhoneRepairDetail() {
     );
   }
 
-  const pageTitle = `Επισκευή ${model.name} — Τιμές Αλλαγής Οθόνης, Μπαταρίας & Θύρας | HiTech Doctor Αθήνα`;
-  const pageDesc = `Επισκευή ${model.name} στην Αθήνα. Αλλαγή οθόνης από €${model.screenTiers[2].price}, μπαταρία €${model.batteryTiers[2].price}, θύρα φόρτισης €${model.chargingPortPrice}. Γνήσια & premium ανταλλακτικά, εγγύηση, αποτέλεσμα 30 λεπτά.`;
+  const is15ProMax = model.slug === "15-pro-max";
+  const pageTitle = is15ProMax
+    ? "Αλλαγή Οθόνης & Μπαταρίας iPhone 15 Pro Max | Μοσχάτο"
+    : `Επισκευή ${model.name} — Τιμές Αλλαγής Οθόνης, Μπαταρίας & Θύρας | HiTech Doctor Αθήνα`;
+  const pageDesc = is15ProMax
+    ? "Αλλαγή οθόνης & μπαταρίας iPhone 15 Pro Max στο Μοσχάτο από €220. Εξυπηρέτηση Ταύρος, Καλλιθέα, Πειραιάς & πανελλαδικά μέσω Box Now. Γραπτή εγγύηση. ☎ 6981 882 005"
+    : `Επισκευή ${model.name} στην Αθήνα. Αλλαγή οθόνης από €${model.screenTiers[2].price}, μπαταρία €${model.batteryTiers[2].price}, θύρα φόρτισης €${model.chargingPortPrice}. Γνήσια & premium ανταλλακτικά, εγγύηση, αποτέλεσμα 30 λεπτά.`;
   const canonicalUrl = `https://hitechdoctor.com/episkevi-iphone/${model.slug}`;
 
   const selectedTier = activeTab === "screen"
@@ -340,6 +460,47 @@ export default function IPhoneRepairDetail() {
     ],
   };
 
+  const faqLd = is15ProMax
+    ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Πόσο κοστίζει η αλλαγή οθόνης iPhone 15 Pro Max;",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Η αντικατάσταση οθόνης iPhone 15 Pro Max ξεκινά από €220 (Standard), €330 (Refurbished Premium) και €418 (Γνήσια Apple OEM). Στην τιμή περιλαμβάνεται ανταλλακτικό, εργασία και εγγύηση.",
+            },
+          },
+          {
+            "@type": "Question",
+            "name": "Χάνεται το Face ID μετά από αλλαγή οθόνης iPhone 15 Pro Max;",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Όχι. Με τα κατάλληλα ανταλλακτικά και σωστή εγκατάσταση, το Face ID διατηρείται πλήρως. Μετά την επισκευή γίνεται έλεγχος Face ID.",
+            },
+          },
+          {
+            "@type": "Question",
+            "name": "Τι είναι Refurbished Premium οθόνη iPhone;",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Ανακατασκευασμένη οθόνη υψηλής ποιότητας που λειτουργεί σχεδόν ταυτόσημα με γνήσια σε χαμηλότερη τιμή. Δες τον οδηγό: https://hitechdoctor.com/blog/refurbished-othones-iphone-ti-einai",
+            },
+          },
+          {
+            "@type": "Question",
+            "name": "Εξυπηρετείτε εκτός Μοσχάτου;",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Ναι. Άμεσα: Μοσχάτο, Ταύρος, Καλλιθέα, Πειραιάς. Πανελλαδικά μέσω Box Now.",
+            },
+          },
+        ],
+      }
+    : null;
+
   const breadcrumbLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -357,8 +518,16 @@ export default function IPhoneRepairDetail() {
       <Helmet>
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(breadcrumbLd)}</script>
+        {faqLd && <script type="application/ld+json">{JSON.stringify(faqLd)}</script>}
         <link rel="canonical" href={canonicalUrl} />
-        <meta name="keywords" content={`επισκευή ${model.name}, αλλαγή οθόνης ${model.name}, αλλαγή μπαταρίας ${model.name}, ${model.name} service Αθήνα`} />
+        <meta
+          name="keywords"
+          content={
+            is15ProMax
+              ? "αλλαγή οθόνης iPhone 15 Pro Max, επισκευή οθόνης iPhone 15 Pro Max, αντικατάσταση οθόνης iPhone 15 Pro Max, αλλαγή μπαταρίας iPhone 15 Pro Max, service iPhone 15 Pro Max Μοσχάτο, επισκευή iPhone Μοσχάτο, αλλαγή οθόνης iPhone Ταύρος, αλλαγή οθόνης iPhone Καλλιθέα, αλλαγή οθόνης iPhone Πειραιάς, αποστολή επισκευή iPhone Box Now"
+              : `επισκευή ${model.name}, αλλαγή οθόνης ${model.name}, αλλαγή μπαταρίας ${model.name}, ${model.name} service Αθήνα`
+          }
+        />
       </Helmet>
 
       <div className="fixed top-0 left-0 w-[500px] h-[500px] rounded-full pointer-events-none -translate-x-1/3 -translate-y-1/3"
@@ -585,7 +754,7 @@ export default function IPhoneRepairDetail() {
             )}
 
             {/* SEO Content */}
-            {model.slug === "13" ? <Seo13 /> : <SeoLoremIpsum model={model} />}
+            {model.slug === "13" ? <Seo13 /> : is15ProMax ? <Seo15ProMax /> : <SeoLoremIpsum model={model} />}
 
             {/* Other models in same series */}
             <div className="mt-10">
