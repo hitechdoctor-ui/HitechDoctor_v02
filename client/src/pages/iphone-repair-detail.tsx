@@ -181,7 +181,12 @@ function Seo15ProMax() {
       </ul>
       <p>
         💡 Δεν ξέρεις τι είναι ακριβώς η Refurbished οθόνη; Διάβασε τον οδηγό μας:{" "}
-        <a href="/blog/refurbished-othones-iphone-ti-einai">Refurbished Οθόνες iPhone: Τι Είναι & Αξίζουν;</a>
+        <a
+          href="/blog/refurbished-othones-iphone-ti-einai"
+          className="text-primary font-semibold hover:underline"
+        >
+          Refurbished Οθόνες iPhone: Τι Είναι & Αξίζουν;
+        </a>
         ;
       </p>
 
@@ -246,7 +251,12 @@ function Seo15ProMax() {
       </ul>
       <p>
         📺 Δες πώς κάνουμε επισκευές iPhone στο κανάλι μας:{" "}
-        <a href="https://www.youtube.com/@HitechDoctor" target="_blank" rel="noopener">
+        <a
+          href="https://www.youtube.com/@HitechDoctor"
+          target="_blank"
+          rel="noopener"
+          className="text-primary font-semibold hover:underline"
+        >
           youtube.com/@HitechDoctor
         </a>
         {" "}— opens in new tab
