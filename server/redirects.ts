@@ -1,4 +1,5 @@
 import type { Express, RequestHandler } from "express";
+import { GSC_404_EXACT_REDIRECTS } from "./gsc-404-redirects";
 
 /**
  * Μόνιμα 301 redirects για URLs που εμφανίστηκαν ως 404 στο Search Console (παλιό Shopify/WP).
@@ -148,6 +149,9 @@ for (const [legacy, slug] of Object.entries(IPHONE_SLUG_ALIASES)) {
   EXACT_REDIRECTS[`/iphone/${legacy}`] = `/episkevi-iphone/${slug}`;
   EXACT_REDIRECTS[`/products/${legacy}`] = `/episkevi-iphone/${slug}`;
 }
+
+/** Εξαγωγή GSC 404 — υπερισχύει (τελευταία εφαρμογή) για 1:1 URL → στόχος */
+Object.assign(EXACT_REDIRECTS, GSC_404_EXACT_REDIRECTS);
 
 export function registerRedirects(app: Express): void {
   const handler: RequestHandler = (req, res, next) => {

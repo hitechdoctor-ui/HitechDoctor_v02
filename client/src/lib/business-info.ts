@@ -1,6 +1,7 @@
 /**
  * Κεντρικά στοιχεία επιχείρησης (footer, επικοινωνία, structured data).
  * Για Google Merchant Center: ορίστε VITE_BUSINESS_AFM και VITE_BUSINESS_DOU στο .env του build.
+ * Για JSON-LD αποστολή (Merchant listings): VITE_MERCHANT_SHIPPING_RATE_EUR (π.χ. 5.00) = τυπική χρέωση μεταφοράς EUR.
  */
 const env = import.meta.env;
 

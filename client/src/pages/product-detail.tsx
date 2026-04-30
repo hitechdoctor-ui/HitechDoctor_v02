@@ -25,6 +25,7 @@ import {
   Gift, Boxes,
 } from "lucide-react";
 import type { Product } from "@shared/schema";
+import { buildMerchantReturnPolicy, buildOfferShippingDetails } from "@/lib/merchant-offer-schema";
 
 // ── iPhone models list — newest first ──────────────────────────────────────
 const IPHONE_MODELS = [
@@ -106,6 +107,8 @@ function buildJsonLd(product: Product) {
         "@type": "Organization",
         "name": "HiTech Doctor",
       },
+      shippingDetails: [buildOfferShippingDetails()],
+      hasMerchantReturnPolicy: buildMerchantReturnPolicy(),
     },
     "aggregateRating": {
       "@type": "AggregateRating",
