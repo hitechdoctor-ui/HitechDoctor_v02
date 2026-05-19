@@ -1,0 +1,66 @@
+{
+  "__meta": {
+    "source": "Innovx τιμοκατάλογος χονδρικής στο email PDF 14/05/2026 (τιμές χωρίς ΦΠΑ)",
+    "retail_multiplier": 1.3,
+    "notes": "Λιανική = χονδρική × multiplier, στρογγύλεμα 2 δεκαδικών. Οι τιμές αναφέρονται σε Ευρώ χονδρικής (όπως στο PDF). Redmi 15C 128GB Green: στο PDF υπάρχουν μόνο Midnight Black και Moonlight Blue — χρησιμοποιείται η χονδρική του Blue (87€). Προϊόντα όπως Redmi 15C 256GB 4G και άλλα που δεν εμφανίζονται ρητά στο PDF δεν αλλάζουν εδώ."
+  },
+  "samsung-galaxy-a16-4g-128gb-black": 96,
+  "samsung-galaxy-a26-5g-128gb-black": 159,
+  "samsung-galaxy-a26-5g-128gb-white": 159,
+  "samsung-galaxy-a26-5g-128gb-mint": 159,
+
+  "redmi-15c-128gb-black": 84,
+  "redmi-15c-128gb-blue": 87,
+  "redmi-15c-128gb-green": 87,
+
+  "redmi-15c-5g-128gb-black": 99,
+  "redmi-15c-5g-256gb-black": 107,
+
+  "redmi-15-nfc-4g-128gb-black": 100,
+  "redmi-15-nfc-4g-128gb-purple": 100,
+  "redmi-15-nfc-4g-128gb-titanium": 100,
+
+  "redmi-15-nfc-5g-128gb-black": 116,
+  "redmi-15-nfc-5g-128gb-titanium": 116,
+  "redmi-15-nfc-5g-128gb-green": 116,
+
+  "redmi-15-nfc-5g-256gb-black": 135,
+
+  "redmi-note-15-nfc-4g-128gb-black": 133,
+  "redmi-note-15-nfc-4g-128gb-blue": 133,
+  "redmi-note-15-nfc-4g-128gb-purple": 133,
+
+  "redmi-note-15-nfc-4g-256gb-black": 154,
+  "redmi-note-15-nfc-4g-256gb-blue": 154,
+  "redmi-note-15-nfc-4g-256gb-purple": 154,
+
+  "redmi-note-15-nfc-5g-128gb-black": 177,
+  "redmi-note-15-nfc-5g-128gb-blue": 177,
+  "redmi-note-15-nfc-5g-128gb-purple": 177,
+
+  "redmi-note-15-nfc-5g-256gb-black": 205,
+  "redmi-note-15-nfc-5g-256gb-purple": 192,
+
+  "redmi-note-15-pro-4g-nfc-256gb-black": 188,
+  "redmi-note-15-pro-4g-nfc-256gb-blue": 188,
+
+  "redmi-note-15-pro-5g-nfc-256gb-black": 250,
+  "redmi-note-15-pro-5g-nfc-256gb-blue": 237,
+  "redmi-note-15-pro-5g-nfc-256gb-titanium": 235,
+
+  "redmi-note-15-pro-5g-nfc-256gb-black-1": 286,
+  "redmi-note-15-pro-5g-nfc-256gb-blue-1": 286,
+  "redmi-note-15-pro-5g-nfc-256gb-brown": 286,
+
+  "redmi-note-15-pro-5g-nfc-512gb-black": 340,
+  "redmi-note-15-pro-5g-nfc-512gb-blue": 340,
+  "redmi-note-15-pro-5g-nfc-512gb-brown": 333,
+
+  "poco-c85-128gb-black": 83,
+  "poco-c85-128gb-purple": 82,
+  "poco-c85-128gb-green": 83,
+
+  "poco-c85-256gb-black": 95,
+  "poco-c85-256gb-purple": 95,
+  "poco-c85-256gb-green": 95
+}
