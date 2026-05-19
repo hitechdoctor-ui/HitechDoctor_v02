@@ -1,30 +1,83 @@
 import type { InferInsertModel } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { db } from './db';
 import { products, adminUsers } from '../shared/schema';
 import rawData from './seed-data/products.json';
 import bcrypt from 'bcrypt';
 
 type SeedProduct = typeof rawData[0];
+
+type SeedProductJson = SeedProduct & {
+  price_kotsovolos?: string | null;
+  price_skroutz?: string | null;
+  price_bestprice?: string | null;
+  manual_kotsovolos?: boolean | null;
+  manual_skroutz?: boolean | null;
+  manual_bestprice?: boolean | null;
+  url_kotsovolos?: string | null;
+  url_skroutz?: string | null;
+  url_bestprice?: string | null;
+};
+
 type InsertRow = InferInsertModel<typeof products>;
 
-function seedJsonToInsertRow(p: SeedProduct): InsertRow {
-  return {
+/** Τιμές ανταγωνιστών + manual flags όπως στο products.json — κοινό για insert & merge στην DB */
+function competitorFieldsFromSeedJson(p: SeedProductJson): Partial<InsertRow> | null {
+  const patch: Partial<InsertRow> = {};
+  const pk =
+    p.price_kotsovolos != null && String(p.price_kotsovolos).trim() !== ""
+      ? String(p.price_kotsovolos).trim()
+      : undefined;
+  const ps =
+    p.price_skroutz != null && String(p.price_skroutz).trim() !== ""
+      ? String(p.price_skroutz).trim()
+      : undefined;
+  const pb =
+    p.price_bestprice != null && String(p.price_bestprice).trim() !== ""
+      ? String(p.price_bestprice).trim()
+      : undefined;
+
+  if (pk != null) {
+    patch.priceKotsovolos = pk;
+    patch.manualKotsovolos = p.manual_kotsovolos ?? true;
+    if (p.url_kotsovolos?.trim()) patch.urlKotsovolos = p.url_kotsovolos.trim();
+  }
+  if (ps != null) {
+    patch.priceSkroutz = ps;
+    patch.manualSkroutz = p.manual_skroutz ?? true;
+    if (p.url_skroutz?.trim()) patch.urlSkroutz = p.url_skroutz.trim();
+  }
+  if (pb != null) {
+    patch.priceBestPrice = pb;
+    patch.manualBestPrice = p.manual_bestprice ?? true;
+    if (p.url_bestprice?.trim()) patch.urlBestPrice = p.url_bestprice.trim();
+  }
+  if (Object.keys(patch).length === 0) return null;
+  patch.lastPriceUpdate = new Date();
+  return patch;
+}
+
+function seedJsonToInsertRow(p: SeedProductJson): InsertRow {
+  const row: InsertRow = {
     name: p.name ?? '',
     description: p.description ?? '',
-    fullDescription: (p as { full_description?: string | null }).full_description ?? null,
+    fullDescription: p.full_description ?? null,
     price: String(p.price ?? '0'),
     category: p.category ?? 'other',
-    subcategory: (p as { subcategory?: string | null }).subcategory ?? null,
+    subcategory: p.subcategory ?? null,
     slug: p.slug ?? '',
-    imageUrl: (p as { image_url?: string | null }).image_url ?? null,
-    images: (p as { images?: string[] | null }).images ?? null,
-    compatibleModels: (p as { compatible_models?: string[] | null }).compatible_models ?? null,
+    imageUrl: p.image_url ?? null,
+    images: p.images ?? null,
+    compatibleModels: p.compatible_models ?? null,
     brand: p.brand ?? null,
-    color: (p as { color?: string | null }).color ?? null,
-    storage: (p as { storage?: string | null }).storage ?? null,
-    preOrder: (p as { pre_order?: boolean }).pre_order ?? false,
-    variantGroup: (p as { variant_group?: string | null }).variant_group ?? null,
+    color: p.color ?? null,
+    storage: p.storage ?? null,
+    preOrder: p.pre_order ?? false,
+    variantGroup: p.variant_group ?? null,
   };
+  const c = competitorFieldsFromSeedJson(p);
+  if (c) Object.assign(row, c);
+  return row;
 }
 
 export async function seedProductsIfEmpty() {
@@ -74,6 +127,28 @@ export async function seedCatalogNewProductsFromJson() {
     }
   } catch (err) {
     console.error('[seed] Error inserting new catalog products:', err);
+  }
+}
+
+/** Ενημερώνει τιμές Skroutz/Kotsovolos/BestPrice από το products.json για ήδη υπάρχοντα slugs */
+export async function mergeSeedCompetitorPricesFromJson() {
+  try {
+    let n = 0;
+    for (const raw of rawData) {
+      const p = raw as SeedProductJson;
+      const slug = (p.slug ?? '').trim();
+      if (!slug) continue;
+      const patch = competitorFieldsFromSeedJson(p);
+      if (!patch) continue;
+
+      await db.update(products).set(patch).where(eq(products.slug, slug));
+      n += 1;
+    }
+    if (n > 0) {
+      console.log(`[seed] Catalog: updated competitor pricing for ${n} product row(s) from products.json`);
+    }
+  } catch (err) {
+    console.error('[seed] mergeSeedCompetitorPricesFromJson:', err);
   }
 }
 

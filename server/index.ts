@@ -13,6 +13,7 @@ import { sendSubscriptionRenewalEmail } from "./email";
 import {
   seedProductsIfEmpty,
   seedCatalogNewProductsFromJson,
+  mergeSeedCompetitorPricesFromJson,
   seedAdminIfEmpty,
 } from "./seed";
 
@@ -177,6 +178,7 @@ async function checkSubscriptionExpiry() {
           try {
             await seedProductsIfEmpty();
             await seedCatalogNewProductsFromJson();
+            await mergeSeedCompetitorPricesFromJson();
             await seedAdminIfEmpty();
           } catch (e) {
             console.error("[seed] Startup seed error:", e);
