@@ -5,6 +5,7 @@ import {
   Gamepad2, Tablet, LogIn, MapPin, Shield, Cable, Tag, Info,
   MessageCircle, HelpCircle, Globe, Download, ScanSearch,
   Truck, Code2,
+  Headphones,
 } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -31,6 +32,7 @@ const CATEGORY_META: Record<string, { label: string; icon: React.ElementType; co
   "screen-protectors":{ label: "Τζάμια Προστασίας",  icon: Shield,     color: "text-sky-400",      bg: "bg-sky-500/10 hover:bg-sky-500/20 border-sky-500/20",         tab: "screen-protectors" },
   cases:             { label: "Θήκες Κινητών",        icon: Package,    color: "text-violet-400",   bg: "bg-violet-500/10 hover:bg-violet-500/20 border-violet-500/20", tab: "cases" },
   chargers:          { label: "Φορτιστές & Καλώδια",  icon: Cable,      color: "text-orange-400",   bg: "bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/20", tab: "chargers" },
+  headphones:        { label: "Ασύρματα ακουστικά", icon: Headphones, color: "text-cyan-400",     bg: "bg-cyan-500/10 hover:bg-cyan-500/20 border-cyan-500/20",         tab: "headphones" },
   laptop:            { label: "Μεταχειρισμένα Laptop",    icon: Laptop,   color: "text-emerald-400",  bg: "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20", tab: "laptop" },
   desktop:           { label: "Μεταχειρισμένοι Υπολογιστές", icon: Monitor, color: "text-violet-400", bg: "bg-violet-500/10 hover:bg-violet-500/20 border-violet-500/20", tab: "desktop" },
 };
@@ -147,6 +149,7 @@ export function Navbar() {
     { label: "Τζάμια Προστασίας", href: "/eshop?tab=screen-protectors", icon: Shield,     color: "text-sky-400",    bg: "bg-sky-500/10 hover:bg-sky-500/20 border-sky-500/20" },
     { label: "Θήκες Κινητών",     href: "/eshop?tab=cases",             icon: Package,    color: "text-violet-400", bg: "bg-violet-500/10 hover:bg-violet-500/20 border-violet-500/20" },
     { label: "Φορτιστές & Καλώδια",href: "/eshop?tab=chargers",         icon: Cable,      color: "text-orange-400", bg: "bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/20" },
+    { label: "Ασύρματα ακουστικά", href: "/eshop?tab=headphones",       icon: Headphones, color: "text-cyan-400",    bg: "bg-cyan-500/10 hover:bg-cyan-500/20 border-cyan-500/20" },
   ];
   const eshopCategories = dynamicCategories.length > 0 ? dynamicCategories : fallbackCategories;
 

@@ -12,7 +12,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo, useEffect, Fragment } from "react";
 import { useSearch } from "wouter";
-import { ShoppingCart, Package, Shield, Smartphone, Cable, Tag, X, SlidersHorizontal, HardDrive, Palette, SlidersVertical, ChevronRight, Laptop, Monitor } from "lucide-react";
+import {
+  ShoppingCart,
+  Package,
+  Shield,
+  Smartphone,
+  Cable,
+  Tag,
+  X,
+  SlidersHorizontal,
+  HardDrive,
+  Palette,
+  SlidersVertical,
+  ChevronRight,
+  Laptop,
+  Monitor,
+  Headphones,
+} from "lucide-react";
 import { Link } from "wouter";
 import type { Product } from "@shared/schema";
 import { PriceDisclaimer } from "@/components/price-disclaimer";
@@ -24,6 +40,7 @@ const COLOR_HEX: Record<string, string> = {
   "jet black": "#d1d5db",
   "awesome black": "#d1d5db",
   white: "#f9fafb",
+  λευκό: "#f9fafb",
   "awesome white": "#f9fafb",
   silver: "#e2e8f0",
   titanium: "#b0b8c4",
@@ -178,7 +195,15 @@ const IPHONE_MODELS = [
 ];
 
 // ── Category tabs ──────────────────────────────────────────────────────────
-type TabId = "mobile" | "screen-protectors" | "cases" | "chargers" | "laptop" | "desktop" | "";
+type TabId =
+  | "mobile"
+  | "screen-protectors"
+  | "cases"
+  | "chargers"
+  | "headphones"
+  | "laptop"
+  | "desktop"
+  | "";
 
 interface Tab {
   id: TabId;
@@ -192,6 +217,7 @@ const TABS: Tab[] = [
   { id: "screen-protectors", label: "Τζάμια Προστασίας", icon: Shield },
   { id: "cases", label: "Θήκες", icon: Smartphone },
   { id: "chargers", label: "Φορτιστές & Καλώδια", icon: Cable },
+  { id: "headphones", label: "Ασύρματα ακουστικά", icon: Headphones },
   { id: "laptop", label: "Laptop", icon: Laptop },
   { id: "desktop", label: "Desktop PC", icon: Monitor },
 ];
@@ -200,6 +226,7 @@ const SUBCATEGORY_LABELS: Record<string, string> = {
   "screen-protectors": "Τζάμι Προστασίας",
   cases: "Θήκη",
   chargers: "Φορτιστής / Καλώδιο",
+  headphones: "Ασύρματα ακουστικά",
   mobile: "Κινητό",
 };
 
@@ -695,7 +722,11 @@ export default function EShop() {
   const isLaptopTab = activeTab === "laptop";
   const isDesktopTab = activeTab === "desktop";
   const isComputerTab = isLaptopTab || isDesktopTab;
-  const isSubcategoryTab = activeTab === "screen-protectors" || activeTab === "cases" || activeTab === "chargers";
+  const isSubcategoryTab =
+    activeTab === "screen-protectors" ||
+    activeTab === "cases" ||
+    activeTab === "chargers" ||
+    activeTab === "headphones";
 
   const fetchCategory = isMobileTab ? "mobile" : isLaptopTab ? "laptop" : isDesktopTab ? "desktop" : (isSubcategoryTab ? "accessory" : undefined);
   const fetchSubcategory = isSubcategoryTab ? activeTab : undefined;

@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { RepairTrackerSection } from "@/components/repair-tracker-section";
-import { Wrench, Package, Shield, Phone, Mail, MapPin, Facebook, Instagram, ExternalLink, Smartphone, Cable, Laptop, Monitor } from "lucide-react";
+import { Wrench, Package, Shield, Phone, Mail, MapPin, Facebook, Instagram, ExternalLink, Smartphone, Cable, Laptop, Monitor, Headphones } from "lucide-react";
 import { SiTiktok, SiViber } from "react-icons/si";
 import { buildViberUrl } from "@/lib/viber";
 import {
@@ -62,6 +62,7 @@ const CATEGORY_META: Record<string, { label: string; icon: React.ElementType; ta
   "screen-protectors":{ label: "Τζάμια Προστασίας",    icon: Shield,     tab: "screen-protectors" },
   cases:              { label: "Θήκες Κινητών",         icon: Package,    tab: "cases" },
   chargers:           { label: "Φορτιστές & Καλώδια",  icon: Cable,      tab: "chargers" },
+  headphones:         { label: "Ασύρματα ακουστικά",   icon: Headphones, tab: "headphones" },
   laptop:             { label: "Μεταχειρισμένα Laptop",          icon: Laptop,   tab: "laptop" },
   desktop:            { label: "Μεταχειρισμένοι Υπολογιστές", icon: Monitor,  tab: "desktop" },
 };
@@ -71,6 +72,7 @@ const FALLBACK_ESHOP = [
   { label: "Τζάμια Προστασίας",    href: "/eshop?tab=screen-protectors" },
   { label: "Θήκες Κινητών",        href: "/eshop?tab=cases" },
   { label: "Φορτιστές & Καλώδια",  href: "/eshop?tab=chargers" },
+  { label: "Ασύρματα ακουστικά",   href: "/eshop?tab=headphones" },
   { label: "Μεταχειρισμένα Laptop",          href: "/eshop?tab=laptop" },
   { label: "Μεταχειρισμένοι Υπολογιστές", href: "/eshop?tab=desktop" },
 ];

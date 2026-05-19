@@ -10,7 +10,11 @@ import { createServer } from "http";
 import { exec } from "node:child_process";
 import { storage } from "./storage";
 import { sendSubscriptionRenewalEmail } from "./email";
-import { seedProductsIfEmpty, seedAdminIfEmpty } from "./seed";
+import {
+  seedProductsIfEmpty,
+  seedCatalogNewProductsFromJson,
+  seedAdminIfEmpty,
+} from "./seed";
 
 const app = express();
 /** Για σωστό client IP πίσω από reverse proxy (π.χ. nginx) — χρησιμοποιείται στο analytics geolocation */
@@ -169,10 +173,17 @@ async function checkSubscriptionExpiry() {
           exec(openCmd, () => {});
         }
         
-        seedProductsIfEmpty();
-        seedAdminIfEmpty();
-        checkSubscriptionExpiry();
-        setInterval(checkSubscriptionExpiry, 24 * 60 * 60 * 1000);
+        void (async () => {
+          try {
+            await seedProductsIfEmpty();
+            await seedCatalogNewProductsFromJson();
+            await seedAdminIfEmpty();
+          } catch (e) {
+            console.error("[seed] Startup seed error:", e);
+          }
+          void checkSubscriptionExpiry();
+          setInterval(checkSubscriptionExpiry, 24 * 60 * 60 * 1000);
+        })();
       }
     );
   } catch (error) {
