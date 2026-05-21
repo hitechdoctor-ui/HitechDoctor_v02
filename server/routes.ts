@@ -49,6 +49,7 @@ import {
   guessDeviceModelFromMessages,
 } from "@shared/repair-assistant";
 import { runSupplierSyncJob, syncJobs, newSyncJobId } from "./supplier-sync";
+import { isPrivilegedAdminRole } from "./admin-auth";
 
 const BCRYPT_ROUNDS = 12;
 
@@ -65,7 +66,9 @@ async function getAdminUserFromRequest(req: Request): Promise<AdminUser | null> 
     const decoded = Buffer.from(token, "base64").toString("utf8");
     const payload = JSON.parse(decoded) as { email?: string };
     if (!payload?.email) return null;
-    return (await storage.getAdminByEmail(payload.email)) ?? null;
+    const user = await storage.getAdminByEmail(payload.email);
+    if (!user || !isPrivilegedAdminRole(user.role)) return null;
+    return user;
   } catch {
     return null;
   }
@@ -205,6 +208,12 @@ export async function registerRoutes(
       if (!user) return res.status(401).json({ ok: false, message: "Λάθος email ή κωδικός" });
       const valid = await bcrypt.compare(password, user.passwordHash);
       if (!valid) return res.status(401).json({ ok: false, message: "Λάθος email ή κωδικός" });
+      if (!isPrivilegedAdminRole(user.role)) {
+        return res.status(403).json({
+          ok: false,
+          message: "Ο λογαριασμός δεν έχει πρόσβαση στη διαχείριση. Επικοινωνήστε με την HiTech Doctor.",
+        });
+      }
       const payload = JSON.stringify({ id: user.id, email: user.email, name: user.name, role: user.role, ts: Date.now() });
       const token = Buffer.from(payload).toString("base64");
       res.json({ ok: true, token, name: user.name, email: user.email, role: user.role });
@@ -223,7 +232,7 @@ export async function registerRoutes(
       const payload = JSON.parse(decoded);
       if (!payload?.email) return res.status(401).json({ ok: false });
       const user = await storage.getAdminByEmail(payload.email);
-      if (!user) return res.status(401).json({ ok: false });
+      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ ok: false });
       return res.json({ ok: true, id: user.id, email: user.email, name: user.name, role: user.role });
     } catch {
       res.status(401).json({ ok: false });
@@ -249,7 +258,8 @@ export async function registerRoutes(
         name: z.string().min(2),
         email: z.string().email(),
         password: z.string().min(8, "Ο κωδικός πρέπει να έχει τουλάχιστον 8 χαρακτήρες"),
-        role: z.enum(["admin", "superadmin", "staff"]).default("admin"),
+        /** Νέοι λογαριασμός από το panel: προεπιλογή staff — όχι admin αυτόματα */
+        role: z.enum(["admin", "superadmin", "staff"]).default("staff"),
       });
       const data = schema.parse(req.body);
       const existing = await storage.getAdminByEmail(data.email);
@@ -1185,7 +1195,7 @@ export async function registerRoutes(
       const payload = JSON.parse(decoded);
       if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
       const user = await storage.getAdminByEmail(payload.email);
-      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
       if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const contacts = await fetchHubSpotContacts();
       res.json(contacts);
@@ -1207,7 +1217,7 @@ export async function registerRoutes(
       const payload = JSON.parse(decoded);
       if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
       const user = await storage.getAdminByEmail(payload.email);
-      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
       if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       res.json(await storage.getSuppliers());
     } catch {
@@ -1224,7 +1234,7 @@ export async function registerRoutes(
       const payload = JSON.parse(decoded);
       if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
       const user = await storage.getAdminByEmail(payload.email);
-      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
       if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const body = insertSupplierSchema.parse(req.body);
       const row = await storage.createSupplier(body);
@@ -1247,7 +1257,7 @@ export async function registerRoutes(
       const payload = JSON.parse(decoded);
       if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
       const user = await storage.getAdminByEmail(payload.email);
-      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
       if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const id = parseInt(req.params.id, 10);
       if (Number.isNaN(id)) return res.status(400).json({ message: "Μη έγκυρο id" });
@@ -1279,7 +1289,7 @@ export async function registerRoutes(
       const payload = JSON.parse(decoded);
       if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
       const user = await storage.getAdminByEmail(payload.email);
-      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
       if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const id = parseInt(req.params.id, 10);
       if (Number.isNaN(id)) return res.status(400).json({ message: "Μη έγκυρο id" });
@@ -1300,7 +1310,7 @@ export async function registerRoutes(
       const payload = JSON.parse(decoded);
       if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
       const user = await storage.getAdminByEmail(payload.email);
-      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
       if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const { supplierId } = z.object({ supplierId: z.number().int().positive().optional() }).parse(req.body ?? {});
       const jobId = newSyncJobId();
@@ -1333,7 +1343,7 @@ export async function registerRoutes(
       const payload = JSON.parse(decoded);
       if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
       const user = await storage.getAdminByEmail(payload.email);
-      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
       if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const job = syncJobs.get(req.params.jobId);
       if (!job) return res.status(404).json({ message: "Άγνωστη εργασία" });
@@ -1352,7 +1362,7 @@ export async function registerRoutes(
       const payload = JSON.parse(decoded);
       if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
       const user = await storage.getAdminByEmail(payload.email);
-      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
       if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       let sid: number | undefined;
       const q = req.query.supplierId;
@@ -1376,7 +1386,7 @@ export async function registerRoutes(
       const payload = JSON.parse(decoded);
       if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
       const user = await storage.getAdminByEmail(payload.email);
-      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
       if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       res.json(await storage.getAllRepairPriceOverrides());
     } catch {
@@ -1403,7 +1413,7 @@ export async function registerRoutes(
       const payload = JSON.parse(decoded);
       if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
       const user = await storage.getAdminByEmail(payload.email);
-      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
       if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const id = z.coerce.number().int().positive().parse(req.params.id);
       const body = repairPriceOverridePatchSchema.parse(req.body);
@@ -1443,7 +1453,7 @@ export async function registerRoutes(
       const payload = JSON.parse(decoded);
       if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
       const user = await storage.getAdminByEmail(payload.email);
-      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
       if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const id = z.coerce.number().int().positive().parse(req.params.id);
       const ok = await storage.deleteRepairPriceOverride(id);
@@ -1467,7 +1477,7 @@ export async function registerRoutes(
       const payload = JSON.parse(decoded);
       if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
       const user = await storage.getAdminByEmail(payload.email);
-      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
       if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const body = insertRepairPriceOverrideSchema.parse(req.body);
       const row = await storage.upsertRepairPriceOverride(body);
@@ -1494,7 +1504,7 @@ export async function registerRoutes(
         const payload = JSON.parse(decoded);
         if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
         const user = await storage.getAdminByEmail(payload.email);
-        if (!user) return res.status(401).json({ message: "Unauthorized" });
+        if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
         if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
         if (!req.file?.buffer?.length) return res.status(400).json({ message: "Απαιτείται αρχείο PDF" });
         mkdirSync(FIXMOBILE_UPLOAD_DIR, { recursive: true });
@@ -1517,7 +1527,7 @@ export async function registerRoutes(
       const payload = JSON.parse(decoded);
       if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
       const user = await storage.getAdminByEmail(payload.email);
-      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
       if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const result = await runFixmobilePdfSyncFromDisk();
       res.json(result);
@@ -1537,7 +1547,7 @@ export async function registerRoutes(
       const payload = JSON.parse(decoded);
       if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
       const user = await storage.getAdminByEmail(payload.email);
-      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
       if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const stats = await storage.getRepairPriceOverrideStats();
       console.log("[repair-price-override-stats]", JSON.stringify(stats));
@@ -1557,7 +1567,7 @@ export async function registerRoutes(
       const payload = JSON.parse(decoded);
       if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
       const user = await storage.getAdminByEmail(payload.email);
-      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
       if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const stats = await storage.getIpswDownloadStats();
       res.json(stats);
@@ -1678,7 +1688,7 @@ export async function registerRoutes(
       const payload = JSON.parse(decoded);
       if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
       const user = await storage.getAdminByEmail(payload.email);
-      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
       if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const rows = await storage.getProductOfferInterests();
       res.json(rows);
@@ -1816,7 +1826,7 @@ export async function registerRoutes(
       const payload = JSON.parse(decoded);
       if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
       const user = await storage.getAdminByEmail(payload.email);
-      if (!user) return res.status(401).json({ message: "Unauthorized" });
+      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
       if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const rows = await storage.getBoxnowDropoffRequests();
       res.json(rows);

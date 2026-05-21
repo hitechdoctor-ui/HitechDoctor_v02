@@ -168,7 +168,8 @@ export const adminUsers = pgTable("admin_users", {
   name: text("name").notNull(),
   email: text("email").notNull(),
   passwordHash: text("password_hash").notNull(),
-  role: text("role").notNull().default("admin"),
+  /** Πρόσβαση admin μόνο για superadmin | admin | staff — όχι αυτόματα σε νέες εγγραφές */
+  role: text("role").notNull().default("customer"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (t) => [uniqueIndex("admin_users_email_idx").on(t.email)]);
 

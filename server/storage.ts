@@ -736,7 +736,7 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async createAdminUser(name: string, email: string, passwordHash: string, role = "admin"): Promise<Omit<AdminUser, "passwordHash">> {
+  async createAdminUser(name: string, email: string, passwordHash: string, role = "customer"): Promise<Omit<AdminUser, "passwordHash">> {
     const [created] = await db.insert(adminUsers).values({ name, email, passwordHash, role }).returning();
     const { passwordHash: _ph, ...rest } = created;
     return rest;

@@ -10,11 +10,9 @@ import createMemoryStore from "memorystore";
 import { Pool } from "pg";
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import bcrypt from "bcrypt";
-import { randomBytes } from "node:crypto";
 import { storage } from "./storage";
+import { isPrivilegedAdminRole } from "./admin-auth";
 
-const BCRYPT_ROUNDS = 12;
 const CALLBACK_PATH = "/api/auth/google/callback";
 
 declare global {
@@ -121,18 +119,16 @@ export function setupGoogleOAuth(app: Express): void {
           const email = profile.emails?.[0]?.value?.toLowerCase()?.trim();
           if (!email) return done(new Error("no_email"));
 
-          const name =
-            profile.displayName?.trim() ||
-            [profile.name?.givenName, profile.name?.familyName].filter(Boolean).join(" ").trim() ||
-            email.split("@")[0]!;
-
-          let user = await storage.getAdminByEmail(email);
+          const user = await storage.getAdminByEmail(email);
+          /** Μην δημιουργείς ποτέ admin από OAuth — σύνδεση μόνο αν υπάρχει ήδη προνομιούχος λογαριασμός */
           if (!user) {
-            const randomHash = await bcrypt.hash(randomBytes(48).toString("hex"), BCRYPT_ROUNDS);
-            await storage.createAdminUser(name, email, randomHash, "admin");
-            user = await storage.getAdminByEmail(email);
+            console.warn("[google-oauth] Απόρριψη — το email δεν αντιστοιχεί σε προσκεκλημένο διαχειριστικό λογαριασμό:", email);
+            return done(null, false);
           }
-          if (!user) return done(new Error("provision_failed"));
+          if (!isPrivilegedAdminRole(user.role)) {
+            console.warn("[google-oauth] Απόρριψη — ο ρόλος δεν επιτρέπει πρόσβαση στο admin:", email, user.role);
+            return done(null, false);
+          }
 
           done(null, {
             id: user.id,

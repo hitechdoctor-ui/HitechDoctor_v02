@@ -36,7 +36,7 @@ export default function AdminUsersPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [changePassId, setChangePassId] = useState<number | null>(null);
   const [showPass, setShowPass] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", password: "", role: "admin" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", role: "staff" });
   const [newPass, setNewPass] = useState("");
   const [showNewPass, setShowNewPass] = useState(false);
 
@@ -49,7 +49,7 @@ export default function AdminUsersPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       setShowCreate(false);
-      setForm({ name: "", email: "", password: "", role: "admin" });
+      setForm({ name: "", email: "", password: "", role: "staff" });
       toast({ title: "Ο διαχειριστής δημιουργήθηκε" });
     },
     onError: (err: any) => toast({ title: parseApiError(err), variant: "destructive" }),
