@@ -155,9 +155,14 @@ export interface IStorage {
   // Admin Users
   getAdminUsers(): Promise<Omit<AdminUser, "passwordHash">[]>;
   getAdminByEmail(email: string): Promise<AdminUser | undefined>;
+  getAdminUserById(id: number): Promise<AdminUser | undefined>;
   createAdminUser(name: string, email: string, passwordHash: string, role?: string): Promise<Omit<AdminUser, "passwordHash">>;
   deleteAdminUser(id: number): Promise<void>;
   updateAdminPassword(id: number, passwordHash: string): Promise<void>;
+  updateAdminUser(
+    id: number,
+    data: Partial<Pick<AdminUser, "name" | "email" | "role">>
+  ): Promise<Omit<AdminUser, "passwordHash">>;
 
   // IPSW downloads
   recordIpswDownload(data: {
@@ -736,6 +741,11 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getAdminUserById(id: number): Promise<AdminUser | undefined> {
+    const [user] = await db.select().from(adminUsers).where(eq(adminUsers.id, id));
+    return user;
+  }
+
   async createAdminUser(name: string, email: string, passwordHash: string, role = "customer"): Promise<Omit<AdminUser, "passwordHash">> {
     const [created] = await db.insert(adminUsers).values({ name, email, passwordHash, role }).returning();
     const { passwordHash: _ph, ...rest } = created;
@@ -748,6 +758,16 @@ export class DatabaseStorage implements IStorage {
 
   async updateAdminPassword(id: number, passwordHash: string): Promise<void> {
     await db.update(adminUsers).set({ passwordHash }).where(eq(adminUsers.id, id));
+  }
+
+  async updateAdminUser(
+    id: number,
+    data: Partial<Pick<AdminUser, "name" | "email" | "role">>
+  ): Promise<Omit<AdminUser, "passwordHash">> {
+    const [updated] = await db.update(adminUsers).set(data).where(eq(adminUsers.id, id)).returning();
+    if (!updated) throw new Error("Admin user not found");
+    const { passwordHash: _ph, ...safe } = updated;
+    return safe;
   }
 
   // --- IPSW download tracking ---

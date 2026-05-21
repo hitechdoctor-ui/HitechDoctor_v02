@@ -4,6 +4,7 @@ import { db } from './db';
 import { products, adminUsers } from '../shared/schema';
 import rawData from './seed-data/products.json';
 import bcrypt from 'bcrypt';
+import { getSuperAdminEmail } from '@shared/admin-roles';
 
 type SeedProduct = typeof rawData[0];
 
@@ -157,13 +158,14 @@ export async function seedAdminIfEmpty() {
     const existing = await db.select({ id: adminUsers.id }).from(adminUsers).limit(1);
     if (existing.length > 0) return;
     const hash = await bcrypt.hash('Q@wertyuiop1975', 12);
+    const ownerEmail = getSuperAdminEmail();
     await db.insert(adminUsers).values({
       name: 'HiTech Doctor Admin',
-      email: 'hitechdoctor@gmail.com',
+      email: ownerEmail,
       passwordHash: hash,
       role: 'superadmin',
     });
-    console.log('[seed] Superadmin created: hitechdoctor@gmail.com');
+    console.log('[seed] Superadmin created:', ownerEmail);
   } catch (err) {
     console.error('[seed] Error seeding admin:', err);
   }

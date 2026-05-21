@@ -470,14 +470,24 @@ function ProductOfferInterestsCustomersSection({
 type RepairRevenueRow = { id: number; createdAt: string; total: number; customerName: string; email: string };
 
 export default function AdminDashboard() {
+  const { data: adminMe } = useQuery({
+    queryKey: ["/api/admin/me"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/me", { headers: getAdminAuthHeaders() });
+      return res.json() as Promise<{ ok: boolean; superAdmin?: boolean }>;
+    },
+  });
+  const superAdmin = !!(adminMe?.ok && adminMe.superAdmin);
+
   const { data: orders } = useOrders();
   const { data: products } = useProducts();
-  const { data: customers } = useCustomers();
+  const { data: customers } = useCustomers({ enabled: superAdmin });
   const { data: repairRequests } = useQuery<RepairRequest[]>({
     queryKey: ["/api/admin/repair-requests"],
   });
   const { data: repairRevenue = [] } = useQuery<RepairRevenueRow[]>({
     queryKey: QUERY_FINANCIAL_REPAIR_REVENUE,
+    enabled: superAdmin,
     queryFn: () =>
       fetch("/api/financial/repair-revenue", {
         credentials: "include",
@@ -489,6 +499,7 @@ export default function AdminDashboard() {
   });
   const { data: offerInterests = [], isLoading: offerInterestsLoading } = useQuery<ProductOfferInterest[]>({
     queryKey: ["admin-product-offer-interests"],
+    enabled: superAdmin,
     queryFn: async () => {
       const res = await fetch("/api/admin/product-offer-interests", {
         headers: getAdminAuthHeaders(),
@@ -507,26 +518,38 @@ export default function AdminDashboard() {
       const created = new Date(order.createdAt);
       if (created >= todayStart) sum += Number(order.totalAmount);
     }
-    for (const r of repairRevenue) {
-      const created = new Date(r.createdAt);
-      if (created >= todayStart) sum += r.total;
+    if (superAdmin) {
+      for (const r of repairRevenue) {
+        const created = new Date(r.createdAt);
+        if (created >= todayStart) sum += r.total;
+      }
     }
     return sum;
-  }, [orders, repairRevenue]);
+  }, [orders, repairRevenue, superAdmin]);
 
   const pendingRepairs = repairRequests?.filter((r) => r.status === "pending").length ?? 0;
 
-  const stats = useMemo(
-    () => [
+  const stats = useMemo(() => {
+    const revenueToday = todayRevenue;
+    const rows: Array<{
+      title: string;
+      value: string | number;
+      icon: typeof Euro;
+      color: string;
+      subtext?: string;
+      subtextClass?: string;
+    }> = [
       {
         title: "Έσοδα Σήμερα",
-        value: new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR" }).format(todayRevenue),
+        value: new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR" }).format(revenueToday),
         icon: Euro,
         color: "text-green-400",
       },
       { title: "Παραγγελίες", value: orders?.length ?? 0, icon: ShoppingCart, color: "text-blue-400" },
       { title: "Προϊόντα", value: products?.length ?? 0, icon: Package, color: "text-purple-400" },
-      {
+    ];
+    if (superAdmin) {
+      rows.push({
         title: "Πελάτες",
         value: customers?.length ?? 0,
         icon: Users,
@@ -536,17 +559,26 @@ export default function AdminDashboard() {
             ? `${offerInterests.length} ${offerInterests.length === 1 ? "αίτημα" : "αιτήματα"} «καλύτερη προσφορά» eShop`
             : undefined,
         subtextClass: "text-orange-400/95",
-      },
-      {
-        title: "Αιτήματα Επισκευής",
-        value: repairRequests?.length ?? 0,
-        icon: Wrench,
-        color: "text-primary",
-        subtext: pendingRepairs > 0 ? `${pendingRepairs} νέα` : undefined,
-      },
-    ],
-    [todayRevenue, orders, products, customers, offerInterests.length, repairRequests, pendingRepairs]
-  );
+      });
+    }
+    rows.push({
+      title: "Αιτήματα Επισκευής",
+      value: repairRequests?.length ?? 0,
+      icon: Wrench,
+      color: "text-primary",
+      subtext: pendingRepairs > 0 ? `${pendingRepairs} νέα` : undefined,
+    });
+    return rows;
+  }, [
+    todayRevenue,
+    orders,
+    products,
+    customers,
+    offerInterests.length,
+    repairRequests?.length,
+    pendingRepairs,
+    superAdmin,
+  ]);
 
   return (
     <AdminLayout>
@@ -557,7 +589,7 @@ export default function AdminDashboard() {
         <p className="text-muted-foreground mt-1">Αιτήματα επισκευής, προϊόντα eShop και στατιστικά</p>
       </div>
 
-      <AnalyticsDashboard />
+      {superAdmin ? <AnalyticsDashboard /> : null}
 
       {/* ── Stats ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
@@ -583,10 +615,11 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* ── Πελάτες eShop: καλύτερη προσφορά ── */}
-      <div className="mb-6">
-        <ProductOfferInterestsCustomersSection rows={offerInterests} isLoading={offerInterestsLoading} />
-      </div>
+      {superAdmin ? (
+        <div className="mb-6">
+          <ProductOfferInterestsCustomersSection rows={offerInterests} isLoading={offerInterestsLoading} />
+        </div>
+      ) : null}
 
       {/* ── Repair Requests (service CRM) ── */}
       <div className="mb-6">

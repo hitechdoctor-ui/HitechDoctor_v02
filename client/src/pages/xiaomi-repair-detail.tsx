@@ -22,6 +22,7 @@ import {
   REPAIR_PRICE_ROW_BOOK,
   REPAIR_SIDEBAR_ESHOP,
 } from "@/lib/repair-touch-ui";
+import { catalogPriceNetExVatFromGross, formatRepairEuro } from "@shared/repair-pricing";
 import {
   CheckCircle2, Monitor, Battery, Zap, ChevronRight, Phone,
   Shield, Star, Clock, Wrench, ShoppingCart, ArrowRight,
@@ -83,8 +84,11 @@ function PriceRow({ icon: Icon, label, price, note, highlight, onBook }: PriceRo
       </div>
       <div className="flex items-center gap-3 shrink-0 ml-3">
         <div className="text-right">
-          <p className={`text-2xl font-extrabold ${highlight ? "text-primary" : "text-foreground"}`}>€{price}</p>
-          <p className="text-[10px] text-muted-foreground">συμπ. ΦΠΑ</p>
+          <p className={`text-2xl font-extrabold tabular-nums ${highlight ? "text-primary" : "text-foreground"}`}>€{price}</p>
+          <p className="text-[10px] text-muted-foreground leading-tight">συμπ. ΦΠΑ</p>
+          <p className="text-[10px] text-muted-foreground tabular-nums leading-tight">
+            {formatRepairEuro(catalogPriceNetExVatFromGross(price))} χωρίς ΦΠΑ
+          </p>
         </div>
         {onBook && (
           <Button onClick={onBook} size="sm" className={`${REPAIR_PRICE_ROW_BOOK} shrink-0`}
@@ -124,7 +128,12 @@ function ScreenTierCard({ label, sublabel, price, features, selected, onClick, r
           <p className={`text-sm font-display font-bold ${selected ? "text-primary" : "text-foreground"}`}>{label}</p>
           <p className="text-[10px] text-muted-foreground mt-0.5">{sublabel}</p>
         </div>
-        <p className={`text-xl font-extrabold shrink-0 ${selected ? "text-primary" : "text-foreground"}`}>€{price}</p>
+        <div className="text-right shrink-0">
+          <p className={`text-xl font-extrabold tabular-nums ${selected ? "text-primary" : "text-foreground"}`}>€{price}</p>
+          <p className="text-[9px] text-muted-foreground tabular-nums leading-tight mt-0.5">
+            {formatRepairEuro(catalogPriceNetExVatFromGross(price))} χωρίς ΦΠΑ
+          </p>
+        </div>
       </div>
       <ul className="space-y-1">
         {features.map((f) => (
@@ -391,7 +400,12 @@ export default function XiaomiRepairDetail() {
                   <p className="text-xs text-muted-foreground">{model.screen}</p>
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
-                  <span className="text-2xl font-extrabold text-primary">€{activeScreenPrice}</span>
+                  <div className="flex flex-col items-start sm:items-end">
+                    <span className="text-2xl font-extrabold text-primary tabular-nums">€{activeScreenPrice}</span>
+                    <span className="text-[10px] text-muted-foreground tabular-nums">
+                      {formatRepairEuro(catalogPriceNetExVatFromGross(activeScreenPrice))} χωρίς ΦΠΑ
+                    </span>
+                  </div>
                   <Button onClick={() => openRepairModal(activeScreenPrice, true)} className={REPAIR_CTA_GRADIENT}
                     style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
                     data-testid="button-book-screen">

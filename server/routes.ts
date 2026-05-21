@@ -1,4 +1,4 @@
-import type { Express, Request } from "express";
+import type { Express, Request, Response } from "express";
 import type { Server } from "http";
 import { mkdirSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
@@ -49,30 +49,81 @@ import {
   guessDeviceModelFromMessages,
 } from "@shared/repair-assistant";
 import { runSupplierSyncJob, syncJobs, newSyncJobId } from "./supplier-sync";
-import { isPrivilegedAdminRole } from "./admin-auth";
+import {
+  isPrivilegedAdminRole,
+  isSuperAdminEmail,
+  isSuperAdminUser,
+  normalizeAdminEmail,
+} from "@shared/admin-roles";
 
 const BCRYPT_ROUNDS = 12;
 
-const fixmobileUpload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 30 * 1024 * 1024 },
-});
+const TOKEN_KIND_ADMIN = "admin";
+const TOKEN_KIND_PORTAL = "portal";
 
-async function getAdminUserFromRequest(req: Request): Promise<AdminUser | null> {
+type BareTokenPayload = {
+  email?: string;
+  kind?: string;
+};
+
+function parseBearerPayload(req: Request): BareTokenPayload | null {
   const auth = req.headers.authorization || "";
   const token = auth.replace(/^Bearer\s+/i, "");
   if (!token) return null;
   try {
     const decoded = Buffer.from(token, "base64").toString("utf8");
-    const payload = JSON.parse(decoded) as { email?: string };
-    if (!payload?.email) return null;
-    const user = await storage.getAdminByEmail(payload.email);
-    if (!user || !isPrivilegedAdminRole(user.role)) return null;
-    return user;
+    return JSON.parse(decoded) as BareTokenPayload;
   } catch {
     return null;
   }
 }
+
+async function resolveAdminSession(req: Request): Promise<{ user: AdminUser } | null> {
+  const payload = parseBearerPayload(req);
+  if (!payload?.email) return null;
+  const kind = payload.kind ?? TOKEN_KIND_ADMIN;
+  if (kind !== TOKEN_KIND_ADMIN) return null;
+  const user = await storage.getAdminByEmail(normalizeAdminEmail(payload.email));
+  if (!user || !isPrivilegedAdminRole(user.role)) return null;
+  return { user };
+}
+
+async function getAdminUserFromRequest(req: Request): Promise<AdminUser | null> {
+  const session = await resolveAdminSession(req);
+  return session?.user ?? null;
+}
+
+async function getPortalAccountFromRequest(req: Request): Promise<AdminUser | null> {
+  const payload = parseBearerPayload(req);
+  if (!payload?.email || payload.kind !== TOKEN_KIND_PORTAL) return null;
+  const user = await storage.getAdminByEmail(normalizeAdminEmail(payload.email));
+  if (!user || user.role !== "customer") return null;
+  return user;
+}
+
+/** Απάντηση ήδη σταλμένη — επιστρέφει true αν απορρίφθηκε το αίτημα. */
+function rejectUnlessSuperAdmin(u: AdminUser | null, res: Response): boolean {
+  if (!u) {
+    res.status(401).json({ message: "Σύνδεση απαιτείται" });
+    return true;
+  }
+  if (!isSuperAdminUser(u)) {
+    res.status(403).json({ message: "Δεν έχετε δικαίωμα πρόσβασης — μόνο ο κύριος διαχειριστής." });
+    return true;
+  }
+  return false;
+}
+
+async function requireSuperAdmin(req: Request, res: Response): Promise<AdminUser | null> {
+  const u = await getAdminUserFromRequest(req);
+  if (rejectUnlessSuperAdmin(u, res)) return null;
+  return u;
+}
+
+const fixmobileUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 30 * 1024 * 1024 },
+});
 
 function staffMayEditRepair(user: AdminUser, repair: Pick<RepairRequest, "assignedToUserId">): boolean {
   if (user.role !== "staff") return true;
@@ -204,7 +255,7 @@ export async function registerRoutes(
     try {
       const { email, password } = req.body || {};
       if (!email || !password) return res.status(400).json({ ok: false, message: "Email και κωδικός απαιτούνται" });
-      const user = await storage.getAdminByEmail(email);
+      const user = await storage.getAdminByEmail(normalizeAdminEmail(String(email)));
       if (!user) return res.status(401).json({ ok: false, message: "Λάθος email ή κωδικός" });
       const valid = await bcrypt.compare(password, user.passwordHash);
       if (!valid) return res.status(401).json({ ok: false, message: "Λάθος email ή κωδικός" });
@@ -214,7 +265,20 @@ export async function registerRoutes(
           message: "Ο λογαριασμός δεν έχει πρόσβαση στη διαχείριση. Επικοινωνήστε με την HiTech Doctor.",
         });
       }
-      const payload = JSON.stringify({ id: user.id, email: user.email, name: user.name, role: user.role, ts: Date.now() });
+      if (user.role === "superadmin" && !isSuperAdminEmail(user.email)) {
+        return res.status(403).json({
+          ok: false,
+          message: "Ο ρόλος superadmin είναι κρατημένος για τον κύριο διαχειριστή.",
+        });
+      }
+      const payload = JSON.stringify({
+        kind: TOKEN_KIND_ADMIN,
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        ts: Date.now(),
+      });
       const token = Buffer.from(payload).toString("base64");
       res.json({ ok: true, token, name: user.name, email: user.email, role: user.role });
     } catch (err) {
@@ -224,36 +288,135 @@ export async function registerRoutes(
   });
 
   app.get("/api/admin/me", async (req, res) => {
-    const auth = req.headers.authorization || "";
-    const token = auth.replace("Bearer ", "");
-    if (!token) return res.status(401).json({ ok: false });
     try {
-      const decoded = Buffer.from(token, "base64").toString("utf8");
-      const payload = JSON.parse(decoded);
-      if (!payload?.email) return res.status(401).json({ ok: false });
-      const user = await storage.getAdminByEmail(payload.email);
-      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ ok: false });
-      return res.json({ ok: true, id: user.id, email: user.email, name: user.name, role: user.role });
+      const session = await resolveAdminSession(req);
+      if (!session) return res.status(401).json({ ok: false });
+      const { user } = session;
+      if (user.role === "superadmin" && !isSuperAdminEmail(user.email)) {
+        return res.status(403).json({ ok: false, message: "Μη έγκυρη πρόσβαση διαχειριστή." });
+      }
+      return res.json({
+        ok: true,
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        superAdmin: isSuperAdminUser(user),
+      });
     } catch {
       res.status(401).json({ ok: false });
     }
   });
 
-  // --- Admin Users CRUD ---
+  // --- Portal (πελάτης — χωρίς πρόσβαση στο admin) ---
+  app.post("/api/portal/register", async (req, res) => {
+    try {
+      const schema = z.object({
+        name: z.string().min(2),
+        email: z.string().email(),
+        password: z.string().min(8, "Ο κωδικός πρέπει να έχει τουλάχιστον 8 χαρακτήρες"),
+      });
+      const data = schema.parse(req.body);
+      const email = normalizeAdminEmail(data.email);
+      const existing = await storage.getAdminByEmail(email);
+      if (existing) return res.status(409).json({ ok: false, message: "Υπάρχει ήδη λογαριασμός με αυτό το email." });
+      const hash = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
+      await storage.createAdminUser(data.name.trim(), email, hash, "customer");
+      const payload = JSON.stringify({
+        kind: TOKEN_KIND_PORTAL,
+        email,
+        name: data.name.trim(),
+        ts: Date.now(),
+      });
+      const token = Buffer.from(payload).toString("base64");
+      res.status(201).json({ ok: true, token, email, name: data.name.trim() });
+    } catch (err) {
+      if (err instanceof z.ZodError) return res.status(400).json({ ok: false, message: err.errors[0].message });
+      console.error("[portal/register]", err);
+      res.status(500).json({ ok: false, message: "Σφάλμα εγγραφής" });
+    }
+  });
+
+  app.post("/api/portal/login", async (req, res) => {
+    try {
+      const { email, password } = req.body || {};
+      if (!email || !password) return res.status(400).json({ ok: false, message: "Email και κωδικός απαιτούνται" });
+      const user = await storage.getAdminByEmail(normalizeAdminEmail(String(email)));
+      if (!user) return res.status(401).json({ ok: false, message: "Λάθος email ή κωδικός" });
+      const valid = await bcrypt.compare(password, user.passwordHash);
+      if (!valid) return res.status(401).json({ ok: false, message: "Λάθος email ή κωδικός" });
+      if (user.role !== "customer") {
+        return res.status(403).json({
+          ok: false,
+          message: "Αυτός ο λογαριασμός είναι για διαχείριση. Συνδεθείτε από το κέντρο διαχείρισης.",
+        });
+      }
+      const payload = JSON.stringify({
+        kind: TOKEN_KIND_PORTAL,
+        email: user.email,
+        name: user.name,
+        ts: Date.now(),
+      });
+      const token = Buffer.from(payload).toString("base64");
+      res.json({ ok: true, token, email: user.email, name: user.name });
+    } catch (err) {
+      console.error("[portal/login]", err);
+      res.status(500).json({ ok: false, message: "Σφάλμα σύνδεσης" });
+    }
+  });
+
+  app.get("/api/portal/me", async (req, res) => {
+    try {
+      const user = await getPortalAccountFromRequest(req);
+      if (!user) return res.status(401).json({ ok: false });
+      const { passwordHash: _ph, ...safe } = user;
+      return res.json({ ok: true, ...safe });
+    } catch {
+      res.status(401).json({ ok: false });
+    }
+  });
+
+  app.get("/api/portal/orders", async (req, res) => {
+    try {
+      const user = await getPortalAccountFromRequest(req);
+      if (!user) return res.status(401).json({ message: "Σύνδεση απαιτείται" });
+      const cust = await storage.getCustomerByEmail(normalizeAdminEmail(user.email));
+      const ordersList = cust ? await storage.getCustomerOrders(cust.id) : [];
+      res.json(ordersList);
+    } catch (err) {
+      console.error("[portal/orders]", err);
+      res.status(500).json({ message: "Σφάλμα φόρτωσης παραγγελιών" });
+    }
+  });
+
+  app.get("/api/portal/subscriptions", async (req, res) => {
+    try {
+      const user = await getPortalAccountFromRequest(req);
+      if (!user) return res.status(401).json({ message: "Σύνδεση απαιτείται" });
+      const subs = await storage.getCustomerSubscriptions(user.email);
+      res.json(subs);
+    } catch (err) {
+      console.error("[portal/subscriptions]", err);
+      res.status(500).json({ message: "Σφάλμα φόρτωσης συνδρομών" });
+    }
+  });
+
+  // --- Admin Users CRUD (μόνο κύριος διαχειριστής) ---
   app.get("/api/admin/users", async (req, res) => {
     try {
-      const u = await getAdminUserFromRequest(req);
-      if (!u) return res.status(401).json({ message: "Σύνδεση απαιτείται" });
-      if (u.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const u = await requireSuperAdmin(req, res);
+      if (!u) return;
       const users = await storage.getAdminUsers();
-      res.json(users);
-    } catch { res.status(500).json({ message: "Σφάλμα" }); }
+      res.json(users.map((row) => ({ ...row, platformOwner: isSuperAdminUser(row) })));
+    } catch {
+      res.status(500).json({ message: "Σφάλμα" });
+    }
   });
 
   app.post("/api/admin/users", async (req, res) => {
     try {
-      const actor = await getAdminUserFromRequest(req);
-      if (!actor || actor.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const actor = await requireSuperAdmin(req, res);
+      if (!actor) return;
       const schema = z.object({
         name: z.string().min(2),
         email: z.string().email(),
@@ -262,10 +425,17 @@ export async function registerRoutes(
         role: z.enum(["admin", "superadmin", "staff"]).default("staff"),
       });
       const data = schema.parse(req.body);
-      const existing = await storage.getAdminByEmail(data.email);
+      const emailNorm = normalizeAdminEmail(data.email);
+      if (data.role === "superadmin" && !isSuperAdminEmail(emailNorm)) {
+        return res.status(403).json({
+          message:
+            "Ο ρόλος superadmin επιτρέπεται μόνο για τον λογαριασμό του κύριου διαχειριστή (SUPER_ADMIN_EMAIL / προεπιλογή).",
+        });
+      }
+      const existing = await storage.getAdminByEmail(emailNorm);
       if (existing) return res.status(409).json({ message: "Υπάρχει ήδη διαχειριστής με αυτό το email" });
       const hash = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
-      const user = await storage.createAdminUser(data.name, data.email, hash, data.role);
+      const user = await storage.createAdminUser(data.name, emailNorm, hash, data.role);
       res.status(201).json(user);
     } catch (err) {
       if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
@@ -273,22 +443,91 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/admin/users/:id", async (req, res) => {
+    try {
+      const actor = await requireSuperAdmin(req, res);
+      if (!actor) return;
+      const id = parseInt(req.params.id, 10);
+      if (!Number.isFinite(id)) return res.status(400).json({ message: "Μη έγκυρο id" });
+
+      const schema = z
+        .object({
+          name: z.string().min(2).optional(),
+          email: z.string().email().optional(),
+          role: z.enum(["admin", "superadmin", "staff"]).optional(),
+        })
+        .refine((d) => d.name !== undefined || d.email !== undefined || d.role !== undefined, {
+          message: "Τουλάχιστον ένα πεδίο προς ενημέρωση",
+        });
+
+      const body = schema.parse(req.body);
+      const target = await storage.getAdminUserById(id);
+      if (!target) return res.status(404).json({ message: "Δεν βρέθηκε ο διαχειριστής" });
+
+      if (!isPrivilegedAdminRole(target.role)) {
+        return res.status(403).json({ message: "Ο λογαριασμός δεν είναι διαχειριστικός τύπος προς επεξεργασία εδώ." });
+      }
+
+      if (isSuperAdminUser(target)) {
+        if (body.role !== undefined && body.role !== "superadmin") {
+          return res.status(403).json({ message: "Δεν επιτρέπεται αλλαγή ρόλου του κύριου διαχειριστή." });
+        }
+      }
+
+      const nextRole = body.role ?? target.role;
+      const nextEmailNorm =
+        body.email !== undefined ? normalizeAdminEmail(body.email) : normalizeAdminEmail(target.email);
+
+      if (nextRole === "superadmin" && !isSuperAdminEmail(nextEmailNorm)) {
+        return res.status(403).json({
+          message:
+            "Ο ρόλος superadmin επιτρέπεται μόνο για τον λογαριασμό του κύριου διαχειριστή (SUPER_ADMIN_EMAIL / προεπιλογή).",
+        });
+      }
+
+      if (body.email !== undefined) {
+        const clash = await storage.getAdminByEmail(nextEmailNorm);
+        if (clash && clash.id !== id) {
+          return res.status(409).json({ message: "Υπάρχει ήδη λογαριασμός με αυτό το email" });
+        }
+      }
+
+      const patch: Partial<{ name: string; email: string; role: string }> = {};
+      if (body.name !== undefined) patch.name = body.name.trim();
+      if (body.email !== undefined) patch.email = nextEmailNorm;
+      if (body.role !== undefined) patch.role = body.role;
+
+      const updated = await storage.updateAdminUser(id, patch);
+      res.json(updated);
+    } catch (err) {
+      if (err instanceof z.ZodError) return res.status(400).json({ message: err.errors[0].message });
+      console.error("[admin/users PATCH]", err);
+      res.status(500).json({ message: "Σφάλμα" });
+    }
+  });
+
   app.delete("/api/admin/users/:id", async (req, res) => {
     try {
-      const actor = await getAdminUserFromRequest(req);
-      if (!actor || actor.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const actor = await requireSuperAdmin(req, res);
+      if (!actor) return;
       const id = parseInt(req.params.id);
       const all = await storage.getAdminUsers();
+      const target = all.find((x) => x.id === id);
+      if (target && isSuperAdminUser(target)) {
+        return res.status(400).json({ message: "Δεν επιτρέπεται διαγραφή του κύριου διαχειριστή." });
+      }
       if (all.length <= 1) return res.status(400).json({ message: "Δεν μπορείτε να διαγράψετε τον τελευταίο διαχειριστή" });
       await storage.deleteAdminUser(id);
       res.json({ ok: true });
-    } catch { res.status(500).json({ message: "Σφάλμα" }); }
+    } catch {
+      res.status(500).json({ message: "Σφάλμα" });
+    }
   });
 
   app.patch("/api/admin/users/:id/password", async (req, res) => {
     try {
-      const actor = await getAdminUserFromRequest(req);
-      if (!actor || actor.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const actor = await requireSuperAdmin(req, res);
+      if (!actor) return;
       const id = parseInt(req.params.id);
       const schema = z.object({ password: z.string().min(8) });
       const { password } = schema.parse(req.body);
@@ -498,11 +737,11 @@ export async function registerRoutes(
     }
   });
 
-  // --- Customers API ---
+  // --- Customers API (μόνο κύριος διαχειριστής — CRM) ---
   app.get(api.customers.list.path, async (req, res) => {
     try {
-      const u = await getAdminUserFromRequest(req);
-      if (u?.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const u = await requireSuperAdmin(req, res);
+      if (!u) return;
       const customers = await storage.getCustomers();
       res.json(customers);
     } catch (error) {
@@ -512,8 +751,8 @@ export async function registerRoutes(
 
   app.get("/api/customers/:id", async (req, res) => {
     try {
-      const u = await getAdminUserFromRequest(req);
-      if (u?.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const u = await requireSuperAdmin(req, res);
+      if (!u) return;
       const id = parseInt(req.params.id);
       const customer = await storage.getCustomer(id);
       if (!customer) return res.status(404).json({ message: "Customer not found" });
@@ -525,8 +764,8 @@ export async function registerRoutes(
 
   app.get("/api/customers/:id/orders", async (req, res) => {
     try {
-      const u = await getAdminUserFromRequest(req);
-      if (u?.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const u = await requireSuperAdmin(req, res);
+      if (!u) return;
       const id = parseInt(req.params.id);
       const orderList = await storage.getCustomerOrders(id);
       res.json(orderList);
@@ -537,8 +776,8 @@ export async function registerRoutes(
 
   app.get("/api/customers/:id/subscriptions", async (req, res) => {
     try {
-      const u = await getAdminUserFromRequest(req);
-      if (u?.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const u = await requireSuperAdmin(req, res);
+      if (!u) return;
       const id = parseInt(req.params.id);
       const customer = await storage.getCustomer(id);
       if (!customer) return res.status(404).json({ message: "Customer not found" });
@@ -551,8 +790,8 @@ export async function registerRoutes(
 
   app.get("/api/customers/:id/inquiries", async (req, res) => {
     try {
-      const u = await getAdminUserFromRequest(req);
-      if (u?.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const u = await requireSuperAdmin(req, res);
+      if (!u) return;
       const id = parseInt(req.params.id);
       const customer = await storage.getCustomer(id);
       if (!customer) return res.status(404).json({ message: "Customer not found" });
@@ -565,8 +804,8 @@ export async function registerRoutes(
 
   app.patch("/api/customers/:id", async (req, res) => {
     try {
-      const u = await getAdminUserFromRequest(req);
-      if (u?.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const u = await requireSuperAdmin(req, res);
+      if (!u) return;
       const id = parseInt(req.params.id);
       const body = z
         .object({
@@ -589,6 +828,9 @@ export async function registerRoutes(
   // --- Orders & Checkout API ---
   app.get(api.orders.list.path, async (req, res) => {
     try {
+      const u = await getAdminUserFromRequest(req);
+      if (!u) return res.status(401).json({ message: "Σύνδεση απαιτείται" });
+      if (u.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const ordersList = await storage.getOrders();
       res.json(ordersList);
     } catch (error) {
@@ -651,6 +893,18 @@ export async function registerRoutes(
   app.get("/api/orders/:id/items", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      const uAdmin = await getAdminUserFromRequest(req);
+      if (uAdmin) {
+        if (uAdmin.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+        const items = await storage.getOrderItems(id);
+        return res.json(items);
+      }
+      const portal = await getPortalAccountFromRequest(req);
+      if (!portal) return res.status(401).json({ message: "Σύνδεση απαιτείται" });
+      const oc = await storage.getOrderWithCustomer(id);
+      if (!oc || normalizeAdminEmail(oc.customerEmail) !== normalizeAdminEmail(portal.email)) {
+        return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      }
       const items = await storage.getOrderItems(id);
       res.json(items);
     } catch (error) {
@@ -660,6 +914,9 @@ export async function registerRoutes(
 
   app.patch(api.orders.updateStatus.path, async (req, res) => {
     try {
+      const actor = await getAdminUserFromRequest(req);
+      if (!actor) return res.status(401).json({ message: "Σύνδεση απαιτείται" });
+      if (actor.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
       const id = parseInt(req.params.id);
       const input = api.orders.updateStatus.input.parse(req.body);
       const before = await storage.getOrderWithCustomer(id);
@@ -689,11 +946,24 @@ export async function registerRoutes(
   // --- Repair Requests API ---
   app.get("/api/repair-requests", async (req, res) => {
     try {
-      const email = req.query.email as string | undefined;
-      if (email) {
-        const requests = await storage.getRepairRequestsByEmail(email);
+      const emailRaw = req.query.email as string | undefined;
+      const emailNorm = emailRaw ? normalizeAdminEmail(emailRaw) : undefined;
+      const admin = await getAdminUserFromRequest(req);
+      const portal = admin ? null : await getPortalAccountFromRequest(req);
+
+      if (emailNorm) {
+        if (admin) {
+          const requests = await storage.getRepairRequestsByEmail(emailNorm);
+          return res.json(requests);
+        }
+        if (!portal || normalizeAdminEmail(portal.email) !== emailNorm) {
+          return res.status(403).json({ message: "Δεν επιτρέπεται" });
+        }
+        const requests = await storage.getRepairRequestsByEmail(emailNorm);
         return res.json(requests);
       }
+
+      if (!admin) return res.status(401).json({ message: "Σύνδεση απαιτείται" });
       const requests = await storage.getRepairRequests();
       res.json(requests);
     } catch (error) {
@@ -963,8 +1233,8 @@ export async function registerRoutes(
 
   app.get("/api/financial/repair-revenue", async (req, res) => {
     try {
-      const u = await getAdminUserFromRequest(req);
-      if (u?.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const u = await requireSuperAdmin(req, res);
+      if (!u) return;
       const rows = await storage.getCompletedRepairRevenueRows();
       res.json(rows);
     } catch (error) {
@@ -975,6 +1245,8 @@ export async function registerRoutes(
   // --- Subscriptions API ---
   app.get("/api/subscriptions", async (req, res) => {
     try {
+      const u = await requireSuperAdmin(req, res);
+      if (!u) return;
       const type = req.query.type as string | undefined;
       const subs = await storage.getSubscriptions(type);
       res.json(subs);
@@ -985,6 +1257,8 @@ export async function registerRoutes(
 
   app.get("/api/subscriptions/:id", async (req, res) => {
     try {
+      const u = await requireSuperAdmin(req, res);
+      if (!u) return;
       const id = parseInt(req.params.id);
       const sub = await storage.getSubscription(id);
       if (!sub) return res.status(404).json({ message: "Subscription not found" });
@@ -1013,6 +1287,8 @@ export async function registerRoutes(
 
   app.patch("/api/subscriptions/:id", async (req, res) => {
     try {
+      const actor = await requireSuperAdmin(req, res);
+      if (!actor) return;
       const id = parseInt(req.params.id);
       const schema = z.object({
         customerName: z.string().optional(),
@@ -1038,6 +1314,8 @@ export async function registerRoutes(
 
   app.delete("/api/subscriptions/:id", async (req, res) => {
     try {
+      const actor = await requireSuperAdmin(req, res);
+      if (!actor) return;
       const id = parseInt(req.params.id);
       await storage.deleteSubscription(id);
       res.status(204).send();
@@ -1049,6 +1327,8 @@ export async function registerRoutes(
   // --- Website Inquiries API ---
   app.get("/api/website-inquiries", async (req, res) => {
     try {
+      const u = await requireSuperAdmin(req, res);
+      if (!u) return;
       const inquiries = await storage.getWebsiteInquiries();
       res.json(inquiries);
     } catch (error) {
@@ -1076,6 +1356,8 @@ export async function registerRoutes(
 
   app.patch("/api/website-inquiries/:id", async (req, res) => {
     try {
+      const actor = await requireSuperAdmin(req, res);
+      if (!actor) return;
       const id = parseInt(req.params.id);
       const schema = z.object({
         status: z.string().optional(),
@@ -1187,16 +1469,9 @@ export async function registerRoutes(
   });
 
   app.get("/api/admin/hubspot/contacts", async (req, res) => {
-    const auth = req.headers.authorization || "";
-    const token = auth.replace("Bearer ", "");
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
     try {
-      const decoded = Buffer.from(token, "base64").toString("utf8");
-      const payload = JSON.parse(decoded);
-      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
-      const user = await storage.getAdminByEmail(payload.email);
-      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
-      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const user = await requireSuperAdmin(req, res);
+      if (!user) return;
       const contacts = await fetchHubSpotContacts();
       res.json(contacts);
     } catch (err) {
@@ -1209,16 +1484,9 @@ export async function registerRoutes(
 
   /** Supplier XML sync — προμηθευτές & τιμές επισκευών */
   app.get("/api/admin/suppliers", async (req, res) => {
-    const auth = req.headers.authorization || "";
-    const token = auth.replace("Bearer ", "");
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
     try {
-      const decoded = Buffer.from(token, "base64").toString("utf8");
-      const payload = JSON.parse(decoded);
-      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
-      const user = await storage.getAdminByEmail(payload.email);
-      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
-      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const user = await requireSuperAdmin(req, res);
+      if (!user) return;
       res.json(await storage.getSuppliers());
     } catch {
       res.status(401).json({ message: "Unauthorized" });
@@ -1226,16 +1494,9 @@ export async function registerRoutes(
   });
 
   app.post("/api/admin/suppliers", async (req, res) => {
-    const auth = req.headers.authorization || "";
-    const token = auth.replace("Bearer ", "");
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
     try {
-      const decoded = Buffer.from(token, "base64").toString("utf8");
-      const payload = JSON.parse(decoded);
-      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
-      const user = await storage.getAdminByEmail(payload.email);
-      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
-      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const user = await requireSuperAdmin(req, res);
+      if (!user) return;
       const body = insertSupplierSchema.parse(req.body);
       const row = await storage.createSupplier(body);
       res.status(201).json(row);
@@ -1249,16 +1510,9 @@ export async function registerRoutes(
   });
 
   app.put("/api/admin/suppliers/:id", async (req, res) => {
-    const auth = req.headers.authorization || "";
-    const token = auth.replace("Bearer ", "");
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
     try {
-      const decoded = Buffer.from(token, "base64").toString("utf8");
-      const payload = JSON.parse(decoded);
-      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
-      const user = await storage.getAdminByEmail(payload.email);
-      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
-      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const user = await requireSuperAdmin(req, res);
+      if (!user) return;
       const id = parseInt(req.params.id, 10);
       if (Number.isNaN(id)) return res.status(400).json({ message: "Μη έγκυρο id" });
       const body = z
@@ -1281,16 +1535,9 @@ export async function registerRoutes(
   });
 
   app.delete("/api/admin/suppliers/:id", async (req, res) => {
-    const auth = req.headers.authorization || "";
-    const token = auth.replace("Bearer ", "");
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
     try {
-      const decoded = Buffer.from(token, "base64").toString("utf8");
-      const payload = JSON.parse(decoded);
-      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
-      const user = await storage.getAdminByEmail(payload.email);
-      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
-      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const user = await requireSuperAdmin(req, res);
+      if (!user) return;
       const id = parseInt(req.params.id, 10);
       if (Number.isNaN(id)) return res.status(400).json({ message: "Μη έγκυρο id" });
       await storage.deleteSupplier(id);
@@ -1302,16 +1549,9 @@ export async function registerRoutes(
   });
 
   app.post("/api/admin/sync-now", async (req, res) => {
-    const auth = req.headers.authorization || "";
-    const token = auth.replace("Bearer ", "");
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
     try {
-      const decoded = Buffer.from(token, "base64").toString("utf8");
-      const payload = JSON.parse(decoded);
-      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
-      const user = await storage.getAdminByEmail(payload.email);
-      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
-      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const user = await requireSuperAdmin(req, res);
+      if (!user) return;
       const { supplierId } = z.object({ supplierId: z.number().int().positive().optional() }).parse(req.body ?? {});
       const jobId = newSyncJobId();
       syncJobs.set(jobId, { progress: 0, message: "Έναρξη…", done: false });
@@ -1335,16 +1575,9 @@ export async function registerRoutes(
   });
 
   app.get("/api/admin/sync-status/:jobId", async (req, res) => {
-    const auth = req.headers.authorization || "";
-    const token = auth.replace("Bearer ", "");
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
     try {
-      const decoded = Buffer.from(token, "base64").toString("utf8");
-      const payload = JSON.parse(decoded);
-      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
-      const user = await storage.getAdminByEmail(payload.email);
-      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
-      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const user = await requireSuperAdmin(req, res);
+      if (!user) return;
       const job = syncJobs.get(req.params.jobId);
       if (!job) return res.status(404).json({ message: "Άγνωστη εργασία" });
       res.json(job);
@@ -1354,16 +1587,9 @@ export async function registerRoutes(
   });
 
   app.get("/api/admin/supplier-sync-items", async (req, res) => {
-    const auth = req.headers.authorization || "";
-    const token = auth.replace("Bearer ", "");
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
     try {
-      const decoded = Buffer.from(token, "base64").toString("utf8");
-      const payload = JSON.parse(decoded);
-      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
-      const user = await storage.getAdminByEmail(payload.email);
-      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
-      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const user = await requireSuperAdmin(req, res);
+      if (!user) return;
       let sid: number | undefined;
       const q = req.query.supplierId;
       if (q != null && String(q) !== "") {
@@ -1378,16 +1604,9 @@ export async function registerRoutes(
   });
 
   app.get("/api/admin/repair-price-overrides", async (req, res) => {
-    const auth = req.headers.authorization || "";
-    const token = auth.replace("Bearer ", "");
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
     try {
-      const decoded = Buffer.from(token, "base64").toString("utf8");
-      const payload = JSON.parse(decoded);
-      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
-      const user = await storage.getAdminByEmail(payload.email);
-      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
-      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const user = await requireSuperAdmin(req, res);
+      if (!user) return;
       res.json(await storage.getAllRepairPriceOverrides());
     } catch {
       res.status(401).json({ message: "Unauthorized" });
@@ -1405,16 +1624,9 @@ export async function registerRoutes(
     });
 
   app.patch("/api/admin/repair-price-overrides/:id", async (req, res) => {
-    const auth = req.headers.authorization || "";
-    const token = auth.replace("Bearer ", "");
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
     try {
-      const decoded = Buffer.from(token, "base64").toString("utf8");
-      const payload = JSON.parse(decoded);
-      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
-      const user = await storage.getAdminByEmail(payload.email);
-      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
-      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const user = await requireSuperAdmin(req, res);
+      if (!user) return;
       const id = z.coerce.number().int().positive().parse(req.params.id);
       const body = repairPriceOverridePatchSchema.parse(req.body);
       const patch: {
@@ -1445,16 +1657,9 @@ export async function registerRoutes(
   });
 
   app.delete("/api/admin/repair-price-overrides/:id", async (req, res) => {
-    const auth = req.headers.authorization || "";
-    const token = auth.replace("Bearer ", "");
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
     try {
-      const decoded = Buffer.from(token, "base64").toString("utf8");
-      const payload = JSON.parse(decoded);
-      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
-      const user = await storage.getAdminByEmail(payload.email);
-      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
-      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const user = await requireSuperAdmin(req, res);
+      if (!user) return;
       const id = z.coerce.number().int().positive().parse(req.params.id);
       const ok = await storage.deleteRepairPriceOverride(id);
       if (!ok) return res.status(404).json({ message: "Δεν βρέθηκε η εγγραφή" });
@@ -1469,16 +1674,9 @@ export async function registerRoutes(
   });
 
   app.post("/api/admin/repair-price-overrides", async (req, res) => {
-    const auth = req.headers.authorization || "";
-    const token = auth.replace("Bearer ", "");
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
     try {
-      const decoded = Buffer.from(token, "base64").toString("utf8");
-      const payload = JSON.parse(decoded);
-      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
-      const user = await storage.getAdminByEmail(payload.email);
-      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
-      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const user = await requireSuperAdmin(req, res);
+      if (!user) return;
       const body = insertRepairPriceOverrideSchema.parse(req.body);
       const row = await storage.upsertRepairPriceOverride(body);
       res.status(201).json(row);
@@ -1496,16 +1694,9 @@ export async function registerRoutes(
     "/api/admin/upload-fixmobile-pdf",
     fixmobileUpload.single("file"),
     async (req, res) => {
-      const auth = req.headers.authorization || "";
-      const token = auth.replace("Bearer ", "");
-      if (!token) return res.status(401).json({ message: "Unauthorized" });
       try {
-        const decoded = Buffer.from(token, "base64").toString("utf8");
-        const payload = JSON.parse(decoded);
-        if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
-        const user = await storage.getAdminByEmail(payload.email);
-        if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
-        if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+        const user = await requireSuperAdmin(req, res);
+        if (!user) return;
         if (!req.file?.buffer?.length) return res.status(400).json({ message: "Απαιτείται αρχείο PDF" });
         mkdirSync(FIXMOBILE_UPLOAD_DIR, { recursive: true });
         await writeFile(FIXMOBILE_PDF, req.file.buffer);
@@ -1519,16 +1710,9 @@ export async function registerRoutes(
 
   /** Διαβάζει τα αποθηκευμένα PDF και ενημερώνει repair_price_overrides */
   app.post("/api/admin/sync-fixmobile-pdf", async (req, res) => {
-    const auth = req.headers.authorization || "";
-    const token = auth.replace("Bearer ", "");
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
     try {
-      const decoded = Buffer.from(token, "base64").toString("utf8");
-      const payload = JSON.parse(decoded);
-      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
-      const user = await storage.getAdminByEmail(payload.email);
-      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
-      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const user = await requireSuperAdmin(req, res);
+      if (!user) return;
       const result = await runFixmobilePdfSyncFromDisk();
       res.json(result);
     } catch (err) {
@@ -1539,16 +1723,9 @@ export async function registerRoutes(
 
   /** Πλήθος εγγραφών repair_price_overrides ανά service_key (πρόοδος αντιστοίχισης επισκευών) */
   app.get("/api/admin/repair-price-override-stats", async (req, res) => {
-    const auth = req.headers.authorization || "";
-    const token = auth.replace("Bearer ", "");
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
     try {
-      const decoded = Buffer.from(token, "base64").toString("utf8");
-      const payload = JSON.parse(decoded);
-      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
-      const user = await storage.getAdminByEmail(payload.email);
-      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
-      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const user = await requireSuperAdmin(req, res);
+      if (!user) return;
       const stats = await storage.getRepairPriceOverrideStats();
       console.log("[repair-price-override-stats]", JSON.stringify(stats));
       res.json(stats);
@@ -1559,16 +1736,9 @@ export async function registerRoutes(
   });
 
   app.get("/api/admin/ipsw-downloads", async (req, res) => {
-    const auth = req.headers.authorization || "";
-    const token = auth.replace("Bearer ", "");
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
     try {
-      const decoded = Buffer.from(token, "base64").toString("utf8");
-      const payload = JSON.parse(decoded);
-      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
-      const user = await storage.getAdminByEmail(payload.email);
-      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
-      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const user = await requireSuperAdmin(req, res);
+      if (!user) return;
       const stats = await storage.getIpswDownloadStats();
       res.json(stats);
     } catch {
@@ -1578,9 +1748,8 @@ export async function registerRoutes(
 
   app.get("/api/admin/analytics/stats", async (req, res) => {
     try {
-      const u = await getAdminUserFromRequest(req);
-      if (!u) return res.status(401).json({ message: "Unauthorized" });
-      if (u.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const u = await requireSuperAdmin(req, res);
+      if (!u) return;
       const stats = await storage.getAnalyticsStats();
       res.json(stats);
     } catch (err) {
@@ -1591,9 +1760,8 @@ export async function registerRoutes(
 
   app.get("/api/admin/analytics/top-pages", async (req, res) => {
     try {
-      const u = await getAdminUserFromRequest(req);
-      if (!u) return res.status(401).json({ message: "Unauthorized" });
-      if (u.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const u = await requireSuperAdmin(req, res);
+      if (!u) return;
       const q = z.enum(["day", "week", "month", "year"]).safeParse(req.query.period);
       const period = q.success ? q.data : "week";
       const rows = await storage.getAnalyticsTopPages(period);
@@ -1606,9 +1774,8 @@ export async function registerRoutes(
 
   app.get("/api/admin/analytics/chat-activity", async (req, res) => {
     try {
-      const u = await getAdminUserFromRequest(req);
-      if (!u) return res.status(401).json({ message: "Unauthorized" });
-      if (u.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const u = await requireSuperAdmin(req, res);
+      if (!u) return;
       const stats = await storage.getChatActivityStats();
       res.json(stats);
     } catch (err) {
@@ -1619,9 +1786,8 @@ export async function registerRoutes(
 
   app.get("/api/admin/analytics/insights", async (req, res) => {
     try {
-      const u = await getAdminUserFromRequest(req);
-      if (!u) return res.status(401).json({ message: "Unauthorized" });
-      if (u.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const u = await requireSuperAdmin(req, res);
+      if (!u) return;
       const q = z.enum(["day", "week", "month", "year"]).safeParse(req.query.period);
       const period = q.success ? q.data : "month";
       const data = await storage.getAnalyticsInsights(period);
@@ -1635,9 +1801,8 @@ export async function registerRoutes(
   /** GA4 Data API (προαιρετικό): GA4_PROPERTY_ID + service account credentials */
   app.get("/api/admin/analytics/ga4", async (req, res) => {
     try {
-      const u = await getAdminUserFromRequest(req);
-      if (!u) return res.status(401).json({ message: "Unauthorized" });
-      if (u.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const u = await requireSuperAdmin(req, res);
+      if (!u) return;
       const q = z.enum(["day", "week", "month", "year"]).safeParse(req.query.period);
       const period = (q.success ? q.data : "week") as Ga4Period;
       const data = await fetchGa4Summary(period);
@@ -1680,16 +1845,9 @@ export async function registerRoutes(
   });
 
   app.get("/api/admin/product-offer-interests", async (req, res) => {
-    const auth = req.headers.authorization || "";
-    const token = auth.replace("Bearer ", "");
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
     try {
-      const decoded = Buffer.from(token, "base64").toString("utf8");
-      const payload = JSON.parse(decoded);
-      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
-      const user = await storage.getAdminByEmail(payload.email);
-      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
-      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const user = await requireSuperAdmin(req, res);
+      if (!user) return;
       const rows = await storage.getProductOfferInterests();
       res.json(rows);
     } catch {
@@ -1818,16 +1976,9 @@ export async function registerRoutes(
   });
 
   app.get("/api/admin/boxnow-dropoffs", async (req, res) => {
-    const auth = req.headers.authorization || "";
-    const token = auth.replace("Bearer ", "");
-    if (!token) return res.status(401).json({ message: "Unauthorized" });
     try {
-      const decoded = Buffer.from(token, "base64").toString("utf8");
-      const payload = JSON.parse(decoded);
-      if (!payload?.email) return res.status(401).json({ message: "Unauthorized" });
-      const user = await storage.getAdminByEmail(payload.email);
-      if (!user || !isPrivilegedAdminRole(user.role)) return res.status(401).json({ message: "Unauthorized" });
-      if (user.role === "staff") return res.status(403).json({ message: "Δεν επιτρέπεται" });
+      const user = await requireSuperAdmin(req, res);
+      if (!user) return;
       const rows = await storage.getBoxnowDropoffRequests();
       res.json(rows);
     } catch {

@@ -24,6 +24,40 @@ type NavBlock =
   | { kind: "links"; items: NavLinkItem[] }
   | { kind: "group"; title: string; items: NavLinkItem[] };
 
+/** Μονοπάτια που επιτρέπονται μόνο στον κύριο διαχειριστή (SUPER_ADMIN_EMAIL / προεπιλογή). */
+const SUPER_ADMIN_ROUTE_PREFIXES = [
+  "/admin/insights",
+  "/admin/antivirus-subscriptions",
+  "/admin/website-subscriptions",
+  "/admin/customers",
+  "/admin/hubspot",
+  "/admin/website-inquiries",
+  "/admin/sync",
+  "/admin/repair-price-overrides",
+  "/admin/product-offer-interests",
+  "/admin/oikonomika",
+  "/admin/ipsw-downloads",
+  "/admin/users",
+] as const;
+
+function isSuperAdminOnlyPath(path: string): boolean {
+  return SUPER_ADMIN_ROUTE_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`));
+}
+
+function filterNavBlocksForNonSuper(blocks: NavBlock[]): NavBlock[] {
+  return blocks
+    .map((block) => {
+      if (block.kind === "links") {
+        return { ...block, items: block.items.filter((l) => !isSuperAdminOnlyPath(l.href)) };
+      }
+      return {
+        ...block,
+        items: block.items.filter((l) => !isSuperAdminOnlyPath(l.href)),
+      };
+    })
+    .filter((block) => block.items.length > 0);
+}
+
 function linkIsActive(href: string, location: string): boolean {
   if (href === "/admin") return location === "/admin";
   return location.startsWith(href);
@@ -67,10 +101,18 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           notifyAdminAuthChange();
           setToken(null);
         }
-        else setAdminInfo({ name: d.name, email: d.email, role: d.role });
+        else setAdminInfo({ name: d.name, email: d.email, role: d.role, superAdmin: !!d.superAdmin });
       })
       .catch(() => {});
   }, [token]);
+
+  /** Μη κύριος διαχειριστής: αποκλεισμός σελίδων Analytics / CRM / ρυθμίσεις κ.λπ. */
+  useEffect(() => {
+    if (!token || adminInfo?.role === "staff") return;
+    if (adminInfo?.superAdmin !== false) return;
+    if (!isSuperAdminOnlyPath(location)) return;
+    setLocation("/admin");
+  }, [token, adminInfo?.role, adminInfo?.superAdmin, location, setLocation]);
 
   /** Ρόλος staff: μόνο «Αιτήματα Επισκευής» — όχι CRM, παραγγελίες κ.λπ. */
   useEffect(() => {
@@ -210,7 +252,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     },
   ];
 
-  const navBlocks = adminInfo?.role === "staff" ? staffNavBlocks : adminNavBlocks;
+  const navBlocks =
+    adminInfo?.role === "staff"
+      ? staffNavBlocks
+      : adminInfo?.superAdmin === true
+        ? adminNavBlocks
+        : filterNavBlocksForNonSuper(adminNavBlocks);
 
   const SidebarContent = () => (
     <>

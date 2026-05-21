@@ -433,7 +433,7 @@ export function Navbar() {
 
                     {/* Σύνδεση button */}
                     <div className="pt-3 border-t border-white/8">
-                      <Link href="/admin" data-testid="nav-info-login">
+                      <Link href="/auth" data-testid="nav-info-login">
                         <Button
                           className="w-full bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 hover:border-primary/50 transition-all gap-2 font-semibold"
                           variant="ghost"
@@ -647,7 +647,7 @@ export function Navbar() {
                 </div>
                 <div className="shrink-0 border-t border-white/10 bg-background/98 px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
                   <Button asChild variant="ghost" className="h-12 w-full gap-2 bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 hover:border-primary/50 font-semibold">
-                    <Link href="/admin" data-testid="btn-login-mobile-footer">
+                    <Link href="/auth" data-testid="btn-login-mobile-footer">
                       <LogIn className="h-4 w-4 shrink-0" aria-hidden />
                       Σύνδεση
                     </Link>

@@ -41,3 +41,12 @@ export function breakdownFromTotalInclVat(totalInclVat: number): RepairPriceBrea
 export function formatRepairEuro(n: number): string {
   return n.toLocaleString("el-GR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 }
+
+/**
+ * Όταν ο κατάλογος δίνει μία ενιαία τιμή «συμπ. ΦΠΑ», εκθέτουμε και το ισοδύναμο χωρίς ΦΠΑ
+ * (χωρίς ανάλυση εργασίας–ανταλλακτικού — διαφορετικό από `breakdownFromTotalInclVat`).
+ */
+export function catalogPriceNetExVatFromGross(grossInclVat: number): number {
+  const g = Math.max(0, grossInclVat);
+  return round2(g / REPAIR_GROSS_MULTIPLIER);
+}

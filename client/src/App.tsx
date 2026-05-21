@@ -16,6 +16,7 @@ import { GlobalLocalBusinessSchema } from "@/components/global-localbusiness-sch
 import { cn } from "@/lib/utils";
 import { usePageTracker } from "@/hooks/use-page-tracker";
 import { GoogleAnalytics } from "@/components/google-analytics";
+import { SuperAdminGuard } from "@/components/admin/super-admin-guard";
 
 // Public Pages — lazy loaded (reload on stale chunk after deploy — see lazy-with-reload.ts)
 const Home = lazyWithReload(() => import("./pages/home-page"));
@@ -72,6 +73,7 @@ const AccessibilityStatement = lazyWithReload(() => import("./pages/accessibilit
 const NotFound = lazyWithReload(() => import("./pages/not-found"));
 const RepairRedirect = lazyWithReload(() => import("./pages/repair-redirect"));
 const AuthPage = lazyWithReload(() => import("./pages/auth-page"));
+const AccountPage = lazyWithReload(() => import("./pages/account-page"));
 
 // Admin Pages — lazy loaded (biggest win: never loaded for public visitors)
 const AdminDashboard = lazyWithReload(() => import("./pages/admin/dashboard"));
@@ -231,23 +233,115 @@ function Router() {
           <Route path="/prosvassimotita" component={AccessibilityStatement} />
           <Route path="/repair/:slug" component={RepairRedirect} />
           <Route path="/auth" component={AuthPage} />
-          <Route path="/admin/insights" component={AdminInsights} />
+          <Route path="/account" component={AccountPage} />
+          <Route
+            path="/admin/insights"
+            component={() => (
+              <SuperAdminGuard>
+                <AdminInsights />
+              </SuperAdminGuard>
+            )}
+          />
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/admin/repair-requests" component={AdminRepairRequests} />
-          <Route path="/admin/website-inquiries" component={AdminWebsiteInquiries} />
-          <Route path="/admin/antivirus-subscriptions" component={AdminAntivirusSubscriptions} />
-          <Route path="/admin/website-subscriptions" component={AdminWebsiteSubscriptions} />
+          <Route
+            path="/admin/website-inquiries"
+            component={() => (
+              <SuperAdminGuard>
+                <AdminWebsiteInquiries />
+              </SuperAdminGuard>
+            )}
+          />
+          <Route
+            path="/admin/antivirus-subscriptions"
+            component={() => (
+              <SuperAdminGuard>
+                <AdminAntivirusSubscriptions />
+              </SuperAdminGuard>
+            )}
+          />
+          <Route
+            path="/admin/website-subscriptions"
+            component={() => (
+              <SuperAdminGuard>
+                <AdminWebsiteSubscriptions />
+              </SuperAdminGuard>
+            )}
+          />
           <Route path="/admin/products" component={AdminProducts} />
           <Route path="/admin/orders" component={AdminOrders} />
-          <Route path="/admin/customers" component={AdminCustomers} />
-          <Route path="/admin/hubspot" component={AdminHubspotContacts} />
-          <Route path="/admin/customers/:id" component={AdminCustomerDetail} />
-          <Route path="/admin/oikonomika" component={AdminOikonomika} />
-          <Route path="/admin/users" component={AdminUsersPage} />
-          <Route path="/admin/ipsw-downloads" component={AdminIpswDownloads} />
-          <Route path="/admin/product-offer-interests" component={AdminProductOfferInterests} />
-          <Route path="/admin/sync" component={AdminSupplierSync} />
-          <Route path="/admin/repair-price-overrides" component={AdminRepairPriceOverrides} />
+          <Route
+            path="/admin/customers"
+            component={() => (
+              <SuperAdminGuard>
+                <AdminCustomers />
+              </SuperAdminGuard>
+            )}
+          />
+          <Route
+            path="/admin/hubspot"
+            component={() => (
+              <SuperAdminGuard>
+                <AdminHubspotContacts />
+              </SuperAdminGuard>
+            )}
+          />
+          <Route
+            path="/admin/customers/:id"
+            component={() => (
+              <SuperAdminGuard>
+                <AdminCustomerDetail />
+              </SuperAdminGuard>
+            )}
+          />
+          <Route
+            path="/admin/oikonomika"
+            component={() => (
+              <SuperAdminGuard>
+                <AdminOikonomika />
+              </SuperAdminGuard>
+            )}
+          />
+          <Route
+            path="/admin/users"
+            component={() => (
+              <SuperAdminGuard>
+                <AdminUsersPage />
+              </SuperAdminGuard>
+            )}
+          />
+          <Route
+            path="/admin/ipsw-downloads"
+            component={() => (
+              <SuperAdminGuard>
+                <AdminIpswDownloads />
+              </SuperAdminGuard>
+            )}
+          />
+          <Route
+            path="/admin/product-offer-interests"
+            component={() => (
+              <SuperAdminGuard>
+                <AdminProductOfferInterests />
+              </SuperAdminGuard>
+            )}
+          />
+          <Route
+            path="/admin/sync"
+            component={() => (
+              <SuperAdminGuard>
+                <AdminSupplierSync />
+              </SuperAdminGuard>
+            )}
+          />
+          <Route
+            path="/admin/repair-price-overrides"
+            component={() => (
+              <SuperAdminGuard>
+                <AdminRepairPriceOverrides />
+              </SuperAdminGuard>
+            )}
+          />
           <Route component={NotFound} />
         </Switch>
       </Suspense>

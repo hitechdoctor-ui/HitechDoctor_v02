@@ -729,7 +729,7 @@ function RepairDetailPanel({ req }: { req: RepairRequest }) {
 }
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
-type MeResponse = { ok?: boolean; role?: string; id?: number };
+type MeResponse = { ok?: boolean; role?: string; id?: number; superAdmin?: boolean };
 
 type AdminUserRow = { id: number; name: string; email: string; role: string };
 
@@ -747,7 +747,7 @@ export default function AdminRepairRequests() {
 
   const { data: assignUsers = [] } = useQuery<AdminUserRow[]>({
     queryKey: ["/api/admin/users"],
-    enabled: !isStaff,
+    enabled: !isStaff && me?.superAdmin === true,
   });
 
   const { data: requests, isLoading } = useQuery<RepairRequest[]>({

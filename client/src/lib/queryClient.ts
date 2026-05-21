@@ -1,10 +1,22 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { ADMIN_TOKEN_STORAGE_KEY } from "@/lib/admin-auth-storage";
+import { PORTAL_TOKEN_STORAGE_KEY } from "@/lib/portal-auth-storage";
 
 /** Authorization header για κλήσεις admin API όταν υπάρχει token στο localStorage. */
 export function getAdminAuthHeaders(): Record<string, string> {
   try {
     const token = localStorage.getItem(ADMIN_TOKEN_STORAGE_KEY);
+    if (!token) return {};
+    return { Authorization: `Bearer ${token}` };
+  } catch {
+    return {};
+  }
+}
+
+/** Authorization για `/api/portal/*` — μόνο portal token. */
+export function getPortalAuthHeaders(): Record<string, string> {
+  try {
+    const token = localStorage.getItem(PORTAL_TOKEN_STORAGE_KEY);
     if (!token) return {};
     return { Authorization: `Bearer ${token}` };
   } catch {

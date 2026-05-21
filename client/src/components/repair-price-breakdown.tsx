@@ -1,5 +1,8 @@
 import { cn } from "@/lib/utils";
-import { formatRepairEuro } from "@shared/repair-pricing";
+import {
+  catalogPriceNetExVatFromGross,
+  formatRepairEuro,
+} from "@shared/repair-pricing";
 
 type Props = {
   /** Τελική τιμή με ΦΠΑ (όπως εμφανίζεται στο site) */
@@ -20,6 +23,9 @@ export function RepairPriceBreakdownCard({ totalInclVat, className }: Props) {
         Τελική τιμή (με ΦΠΑ)
       </p>
       <p className="text-lg font-extrabold text-primary tabular-nums">{formatRepairEuro(totalInclVat)}</p>
+      <p className="text-xs text-muted-foreground tabular-nums mt-1">
+        Χωρίς ΦΠΑ: {formatRepairEuro(catalogPriceNetExVatFromGross(totalInclVat))}
+      </p>
       <p className="text-xs text-muted-foreground mt-2.5 leading-relaxed">
         Στην τιμή περιλαμβάνεται το ανταλλακτικό, η εργασία και γραπτή εγγύηση 3 μηνών από τη HiTech Doctor.
       </p>

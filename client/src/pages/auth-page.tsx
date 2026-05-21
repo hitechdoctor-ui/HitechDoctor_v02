@@ -2,9 +2,10 @@ import { useState, useEffect, useMemo } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Lock, Mail, Eye, EyeOff } from "lucide-react";
+import { Lock, Mail, Eye, EyeOff, User } from "lucide-react";
 import { notifyAdminAuthChange } from "@/lib/admin-auth-events";
 import { ADMIN_TOKEN_STORAGE_KEY } from "@/lib/admin-auth-storage";
+import { PORTAL_TOKEN_STORAGE_KEY } from "@/lib/portal-auth-storage";
 import { cn } from "@/lib/utils";
 
 /** Επίσημο πολύχρωμο G (Google branding). */
@@ -184,14 +185,150 @@ export function AdminAuthPanel({ onLogin }: { onLogin: (token: string) => void }
   );
 }
 
-/** Αυτόνομη σελίδα σύνδεσης `/auth` (ίδιο περιεχόμενο με το admin login). */
+/** Αυτόνομη σελίδα εγγραφής/σύνδεσης πελάτη `/auth`. Η διαχείριση είναι στο `/admin`. */
 export default function AuthPage() {
   const [, setLocation] = useLocation();
+  const [mode, setMode] = useState<"login" | "register">("login");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const submitPortal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      const url = mode === "register" ? "/api/portal/register" : "/api/portal/login";
+      const body =
+        mode === "register"
+          ? JSON.stringify({ name: name.trim(), email: email.trim(), password })
+          : JSON.stringify({ email: email.trim(), password });
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+      });
+      const data = await res.json();
+      if (data.ok && data.token) {
+        localStorage.setItem(PORTAL_TOKEN_STORAGE_KEY, data.token);
+        setLocation("/account");
+      } else {
+        setError(data.message || "Αποτυχία — δοκιμάστε ξανά.");
+      }
+    } catch {
+      setError("Σφάλμα δικτύου — δοκιμάστε ξανά.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <AdminAuthPanel
-      onLogin={() => {
-        setLocation("/admin");
-      }}
-    />
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8">
+          <div className="w-14 h-14 rounded-2xl bg-primary/15 border border-primary/30 flex items-center justify-center mx-auto mb-4">
+            <Mail className="w-6 h-6 text-primary" />
+          </div>
+          <h1 className="text-2xl font-display font-bold text-foreground">Ο λογαριασμός μου</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Εγγραφή ή σύνδεση ως πελάτης — τα στοιχεία και οι παραγγελίες σας.
+          </p>
+        </div>
+
+        <div className="flex rounded-xl border border-white/10 p-1 mb-6 bg-card/40">
+          <button
+            type="button"
+            className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
+              mode === "login" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+            }`}
+            onClick={() => setMode("login")}
+          >
+            Σύνδεση
+          </button>
+          <button
+            type="button"
+            className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
+              mode === "register" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+            }`}
+            onClick={() => setMode("register")}
+          >
+            Εγγραφή
+          </button>
+        </div>
+
+        <form onSubmit={submitPortal} className="space-y-4">
+          {mode === "register" ? (
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none opacity-70" />
+              <Input
+                type="text"
+                placeholder="Ονοματεπώνυμο"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="pl-9"
+                required
+                autoComplete="name"
+              />
+            </div>
+          ) : null}
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <Input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="pl-9"
+              required
+              autoComplete="email"
+            />
+          </div>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <Input
+              type={showPass ? "text" : "password"}
+              placeholder="Κωδικός"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="pl-9 pr-10"
+              required
+              minLength={8}
+              autoComplete={mode === "register" ? "new-password" : "current-password"}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPass(!showPass)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label={showPass ? "Απόκρυψη κωδικού" : "Εμφάνιση κωδικού"}
+            >
+              {showPass ? <EyeOff className="w-4 h-4" aria-hidden /> : <Eye className="w-4 h-4" aria-hidden />}
+            </button>
+          </div>
+          {error ? (
+            <p className="text-sm text-red-400 text-center bg-red-400/10 border border-red-400/20 rounded-lg py-2 px-3">
+              {error}
+            </p>
+          ) : null}
+          <Button type="submit" className="w-full h-11" disabled={loading}>
+            {loading ? "Περιμένετε..." : mode === "register" ? "Δημιουργία λογαριασμού" : "Σύνδεση"}
+          </Button>
+        </form>
+
+        <p className="text-center mt-6 text-xs text-muted-foreground">
+          Είστε διαχειριστής ή προσωπικό;{" "}
+          <Link href="/admin" className="text-primary hover:underline font-medium">
+            Σύνδεση διαχείρισης →
+          </Link>
+        </p>
+        <p className="text-center mt-3 text-xs text-muted-foreground">
+          <Link href="/" className="hover:text-primary transition-colors">
+            ← Επιστροφή στο site
+          </Link>
+        </p>
+      </div>
+    </div>
   );
 }

@@ -11,7 +11,7 @@ import { Pool } from "pg";
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { storage } from "./storage";
-import { isPrivilegedAdminRole } from "./admin-auth";
+import { isPrivilegedAdminRole, isSuperAdminEmail } from "@shared/admin-roles";
 
 const CALLBACK_PATH = "/api/auth/google/callback";
 
@@ -129,6 +129,10 @@ export function setupGoogleOAuth(app: Express): void {
             console.warn("[google-oauth] Απόρριψη — ο ρόλος δεν επιτρέπει πρόσβαση στο admin:", email, user.role);
             return done(null, false);
           }
+          if (user.role === "superadmin" && !isSuperAdminEmail(user.email)) {
+            console.warn("[google-oauth] Απόρριψη — superadmin μόνο για τον κύριο διαχειριστή:", email);
+            return done(null, false);
+          }
 
           done(null, {
             id: user.id,
@@ -161,6 +165,7 @@ export function setupGoogleOAuth(app: Express): void {
         return;
       }
       const payload = JSON.stringify({
+        kind: "admin",
         id: u.id,
         email: u.email,
         name: u.name,
