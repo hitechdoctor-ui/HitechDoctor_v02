@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { Link, useLocation } from "wouter";
 import { Home, Wrench, MessageCircle, ShoppingCart } from "lucide-react";
 import { requestOpenRepairChat } from "@/lib/repair-chat-events";
@@ -15,12 +16,13 @@ function isRepairsPath(path: string): boolean {
 export function MobileBottomNav() {
   const [loc] = useLocation();
 
-  return (
+  /** Portal στο body: αποφεύγει “σπασμένο” fixed όταν κάποιος πρόγονος έχει transform/filter (το fixed γίνεται σχετικό με εκείνο το container αντί για το viewport). */
+  const nav = (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-[140] border-t border-white/10 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 pb-[env(safe-area-inset-bottom)]"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-[140] w-full border-t border-white/10 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 pb-[env(safe-area-inset-bottom)]"
       aria-label="Κύρια πλοήγηση"
     >
-      <div className="mx-auto flex h-16 max-w-lg items-stretch justify-around">
+      <div className="mx-auto flex h-16 w-full max-w-lg items-stretch justify-around">
         <Link
           href="/"
           className={cn(
@@ -66,4 +68,7 @@ export function MobileBottomNav() {
       </div>
     </nav>
   );
+
+  if (typeof document === "undefined") return null;
+  return createPortal(nav, document.body);
 }
