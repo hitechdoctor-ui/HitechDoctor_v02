@@ -5,21 +5,26 @@ import { AdminLayout } from "@/components/layout/admin-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Trash2, KeyRound, Shield, ShieldCheck, Eye, EyeOff, Pencil } from "lucide-react";
-function parseApiError(err: any): string {
+import { cn } from "@/lib/utils";
+import { UserPlus, Trash2, KeyRound, Shield, ShieldCheck, Eye, EyeOff, CircleUser } from "lucide-react";
+
+const ROLE_VALUES = ["superadmin", "admin", "staff", "customer"] as const;
+
+function parseApiError(err: unknown): string {
   try {
-    const raw = err?.message || "";
+    const raw = err && typeof err === "object" && "message" in err ? String((err as { message?: string }).message) : "";
     const jsonStart = raw.indexOf("{");
     if (jsonStart !== -1) {
-      const parsed = JSON.parse(raw.slice(jsonStart));
+      const parsed = JSON.parse(raw.slice(jsonStart)) as { message?: string };
       return parsed.message || raw;
     }
     return raw || "Σφάλμα";
-  } catch { return "Σφάλμα"; }
+  } catch {
+    return "Σφάλμα";
+  }
 }
 
 interface AdminUser {
@@ -32,21 +37,41 @@ interface AdminUser {
   platformOwner?: boolean;
 }
 
-/** Αρχική τιμή ρόλου στη φόρμα επεξεργασίας (οι λανθασμένοι superadmin χωρίς owner email αντιμετωπίζονται ως admin). */
-function initialEditRole(user: AdminUser): string {
-  if (user.role === "staff") return "staff";
-  if (user.role === "superadmin" && user.platformOwner) return "superadmin";
-  return "admin";
+function roleLabel(role: string): string {
+  switch (role) {
+    case "superadmin":
+      return "Super Admin";
+    case "admin":
+      return "Admin";
+    case "staff":
+      return "Προσωπικό";
+    case "customer":
+      return "Πελάτης (Portal)";
+    default:
+      return role;
+  }
+}
+
+function RoleIcon({ role, className }: { role: string; className?: string }) {
+  const iconClass = cn("w-3.5 h-3.5 shrink-0", className);
+  switch (role) {
+    case "superadmin":
+      return <ShieldCheck className={iconClass} aria-hidden />;
+    case "staff":
+      return <Eye className={iconClass} aria-hidden />;
+    case "customer":
+      return <CircleUser className={iconClass} aria-hidden />;
+    default:
+      return <Shield className={iconClass} aria-hidden />;
+  }
 }
 
 export default function AdminUsersPage() {
   const { toast } = useToast();
   const [showCreate, setShowCreate] = useState(false);
   const [changePassId, setChangePassId] = useState<number | null>(null);
-  const [editUser, setEditUser] = useState<AdminUser | null>(null);
   const [showPass, setShowPass] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "", role: "staff" });
-  const [editForm, setEditForm] = useState({ name: "", email: "", role: "staff" });
   const [newPass, setNewPass] = useState("");
   const [showNewPass, setShowNewPass] = useState(false);
 
@@ -62,7 +87,7 @@ export default function AdminUsersPage() {
       setForm({ name: "", email: "", password: "", role: "staff" });
       toast({ title: "Ο διαχειριστής δημιουργήθηκε" });
     },
-    onError: (err: any) => toast({ title: parseApiError(err), variant: "destructive" }),
+    onError: (err: unknown) => toast({ title: parseApiError(err), variant: "destructive" }),
   });
 
   const deleteMutation = useMutation({
@@ -71,7 +96,7 @@ export default function AdminUsersPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       toast({ title: "Ο διαχειριστής διαγράφηκε" });
     },
-    onError: (err: any) => toast({ title: parseApiError(err), variant: "destructive" }),
+    onError: (err: unknown) => toast({ title: parseApiError(err), variant: "destructive" }),
   });
 
   const changePassMutation = useMutation({
@@ -83,23 +108,17 @@ export default function AdminUsersPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       toast({ title: "Ο κωδικός ενημερώθηκε" });
     },
-    onError: (err: any) => toast({ title: parseApiError(err), variant: "destructive" }),
+    onError: (err: unknown) => toast({ title: parseApiError(err), variant: "destructive" }),
   });
 
-  const updateMutation = useMutation({
-    mutationFn: ({
-      id,
-      payload,
-    }: {
-      id: number;
-      payload: { name: string; email: string; role: string };
-    }) => apiRequest("PATCH", `/api/admin/users/${id}`, payload),
+  const patchRoleMutation = useMutation({
+    mutationFn: ({ id, role }: { id: number; role: string }) =>
+      apiRequest("PATCH", `/api/admin/users/${id}`, { role }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-      setEditUser(null);
-      toast({ title: "Ο διαχειριστής ενημερώθηκε" });
+      toast({ title: "Ο ρόλος ενημερώθηκε" });
     },
-    onError: (err: any) => toast({ title: parseApiError(err), variant: "destructive" }),
+    onError: (err: unknown) => toast({ title: parseApiError(err), variant: "destructive" }),
   });
 
   return (
@@ -108,7 +127,9 @@ export default function AdminUsersPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-display font-bold">Διαχειριστές</h1>
-            <p className="text-muted-foreground text-sm mt-1">Διαχείριση λογαριασμών πρόσβασης στο admin panel</p>
+            <p className="text-muted-foreground text-sm mt-1">
+              Διαχείριση λογαριασμών πρόσβασης στο admin panel και portal
+            </p>
           </div>
           <Button onClick={() => setShowCreate(true)} data-testid="btn-create-admin">
             <UserPlus className="w-4 h-4 mr-2" />
@@ -132,89 +153,100 @@ export default function AdminUsersPage() {
               </thead>
               <tbody>
                 {users.map((user) => {
-                  const isPrivilegedAdmin =
-                    user.role === "admin" || user.role === "staff" || user.role === "superadmin";
                   const isPrimarySuperAdmin = user.role === "superadmin" && user.platformOwner === true;
+                  const savingRole =
+                    patchRoleMutation.isPending && patchRoleMutation.variables?.id === user.id;
+                  const roleControlDisabled = isPrimarySuperAdmin || savingRole;
+                  const safeRole = ROLE_VALUES.includes(user.role as (typeof ROLE_VALUES)[number])
+                    ? user.role
+                    : "customer";
+
                   return (
-                  <tr key={user.id} className="border-b border-white/5 hover:bg-white/3 transition-colors" data-testid={`row-admin-${user.id}`}>
-                    <td className="px-4 py-3 font-medium">{user.name}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{user.email}</td>
-                    <td className="px-4 py-3">
-                      <Badge
-                        variant={user.role === "superadmin" ? "default" : "secondary"}
-                        className="gap-1"
-                      >
-                        {user.role === "superadmin" ? (
-                          <ShieldCheck className="w-3 h-3" />
-                        ) : user.role === "staff" ? (
-                          <Eye className="w-3 h-3" />
-                        ) : (
-                          <Shield className="w-3 h-3" />
-                        )}
-                        {user.role === "superadmin"
-                          ? "Super Admin"
-                          : user.role === "staff"
-                            ? "Προσωπικό"
-                            : "Admin"}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {new Date(user.createdAt).toLocaleDateString("el-GR")}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2 justify-end">
-                        {isPrivilegedAdmin ? (
+                    <tr
+                      key={user.id}
+                      className="border-b border-white/5 hover:bg-white/3 transition-colors"
+                      data-testid={`row-admin-${user.id}`}
+                    >
+                      <td className="px-4 py-3 font-medium">{user.name}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{user.email}</td>
+                      <td className="px-4 py-3">
+                        <Select
+                          value={safeRole}
+                          disabled={roleControlDisabled}
+                          onValueChange={(next) => {
+                            if (next === safeRole || roleControlDisabled) return;
+                            patchRoleMutation.mutate({ id: user.id, role: next });
+                          }}
+                        >
+                          <SelectTrigger
+                            aria-label={`Αλλαγή ρόλου για ${user.name}`}
+                            data-testid={`select-role-admin-${user.id}`}
+                            className={cn(
+                              "h-8 min-w-[188px] max-w-[240px] border-white/15 bg-white/5 text-xs shadow-none",
+                              roleControlDisabled && "opacity-90",
+                            )}
+                          >
+                            <div className="flex items-center gap-2 truncate min-w-0 flex-1 text-left">
+                              <RoleIcon role={safeRole} />
+                              <SelectValue placeholder={roleLabel(safeRole)} />
+                            </div>
+                          </SelectTrigger>
+                          <SelectContent align="start">
+                            {ROLE_VALUES.map((r) => (
+                              <SelectItem key={r} value={r} className="text-sm">
+                                {roleLabel(r)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {savingRole ? (
+                          <p className="text-[11px] text-muted-foreground mt-1">Αποθήκευση...</p>
+                        ) : null}
+                        {isPrimarySuperAdmin ? (
+                          <p className="text-[11px] text-muted-foreground mt-1">
+                            Ο ρόλος του κύριου διαχειριστή είναι κλειδωμένος.
+                          </p>
+                        ) : null}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {new Date(user.createdAt).toLocaleDateString("el-GR")}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2 justify-end">
                           <Button
                             size="sm"
                             variant="ghost"
                             className="text-muted-foreground hover:text-foreground"
                             onClick={() => {
-                              setEditUser(user);
-                              setEditForm({
-                                name: user.name,
-                                email: user.email,
-                                role: initialEditRole(user),
-                              });
+                              setChangePassId(user.id);
+                              setNewPass("");
                             }}
-                            aria-label={`Επεξεργασία ${user.name}`}
-                            data-testid={`btn-edit-admin-${user.id}`}
+                            aria-label={`Αλλαγή κωδικού ${user.name}`}
+                            data-testid={`btn-changepass-${user.id}`}
                           >
-                            <Pencil className="w-4 h-4" />
+                            <KeyRound className="w-4 h-4" />
                           </Button>
-                        ) : null}
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-muted-foreground hover:text-foreground"
-                          onClick={() => { setChangePassId(user.id); setNewPass(""); }}
-                          aria-label={`Αλλαγή κωδικού ${user.name}`}
-                          data-testid={`btn-changepass-${user.id}`}
-                        >
-                          <KeyRound className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-red-400/60 hover:text-red-400 hover:bg-red-400/10"
-                          onClick={() => {
-                            if (confirm(`Διαγραφή διαχειριστή "${user.name}";`)) {
-                              deleteMutation.mutate(user.id);
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-red-400/60 hover:text-red-400 hover:bg-red-400/10"
+                            onClick={() => {
+                              if (confirm(`Διαγραφή διαχειριστή "${user.name}";`)) {
+                                deleteMutation.mutate(user.id);
+                              }
+                            }}
+                            disabled={isPrimarySuperAdmin}
+                            aria-disabled={isPrimarySuperAdmin}
+                            title={
+                              isPrimarySuperAdmin ? "Ο κύριος διαχειριστής δεν διαγράφεται από εδώ" : undefined
                             }
-                          }}
-                          disabled={isPrimarySuperAdmin}
-                          aria-disabled={isPrimarySuperAdmin}
-                          title={
-                            isPrimarySuperAdmin
-                              ? "Ο κύριος διαχειριστής δεν διαγράφεται από εδώ"
-                              : undefined
-                          }
-                          data-testid={`btn-delete-admin-${user.id}`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
+                            data-testid={`btn-delete-admin-${user.id}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
                   );
                 })}
               </tbody>
@@ -288,7 +320,9 @@ export default function AdminUsersPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setShowCreate(false)}>Ακύρωση</Button>
+            <Button variant="ghost" onClick={() => setShowCreate(false)}>
+              Ακύρωση
+            </Button>
             <Button
               onClick={() => createMutation.mutate(form)}
               disabled={createMutation.isPending}
@@ -297,95 +331,6 @@ export default function AdminUsersPage() {
               {createMutation.isPending ? "Δημιουργία..." : "Δημιουργία"}
             </Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Admin Dialog */}
-      <Dialog open={editUser !== null} onOpenChange={(open) => { if (!open) setEditUser(null); }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Επεξεργασία διαχειριστή</DialogTitle>
-          </DialogHeader>
-          {editUser ? (
-            <>
-              <p className="text-xs text-muted-foreground -mt-1 pb-2 border-b border-white/10">
-                ID #{editUser.id} · <span className="font-mono">{editUser.email}</span>
-              </p>
-              <div className="space-y-4 py-2">
-                <div className="space-y-1.5">
-                  <Label>Ονοματεπώνυμο</Label>
-                  <Input
-                    value={editForm.name}
-                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                    placeholder="Ονοματεπώνυμο"
-                    data-testid="input-edit-admin-name"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Email</Label>
-                  <Input
-                    type="email"
-                    value={editForm.email}
-                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                    placeholder="email@domain.com"
-                  />
-                  {editUser.role === "superadmin" && editUser.platformOwner ? (
-                    <p className="text-[11px] text-muted-foreground">
-                      Μετά την αλλαγή email στη βάση, ορίστε το ίδιο email στο SUPER_ADMIN_EMAIL (π.χ. Railway) για
-                      πλήρη προνόμια.
-                    </p>
-                  ) : null}
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Ρόλος</Label>
-                  {editUser.role === "superadmin" && editUser.platformOwner ? (
-                    <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm flex items-center gap-2">
-                      <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
-                      Super Admin — κύριος λογαριασμός
-                    </div>
-                  ) : (
-                    <Select
-                      value={editForm.role === "staff" ? "staff" : "admin"}
-                      onValueChange={(v) => setEditForm({ ...editForm, role: v })}
-                    >
-                      <SelectTrigger data-testid="select-edit-admin-role">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="staff">Προσωπικό (μόνο ανατεθέντα αιτήματα)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="ghost" onClick={() => setEditUser(null)}>Ακύρωση</Button>
-                <Button
-                  onClick={() => {
-                    const primary = editUser.role === "superadmin" && editUser.platformOwner === true;
-                    const roleToSend = primary ? "superadmin" : editForm.role;
-                    updateMutation.mutate({
-                      id: editUser.id,
-                      payload: {
-                        name: editForm.name.trim(),
-                        email: editForm.email.trim(),
-                        role: roleToSend,
-                      },
-                    });
-                  }}
-                  disabled={
-                    updateMutation.isPending ||
-                    editForm.name.trim().length < 2 ||
-                    editForm.email.trim().length < 3
-                  }
-                  data-testid="btn-submit-edit-admin"
-                >
-                  {updateMutation.isPending ? "Αποθήκευση..." : "Αποθήκευση"}
-                </Button>
-              </DialogFooter>
-            </>
-          ) : null}
         </DialogContent>
       </Dialog>
 
@@ -419,7 +364,9 @@ export default function AdminUsersPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setChangePassId(null)}>Ακύρωση</Button>
+            <Button variant="ghost" onClick={() => setChangePassId(null)}>
+              Ακύρωση
+            </Button>
             <Button
               onClick={() => changePassId && changePassMutation.mutate({ id: changePassId, password: newPass })}
               disabled={changePassMutation.isPending || newPass.length < 8}

@@ -454,7 +454,7 @@ export async function registerRoutes(
         .object({
           name: z.string().min(2).optional(),
           email: z.string().email().optional(),
-          role: z.enum(["admin", "superadmin", "staff"]).optional(),
+          role: z.enum(["admin", "superadmin", "staff", "customer"]).optional(),
         })
         .refine((d) => d.name !== undefined || d.email !== undefined || d.role !== undefined, {
           message: "Τουλάχιστον ένα πεδίο προς ενημέρωση",
@@ -463,10 +463,6 @@ export async function registerRoutes(
       const body = schema.parse(req.body);
       const target = await storage.getAdminUserById(id);
       if (!target) return res.status(404).json({ message: "Δεν βρέθηκε ο διαχειριστής" });
-
-      if (!isPrivilegedAdminRole(target.role)) {
-        return res.status(403).json({ message: "Ο λογαριασμός δεν είναι διαχειριστικός τύπος προς επεξεργασία εδώ." });
-      }
 
       if (isSuperAdminUser(target)) {
         if (body.role !== undefined && body.role !== "superadmin") {
