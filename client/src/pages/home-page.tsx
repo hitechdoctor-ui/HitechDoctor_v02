@@ -74,7 +74,7 @@ const HERO_IMG_DESKTOP =
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-background circuit-bg relative overflow-hidden">
+    <div className="min-h-screen bg-background relative overflow-x-hidden">
       <Seo
         title="Αρχική"
         description="Ο τεχνολογικός σας γιατρός. Επισκευές κινητών, tablet, laptop, IT Support και αγορά αξεσουάρ στο Αθήνα."
@@ -86,7 +86,7 @@ export default function Home() {
         <link rel="preload" as="image" href={HERO_IMG_MOBILE} fetchPriority="high" />
       </Helmet>
 
-      {/* Background ambient glows */}
+      {/* Light ambient (no busy circuit pattern behind hero text) */}
       <div
         className="absolute top-0 left-0 w-[700px] h-[700px] rounded-full pointer-events-none -translate-x-1/2 -translate-y-1/2"
         style={{ background: "radial-gradient(circle, rgba(0,210,200,0.08) 0%, transparent 70%)" }}
@@ -113,100 +113,111 @@ export default function Home() {
       </a>
 
       <main>
-        {/* ── Hero ── */}
-        <section
-          className="container mx-auto px-4 pt-10 pb-24 lg:pt-16 lg:pb-32 grid lg:grid-cols-2 gap-10 lg:gap-14 items-center"
-          aria-label="Hero section"
-        >
-          <div className="flex flex-col items-start gap-6 z-10 order-2 lg:order-1 w-full max-w-full">
-            <Badge
-              variant="outline"
-              className="border-primary/30 bg-primary/10 text-primary px-4 py-1.5 text-sm font-semibold tracking-wide"
-            >
-              <Zap className="w-3.5 h-3.5 mr-1.5" />
-              Αξιόπιστες Υπηρεσίες Τεχνολογίας
-            </Badge>
+        {/* ── Promo hero: καθαρό banner, υψηλή αναγνωσιμότητα — χωρίς βίντεο / χαοτικό φόντο πίσω από CTAs ── */}
+        <section className="container mx-auto px-4 pt-8 pb-10 lg:pt-12 lg:pb-14" aria-label="HiTech Doctor">
+          <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-card/70 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur-md sm:rounded-3xl">
+            <div
+              className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/[0.12] via-background/95 to-background"
+              aria-hidden
+            />
+            <div
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_70%_at_80%_0%,rgba(0,210,200,0.14),transparent_55%)]"
+              aria-hidden
+            />
 
-            <h1 className="text-5xl lg:text-7xl font-display font-extrabold leading-tight text-foreground">
-              Επαναφέρουμε
-              <br />
-              <span className="gradient-text">την Τεχνολογία</span>
-              <br />
-              σας στη ζωή.
-            </h1>
-
-            <p className="text-lg text-muted-foreground max-w-xl leading-relaxed">
-              Στο HiTech Doctor αναλαμβάνουμε επισκευές smartphone, tablet και Η/Υ — γρήγορα, υπεύθυνα και οικονομικά. Βρείτε επίσης κορυφαία αξεσουάρ στο eShop μας.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-              <Link href="/services">
-                <Button
-                  size="lg"
-                  className="h-12 px-8 text-base font-semibold border-0"
-                  style={{
-                    background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))",
-                    boxShadow: "0 0 28px rgba(0,210,200,0.35)",
-                  }}
-                  data-testid="button-hero-services"
+            <div className="relative grid items-center gap-8 p-6 sm:p-8 lg:grid-cols-2 lg:gap-12 lg:p-10">
+              <div className="order-1 flex w-full max-w-xl flex-col gap-5">
+                <Badge
+                  variant="outline"
+                  className="w-fit border-primary/35 bg-primary/10 px-3 py-1 text-xs font-semibold tracking-wide text-primary"
                 >
-                  Οι Υπηρεσίες μας
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-              </Link>
-              <Link href="/eshop">
-                <Button size="lg" variant="outline" className="h-12 px-8 text-base border-primary/25 text-primary" data-testid="button-hero-eshop">
-                  eShop
-                </Button>
-              </Link>
-              <Button
-                type="button"
-                size="lg"
-                variant="outline"
-                className="h-12 px-8 text-base font-semibold border-primary/25 text-primary gap-2"
-                onClick={() => requestOpenRepairChat()}
-                data-testid="button-hero-ai-chat"
-              >
-                <Bot className="w-5 h-5 shrink-0" aria-hidden />
-                AI Βοηθός
-              </Button>
-            </div>
+                  <Zap className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+                  HiTech Doctor — Αθήνα
+                </Badge>
 
-            {/* Quick trust badges */}
-            <div className="flex flex-wrap gap-3 mt-2">
-              {["Γρήγορη επισκευή", "Γραπτή εγγύηση", "Γνήσια ανταλλακτικά"].map((b) => (
-                <span key={b} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
-                  {b}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Hero image — ορατό και σε mobile για καλύτερο LCP· desktop παραμένει full-width στο grid */}
-          <div className="relative z-10 order-1 lg:order-2 w-full max-w-[560px] mx-auto lg:max-w-[560px]">
-            <div className="relative w-full rounded-2xl lg:rounded-3xl tech-glow pcb-border overflow-hidden">
-              <img
-                src={HERO_IMG_MOBILE}
-                srcSet={`${HERO_IMG_MOBILE} 720w, ${HERO_IMG_DESKTOP} 900w`}
-                sizes="(max-width: 1023px) min(100vw, 42rem), 560px"
-                alt="Επισκευή τεχνολογίας — μητρική πλακέτα ASUS"
-                className="w-full aspect-[4/3] max-h-[min(38vh,260px)] sm:max-h-[min(42vh,300px)] object-cover lg:max-h-none"
-                width={900}
-                height={675}
-                loading="eager"
-                fetchPriority="high"
-                decoding="async"
-              />
-              <div className="absolute inset-0 bg-gradient-to-tr from-background/80 via-background/20 to-transparent" />
-              {/* Floating stat */}
-              <div className="absolute bottom-5 left-5 glass-panel rounded-xl px-4 py-2.5 flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center">
-                  <Wrench className="w-4 h-4 text-primary" />
-                </div>
                 <div>
-                  <p className="text-xs font-bold text-foreground">Express Επισκευή</p>
-                  <p className="text-xs text-muted-foreground">Αποτέλεσμα σε ώρες</p>
+                  <h1 className="font-display text-3xl font-extrabold leading-[1.12] tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+                    Επαγγελματικές επισκευές &amp; τεχνική υποστήριξη
+                  </h1>
+                  <p className="mt-3 text-base font-medium text-primary/95 sm:text-lg">
+                    Κινητά, tablet, laptop &amp; desktop — γρήγορα, με γραπτή εγγύηση.
+                  </p>
+                </div>
+
+                <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
+                  Στο HiTech Doctor συνδυάζουμε εξειδίκευση σε επισκευές Apple &amp; Android με IT support και ένα προσεγμένο eShop αξεσουάρ. Ένα σημείο για όλες τις ανάγκες της συσκευής σας.
+                </p>
+
+                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                  <Link href="/services">
+                    <Button
+                      size="lg"
+                      className="h-12 min-w-[200px] px-8 text-base font-semibold shadow-[0_0_28px_rgba(0,210,200,0.28)] border-0"
+                      style={{
+                        background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))",
+                      }}
+                      data-testid="button-hero-services"
+                    >
+                      Οι υπηρεσίες μας
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Button>
+                  </Link>
+                  <Link
+                    href="/eshop"
+                    className="inline-flex min-h-12 items-center justify-center rounded-lg border border-primary/25 px-6 text-sm font-semibold text-primary transition-colors hover:bg-primary/10"
+                    data-testid="button-hero-eshop"
+                  >
+                    eShop
+                  </Link>
+                </div>
+
+                <button
+                  type="button"
+                  className="flex w-fit items-center gap-2 text-sm font-medium text-muted-foreground underline-offset-4 transition-colors hover:text-primary hover:underline"
+                  onClick={() => requestOpenRepairChat()}
+                  data-testid="button-hero-ai-chat"
+                >
+                  <Bot className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+                  Ρώτα τον AI βοηθό
+                </button>
+
+                <div className="flex flex-wrap gap-3 pt-1">
+                  {["Γρήγορη επισκευή", "Γραπτή εγγύηση", "Γνήσια ανταλλακτικά"].map((b) => (
+                    <span key={b} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" />
+                      {b}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="order-2 w-full lg:order-2">
+                <div className="relative mx-auto w-full max-w-[520px] overflow-hidden rounded-2xl border border-white/10 shadow-2xl lg:ml-auto lg:mr-0">
+                  <div className="relative aspect-[4/3] max-h-[min(42vh,280px)] w-full sm:max-h-[min(44vh,320px)] lg:max-h-[340px]">
+                    <img
+                      src={HERO_IMG_MOBILE}
+                      srcSet={`${HERO_IMG_MOBILE} 720w, ${HERO_IMG_DESKTOP} 900w`}
+                      sizes="(max-width: 1023px) min(100vw, 36rem), 520px"
+                      alt="Επαγγελματική επισκευή τεχνολογίας — εργαστήριο HiTech Doctor"
+                      className="h-full w-full object-cover"
+                      width={900}
+                      height={675}
+                      loading="eager"
+                      fetchPriority="high"
+                      decoding="async"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/88 to-background/35" />
+                    <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/10" aria-hidden />
+                    <div className="absolute bottom-3 left-3 right-3 flex items-center gap-3 rounded-xl border border-white/10 bg-background/95 px-3 py-2 backdrop-blur-md sm:bottom-4 sm:left-4 sm:right-auto">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/30 bg-primary/15">
+                        <Wrench className="h-4 w-4 text-primary" aria-hidden />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-foreground">Express επισκευή</p>
+                        <p className="text-[11px] text-muted-foreground">Αποτέλεσμα σε ώρες</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -351,12 +362,12 @@ export default function Home() {
 
         {/* ── CTA banner ── */}
         <section
-          className="py-16 border-y border-primary/10 relative overflow-hidden"
+          className="relative overflow-hidden border-y border-primary/10 py-16"
           aria-label="Call to action"
-          style={{ background: "linear-gradient(135deg, rgba(0,210,200,0.05) 0%, rgba(0,0,0,0) 60%, rgba(0,130,180,0.05) 100%)" }}
+          style={{ background: "linear-gradient(135deg, rgba(0,210,200,0.06) 0%, rgba(0,0,0,0) 55%, rgba(0,130,180,0.06) 100%)" }}
         >
-          <div className="absolute inset-0 circuit-bg opacity-60 pointer-events-none" />
-          <div className="container mx-auto px-4 text-center relative">
+          <div className="pointer-events-none absolute inset-0 bg-background/80" aria-hidden />
+          <div className="container relative mx-auto px-4 text-center">
             <h2 className="text-3xl font-display font-bold text-foreground mb-4">uBreak i Fix</h2>
             <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
               Φέρε τη συσκευή σου ή επικοινώνησε μαζί μας για δωρεάν αξιολόγηση — χωρίς δεσμεύσεις.

@@ -489,7 +489,12 @@ export function Navbar() {
                 <Menu className="w-5 h-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="bg-background border-white/10 overflow-y-auto">
+            <SheetContent
+              side="right"
+              className="flex h-[100dvh] max-h-[100dvh] w-full flex-col gap-0 overflow-hidden border-white/10 p-0 pt-[env(safe-area-inset-top)]"
+            >
+              <div className="flex min-h-0 flex-1 flex-col">
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-6 pb-4 pt-12">
               <a
                 href={buildViberUrl()}
                 target="_blank"
@@ -634,15 +639,21 @@ export function Navbar() {
                           {link.name}
                         </Link>
                       ))}
-                      <Link href="/admin" className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-primary/10 text-sm text-primary font-semibold mt-1 border border-primary/20 bg-primary/5" data-testid="btn-login-mobile">
-                        <LogIn className="w-4 h-4" />
-                        Σύνδεση
-                      </Link>
                     </div>
                   )}
                 </div>
 
               </nav>
+                </div>
+                <div className="shrink-0 border-t border-white/10 bg-background/98 px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+                  <Button asChild variant="ghost" className="h-12 w-full gap-2 bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 hover:border-primary/50 font-semibold">
+                    <Link href="/admin" data-testid="btn-login-mobile-footer">
+                      <LogIn className="h-4 w-4 shrink-0" aria-hidden />
+                      Σύνδεση
+                    </Link>
+                  </Button>
+                </div>
+              </div>
             </SheetContent>
           </Sheet>
         </div>
