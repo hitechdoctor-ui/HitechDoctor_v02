@@ -53,7 +53,7 @@ const brands = [
       "Επισκευή πλακέτας",
       "Αλλαγή πίσω γυαλιού",
     ],
-    models: "Galaxy S25, S24, S23, A56, A55, A35, Z Fold 7, Z Flip 7 & άλλα",
+    models: "Galaxy S25, S24, S23, A56, A55, A53, A35, Z Fold 7, Z Flip 7 & άλλα",
     priceFrom: "€45",
     timeFrom: "30 λεπτά",
     color: "from-blue-600/25 to-blue-500/15",

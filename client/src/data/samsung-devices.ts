@@ -44,6 +44,8 @@ export const SAMSUNG_SERIES: SamsungSeries[] = [
     models: [
       { name: "Samsung Galaxy A56 5G", slug: slug("Samsung Galaxy A56 5G"), screen: "6.7″ AMOLED 120Hz",          tag: "NEW", screenPrice: 120, batteryPrice: 65, portPrice: 55 },
       { name: "Samsung Galaxy A55 5G", slug: slug("Samsung Galaxy A55 5G"), screen: "6.6″ Super AMOLED 120Hz",           screenPrice: 110, screenPriceOEM: 75,  batteryPrice: 60, portPrice: 50 },
+      /** Οθόνη 105 € χωρίς ΦΠΑ → ~130 € με ΦΠΑ 24% · συμφωνία με τιμοκατάλογο εργαστηρίου */
+      { name: "Samsung Galaxy A53 5G", slug: slug("Samsung Galaxy A53 5G"), screen: "6.5″ Super AMOLED 120Hz", screenPrice: 130, batteryPrice: 54, portPrice: 48 },
       { name: "Samsung Galaxy A36 5G", slug: slug("Samsung Galaxy A36 5G"), screen: "6.7″ AMOLED 120Hz",          tag: "NEW", screenPrice: 130, batteryPrice: 58, portPrice: 50 },
       { name: "Samsung Galaxy A35 5G", slug: slug("Samsung Galaxy A35 5G"), screen: "6.6″ Super AMOLED 120Hz",           screenPrice: 110, batteryPrice: 55, portPrice: 50 },
       { name: "Samsung Galaxy A26 5G", slug: slug("Samsung Galaxy A26 5G"), screen: "6.7″ AMOLED 120Hz",          tag: "NEW", screenPrice: 110, batteryPrice: 52, portPrice: 45 },
