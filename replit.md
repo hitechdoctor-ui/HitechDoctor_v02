@@ -159,7 +159,7 @@ Zod schemas are auto-generated from the Drizzle table definitions using `drizzle
 ### SEO
 - **react-helmet-async** — Dynamic document head management
 - `client/public/robots.txt` — Search engine crawl rules (blocks /admin, /checkout)
-- `client/public/sitemap.xml` — XML sitemap for all public pages
+- `server/routes.ts` `/sitemap.xml` — δυναμικό XML sitemap (επισκευές ανά μοντέλο, laptop/tablet/desktop, eShop προϊόντα blog)
 
 ### Global UI Components (non-admin pages only, mounted in App.tsx)
 - **ScrollProgressBar** — Reading progress bar at top of viewport

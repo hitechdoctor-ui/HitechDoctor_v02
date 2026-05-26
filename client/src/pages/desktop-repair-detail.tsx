@@ -4,6 +4,7 @@ import { Helmet } from "react-helmet-async";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Seo } from "@/components/seo";
+import { BUSINESS_SEO_META_LOCAL } from "@/lib/business-info";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
@@ -126,7 +127,7 @@ export default function DesktopRepairDetail() {
   }
 
   const pageTitle = `Επισκευή & Αναβάθμιση ${brand.name} — Τιμές RAM, SSD, PSU, OS | HiTech Doctor Αθήνα`;
-  const pageDesc = `Επισκευή & αναβάθμιση ${brand.name} στην Αθήνα (${brand.seriesLabel}). RAM/SSD από €${brand.ramUpgradeFrom}, τροφοδοτικό από €${brand.psuFrom}, εγκατάσταση OS €${brand.osInstallFrom}. Γραπτή εγγύηση.`;
+  const pageDesc = `Επισκευή & αναβάθμιση ${brand.name} (${brand.seriesLabel}): RAM/SSD από €${brand.ramUpgradeFrom}, PSU από €${brand.psuFrom}, εγκατάσταση OS €${brand.osInstallFrom}. ${BUSINESS_SEO_META_LOCAL}`;
   const canonicalUrl = `https://hitechdoctor.com/episkevi-desktop/${brand.slug}`;
 
   const jsonLd = {

@@ -4,6 +4,7 @@ import { Helmet } from "react-helmet-async";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Seo } from "@/components/seo";
+import { BUSINESS_SEO_META_LOCAL } from "@/lib/business-info";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
@@ -126,7 +127,7 @@ export default function LaptopRepairDetail() {
   }
 
   const pageTitle = `Επισκευή ${brand.name} — Τιμές Αλλαγής Οθόνης, Μπαταρίας & Πληκτρολογίου | HiTech Doctor Αθήνα`;
-  const pageDesc = `Επισκευή ${brand.name} στην Αθήνα (${brand.seriesLabel}). Αλλαγή οθόνης από €${brand.screenPriceFrom}, μπαταρία από €${brand.batteryPriceFrom}, πληκτρολόγιο από €${brand.keyboardPriceFrom}. Γνήσια ανταλλακτικά, εγγύηση.`;
+  const pageDesc = `Επισκευή ${brand.name} (${brand.seriesLabel}): οθόνη από €${brand.screenPriceFrom}, μπαταρία από €${brand.batteryPriceFrom}, πληκτρολόγιο από €${brand.keyboardPriceFrom}. ${BUSINESS_SEO_META_LOCAL}`;
   const canonicalUrl = `https://hitechdoctor.com/episkevi-laptop/${brand.slug}`;
 
   const jsonLd = {

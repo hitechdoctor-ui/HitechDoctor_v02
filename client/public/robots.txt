@@ -6,6 +6,7 @@ Allow: /
 Allow: /services
 Allow: /episkevi-
 Allow: /eshop
+Allow: /eshop-home
 Allow: /repair/
 Allow: /blog
 Allow: /portfolio/
@@ -26,4 +27,4 @@ Allow: /
 User-agent: Googlebot-Image
 Allow: /
 
-Sitemap: https://hitechdoctor.com/sitemap.xml
+Sitemap: https://www.hitechdoctor.com/sitemap.xml

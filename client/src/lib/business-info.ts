@@ -48,6 +48,10 @@ export function formatBusinessAddressOneLine(): string {
   return `${BUSINESS_STREET_ADDRESS}, ${BUSINESS_ADDRESS_LOCALITY} ${BUSINESS_POSTAL_CODE}, ${BUSINESS_ADDRESS_REGION}, Ελλάδα`;
 }
 
+/** Σύντομο τοπικό hook για meta descriptions (επισκευές / programmatic SEO). */
+export const BUSINESS_SEO_META_LOCAL =
+  "Κατάστημα Μοσχάτο—εξυπηρέτηση Καλλιθέα, Αθήνα & αποστολές πανελλαδικά.";
+
 export function buildLocalBusinessJsonLd(): Record<string, unknown> {
   const merged: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -55,6 +59,7 @@ export function buildLocalBusinessJsonLd(): Record<string, unknown> {
     additionalType: "https://schema.org/MobilePhoneRepair",
     name: BUSINESS_REGISTERED_NAME,
     alternateName: BUSINESS_TRADE_NAME,
+    description: `Επισκευή smartphone, tablet, laptop & υπολογιστών — σημείο στο ${BUSINESS_ADDRESS_LOCALITY} (${BUSINESS_ADDRESS_REGION}), κοντά στην Καλλιθέα & την ευρύτερη Αθήνα. Τηλ. ${BUSINESS_PHONE_DISPLAY}, email ${BUSINESS_EMAIL}.`,
     url: BUSINESS_SITE_URL_WWW,
     image: `${BUSINESS_SITE_URL_WWW}/favicon.png`,
     logo: `${BUSINESS_SITE_URL_WWW}/favicon.png`,
@@ -86,7 +91,13 @@ export function buildLocalBusinessJsonLd(): Record<string, unknown> {
       "Th 17:30-21:00",
       "Fr 17:30-21:00",
     ],
-    areaServed: "Athens, Greece",
+    areaServed: [
+      { "@type": "City", name: "Μοσχάτο" },
+      { "@type": "City", name: "Καλλιθέα" },
+      { "@type": "AdministrativeArea", name: "Αττική" },
+      { "@type": "City", name: "Αθήνα" },
+      { "@type": "Country", name: "Ελλάδα" },
+    ],
     sameAs: BUSINESS_SAME_AS,
 
     contactPoint: [

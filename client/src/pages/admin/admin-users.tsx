@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { getSuperAdminEmail, normalizeAdminEmail } from "@shared/admin-roles";
 import { UserPlus, Trash2, KeyRound, Shield, ShieldCheck, Eye, EyeOff, CircleUser } from "lucide-react";
 
 const ROLE_VALUES = ["superadmin", "admin", "staff", "customer"] as const;
@@ -44,12 +45,33 @@ function roleLabel(role: string): string {
     case "admin":
       return "Admin";
     case "staff":
-      return "Προσωπικό";
+      return "Προσωπικό (Staff)";
     case "customer":
-      return "Πελάτης (Portal)";
+      return "Πελάτης (Customer)";
     default:
       return role;
   }
+}
+
+/** Κανονικοποιημένο SUPER_ADMIN_EMAIL για το UI: προτιμάται VITE_SUPER_ADMIN_EMAIL στο build, αλλιώς το shared fallback/process. */
+function canonicalSuperAdminEmailForUi(): string {
+  try {
+    const env = typeof import.meta !== "undefined" ? import.meta.env : undefined;
+    const vite =
+      env && typeof env.VITE_SUPER_ADMIN_EMAIL === "string" ? env.VITE_SUPER_ADMIN_EMAIL.trim() : "";
+    if (vite) return normalizeAdminEmail(vite);
+  } catch {
+    /* ignore */
+  }
+  return getSuperAdminEmail();
+}
+
+/** Κλείδωμα ρόλου: ιδιοκτήτης πλατφόρμας από API ή email που ταιριάζει με SUPER_ADMIN_EMAIL (βλ. .env / VITE_SUPER_ADMIN_EMAIL). */
+function isPlatformOwnerRow(user: AdminUser): boolean {
+  return (
+    user.platformOwner === true ||
+    normalizeAdminEmail(user.email) === canonicalSuperAdminEmailForUi()
+  );
 }
 
 function RoleIcon({ role, className }: { role: string; className?: string }) {
@@ -153,10 +175,10 @@ export default function AdminUsersPage() {
               </thead>
               <tbody>
                 {users.map((user) => {
-                  const isPrimarySuperAdmin = user.role === "superadmin" && user.platformOwner === true;
+                  const ownerLocked = isPlatformOwnerRow(user);
                   const savingRole =
                     patchRoleMutation.isPending && patchRoleMutation.variables?.id === user.id;
-                  const roleControlDisabled = isPrimarySuperAdmin || savingRole;
+                  const roleControlDisabled = ownerLocked || savingRole;
                   const safeRole = ROLE_VALUES.includes(user.role as (typeof ROLE_VALUES)[number])
                     ? user.role
                     : "customer";
@@ -202,9 +224,9 @@ export default function AdminUsersPage() {
                         {savingRole ? (
                           <p className="text-[11px] text-muted-foreground mt-1">Αποθήκευση...</p>
                         ) : null}
-                        {isPrimarySuperAdmin ? (
+                        {ownerLocked ? (
                           <p className="text-[11px] text-muted-foreground mt-1">
-                            Ο ρόλος του κύριου διαχειριστή είναι κλειδωμένος.
+                            Ο ρόλος του ιδιοκτήτη πλατφόρμας δεν αλλάζει από εδώ (SUPER_ADMIN_EMAIL).
                           </p>
                         ) : null}
                       </td>
@@ -235,10 +257,10 @@ export default function AdminUsersPage() {
                                 deleteMutation.mutate(user.id);
                               }
                             }}
-                            disabled={isPrimarySuperAdmin}
-                            aria-disabled={isPrimarySuperAdmin}
+                            disabled={ownerLocked}
+                            aria-disabled={ownerLocked}
                             title={
-                              isPrimarySuperAdmin ? "Ο κύριος διαχειριστής δεν διαγράφεται από εδώ" : undefined
+                              ownerLocked ? "Ο ιδιοκτήτης πλατφόρμας δεν διαγράφεται από εδώ" : undefined
                             }
                             data-testid={`btn-delete-admin-${user.id}`}
                           >
@@ -312,9 +334,9 @@ export default function AdminUsersPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="superadmin">Super Admin</SelectItem>
-                  <SelectItem value="staff">Προσωπικό (μόνο ανατεθέντα αιτήματα)</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="staff">Προσωπικό (Staff)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

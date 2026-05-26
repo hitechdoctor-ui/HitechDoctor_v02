@@ -146,7 +146,11 @@ export async function registerRoutes(
   /** Dynamic sitemap.xml (SEO) */
   app.get("/sitemap.xml", async (_req, res) => {
     try {
-      const base = "https://www.hitechdoctor.com";
+      const base =
+        (process.env.SITE_URL || process.env.PUBLIC_APP_URL || "https://www.hitechdoctor.com").replace(
+          /\/$/,
+          "",
+        );
 
       // --- Static pages (keep in sync with App routes) ---
       const staticPaths = [
@@ -161,6 +165,12 @@ export async function registerRoutes(
         "/services/episkeui-laptop",
         "/services/episkeui-tablet",
         "/services/episkeui-desktop",
+        "/services/episkeui-apple-watch",
+        "/services/episkeui-playstation",
+        "/services/imei-check",
+        "/services/ipsw-download",
+        "/services/apostoli-syskevis",
+        "/eshop-home",
         "/eshop",
         "/blog",
         "/check-status",
@@ -175,25 +185,60 @@ export async function registerRoutes(
         "/prosvassimotita",
         "/apple-service",
         "/web-designer",
-        "/services/imei-check",
-        "/services/ipsw-download",
-        "/services/apostoli-syskevis",
+        "/portfolio/hydrofix-gr",
+        "/portfolio/regalo-gr",
+        "/portfolio/louloudotopos",
+        "/portfolio/bsnaomi-gr",
+        "/portfolio/theatrehood-gr",
+        "/portfolio/ath-ecs-gr",
+        "/portfolio/nikosapost-gr",
+        "/portfolio/metamorfosi-moschato-gr",
       ];
 
-      // --- Repair detail pages (device slugs from data lists) ---
-      // These live in the client data layer today; we import them for sitemap completeness.
-      const [{ IPHONE_SERIES }, { SAMSUNG_SERIES }] = await Promise.all([
+      const [
+        { IPHONE_SERIES },
+        { SAMSUNG_SERIES },
+        { XIAOMI_SERIES },
+        { HUAWEI_SERIES },
+        { ONEPLUS_SERIES },
+        { LAPTOP_BRANDS },
+        { TABLET_BRANDS },
+        { DESKTOP_BRANDS },
+      ] = await Promise.all([
         import("../client/src/data/iphone-devices"),
         import("../client/src/data/samsung-devices"),
+        import("../client/src/data/xiaomi-devices"),
+        import("../client/src/data/huawei-devices"),
+        import("../client/src/data/oneplus-devices"),
+        import("../client/src/data/laptop-brands"),
+        import("../client/src/data/tablet-brands"),
+        import("../client/src/data/desktop-brands"),
       ]);
-      const iphoneModelSlugs: string[] = (IPHONE_SERIES ?? [])
-        .flatMap((s: any) => (s?.models ?? []).map((m: any) => m?.slug).filter(Boolean));
-      const samsungModelSlugs: string[] = (SAMSUNG_SERIES ?? [])
-        .flatMap((s: any) => (s?.models ?? []).map((m: any) => m?.slug).filter(Boolean));
+
+      const collectModelSlugs = (series: readonly { models?: readonly { slug?: string }[] }[]): string[] =>
+        (series ?? []).flatMap((s) =>
+          (s.models ?? []).map((m) => m.slug).filter((slug): slug is string => typeof slug === "string" && slug.trim().length > 0)
+        );
+
+      const iphoneModelSlugs = collectModelSlugs(IPHONE_SERIES ?? []);
+      const samsungModelSlugs = collectModelSlugs(SAMSUNG_SERIES ?? []);
+      const xiaomiModelSlugs = collectModelSlugs(XIAOMI_SERIES ?? []);
+      const huaweiModelSlugs = collectModelSlugs(HUAWEI_SERIES ?? []);
+      const oneplusModelSlugs = collectModelSlugs(ONEPLUS_SERIES ?? []);
+
+      const laptopSlugs = (LAPTOP_BRANDS ?? []).map((b: { slug: string }) => b.slug).filter(Boolean);
+      const tabletSlugs = (TABLET_BRANDS ?? []).map((b: { slug: string }) => b.slug).filter(Boolean);
+      const desktopSlugs = (DESKTOP_BRANDS ?? []).map((b: { slug: string }) => b.slug).filter(Boolean);
 
       const repairPaths = [
         ...iphoneModelSlugs.map((slug) => `/episkevi-iphone/${slug}`),
         ...samsungModelSlugs.map((slug) => `/episkevi-samsung/${slug}`),
+        ...xiaomiModelSlugs.map((slug) => `/episkevi-xiaomi/${slug}`),
+        ...huaweiModelSlugs.map((slug) => `/episkevi-huawei/${slug}`),
+        ...oneplusModelSlugs.map((slug) => `/episkevi-oneplus/${slug}`),
+        ...laptopSlugs.map((slug) => `/episkevi-laptop/${slug}`),
+        ...tabletSlugs.map((slug) => `/episkevi-tablet/${slug}`),
+        ...desktopSlugs.map((slug) => `/episkevi-desktop/${slug}`),
       ];
 
       // --- Blog posts ---

@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/footer";
 import { RepairBottomProducts } from "@/components/repair-bottom-products";
 import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { Seo } from "@/components/seo";
+import { BUSINESS_SEO_META_LOCAL } from "@/lib/business-info";
 import { RepairRequestModal } from "@/components/repair-request-modal";
 import { RepairPriceBreakdownCard } from "@/components/repair-price-breakdown";
 import { Button } from "@/components/ui/button";
@@ -422,7 +423,7 @@ export default function IPhoneRepairDetail() {
     : `Επισκευή ${model.name} — Τιμές Αλλαγής Οθόνης, Μπαταρίας & Θύρας | HiTech Doctor Αθήνα`;
   const pageDesc = is15ProMax
     ? "Αλλαγή οθόνης & μπαταρίας iPhone 15 Pro Max στο Μοσχάτο από €220. Εξυπηρέτηση Ταύρος, Καλλιθέα, Πειραιάς & πανελλαδικά μέσω Box Now. Γραπτή εγγύηση. ☎ 6981 882 005"
-    : `Επισκευή ${model.name} στην Αθήνα. Αλλαγή οθόνης από €${model.screenTiers[2].price}, μπαταρία €${model.batteryTiers[2].price}, θύρα φόρτισης €${model.chargingPortPrice}. Γνήσια & premium ανταλλακτικά, εγγύηση, αποτέλεσμα 30 λεπτά.`;
+    : `Επισκευή ${model.name}: οθόνη από €${model.screenTiers[2].price}, μπαταρία €${model.batteryTiers[2].price}, θύρα φόρτισης €${model.chargingPortPrice}. ${BUSINESS_SEO_META_LOCAL} Γνήσια/premium ανταλλακτικά, γραπτή εγγύηση.`;
   const canonicalUrl = `https://hitechdoctor.com/episkevi-iphone/${model.slug}`;
 
   const selectedTier = activeTab === "screen"

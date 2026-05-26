@@ -5,6 +5,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { RepairBottomProducts } from "@/components/repair-bottom-products";
 import { Seo } from "@/components/seo";
+import { BUSINESS_SEO_META_LOCAL } from "@/lib/business-info";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
@@ -197,8 +198,8 @@ export default function SamsungRepairDetail() {
 
   const pageTitle = `Επισκευή ${model.name} — Τιμές Αλλαγής Οθόνης, Μπαταρίας & Θύρας | HiTech Doctor Αθήνα`;
   const pageDesc = hasOEM
-    ? `Επισκευή ${model.name} στην Αθήνα. Αλλαγή οθόνης από €${model.screenPriceOEM} (OEM) ή €${model.screenPrice} (Γνήσια), μπαταρία €${model.batteryPrice}. Εγγύηση, αποτέλεσμα 30 λεπτά.`
-    : `Επισκευή ${model.name} στην Αθήνα. Αλλαγή οθόνης €${model.screenPrice}, μπαταρία €${model.batteryPrice}. Γνήσια ανταλλακτικά, εγγύηση, αποτέλεσμα 30 λεπτά.`;
+    ? `Επισκευή ${model.name}: οθόνη από €${model.screenPriceOEM} (OEM) ή €${model.screenPrice} (Γνήσια), μπαταρία €${model.batteryPrice}, θύρα USB-C €${model.portPrice}. ${BUSINESS_SEO_META_LOCAL}`
+    : `Επισκευή ${model.name}: οθόνη €${model.screenPrice}, μπαταρία €${model.batteryPrice}, θύρα USB-C €${model.portPrice}. ${BUSINESS_SEO_META_LOCAL}`;
   const canonicalUrl = `https://hitechdoctor.com/episkevi-samsung/${model.slug}`;
 
   const jsonLd = {
