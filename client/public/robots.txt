@@ -33,4 +33,4 @@ Disallow: /api/
 User-agent: Googlebot-Image
 Allow: /
 
-Sitemap: https://www.hitechdoctor.com/sitemap.xml
+Sitemap: https://hitechdoctor.com/sitemap.xml

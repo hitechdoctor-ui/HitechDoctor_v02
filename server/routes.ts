@@ -55,6 +55,7 @@ import {
   isSuperAdminUser,
   normalizeAdminEmail,
 } from "@shared/admin-roles";
+import { buildSitemapXml } from "./sitemap";
 
 const BCRYPT_ROUNDS = 12;
 
@@ -138,151 +139,17 @@ function publicBaseUrl(): string {
   return "http://localhost:5000";
 }
 
-/** Δημόσιες μόνο — ποτέ /admin (403 πίσω από auth). */
-function isPublicSitemapPath(pathname: string): boolean {
-  const p = pathname.startsWith("/") ? pathname : `/${pathname}`;
-  return p !== "/admin" && !p.startsWith("/admin/");
-}
-
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
 
-  /** Dynamic sitemap.xml (SEO) */
+  /** Dynamic sitemap.xml (SEO) — μόνο δημόσιες σελίδες, canonical origin, χωρίς trailing slash */
   app.get("/sitemap.xml", async (_req, res) => {
     try {
-      const base =
-        (process.env.SITE_URL || process.env.PUBLIC_APP_URL || "https://www.hitechdoctor.com").replace(
-          /\/$/,
-          "",
-        );
-
-      // --- Static pages (keep in sync with App routes) ---
-      const staticPaths = [
-        "/",
-        "/services",
-        "/services/episkeui-iphone",
-        "/services/episkeui-samsung",
-        "/services/episkeui-xiaomi",
-        "/services/episkeui-huawei",
-        "/services/episkeui-oneplus",
-        "/services/episkeui-kiniton",
-        "/services/episkeui-laptop",
-        "/services/episkeui-tablet",
-        "/services/episkeui-desktop",
-        "/services/episkeui-apple-watch",
-        "/services/episkeui-playstation",
-        "/services/imei-check",
-        "/services/ipsw-download",
-        "/services/apostoli-syskevis",
-        "/eshop-home",
-        "/eshop",
-        "/blog",
-        "/check-status",
-        "/contact",
-        "/sxetika-me-mas",
-        "/faq",
-        "/tropoi-pliromis",
-        "/oroi-episkeuis",
-        "/politiki-cookies",
-        "/politiki-epistrofon",
-        "/oroi-chrisis",
-        "/prosvassimotita",
-        "/apple-service",
-        "/web-designer",
-        "/portfolio/hydrofix-gr",
-        "/portfolio/regalo-gr",
-        "/portfolio/louloudotopos",
-        "/portfolio/bsnaomi-gr",
-        "/portfolio/theatrehood-gr",
-        "/portfolio/ath-ecs-gr",
-        "/portfolio/nikosapost-gr",
-        "/portfolio/metamorfosi-moschato-gr",
-      ];
-
-      const [
-        { IPHONE_SERIES },
-        { SAMSUNG_SERIES },
-        { XIAOMI_SERIES },
-        { HUAWEI_SERIES },
-        { ONEPLUS_SERIES },
-        { LAPTOP_BRANDS },
-        { TABLET_BRANDS },
-        { DESKTOP_BRANDS },
-      ] = await Promise.all([
-        import("../client/src/data/iphone-devices"),
-        import("../client/src/data/samsung-devices"),
-        import("../client/src/data/xiaomi-devices"),
-        import("../client/src/data/huawei-devices"),
-        import("../client/src/data/oneplus-devices"),
-        import("../client/src/data/laptop-brands"),
-        import("../client/src/data/tablet-brands"),
-        import("../client/src/data/desktop-brands"),
-      ]);
-
-      const collectModelSlugs = (series: readonly { models?: readonly { slug?: string }[] }[]): string[] =>
-        (series ?? []).flatMap((s) =>
-          (s.models ?? []).map((m) => m.slug).filter((slug): slug is string => typeof slug === "string" && slug.trim().length > 0)
-        );
-
-      const iphoneModelSlugs = collectModelSlugs(IPHONE_SERIES ?? []);
-      const samsungModelSlugs = collectModelSlugs(SAMSUNG_SERIES ?? []);
-      const xiaomiModelSlugs = collectModelSlugs(XIAOMI_SERIES ?? []);
-      const huaweiModelSlugs = collectModelSlugs(HUAWEI_SERIES ?? []);
-      const oneplusModelSlugs = collectModelSlugs(ONEPLUS_SERIES ?? []);
-
-      const laptopSlugs = (LAPTOP_BRANDS ?? []).map((b: { slug: string }) => b.slug).filter(Boolean);
-      const tabletSlugs = (TABLET_BRANDS ?? []).map((b: { slug: string }) => b.slug).filter(Boolean);
-      const desktopSlugs = (DESKTOP_BRANDS ?? []).map((b: { slug: string }) => b.slug).filter(Boolean);
-
-      const repairPaths = [
-        ...iphoneModelSlugs.map((slug) => `/episkevi-iphone/${slug}`),
-        ...samsungModelSlugs.map((slug) => `/episkevi-samsung/${slug}`),
-        ...xiaomiModelSlugs.map((slug) => `/episkevi-xiaomi/${slug}`),
-        ...huaweiModelSlugs.map((slug) => `/episkevi-huawei/${slug}`),
-        ...oneplusModelSlugs.map((slug) => `/episkevi-oneplus/${slug}`),
-        ...laptopSlugs.map((slug) => `/episkevi-laptop/${slug}`),
-        ...tabletSlugs.map((slug) => `/episkevi-tablet/${slug}`),
-        ...desktopSlugs.map((slug) => `/episkevi-desktop/${slug}`),
-      ];
-
-      // --- Blog posts ---
-      // Blog posts are currently stored in the app data layer; if/when moved to DB, replace this import with a DB query.
-      const { BLOG_POSTS } = await import("../client/src/data/blog-posts");
-      const blogPaths: string[] = (BLOG_POSTS ?? [])
-        .map((p: any) => p?.slug)
-        .filter(Boolean)
-        .map((slug: string) => `/blog/${slug}`);
-
-      // --- eShop products (DB) ---
-      const products = await storage.getProducts();
-      const productPaths: string[] = (products ?? [])
-        .map((p: any) => p?.slug)
-        .filter((s: unknown) => typeof s === "string" && s.trim().length > 0)
-        .map((slug: string) => `/eshop/${slug}`);
-
-      const urls = Array.from(
-        new Set([...staticPaths, ...repairPaths, ...blogPaths, ...productPaths]),
-      ).filter(isPublicSitemapPath);
-
-      const escXml = (s: string) =>
-        s
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&apos;");
-
-      const xml = `<?xml version="1.0" encoding="UTF-8"?>\n` +
-        `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
-        urls
-          .map((p) => `  <url><loc>${escXml(`${base}${p}`)}</loc></url>`)
-          .join("\n") +
-        `\n</urlset>\n`;
-
+      const xml = await buildSitemapXml(() => storage.getProducts());
       res.setHeader("Content-Type", "application/xml; charset=utf-8");
-      res.setHeader("Cache-Control", "public, max-age=1800"); // 30 minutes
+      res.setHeader("Cache-Control", "public, max-age=1800");
       res.send(xml);
     } catch (err) {
       console.error("[sitemap.xml]", err);
