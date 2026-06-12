@@ -138,6 +138,12 @@ function publicBaseUrl(): string {
   return "http://localhost:5000";
 }
 
+/** Δημόσιες μόνο — ποτέ /admin (403 πίσω από auth). */
+function isPublicSitemapPath(pathname: string): boolean {
+  const p = pathname.startsWith("/") ? pathname : `/${pathname}`;
+  return p !== "/admin" && !p.startsWith("/admin/");
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -257,8 +263,8 @@ export async function registerRoutes(
         .map((slug: string) => `/eshop/${slug}`);
 
       const urls = Array.from(
-        new Set([...staticPaths, ...repairPaths, ...blogPaths, ...productPaths])
-      );
+        new Set([...staticPaths, ...repairPaths, ...blogPaths, ...productPaths]),
+      ).filter(isPublicSitemapPath);
 
       const escXml = (s: string) =>
         s
