@@ -1,6 +1,5 @@
 import type { Express, RequestHandler } from "express";
 import { GSC_404_EXACT_REDIRECTS } from "./gsc-404-redirects";
-import { CANONICAL_SITE_ORIGIN } from "./sitemap";
 
 /**
  * Μόνιμα 301 redirects για URLs που εμφανίστηκαν ως 404 στο Search Console (παλιό Shopify/WP).
@@ -158,22 +157,7 @@ export function registerRedirects(app: Express): void {
   const handler: RequestHandler = (req, res, next) => {
     if (req.method !== "GET" && req.method !== "HEAD") return next();
 
-    const rawUrl = req.originalUrl || req.url || "/";
-    const qIndex = rawUrl.indexOf("?");
-    const rawPath = qIndex >= 0 ? rawUrl.slice(0, qIndex) : rawUrl;
-    const querySuffix = qIndex >= 0 ? rawUrl.slice(qIndex) : "";
-
-    const host = (req.headers.host || "").toLowerCase().split(":")[0];
-    const canonicalHost = new URL(CANONICAL_SITE_ORIGIN).host.toLowerCase();
-    if (host === `www.${canonicalHost}`) {
-      return res.redirect(301, `${CANONICAL_SITE_ORIGIN}${rawPath}${querySuffix}`);
-    }
-
-    if (rawPath.length > 1 && rawPath.endsWith("/")) {
-      return res.redirect(301, `${rawPath.slice(0, -1)}${querySuffix}`);
-    }
-
-    const raw = rawPath;
+    const raw = (req.originalUrl || req.url || "").split("?")[0];
     if (
       raw.startsWith("/api") ||
       raw.startsWith("/@") ||
