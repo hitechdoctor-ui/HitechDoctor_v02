@@ -1,10 +1,9 @@
 import { cn } from "@/lib/utils";
-import { SosButton } from "@/components/sos-button";
 import { AccessibilityButton } from "@/components/accessibility-button";
 import { RepairChatbot } from "@/components/repair-chatbot";
 
 /**
- * Κάθετη στήλη FAB: τηλέφωνο, προσβασιμότητα, AI Doctor (RepairChatbot σε όλες τις δημόσιες σελίδες).
+ * Κάθετη στήλη FAB: προσβασιμότητα + AI Doctor (RepairChatbot σε όλες τις δημόσιες σελίδες).
  * Στο eShop το κουμπί φίλτρων έχει z-[154] — `elevateZForOverlay` ανεβάζει τη στήλη ώστε το chat να μην καλύπτεται.
  */
 export function FloatingActionStack({
@@ -23,7 +22,6 @@ export function FloatingActionStack({
       )}
       aria-label="Γρήγορες ενέργειες"
     >
-      <SosButton />
       <AccessibilityButton />
       {showRepairChat ? <RepairChatbot /> : null}
     </div>

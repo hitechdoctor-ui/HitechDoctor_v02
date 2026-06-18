@@ -98,20 +98,6 @@ export default function Home() {
 
       <Navbar />
 
-      {/* ── Viber Fixed CTA ── */}
-      <a
-        href="viber://chat?number=hitechdoctor"
-        className="fixed bottom-[4.5rem] right-4 md:bottom-6 z-[130] flex items-center gap-2.5 px-4 py-3 rounded-2xl font-semibold text-sm text-white shadow-2xl transition-transform hover:scale-105 active:scale-95"
-        style={{ background: "linear-gradient(135deg, #7360f2, #59267c)", boxShadow: "0 4px 24px rgba(115,96,242,0.45)" }}
-        aria-label="Στείλε φωτογραφία βλάβης στο Viber"
-      >
-        <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white shrink-0" aria-hidden>
-          <path d="M11.4 0C5.2.3.3 5.4.3 11.6c0 2.2.6 4.3 1.7 6.1L.3 24l6.5-1.7c1.7.9 3.6 1.4 5.6 1.4 6.2 0 11.3-5 11.3-11.1C23.7 6.4 18.2.7 11.4 0zm5.8 16.4c-.3.8-1.5 1.5-2.1 1.6-.5.1-1.2.1-1.9-.1-.4-.1-1-.3-1.7-.6-3-1.3-5-4.3-5.1-4.5-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.2.5-.3.7-.3h.5c.2 0 .4.1.5.4.2.4.7 1.7.8 1.8.1.1.1.3 0 .5-.1.2-.2.3-.3.4-.1.1-.3.3-.4.4-.1.1-.2.3-.1.5.5.8 1.1 1.5 1.8 2.1.7.6 1.5 1 2.3 1.2.2.1.4 0 .5-.1l.4-.5c.1-.2.3-.2.5-.1l1.7.8c.2.1.4.2.4.4.1.3 0 1-.2 1.5z" />
-        </svg>
-        <span className="hidden sm:inline">Στείλε φωτογραφία βλάβης</span>
-        <span className="sm:hidden">Viber</span>
-      </a>
-
       <main>
         {/* ── Promo hero: καθαρό banner, υψηλή αναγνωσιμότητα — χωρίς βίντεο / χαοτικό φόντο πίσω από CTAs ── */}
         <section className="container mx-auto px-4 pt-8 pb-10 lg:pt-12 lg:pb-14" aria-label="HiTech Doctor">
