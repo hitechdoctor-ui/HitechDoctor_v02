@@ -775,6 +775,7 @@ export default function AdminProducts() {
             <SelectContent>
               <SelectItem value="all-categories">Όλες οι κατηγορίες</SelectItem>
               <SelectItem value="mobile">Κινητά (mobile)</SelectItem>
+              <SelectItem value="refurbished-iphones">Refurbished iPhone</SelectItem>
               <SelectItem value="accessory">Αξεσουάρ (accessory)</SelectItem>
               <SelectItem value="laptop">Laptop</SelectItem>
               <SelectItem value="desktop">Desktop PC</SelectItem>

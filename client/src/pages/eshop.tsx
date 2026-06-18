@@ -28,6 +28,8 @@ import {
   Laptop,
   Monitor,
   Headphones,
+  BatteryFull,
+  Sparkles,
 } from "lucide-react";
 import { Link } from "wouter";
 import type { Product } from "@shared/schema";
@@ -61,7 +63,8 @@ const COLOR_HEX: Record<string, string> = {
   "cosmic orange": "#fb923c",
   brown: "#d97706",
   gold: "#fbbf24",
-  yellow: "#facc15",
+  "starlight white": "#f9fafb",
+  starlight: "#f9fafb",
 };
 
 function getColorHex(colorName?: string): string {
@@ -201,6 +204,7 @@ type TabId =
   | "cases"
   | "chargers"
   | "headphones"
+  | "refurbished-iphones"
   | "laptop"
   | "desktop"
   | "";
@@ -214,6 +218,7 @@ interface Tab {
 const TABS: Tab[] = [
   { id: "", label: "Όλα", icon: Package },
   { id: "mobile", label: "Κινητά", icon: Smartphone },
+  { id: "refurbished-iphones", label: "Refurbished iPhone", icon: Sparkles },
   { id: "screen-protectors", label: "Τζάμια Προστασίας", icon: Shield },
   { id: "cases", label: "Θήκες", icon: Smartphone },
   { id: "chargers", label: "Φορτιστές & Καλώδια", icon: Cable },
@@ -228,10 +233,106 @@ const SUBCATEGORY_LABELS: Record<string, string> = {
   chargers: "Φορτιστής / Καλώδιο",
   headphones: "Ασύρματα ακουστικά",
   mobile: "Κινητό",
+  "refurbished-iphones": "Refurbished iPhone",
 };
 
 const formatPrice = (price: string | number) =>
   new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR" }).format(Number(price));
+
+function isRefurbishedIphone(product: Product): boolean {
+  return product.category === "refurbished-iphones";
+}
+
+// ── Refurbished iPhone card (Grade A) ───────────────────────────────────────
+function RefurbishedIphoneCard({ product }: { product: Product }) {
+  const addItem = useCartStore((s) => s.addItem);
+  const { toast } = useToast();
+  const p = product as Product & { ram?: string; color?: string; storage?: string };
+
+  const handleAdd = () => {
+    addItem(product);
+    toast({ title: "Προστέθηκε στο καλάθι", description: product.name, duration: 3000 });
+  };
+
+  const brandBg = getBrandBg(p.brand ?? "Apple");
+  const colorHex = getColorHex(p.color);
+
+  return (
+    <div
+      className="bg-card pcb-border rounded-2xl flex flex-col overflow-hidden group transition-all duration-300 hover:-translate-y-2"
+      style={{ "--card-glow": colorHex } as React.CSSProperties}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = `0 8px 40px ${colorHex}44`; }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
+      data-testid={`card-product-${product.id}`}
+    >
+      <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
+        <div className="relative h-64 overflow-hidden" style={{ background: brandBg }}>
+          {/* Grade A banner */}
+          <div className="absolute top-0 inset-x-0 z-20 flex justify-center">
+            <span className="w-full py-2 text-center text-xs font-black tracking-[0.22em] uppercase text-white bg-gradient-to-r from-emerald-600 via-green-500 to-emerald-600 shadow-[0_4px_20px_rgba(34,197,94,0.45)]">
+              GRADE A
+            </span>
+          </div>
+
+          {product.imageUrl ? (
+            <img
+              src={product.imageUrl}
+              alt={`${product.name} — HiTech Doctor`}
+              className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500 ease-out pt-8"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full pt-8 group-hover:scale-105 transition-transform duration-500 ease-out">
+              <ColoredPhoneIcon color={p.color} brand={p.brand} />
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+        </div>
+      </Link>
+
+      <div className="flex flex-col flex-1 p-4 gap-3">
+        <div className="flex-1">
+          <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
+            <h3 className="font-display font-bold text-foreground text-[14px] leading-snug mb-2 hover:text-primary transition-colors line-clamp-2">
+              {product.name}
+            </h3>
+          </Link>
+
+          <p className="text-2xl font-extrabold text-primary tracking-tight">
+            {formatPrice(product.price)}
+          </p>
+
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 text-[10px] font-bold uppercase">
+              <Sparkles className="w-3 h-3" />
+              Grade A
+            </span>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300/90 text-[10px] font-semibold">
+              100% Μπαταρία
+            </span>
+          </div>
+        </div>
+
+        <Button
+          onClick={handleAdd}
+          className="h-9 text-sm font-semibold w-full"
+          style={{ background: "linear-gradient(135deg, hsl(185 100% 36%), hsl(200 90% 46%))", boxShadow: "0 0 18px rgba(0,210,200,0.22)" }}
+          data-testid={`button-addcart-${product.id}`}
+        >
+          <ShoppingCart className="w-4 h-4 mr-2" />
+          Προσθήκη στο Καλάθι
+        </Button>
+
+        <div className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/25">
+          <BatteryFull className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span className="text-[11px] font-bold tracking-wide text-emerald-300 uppercase">
+            100% Υγεία Μπαταρίας
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ── Mobile product card ─────────────────────────────────────────────────────
 function MobileCard({ product }: { product: Product }) {
@@ -719,6 +820,7 @@ export default function EShop() {
   }, [search]);
 
   const isMobileTab = activeTab === "mobile";
+  const isRefurbishedTab = activeTab === "refurbished-iphones";
   const isLaptopTab = activeTab === "laptop";
   const isDesktopTab = activeTab === "desktop";
   const isComputerTab = isLaptopTab || isDesktopTab;
@@ -728,7 +830,17 @@ export default function EShop() {
     activeTab === "chargers" ||
     activeTab === "headphones";
 
-  const fetchCategory = isMobileTab ? "mobile" : isLaptopTab ? "laptop" : isDesktopTab ? "desktop" : (isSubcategoryTab ? "accessory" : undefined);
+  const fetchCategory = isMobileTab
+    ? "mobile"
+    : isRefurbishedTab
+      ? "refurbished-iphones"
+      : isLaptopTab
+        ? "laptop"
+        : isDesktopTab
+          ? "desktop"
+          : isSubcategoryTab
+            ? "accessory"
+            : undefined;
   const fetchSubcategory = isSubcategoryTab ? activeTab : undefined;
 
   const { data: allProducts, isLoading } = useProducts(fetchCategory, fetchSubcategory);
@@ -849,6 +961,8 @@ export default function EShop() {
           <h1 className="text-4xl lg:text-5xl font-display font-extrabold text-foreground mb-2">
             {isMobileTab ? (
               <>Κινητά <span className="gradient-text">Τηλέφωνα</span></>
+            ) : isRefurbishedTab ? (
+              <>Refurbished <span className="gradient-text">Apple iPhone</span></>
             ) : isLaptopTab ? (
               <>Refurbished <span className="gradient-text">Laptops</span></>
             ) : isDesktopTab ? (
@@ -860,6 +974,8 @@ export default function EShop() {
           <p className="text-muted-foreground max-w-xl">
             {isMobileTab
               ? "Βρείτε κινητά τηλέφωνα Apple, Samsung, Xiaomi και άλλες μάρκες. Φιλτράρετε ανά μάρκα, χρώμα και μνήμη."
+              : isRefurbishedTab
+              ? "Ανακατασκευασμένα Apple iPhone Grade A με 100% υγεία μπαταρίας. Ελεγμένα, με εγγύηση καταστήματος."
               : isLaptopTab
               ? "Μεταχειρισμένα laptop με εγγύηση 1 έτους. Lenovo ThinkPad, Microsoft Surface και άλλα μοντέλα επαγγελματικής κλάσης."
               : isDesktopTab
@@ -888,13 +1004,28 @@ export default function EShop() {
         </div>
 
         {/* ── Mobile filters ── */}
-        {isMobileTab && !isLoading && allProducts && allProducts.length > 0 && (
+        {(isMobileTab || isRefurbishedTab) && !isLoading && allProducts && allProducts.length > 0 && (
           <MobileFilterBar
             products={allProducts}
             brand={filterBrand} setBrand={setFilterBrand}
             color={filterColor} setColor={setFilterColor}
             storage={filterStorage} setStorage={setFilterStorage}
           />
+        )}
+
+        {/* ── Refurbished iPhone info banner ── */}
+        {isRefurbishedTab && (
+          <div className="mb-6 bg-emerald-500/5 border border-emerald-500/25 rounded-2xl p-4 flex flex-wrap items-center gap-3">
+            <BatteryFull className="w-5 h-5 text-emerald-400 shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-foreground">Grade A — 100% Υγεία Μπαταρίας</p>
+              <p className="text-xs text-muted-foreground">Όλα τα refurbished iPhone ελέγχονται πριν την πώληση και συνοδεύονται από εγγύηση καταστήματος.</p>
+            </div>
+            <div className="flex flex-wrap gap-2 ml-auto">
+              <span className="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-xs text-emerald-300 font-semibold">Grade A</span>
+              <span className="px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-xs text-emerald-300 font-semibold">100% Μπαταρία</span>
+            </div>
+          </div>
         )}
 
         {/* ── Screen protector info banner ── */}
@@ -941,7 +1072,9 @@ export default function EShop() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
             {products.map((product) =>
-              product.category === "mobile"
+              isRefurbishedIphone(product)
+                ? <RefurbishedIphoneCard key={product.id} product={product} />
+                : product.category === "mobile"
                 ? <MobileCard key={product.id} product={product} />
                 : isScreenProtector(product)
                   ? <ScreenProtectorCard key={product.id} product={product} />

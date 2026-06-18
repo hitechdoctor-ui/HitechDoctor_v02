@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { RepairTrackerSection } from "@/components/repair-tracker-section";
-import { Wrench, Package, Shield, Phone, Mail, MapPin, Facebook, Instagram, ExternalLink, Smartphone, Cable, Laptop, Monitor, Headphones } from "lucide-react";
+import { Wrench, Package, Shield, Phone, Mail, MapPin, Facebook, Instagram, ExternalLink, Smartphone, Cable, Laptop, Monitor, Headphones, Sparkles } from "lucide-react";
 import { SiTiktok, SiViber } from "react-icons/si";
 import { buildViberUrl } from "@/lib/viber";
 import {
@@ -59,6 +59,7 @@ const CONTACT = [
 // ── Meta για κατηγορίες — ίδιο με navbar ──────────────────────────────────────
 const CATEGORY_META: Record<string, { label: string; icon: React.ElementType; tab: string }> = {
   mobile:             { label: "Κινητά Τηλέφωνα",      icon: Smartphone, tab: "mobile" },
+  "refurbished-iphones": { label: "Μεταχειρισμένα Apple", icon: Sparkles, tab: "refurbished-iphones" },
   "screen-protectors":{ label: "Τζάμια Προστασίας",    icon: Shield,     tab: "screen-protectors" },
   cases:              { label: "Θήκες Κινητών",         icon: Package,    tab: "cases" },
   chargers:           { label: "Φορτιστές & Καλώδια",  icon: Cable,      tab: "chargers" },
@@ -69,6 +70,7 @@ const CATEGORY_META: Record<string, { label: string; icon: React.ElementType; ta
 
 const FALLBACK_ESHOP = [
   { label: "Κινητά Τηλέφωνα",      href: "/eshop?tab=mobile" },
+  { label: "Refurbished iPhone",   href: "/eshop?tab=refurbished-iphones" },
   { label: "Τζάμια Προστασίας",    href: "/eshop?tab=screen-protectors" },
   { label: "Θήκες Κινητών",        href: "/eshop?tab=cases" },
   { label: "Φορτιστές & Καλώδια",  href: "/eshop?tab=chargers" },

@@ -3,12 +3,16 @@ import { eq } from 'drizzle-orm';
 import { db } from './db';
 import { products, adminUsers } from '../shared/schema';
 import rawData from './seed-data/products.json';
+import refurbishedIphones from './seed-data/refurbished-iphones.json';
+
+const catalogSeedData = [...rawData, ...refurbishedIphones];
 import bcrypt from 'bcrypt';
 import { getSuperAdminEmail } from '@shared/admin-roles';
 
-type SeedProduct = typeof rawData[0];
+type SeedProduct = (typeof catalogSeedData)[0];
 
 type SeedProductJson = SeedProduct & {
+  ram?: string | null;
   price_kotsovolos?: string | null;
   price_skroutz?: string | null;
   price_bestprice?: string | null;
@@ -71,6 +75,7 @@ function seedJsonToInsertRow(p: SeedProductJson): InsertRow {
     images: p.images ?? null,
     compatibleModels: p.compatible_models ?? null,
     brand: p.brand ?? null,
+    ram: p.ram ?? null,
     color: p.color ?? null,
     storage: p.storage ?? null,
     preOrder: p.pre_order ?? false,
@@ -87,9 +92,9 @@ export async function seedProductsIfEmpty() {
     if (existing.length > 0) {
       return;
     }
-    console.log('[seed] Products table is empty — seeding', rawData.length, 'products...');
+    console.log('[seed] Products table is empty — seeding', catalogSeedData.length, 'products...');
 
-    const rows = rawData.map(seedJsonToInsertRow);
+    const rows = catalogSeedData.map(seedJsonToInsertRow);
 
     const BATCH = 30;
     for (let i = 0; i < rows.length; i += BATCH) {
@@ -110,7 +115,7 @@ export async function seedCatalogNewProductsFromJson() {
       rows.map((r) => r.slug).filter((s): s is string => typeof s === "string" && s.length > 0),
     );
 
-    const missing = rawData.filter((p: SeedProduct) => {
+    const missing = catalogSeedData.filter((p: SeedProduct) => {
       const s = (p as { slug?: string }).slug ?? "";
       return s.length > 0 && !existingSlugs.has(s);
     });
@@ -135,7 +140,7 @@ export async function seedCatalogNewProductsFromJson() {
 export async function mergeSeedCompetitorPricesFromJson() {
   try {
     let n = 0;
-    for (const raw of rawData) {
+    for (const raw of catalogSeedData) {
       const p = raw as SeedProductJson;
       const slug = (p.slug ?? '').trim();
       if (!slug) continue;

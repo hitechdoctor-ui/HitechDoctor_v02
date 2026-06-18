@@ -6,6 +6,7 @@ import {
   MessageCircle, HelpCircle, Globe, Download, ScanSearch,
   Truck, Code2,
   Headphones,
+  Sparkles,
 } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -29,6 +30,7 @@ import { buildViberUrl } from "@/lib/viber";
 // ── Category meta: subcategory (or "mobile") → display info ──────────────────
 const CATEGORY_META: Record<string, { label: string; icon: React.ElementType; color: string; bg: string; tab: string }> = {
   mobile:            { label: "Κινητά Τηλέφωνα",     icon: Smartphone, color: "text-primary",      bg: "bg-primary/10 hover:bg-primary/20 border-primary/20",         tab: "mobile" },
+  "refurbished-iphones": { label: "Μεταχειρισμένα Apple", icon: Sparkles, color: "text-emerald-400", bg: "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20", tab: "refurbished-iphones" },
   "screen-protectors":{ label: "Τζάμια Προστασίας",  icon: Shield,     color: "text-sky-400",      bg: "bg-sky-500/10 hover:bg-sky-500/20 border-sky-500/20",         tab: "screen-protectors" },
   cases:             { label: "Θήκες Κινητών",        icon: Package,    color: "text-violet-400",   bg: "bg-violet-500/10 hover:bg-violet-500/20 border-violet-500/20", tab: "cases" },
   chargers:          { label: "Φορτιστές & Καλώδια",  icon: Cable,      color: "text-orange-400",   bg: "bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/20", tab: "chargers" },
@@ -146,6 +148,7 @@ export function Navbar() {
   const dynamicCategories = buildEshopCategories(categoryRows);
   const fallbackCategories = [
     { label: "Κινητά Τηλέφωνα",   href: "/eshop?tab=mobile",            icon: Smartphone, color: "text-primary",    bg: "bg-primary/10 hover:bg-primary/20 border-primary/20" },
+    { label: "Refurbished iPhone", href: "/eshop?tab=refurbished-iphones", icon: Sparkles, color: "text-emerald-400", bg: "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20" },
     { label: "Τζάμια Προστασίας", href: "/eshop?tab=screen-protectors", icon: Shield,     color: "text-sky-400",    bg: "bg-sky-500/10 hover:bg-sky-500/20 border-sky-500/20" },
     { label: "Θήκες Κινητών",     href: "/eshop?tab=cases",             icon: Package,    color: "text-violet-400", bg: "bg-violet-500/10 hover:bg-violet-500/20 border-violet-500/20" },
     { label: "Φορτιστές & Καλώδια",href: "/eshop?tab=chargers",         icon: Cable,      color: "text-orange-400", bg: "bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/20" },
