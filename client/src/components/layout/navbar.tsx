@@ -159,8 +159,9 @@ export function Navbar() {
   const isActive = (href: string) => location === href || location.startsWith(href + "/");
 
   return (
-    <header className="sticky top-0 z-50 w-full glass-panel border-b-0 border-white/5 rounded-b-2xl mb-6">
-      <div className="container mx-auto px-4 h-20 flex items-center justify-between">
+    <>
+      <header className="sticky top-0 z-50 w-full glass-panel border-b border-white/5 backdrop-blur-md supports-[backdrop-filter]:bg-background/95">
+        <div className="container mx-auto px-4 h-20 flex items-center justify-between">
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
@@ -661,10 +662,13 @@ export function Navbar() {
           </Sheet>
         </div>
       </div>
+      </header>
 
-      <NavbarAiChatBar />
+      <div className="mb-6 border-b border-white/5 bg-gradient-to-b from-zinc-200/70 via-zinc-100/80 to-zinc-200/65 dark:from-zinc-950 dark:via-[#060d18] dark:to-zinc-950">
+        <NavbarAiChatBar />
+      </div>
 
       <CartDrawer open={isCartOpen} onOpenChange={setIsCartOpen} />
-    </header>
+    </>
   );
 }

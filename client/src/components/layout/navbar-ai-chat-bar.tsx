@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Sparkles, ArrowUp, Loader2 } from "lucide-react";
-import { setNavbarAiBarCollapsed } from "@/lib/navbar-ai-bar-dock";
 import { cn } from "@/lib/utils";
 import { ChatWindow } from "@/components/chat/ChatWindow";
 import { RepairRequestModal } from "@/components/repair-request-modal";
@@ -23,14 +22,10 @@ import { useToast } from "@/hooks/use-toast";
 
 const PLACEHOLDER = "Ρωτήστε τον AI Doctor για επισκευές, eShop, τιμές…";
 
-/** Μετά από τόσο scroll η μπάρα «μαζεύεται» — η πρόσβαση συνεχίζεται από το κουμπί chat + Sparkles. */
-const SCROLL_COLLAPSE_PX = 96;
-
 export function NavbarAiChatBar() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [value, setValue] = useState("");
-  const [collapsed, setCollapsed] = useState(false);
   const [messages, setMessages] = useState<RepairAssistantTurn[]>([]);
   const [loading, setLoading] = useState(false);
   const [serviceTermsAccepted, setServiceTermsAccepted] = useState(false);
@@ -44,22 +39,7 @@ export function NavbarAiChatBar() {
     clientContextRef.current = detectRepairChatClientContext(navigator.userAgent);
   }, []);
 
-  useEffect(() => {
-    const update = () => {
-      const y = window.scrollY;
-      const next = y > SCROLL_COLLAPSE_PX;
-      setCollapsed(next);
-      setNavbarAiBarCollapsed(next);
-    };
-    update();
-    window.addEventListener("scroll", update, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", update);
-      setNavbarAiBarCollapsed(false);
-    };
-  }, []);
-
-  /** Πρώην ⌘K στο GlobalSearch — τώρα εστίαση στη μπάρα AI (αν είναι κρυμμένη, ανεβαίνει η σελίδα στην κορυφή). */
+  /** Πρώην ⌘K στο GlobalSearch — τώρα εστίαση στη μπάρα AI. */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -68,15 +48,8 @@ export function NavbarAiChatBar() {
           return;
         }
         e.preventDefault();
-        const focusBar = () => textareaRef.current?.focus({ preventScroll: false });
-
-        if (window.scrollY > SCROLL_COLLAPSE_PX) {
-          window.scrollTo({ top: 0, behavior: "smooth" });
-          window.setTimeout(focusBar, 420);
-        } else {
-          focusBar();
-          textareaRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-        }
+        textareaRef.current?.focus({ preventScroll: false });
+        textareaRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
       }
     };
     document.addEventListener("keydown", onKey);
@@ -161,25 +134,13 @@ export function NavbarAiChatBar() {
     <>
       <div
         className={cn(
-          "w-full overflow-hidden border-primary/20 bg-gradient-to-b from-zinc-200/70 via-zinc-100/80 to-zinc-200/65 dark:from-zinc-950 dark:via-[#060d18] dark:to-zinc-950",
-          "motion-safe:transition-[max-height,opacity,margin,padding,border-color] motion-safe:duration-500 motion-safe:ease-out",
-          collapsed
-            ? "pointer-events-none max-h-0 border-t-0 opacity-0 py-0 [margin-bottom:0]"
-            : cn(
-                "border-t-2 opacity-100",
-                hasThread ? "max-h-[min(560px,72vh)]" : "max-h-[min(340px,55vh)]"
-              )
+          "w-full overflow-hidden border-t-2 border-primary/20 opacity-100",
+          hasThread ? "max-h-[min(560px,72vh)]" : "max-h-[min(340px,55vh)]"
         )}
         role="search"
         aria-label="AI αναζήτηση και chat"
-        aria-hidden={collapsed}
       >
-        <div
-          className={cn(
-            "navbar-ai-chat-wrap mx-auto w-full max-w-6xl px-4 pb-3.5 pt-2 sm:px-6",
-            collapsed && "navbar-ai-chat-wrap-collapsed"
-          )}
-        >
+        <div className="navbar-ai-chat-wrap mx-auto w-full max-w-6xl px-4 pb-3.5 pt-2 sm:px-6">
           <div className="navbar-ai-ambient-glow" aria-hidden />
           <div
             className={cn(

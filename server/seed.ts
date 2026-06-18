@@ -158,6 +158,25 @@ export async function mergeSeedCompetitorPricesFromJson() {
   }
 }
 
+/** Ενημερώνει εικόνες refurbished iPhone από το JSON (για ήδη υπάρχοντα slugs στο Railway). */
+export async function mergeRefurbishedImagesFromJson() {
+  try {
+    let n = 0;
+    for (const raw of refurbishedIphones) {
+      const slug = ((raw as { slug?: string }).slug ?? "").trim();
+      const imageUrl = ((raw as { image_url?: string | null }).image_url ?? "").trim();
+      if (!slug || !imageUrl) continue;
+      await db.update(products).set({ imageUrl }).where(eq(products.slug, slug));
+      n += 1;
+    }
+    if (n > 0) {
+      console.log(`[seed] Refurbished: updated image_url for ${n} product(s) from refurbished-iphones.json`);
+    }
+  } catch (err) {
+    console.error("[seed] mergeRefurbishedImagesFromJson:", err);
+  }
+}
+
 export async function seedAdminIfEmpty() {
   try {
     const existing = await db.select({ id: adminUsers.id }).from(adminUsers).limit(1);

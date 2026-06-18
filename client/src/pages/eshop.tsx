@@ -278,7 +278,7 @@ function RefurbishedIphoneCard({ product }: { product: Product }) {
             <img
               src={product.imageUrl}
               alt={`${product.name} — HiTech Doctor`}
-              className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500 ease-out pt-8"
+              className="w-full h-full object-contain object-center p-4 pt-12 group-hover:scale-[1.03] transition-transform duration-500 ease-out"
               loading="lazy"
             />
           ) : (

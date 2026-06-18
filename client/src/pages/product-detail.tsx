@@ -25,6 +25,7 @@ import {
   Gift, Boxes,
 } from "lucide-react";
 import type { Product } from "@shared/schema";
+import { cn } from "@/lib/utils";
 import { buildMerchantReturnPolicy, buildOfferShippingDetails } from "@/lib/merchant-offer-schema";
 
 // ── iPhone models list — newest first ──────────────────────────────────────
@@ -228,6 +229,9 @@ export default function ProductDetail() {
     (p) => p.variantGroup && product?.variantGroup && p.variantGroup === product.variantGroup
   ).sort((a, b) => Number(a.price) - Number(b.price));
   const isPreOrder = !!(product as any)?.preOrder;
+  const isRefurbishedIphone = product?.category === "refurbished-iphones";
+  const isPhoneGallery =
+    product?.category === "mobile" || isRefurbishedIphone;
 
   const gallery: string[] = product?.images?.length
     ? product.images
@@ -348,7 +352,13 @@ export default function ProductDetail() {
   const isMobile = product.category === "mobile";
   const isLaptop = product.category === "laptop";
   const isDesktop = product.category === "desktop";
-  const subcatLabel = product.subcategory ? SUBCATEGORY_LABELS[product.subcategory] : isMobile ? "Κινητό Τηλέφωνο" : product.category;
+  const subcatLabel = product.subcategory
+    ? SUBCATEGORY_LABELS[product.subcategory]
+    : isMobile
+      ? "Κινητό Τηλέφωνο"
+      : isRefurbishedIphone
+        ? "Refurbished iPhone"
+        : product.category;
   const metaTitle = isMobile
     ? `${product.name} — Τιμή, Χαρακτηριστικά | HiTech Doctor Αθήνα`
     : `${product.name} | HiTech Doctor — Αξεσουάρ iPhone Αθήνα`;
@@ -415,7 +425,12 @@ export default function ProductDetail() {
 
               {/* Main image — clickable → lightbox */}
               <div
-                className="group aspect-square rounded-2xl overflow-hidden bg-card pcb-border relative cursor-zoom-in select-none"
+                className={cn(
+                  "group aspect-square rounded-2xl overflow-hidden pcb-border relative cursor-zoom-in select-none flex items-center justify-center",
+                  isPhoneGallery
+                    ? "bg-gradient-to-br from-zinc-900 via-zinc-950 to-black"
+                    : "bg-card"
+                )}
                 onClick={() => gallery.length > 0 && setLightboxOpen(true)}
                 data-testid="product-main-image"
               >
@@ -424,7 +439,10 @@ export default function ProductDetail() {
                     <img
                       src={gallery[activeImg]}
                       alt={buildImageAlt(gallery[activeImg], product.name)}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      className={cn(
+                        "w-full h-full transition-transform duration-300 group-hover:scale-[1.03]",
+                        isPhoneGallery ? "object-contain p-6 sm:p-8" : "object-cover group-hover:scale-105"
+                      )}
                       loading="eager"
                       decoding="async"
                       width="800"
@@ -469,7 +487,10 @@ export default function ProductDetail() {
                       <img
                         src={src}
                         alt={buildImageAlt(src, product.name)}
-                        className="w-full h-full object-cover"
+                        className={cn(
+                          "w-full h-full",
+                          isPhoneGallery ? "object-contain p-1 bg-zinc-950/80" : "object-cover"
+                        )}
                         loading="lazy"
                         decoding="async"
                         width="200"
