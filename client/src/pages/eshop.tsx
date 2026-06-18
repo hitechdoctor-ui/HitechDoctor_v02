@@ -254,7 +254,6 @@ function RefurbishedIphoneCard({ product }: { product: Product }) {
     toast({ title: "Προστέθηκε στο καλάθι", description: product.name, duration: 3000 });
   };
 
-  const brandBg = getBrandBg(p.brand ?? "Apple");
   const colorHex = getColorHex(p.color);
 
   return (
@@ -266,7 +265,7 @@ function RefurbishedIphoneCard({ product }: { product: Product }) {
       data-testid={`card-product-${product.id}`}
     >
       <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
-        <div className="relative h-64 overflow-hidden" style={{ background: brandBg }}>
+        <div className="relative h-72 sm:h-80 overflow-hidden bg-white">
           {/* Grade A banner */}
           <div className="absolute top-0 inset-x-0 z-20 flex justify-center">
             <span className="w-full py-2 text-center text-xs font-black tracking-[0.22em] uppercase text-white bg-gradient-to-r from-emerald-600 via-green-500 to-emerald-600 shadow-[0_4px_20px_rgba(34,197,94,0.45)]">
@@ -275,18 +274,19 @@ function RefurbishedIphoneCard({ product }: { product: Product }) {
           </div>
 
           {product.imageUrl ? (
-            <img
-              src={product.imageUrl}
-              alt={`${product.name} — HiTech Doctor`}
-              className="w-full h-full object-contain object-center p-4 pt-12 group-hover:scale-[1.03] transition-transform duration-500 ease-out"
-              loading="lazy"
-            />
+            <div className="absolute inset-x-0 bottom-0 top-10 flex items-end justify-center pb-2">
+              <img
+                src={product.imageUrl}
+                alt={`${product.name} — HiTech Doctor`}
+                className="h-[80%] w-auto max-w-[92%] object-contain object-bottom group-hover:scale-[1.04] transition-transform duration-500 ease-out"
+                loading="lazy"
+              />
+            </div>
           ) : (
-            <div className="w-full h-full pt-8 group-hover:scale-105 transition-transform duration-500 ease-out">
+            <div className="absolute inset-x-0 bottom-0 top-10 flex items-end justify-center pb-2 h-[80%] group-hover:scale-105 transition-transform duration-500 ease-out">
               <ColoredPhoneIcon color={p.color} brand={p.brand} />
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
         </div>
       </Link>
 
