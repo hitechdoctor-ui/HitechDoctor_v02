@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Link } from "wouter";
 import { Helmet } from "react-helmet-async";
 import { Navbar } from "@/components/layout/navbar";
@@ -16,13 +16,85 @@ import { APPLE_WATCH_MODELS, type WatchModel } from "@/data/apple-watch-models";
 import { cn } from "@/lib/utils";
 
 const priceButtonClass =
-  "inline-flex items-center justify-center rounded-lg px-2.5 py-1 text-lg font-extrabold border border-transparent transition-all cursor-pointer hover:border-primary/35 hover:bg-primary/10 hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50";
+  "inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-lg font-extrabold border border-transparent transition-all duration-200 cursor-pointer hover:border-primary/40 hover:bg-primary/10 hover:text-cyan-400 hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 active:scale-[0.98]";
+
+type RepairKind = "touch" | "battery";
 
 type RepairPrefill = {
   deviceName: string;
   notes: string;
   totalInclVat?: number;
 };
+
+function WatchPriceButton({
+  model,
+  kind,
+  amount,
+  onSelect,
+  variant = "touch",
+  testId,
+}: {
+  model: WatchModel;
+  kind: RepairKind;
+  amount: number;
+  onSelect: (model: WatchModel, kind: RepairKind) => void;
+  variant?: "touch" | "battery";
+  testId: string;
+}) {
+  const repairLabel = kind === "touch" ? "αντικατάσταση Touch" : "αλλαγή μπαταρίας";
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(model, kind)}
+      className={cn(
+        priceButtonClass,
+        variant === "touch" ? "text-primary" : "text-foreground hover:text-cyan-400",
+      )}
+      aria-label={`${model.name} — ${repairLabel} από €${amount}`}
+      data-testid={testId}
+    >
+      €{amount}
+      <span className="text-xs text-muted-foreground ml-0.5">+</span>
+    </button>
+  );
+}
+
+function WatchPriceCard({
+  model,
+  kind,
+  amount,
+  label,
+  onSelect,
+  testId,
+  className,
+}: {
+  model: WatchModel;
+  kind: RepairKind;
+  amount: number;
+  label: string;
+  onSelect: (model: WatchModel, kind: RepairKind) => void;
+  testId: string;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(model, kind)}
+      className={cn(
+        "p-2 rounded-lg border text-center transition-all duration-200 cursor-pointer hover:border-primary/45 hover:bg-primary/15 hover:text-cyan-400 active:scale-[0.98]",
+        className,
+      )}
+      aria-label={`${model.name} — ${label} από €${amount}`}
+      data-testid={testId}
+    >
+      <p className="text-[9px] text-muted-foreground mb-0.5">{label}</p>
+      <p className="text-xl font-extrabold">
+        €{amount}
+        <span className="text-sm">+</span>
+      </p>
+    </button>
+  );
+}
 
 const defaultRepairPrefill: RepairPrefill = {
   deviceName: "Apple Watch",
@@ -65,30 +137,26 @@ export default function ServiceAppleWatch() {
   const [modalOpen, setModalOpen] = useState(false);
   const [repairPrefill, setRepairPrefill] = useState<RepairPrefill>(defaultRepairPrefill);
 
-  const openRepairModal = (prefill?: Partial<RepairPrefill>) => {
+  const handleOpenContactForm = useCallback((model: WatchModel, kind: RepairKind) => {
+    const isTouch = kind === "touch";
+    setRepairPrefill({
+      deviceName: model.name,
+      notes: isTouch
+        ? `Ενδιαφέρομαι για αντικατάσταση Touch (εξωτερικό τζάμι) — ${model.name}. Ενδεικτική τιμή από €${model.touchPriceFrom}.`
+        : `Ενδιαφέρομαι για αλλαγή μπαταρίας — ${model.name}. Ενδεικτική τιμή από €${model.batteryPriceFrom}.`,
+      totalInclVat: isTouch ? model.touchPriceFrom : model.batteryPriceFrom,
+    });
+    setModalOpen(true);
+  }, []);
+
+  const openRepairModal = useCallback((prefill?: Partial<RepairPrefill>) => {
     setRepairPrefill({
       deviceName: prefill?.deviceName ?? defaultRepairPrefill.deviceName,
       notes: prefill?.notes ?? "",
       totalInclVat: prefill?.totalInclVat,
     });
     setModalOpen(true);
-  };
-
-  const openTouchRepair = (model: WatchModel) => {
-    openRepairModal({
-      deviceName: model.name,
-      notes: `Ενδιαφέρομαι για αντικατάσταση Touch (εξωτερικό τζάμι) — ${model.name}. Ενδεικτική τιμή από €${model.touchPriceFrom}.`,
-      totalInclVat: model.touchPriceFrom,
-    });
-  };
-
-  const openBatteryRepair = (model: WatchModel) => {
-    openRepairModal({
-      deviceName: model.name,
-      notes: `Ενδιαφέρομαι για αλλαγή μπαταρίας — ${model.name}. Ενδεικτική τιμή από €${model.batteryPriceFrom}.`,
-      totalInclVat: model.batteryPriceFrom,
-    });
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-background circuit-bg">
@@ -222,13 +290,17 @@ export default function ServiceAppleWatch() {
           <div className="flex items-center gap-3 mb-2">
             <h2 className="text-xl font-display font-bold text-foreground">Τιμοκατάλογος ανά Μοντέλο</h2>
           </div>
-          <p className="text-sm text-muted-foreground mb-6">
+          <p className="text-sm text-muted-foreground mb-2">
             Ταξινόμηση από το νεότερο / πιο ακριβό μοντέλο προς το παλαιότερο.
             Οι τιμές είναι <strong className="text-foreground">ενδεικτικές και αποτελούν το κατώτατο όριο</strong> — η τελική τιμή επιβεβαιώνεται μετά την αξιολόγηση.
           </p>
+          <p className="text-xs text-primary/90 mb-6 flex items-center gap-1.5">
+            <Info className="w-3.5 h-3.5 shrink-0" />
+            Κάντε κλικ σε μια τιμή Touch ή Μπαταρίας για να ανοίξει η φόρμα αιτήματος επισκευής.
+          </p>
 
-          {/* Desktop table */}
-          <div className="hidden md:block rounded-2xl border border-white/10 overflow-hidden">
+          {/* Desktop table — χωρίς στήλη Ραντεβού */}
+          <div className="hidden md:block rounded-2xl border border-white/10 overflow-hidden" data-watch-table-version="clickable-prices-v2">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/10 bg-white/3">
@@ -259,28 +331,24 @@ export default function ServiceAppleWatch() {
                     <td className="px-4 py-4 text-center text-sm text-muted-foreground">{model.year}</td>
                     <td className="px-4 py-4 text-center text-sm text-muted-foreground">{model.sizes}</td>
                     <td className="px-4 py-4 text-center">
-                      <button
-                        type="button"
-                        onClick={() => openTouchRepair(model)}
-                        className={cn(priceButtonClass, "text-primary")}
-                        aria-label={`${model.name} — αντικατάσταση Touch από €${model.touchPriceFrom}`}
-                        data-testid={`button-touch-${model.slug}`}
-                      >
-                        €{model.touchPriceFrom}
-                        <span className="text-xs text-muted-foreground ml-0.5">+</span>
-                      </button>
+                      <WatchPriceButton
+                        model={model}
+                        kind="touch"
+                        amount={model.touchPriceFrom}
+                        onSelect={handleOpenContactForm}
+                        variant="touch"
+                        testId={`button-touch-${model.slug}`}
+                      />
                     </td>
                     <td className="px-4 py-4 text-center">
-                      <button
-                        type="button"
-                        onClick={() => openBatteryRepair(model)}
-                        className={cn(priceButtonClass, "text-foreground hover:text-primary")}
-                        aria-label={`${model.name} — αλλαγή μπαταρίας από €${model.batteryPriceFrom}`}
-                        data-testid={`button-battery-${model.slug}`}
-                      >
-                        €{model.batteryPriceFrom}
-                        <span className="text-xs text-muted-foreground ml-0.5">+</span>
-                      </button>
+                      <WatchPriceButton
+                        model={model}
+                        kind="battery"
+                        amount={model.batteryPriceFrom}
+                        onSelect={handleOpenContactForm}
+                        variant="battery"
+                        testId={`button-battery-${model.slug}`}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -304,26 +372,24 @@ export default function ServiceAppleWatch() {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => openTouchRepair(model)}
-                    className="p-2 rounded-lg border border-primary/20 bg-primary/8 text-center transition-colors hover:border-primary/45 hover:bg-primary/15 cursor-pointer"
-                    aria-label={`${model.name} — αντικατάσταση Touch από €${model.touchPriceFrom}`}
-                    data-testid={`button-touch-mobile-${model.slug}`}
-                  >
-                    <p className="text-[9px] text-muted-foreground mb-0.5">Touch από</p>
-                    <p className="text-xl font-extrabold text-primary">€{model.touchPriceFrom}<span className="text-sm">+</span></p>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => openBatteryRepair(model)}
-                    className="p-2 rounded-lg border border-white/10 bg-white/3 text-center transition-colors hover:border-primary/35 hover:bg-primary/10 cursor-pointer"
-                    aria-label={`${model.name} — αλλαγή μπαταρίας από €${model.batteryPriceFrom}`}
-                    data-testid={`button-battery-mobile-${model.slug}`}
-                  >
-                    <p className="text-[9px] text-muted-foreground mb-0.5">Μπαταρία από</p>
-                    <p className="text-xl font-extrabold text-foreground group-hover:text-primary">€{model.batteryPriceFrom}<span className="text-sm">+</span></p>
-                  </button>
+                  <WatchPriceCard
+                    model={model}
+                    kind="touch"
+                    amount={model.touchPriceFrom}
+                    label="Touch από"
+                    onSelect={handleOpenContactForm}
+                    testId={`button-touch-mobile-${model.slug}`}
+                    className="border-primary/20 bg-primary/8 text-primary"
+                  />
+                  <WatchPriceCard
+                    model={model}
+                    kind="battery"
+                    amount={model.batteryPriceFrom}
+                    label="Μπαταρία από"
+                    onSelect={handleOpenContactForm}
+                    testId={`button-battery-mobile-${model.slug}`}
+                    className="border-white/10 bg-white/3 text-foreground"
+                  />
                 </div>
               </div>
             ))}
@@ -508,14 +574,17 @@ export default function ServiceAppleWatch() {
         </a>
       </div>
 
-      <RepairRequestModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        defaultDeviceName={repairPrefill.deviceName}
-        defaultNotes={repairPrefill.notes}
-        defaultTotalInclVat={repairPrefill.totalInclVat}
-        temperedGlassOffer={false}
-      />
+      {modalOpen && (
+        <RepairRequestModal
+          key={`${repairPrefill.deviceName}-${repairPrefill.notes}`}
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          defaultDeviceName={repairPrefill.deviceName}
+          defaultNotes={repairPrefill.notes}
+          defaultTotalInclVat={repairPrefill.totalInclVat}
+          temperedGlassOffer={false}
+        />
+      )}
     </div>
   );
 }
