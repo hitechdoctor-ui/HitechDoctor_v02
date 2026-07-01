@@ -7,10 +7,10 @@ interface SeoProps {
   url?: string;
 }
 
-/** Αποφεύγει διπλό suffix όταν το title ήδη περιέχει «| HiTech Doctor». */
+/** Αποφεύγει διπλό suffix όταν το title ήδη αναφέρει HiTech Doctor. */
 function buildDocumentTitle(title: string): string {
   const t = title.trim();
-  if (/\|\s*HiTech Doctor/i.test(t)) return t;
+  if (/HiTech Doctor/i.test(t)) return t;
   return `${t} | HiTech Doctor`;
 }
 

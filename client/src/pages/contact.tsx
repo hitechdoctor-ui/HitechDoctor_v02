@@ -87,10 +87,10 @@ export default function Contact() {
   return (
     <>
       <Helmet>
-        <title>Επικοινωνία | HiTech Doctor – Επισκευές Κινητών & Τεχνολογία</title>
-        <meta name="description" content="Επικοινωνήστε με το HiTech Doctor. Τηλέφωνο, Viber, email και χάρτης. Επισκευές κινητών, tablet, laptop και gaming console." />
-        <meta property="og:title" content="Επικοινωνία | HiTech Doctor" />
-        <meta property="og:description" content="Βρείτε μας στον χάρτη ή επικοινωνήστε μαζί μας τηλεφωνικά και email." />
+        <title>Επικοινωνία &amp; Τοποθεσία | HiTech Doctor</title>
+        <meta name="description" content="Χρειάζεσαι επισκευή; Βρες μας στην Αθήνα, κάλεσε στο τηλέφωνό μας ή στείλε μήνυμα για άμεση τεχνική υποστήριξη και κοστολόγηση της βλάβης σου." />
+        <meta property="og:title" content="Επικοινωνία &amp; Τοποθεσία | HiTech Doctor" />
+        <meta property="og:description" content="Χρειάζεσαι επισκευή; Βρες μας στην Αθήνα, κάλεσε στο τηλέφωνό μας ή στείλε μήνυμα για άμεση τεχνική υποστήριξη και κοστολόγηση της βλάβης σου." />
       </Helmet>
 
       <Navbar />

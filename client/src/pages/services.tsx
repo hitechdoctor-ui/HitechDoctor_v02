@@ -256,8 +256,8 @@ export default function Services() {
   return (
     <div className="min-h-screen bg-background circuit-bg">
       <Seo
-        title="Υπηρεσίες Επισκευών"
-        description="Επισκευές κινητών iPhone & Samsung, tablet, laptop, IT Support, ανάκτηση δεδομένων, δίκτυα Wi-Fi. Γρήγορη εξυπηρέτηση με εγγύηση. HiTech Doctor Αθήνα."
+        title="Επισκευή Apple Watch, PlayStation, iMac, Dell & HP | HiTech Doctor"
+        description="Οι μόνοι στην Ελλάδα με εξειδικευμένη αντικατάσταση οθόνης/υγείας Apple Watch! Άμεση επισκευή PlayStation, iMac, Dell, HP, Lenovo και gaming κονσολών."
         url="https://hitechdoctor.com/services"
       />
       <Helmet>

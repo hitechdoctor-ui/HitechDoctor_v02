@@ -33,8 +33,9 @@ export default function About() {
     <div className="min-h-screen bg-background">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       <Seo
-        title="Σχετικά με εμάς | HiTech Doctor — Επισκευή Κινητών Αθήνα"
-        description="Γνωρίστε την ομάδα του HiTech Doctor. Επαγγελματική επισκευή iPhone, Samsung, iPad και laptop στην Αθήνα με 8+ χρόνια εμπειρία."
+        title="Ποιος είναι ο HiTech Doctor; | 12 Χρόνια Εμπειρίας"
+        description="Γνωρίστε την ομάδα μας. Προσφέρουμε αξιόπιστες, γρήγορες και εγγυημένες λύσεις για κάθε ηλεκτρονική συσκευή, με υπευθυνότητα και τις καλύτερες τιμές της αγοράς."
+        url="https://hitechdoctor.com/sxetika-me-mas"
       />
       <Navbar />
 

@@ -75,8 +75,8 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background relative overflow-x-hidden">
       <Seo
-        title="Αρχική"
-        description="Ο τεχνολογικός σας γιατρός. Επισκευές κινητών, tablet, laptop, IT Support και αγορά αξεσουάρ στο Αθήνα."
+        title="HiTech Doctor | Εξειδικευμένο Κέντρο Επισκευής Tech"
+        description="Ο τεχνολογικός σας γιατρός στην Αθήνα. Επαγγελματική επισκευή σε iPhone, Samsung, Xiaomi, Tablet, Laptop, Mac & IT Support με 12 χρόνια εμπειρίας."
         url="https://hitechdoctor.com"
       />
       <Helmet>
