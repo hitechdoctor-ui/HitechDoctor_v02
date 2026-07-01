@@ -12,7 +12,22 @@ import {
   CheckCircle2, Shield, Clock, Wrench, ChevronRight, Phone,
   Watch, Battery, Info, AlertTriangle, ArrowRight, Star, XCircle,
 } from "lucide-react";
-import { APPLE_WATCH_MODELS } from "@/data/apple-watch-models";
+import { APPLE_WATCH_MODELS, type WatchModel } from "@/data/apple-watch-models";
+import { cn } from "@/lib/utils";
+
+const priceButtonClass =
+  "inline-flex items-center justify-center rounded-lg px-2.5 py-1 text-lg font-extrabold border border-transparent transition-all cursor-pointer hover:border-primary/35 hover:bg-primary/10 hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50";
+
+type RepairPrefill = {
+  deviceName: string;
+  notes: string;
+  totalInclVat?: number;
+};
+
+const defaultRepairPrefill: RepairPrefill = {
+  deviceName: "Apple Watch",
+  notes: "",
+};
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -48,6 +63,32 @@ const breadcrumbLd = {
 
 export default function ServiceAppleWatch() {
   const [modalOpen, setModalOpen] = useState(false);
+  const [repairPrefill, setRepairPrefill] = useState<RepairPrefill>(defaultRepairPrefill);
+
+  const openRepairModal = (prefill?: Partial<RepairPrefill>) => {
+    setRepairPrefill({
+      deviceName: prefill?.deviceName ?? defaultRepairPrefill.deviceName,
+      notes: prefill?.notes ?? "",
+      totalInclVat: prefill?.totalInclVat,
+    });
+    setModalOpen(true);
+  };
+
+  const openTouchRepair = (model: WatchModel) => {
+    openRepairModal({
+      deviceName: model.name,
+      notes: `Ενδιαφέρομαι για αντικατάσταση Touch (εξωτερικό τζάμι) — ${model.name}. Ενδεικτική τιμή από €${model.touchPriceFrom}.`,
+      totalInclVat: model.touchPriceFrom,
+    });
+  };
+
+  const openBatteryRepair = (model: WatchModel) => {
+    openRepairModal({
+      deviceName: model.name,
+      notes: `Ενδιαφέρομαι για αλλαγή μπαταρίας — ${model.name}. Ενδεικτική τιμή από €${model.batteryPriceFrom}.`,
+      totalInclVat: model.batteryPriceFrom,
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background circuit-bg">
@@ -138,7 +179,7 @@ export default function ServiceAppleWatch() {
               </div>
 
               <div className="flex gap-3 flex-wrap">
-                <Button onClick={() => setModalOpen(true)} className="h-10 px-5 font-semibold border-0 text-sm"
+                <Button onClick={() => openRepairModal()} className="h-10 px-5 font-semibold border-0 text-sm"
                   style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
                   data-testid="button-hero-book">
                   <Wrench className="w-4 h-4 mr-2" />Αίτημα Επισκευής
@@ -196,7 +237,6 @@ export default function ServiceAppleWatch() {
                   <th className="text-center px-4 py-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">Μέγεθος</th>
                   <th className="text-center px-4 py-3 text-xs font-bold uppercase tracking-widest text-primary">Touch από</th>
                   <th className="text-center px-4 py-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">Μπαταρία από</th>
-                  <th className="px-4 py-3"></th>
                 </tr>
               </thead>
               <tbody>
@@ -219,20 +259,28 @@ export default function ServiceAppleWatch() {
                     <td className="px-4 py-4 text-center text-sm text-muted-foreground">{model.year}</td>
                     <td className="px-4 py-4 text-center text-sm text-muted-foreground">{model.sizes}</td>
                     <td className="px-4 py-4 text-center">
-                      <span className="text-lg font-extrabold text-primary">€{model.touchPriceFrom}</span>
-                      <span className="text-xs text-muted-foreground">+</span>
+                      <button
+                        type="button"
+                        onClick={() => openTouchRepair(model)}
+                        className={cn(priceButtonClass, "text-primary")}
+                        aria-label={`${model.name} — αντικατάσταση Touch από €${model.touchPriceFrom}`}
+                        data-testid={`button-touch-${model.slug}`}
+                      >
+                        €{model.touchPriceFrom}
+                        <span className="text-xs text-muted-foreground ml-0.5">+</span>
+                      </button>
                     </td>
                     <td className="px-4 py-4 text-center">
-                      <span className="text-lg font-bold text-foreground">€{model.batteryPriceFrom}</span>
-                      <span className="text-xs text-muted-foreground">+</span>
-                    </td>
-                    <td className="px-4 py-4 text-right">
-                      <Button onClick={() => setModalOpen(true)} size="sm"
-                        className="h-8 px-4 text-xs font-semibold border-0"
-                        style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
-                        data-testid={`button-book-${model.slug}`}>
-                        Ραντεβού
-                      </Button>
+                      <button
+                        type="button"
+                        onClick={() => openBatteryRepair(model)}
+                        className={cn(priceButtonClass, "text-foreground hover:text-primary")}
+                        aria-label={`${model.name} — αλλαγή μπαταρίας από €${model.batteryPriceFrom}`}
+                        data-testid={`button-battery-${model.slug}`}
+                      >
+                        €{model.batteryPriceFrom}
+                        <span className="text-xs text-muted-foreground ml-0.5">+</span>
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -255,21 +303,28 @@ export default function ServiceAppleWatch() {
                     <p className="text-[10px] text-muted-foreground mt-0.5">{model.year} · {model.sizes}</p>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2 mb-3">
-                  <div className="p-2 rounded-lg border border-primary/20 bg-primary/8 text-center">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => openTouchRepair(model)}
+                    className="p-2 rounded-lg border border-primary/20 bg-primary/8 text-center transition-colors hover:border-primary/45 hover:bg-primary/15 cursor-pointer"
+                    aria-label={`${model.name} — αντικατάσταση Touch από €${model.touchPriceFrom}`}
+                    data-testid={`button-touch-mobile-${model.slug}`}
+                  >
                     <p className="text-[9px] text-muted-foreground mb-0.5">Touch από</p>
                     <p className="text-xl font-extrabold text-primary">€{model.touchPriceFrom}<span className="text-sm">+</span></p>
-                  </div>
-                  <div className="p-2 rounded-lg border border-white/10 bg-white/3 text-center">
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openBatteryRepair(model)}
+                    className="p-2 rounded-lg border border-white/10 bg-white/3 text-center transition-colors hover:border-primary/35 hover:bg-primary/10 cursor-pointer"
+                    aria-label={`${model.name} — αλλαγή μπαταρίας από €${model.batteryPriceFrom}`}
+                    data-testid={`button-battery-mobile-${model.slug}`}
+                  >
                     <p className="text-[9px] text-muted-foreground mb-0.5">Μπαταρία από</p>
-                    <p className="text-xl font-extrabold text-foreground">€{model.batteryPriceFrom}<span className="text-sm">+</span></p>
-                  </div>
+                    <p className="text-xl font-extrabold text-foreground group-hover:text-primary">€{model.batteryPriceFrom}<span className="text-sm">+</span></p>
+                  </button>
                 </div>
-                <Button onClick={() => setModalOpen(true)} size="sm" className="w-full h-9 text-xs font-semibold border-0"
-                  style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
-                  data-testid={`button-book-mobile-${model.slug}`}>
-                  <Wrench className="w-3.5 h-3.5 mr-1.5" />Κλείσε Ραντεβού
-                </Button>
               </div>
             ))}
           </div>
@@ -399,7 +454,7 @@ export default function ServiceAppleWatch() {
               <strong className="text-foreground"> Πληρώνετε μόνο αν συμφωνήσετε με την τελική τιμή.</strong>
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
-              <Button onClick={() => setModalOpen(true)} className="h-11 px-8 font-semibold border-0 text-base"
+              <Button onClick={() => openRepairModal()} className="h-11 px-8 font-semibold border-0 text-base"
                 style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))", boxShadow: "0 0 24px rgba(0,210,200,0.25)" }}
                 data-testid="button-cta-book">
                 <Wrench className="w-4 h-4 mr-2" />Αίτημα Επισκευής
@@ -441,7 +496,7 @@ export default function ServiceAppleWatch() {
 
       {/* Mobile sticky CTA */}
       <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden border-t border-primary/20 bg-background/95 backdrop-blur p-3 flex gap-2">
-        <Button onClick={() => setModalOpen(true)} className="flex-1 h-11 font-semibold border-0 text-sm"
+        <Button onClick={() => openRepairModal()} className="flex-1 h-11 font-semibold border-0 text-sm"
           style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))" }}
           data-testid="button-mobile-book">
           <Wrench className="w-4 h-4 mr-2" />Αίτημα Επισκευής
@@ -456,7 +511,9 @@ export default function ServiceAppleWatch() {
       <RepairRequestModal
         open={modalOpen}
         onOpenChange={setModalOpen}
-        defaultDeviceName="Apple Watch"
+        defaultDeviceName={repairPrefill.deviceName}
+        defaultNotes={repairPrefill.notes}
+        defaultTotalInclVat={repairPrefill.totalInclVat}
         temperedGlassOffer={false}
       />
     </div>

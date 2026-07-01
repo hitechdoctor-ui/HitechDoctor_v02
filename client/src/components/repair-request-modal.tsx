@@ -31,6 +31,8 @@ interface RepairRequestModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultDeviceName?: string;
+  /** Προσυμπλήρωση περιγραφής / είδους επισκευής */
+  defaultNotes?: string;
   /** Τελική τιμή με ΦΠΑ από τη σελίδα επισκευής — προσυμπλήρωση πεδίου τιμής */
   defaultTotalInclVat?: number;
   /** Callback όταν κλείνει το modal μετά από επιτυχημένη υποβολή */
@@ -49,6 +51,7 @@ export function RepairRequestModal({
   open,
   onOpenChange,
   defaultDeviceName = "",
+  defaultNotes = "",
   defaultTotalInclVat,
   onSubmitSuccess,
   temperedGlassOffer,
@@ -79,11 +82,17 @@ export function RepairRequestModal({
     : 0;
 
   useEffect(() => {
-    if (open && defaultTotalInclVat != null && defaultTotalInclVat > 0) {
+    if (!open) return;
+    form.setValue("deviceName", defaultDeviceName);
+    form.setValue("notes", defaultNotes);
+    if (defaultTotalInclVat != null && defaultTotalInclVat > 0) {
       setPriceInput((defaultTotalInclVat / 1.24).toFixed(2));
       setSelectedBox("net");
+    } else {
+      setPriceInput("");
+      setSelectedBox("net");
     }
-  }, [open, defaultTotalInclVat]);
+  }, [open, defaultDeviceName, defaultNotes, defaultTotalInclVat, form]);
 
   const fmt = (n: number) =>
     n.toLocaleString("el-GR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
@@ -134,7 +143,17 @@ export function RepairRequestModal({
       setServiceTermsError(false);
       setPriceInput("");
       setSelectedBox("net");
-      form.reset({ ...form.getValues(), deviceName: defaultDeviceName });
+      form.reset({
+        firstName: "",
+        lastName: "",
+        phone: "",
+        email: "",
+        deviceName: defaultDeviceName,
+        serialNumber: "",
+        deviceCode: "",
+        notes: defaultNotes,
+        status: "pending",
+      });
     }
     onOpenChange(open);
   }
