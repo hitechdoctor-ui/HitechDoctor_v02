@@ -3,22 +3,44 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Αρχική | HiTech Doctor</title>
+    <meta name="description" content="Ο τεχνολογικός σας γιατρός. Επισκευές κινητών, tablet, laptop, IT Support και αγορά αξεσουάρ στο Αθήνα." />
+    <meta property="og:title" content="Αρχική | HiTech Doctor" />
+    <meta property="og:description" content="Ο τεχνολογικός σας γιατρός. Επισκευές κινητών, tablet, laptop, IT Support και αγορά αξεσουάρ στο Αθήνα." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://hitechdoctor.com/" />
+    <link rel="canonical" href="https://hitechdoctor.com/" />
     <!-- GA4: ορίστε VITE_GA_MEASUREMENT_ID=G-xxxxxxxx στο Railway/Vite (όχι εδώ — χρειάζεται build-time). Βλ. client/src/components/google-analytics.tsx -->
     <script>
       (function(){
         if(window.matchMedia('(prefers-color-scheme: dark)').matches){
           document.documentElement.classList.add('dark');
         }
+        var RELOAD_KEY = 'hitech_chunk_reload_pending';
+        function isStaleChunk(msg){
+          msg = String(msg || '');
+          return msg.indexOf('Failed to fetch dynamically imported module') !== -1
+            || msg.indexOf('Importing a module script failed') !== -1
+            || msg.indexOf('error loading dynamically imported module') !== -1
+            || msg.indexOf('ChunkLoadError') !== -1
+            || msg.indexOf('Loading chunk') !== -1
+            || msg.indexOf('Loading CSS chunk') !== -1;
+        }
+        function reloadOnce(){
+          if(sessionStorage.getItem(RELOAD_KEY)) return;
+          sessionStorage.setItem(RELOAD_KEY, '1');
+          window.location.reload();
+        }
         window.addEventListener('error', function(e){
-          var d = document.getElementById('root');
-          if(d && !d.childNodes.length){
-            d.innerHTML = '<div style="padding:20px;font-family:monospace;color:red;background:#fff;"><b>JS Error:</b><pre style="white-space:pre-wrap">' + (e.message||'') + '\n' + (e.filename||'') + ':' + (e.lineno||'') + '\n' + (e.error && e.error.stack ? e.error.stack : '') + '</pre></div>';
+          if(isStaleChunk(e.message || (e.error && e.error.message))){
+            e.preventDefault();
+            reloadOnce();
           }
-        });
+        }, true);
         window.addEventListener('unhandledrejection', function(e){
-          var d = document.getElementById('root');
-          if(d && !d.childNodes.length){
-            d.innerHTML = '<div style="padding:20px;font-family:monospace;color:red;background:#fff;"><b>Unhandled Promise:</b><pre style="white-space:pre-wrap">' + (e.reason||'') + '</pre></div>';
+          if(isStaleChunk(e.reason)){
+            e.preventDefault();
+            reloadOnce();
           }
         });
       })();

@@ -1,7 +1,7 @@
-import { lazy, Suspense } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { Seo } from "@/components/seo";
 import { Helmet } from "react-helmet-async";
+import HomeBelowFold from "./home-below-fold";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -28,7 +28,6 @@ import {
 import { Link } from "wouter";
 import { requestOpenRepairChat } from "@/lib/repair-chat-events";
 
-const HomeBelowFold = lazy(() => import("./home-below-fold"));
 const homeServices = [
   { icon: Smartphone, title: "Επισκευή Κινητών", href: "/services/episkeui-kiniton" },
   { icon: Tablet, title: "Επισκευή Tablet", href: "/services#episkeui-tablet" },
@@ -375,15 +374,7 @@ export default function Home() {
           </div>
         </section>
 
-        <Suspense
-          fallback={
-            <div className="min-h-[24rem] border-t border-white/6" aria-hidden>
-              <span className="sr-only">Φόρτωση περιεχομένου…</span>
-            </div>
-          }
-        >
-          <HomeBelowFold />
-        </Suspense>
+        <HomeBelowFold />
       </main>
     </div>
   );

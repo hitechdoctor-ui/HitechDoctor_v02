@@ -29,6 +29,19 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        // Keep home route in one chunk — avoids orphaned home-below-fold hashes after deploy
+        manualChunks(id) {
+          if (
+            id.includes("/client/src/pages/home-page") ||
+            id.includes("/client/src/pages/home-below-fold")
+          ) {
+            return "home-page";
+          }
+        },
+      },
+    },
   },
   server: {
     fs: {
