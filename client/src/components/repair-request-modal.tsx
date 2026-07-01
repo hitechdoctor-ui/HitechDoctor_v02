@@ -81,19 +81,6 @@ export function RepairRequestModal({
       : netPrice * 1.24
     : 0;
 
-  useEffect(() => {
-    if (!open) return;
-    form.setValue("deviceName", defaultDeviceName);
-    form.setValue("notes", defaultNotes);
-    if (defaultTotalInclVat != null && defaultTotalInclVat > 0) {
-      setPriceInput((defaultTotalInclVat / 1.24).toFixed(2));
-      setSelectedBox("net");
-    } else {
-      setPriceInput("");
-      setSelectedBox("net");
-    }
-  }, [open, defaultDeviceName, defaultNotes, defaultTotalInclVat, form]);
-
   const fmt = (n: number) =>
     n.toLocaleString("el-GR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 
@@ -107,10 +94,25 @@ export function RepairRequestModal({
       deviceName: defaultDeviceName,
       serialNumber: "",
       deviceCode: "",
-      notes: "",
+      notes: defaultNotes,
       status: "pending",
     },
   });
+
+  const { setValue } = form;
+
+  useEffect(() => {
+    if (!open) return;
+    setValue("deviceName", defaultDeviceName);
+    setValue("notes", defaultNotes);
+    if (defaultTotalInclVat != null && defaultTotalInclVat > 0) {
+      setPriceInput((defaultTotalInclVat / 1.24).toFixed(2));
+      setSelectedBox("net");
+    } else {
+      setPriceInput("");
+      setSelectedBox("net");
+    }
+  }, [open, defaultDeviceName, defaultNotes, defaultTotalInclVat, setValue]);
 
   const mutation = useMutation({
     mutationFn: async (data: FormValues) => {
