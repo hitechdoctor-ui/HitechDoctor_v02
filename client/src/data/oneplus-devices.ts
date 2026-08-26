@@ -62,6 +62,9 @@ export const ONEPLUS_SERIES: OnePlusSeries[] = [
       { name: "OnePlus Nord 2T",       slug: slug("OnePlus Nord 2T"),       screen: "6.43″ AMOLED 90Hz",                screenPrice: 130, batteryPrice: 60, portPrice: 48 },
       { name: "OnePlus Nord CE 2",     slug: slug("OnePlus Nord CE 2"),     screen: "6.43″ AMOLED 90Hz",                screenPrice: 110, batteryPrice: 55, portPrice: 45 },
       { name: "OnePlus Nord CE 2 Lite",slug: slug("OnePlus Nord CE 2 Lite"),screen: "6.59″ IPS LCD 120Hz",              screenPrice: 90,  batteryPrice: 50, portPrice: 42 },
+      { name: "OnePlus Nord N100",     slug: slug("OnePlus Nord N100"),     screen: "6.52″ IPS LCD 90Hz",               screenPrice: 85,  batteryPrice: 48, portPrice: 42 },
+      { name: "OnePlus Nord N10",      slug: slug("OnePlus Nord N10"),      screen: "6.49″ IPS LCD 90Hz",               screenPrice: 90,  batteryPrice: 50, portPrice: 42 },
+      { name: "OnePlus Ace 2V",        slug: slug("OnePlus Ace 2V"),        screen: "6.7″ AMOLED 120Hz",                screenPrice: 155, batteryPrice: 68, portPrice: 55 },
     ],
   },
 ];

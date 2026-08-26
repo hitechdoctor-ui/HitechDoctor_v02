@@ -1,0 +1,71 @@
+[
+  {
+    "id": "group-samsung-a12",
+    "screenSize": "6.5\"",
+    "screenType": "Flat",
+    "notchType": "Waterdrop",
+    "devices": [
+      { "brand": "Samsung", "model": "Galaxy A12", "aliases": ["A12", "Galaxy A12"] },
+      { "brand": "Samsung", "model": "Galaxy A02", "aliases": ["A02", "Galaxy A02"] },
+      { "brand": "Samsung", "model": "Galaxy A02s", "aliases": ["A02s", "Galaxy A02s"] },
+      { "brand": "Samsung", "model": "Galaxy M12", "aliases": ["M12", "Galaxy M12"] },
+      { "brand": "Samsung", "model": "Galaxy M02", "aliases": ["M02", "Galaxy M02"] }
+    ]
+  },
+  {
+    "id": "group-samsung-a53",
+    "screenSize": "6.5\"",
+    "screenType": "Flat",
+    "notchType": "Punch-hole",
+    "devices": [
+      { "brand": "Samsung", "model": "Galaxy A53 5G", "aliases": ["A53", "Galaxy A53", "Galaxy A53 5G"] },
+      { "brand": "Samsung", "model": "Galaxy A52 5G", "aliases": ["A52", "Galaxy A52", "Galaxy A52 5G"] },
+      { "brand": "Samsung", "model": "Galaxy A52s 5G", "aliases": ["A52s", "Galaxy A52s"] },
+      { "brand": "Samsung", "model": "Galaxy A51 5G", "aliases": ["A51", "Galaxy A51"] }
+    ]
+  },
+  {
+    "id": "group-samsung-a55-a35",
+    "screenSize": "6.6\"",
+    "screenType": "Flat",
+    "notchType": "Punch-hole",
+    "devices": [
+      { "brand": "Samsung", "model": "Galaxy A55 5G", "aliases": ["A55", "Galaxy A55", "Galaxy A55 5G"] },
+      { "brand": "Samsung", "model": "Galaxy A35 5G", "aliases": ["A35", "Galaxy A35", "Galaxy A35 5G"] }
+    ]
+  },
+  {
+    "id": "group-iphone-13-14",
+    "screenSize": "6.1\"",
+    "screenType": "Flat",
+    "notchType": "Notch",
+    "devices": [
+      { "brand": "Apple", "model": "iPhone 13", "aliases": ["13"] },
+      { "brand": "Apple", "model": "iPhone 13 Pro", "aliases": ["13 Pro"] },
+      { "brand": "Apple", "model": "iPhone 14", "aliases": ["14"] }
+    ]
+  },
+  {
+    "id": "group-xiaomi-note-10",
+    "screenSize": "6.43\"",
+    "screenType": "Flat",
+    "notchType": "Punch-hole",
+    "devices": [
+      { "brand": "Xiaomi", "model": "Redmi Note 10 4G", "aliases": ["Note 10", "Redmi Note 10"] },
+      { "brand": "Xiaomi", "model": "Redmi Note 10S", "aliases": ["Note 10S", "Redmi Note 10S"] },
+      { "brand": "Xiaomi", "model": "Poco M5s", "aliases": ["M5s", "POCO M5s"] }
+    ]
+  },
+  {
+    "id": "group-realme-c-series",
+    "screenSize": "6.5\"",
+    "screenType": "Flat",
+    "notchType": "Waterdrop",
+    "devices": [
+      { "brand": "Realme", "model": "C11", "aliases": ["Realme C11"] },
+      { "brand": "Realme", "model": "C12", "aliases": ["Realme C12"] },
+      { "brand": "Realme", "model": "C15", "aliases": ["Realme C15"] },
+      { "brand": "Realme", "model": "C25", "aliases": ["Realme C25"] }
+    ]
+  }
+]

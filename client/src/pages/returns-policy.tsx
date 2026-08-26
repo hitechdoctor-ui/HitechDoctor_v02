@@ -4,6 +4,7 @@ import { Seo } from "@/components/seo";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { Link } from "wouter";
 import { Package, RotateCcw, Wrench, Mail, Phone, MapPin } from "lucide-react";
+import { BusinessLegalBlock } from "@/components/business-legal-block";
 import {
   BUSINESS_EMAIL,
   BUSINESS_PHONE_DISPLAY,
@@ -106,6 +107,11 @@ export default function ReturnsPolicy() {
                 </span>
               </li>
             </ul>
+
+            <div className="not-prose mt-6 p-4 rounded-xl border border-white/10 bg-white/[0.02]">
+              <h3 className="text-sm font-semibold text-foreground mb-3">Στοιχεία επιχείρησης</h3>
+              <BusinessLegalBlock />
+            </div>
 
             <h2>4. Σύνδεση με άλλες πολιτικές</h2>
             <p>

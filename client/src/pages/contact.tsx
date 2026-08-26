@@ -10,13 +10,10 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import QRCode from "react-qr-code";
+import { BusinessLegalBlock } from "@/components/business-legal-block";
 import {
   BUSINESS_REGISTERED_NAME,
   BUSINESS_TRADE_NAME,
-  BUSINESS_GEMI,
-  BUSINESS_AFM,
-  BUSINESS_DOU,
-  formatBusinessAddressOneLine,
   BUSINESS_HOURS_SUMMARY,
 } from "@/lib/business-info";
 
@@ -314,39 +311,15 @@ export default function Contact() {
               Στοιχεία επιχείρησης
             </h2>
             <dl className="grid gap-3 text-sm text-muted-foreground">
-              <div>
-                <dt className="text-[11px] uppercase tracking-wider text-muted-foreground mb-0.5">Επωνυμία</dt>
-                <dd className="text-foreground font-medium">
-                  {BUSINESS_REGISTERED_NAME}
-                  {BUSINESS_REGISTERED_NAME !== BUSINESS_TRADE_NAME && (
-                    <span className="text-muted-foreground font-normal"> — εμπορική επωνυμία: {BUSINESS_TRADE_NAME}</span>
-                  )}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-[11px] uppercase tracking-wider text-muted-foreground mb-0.5">Διεύθυνση</dt>
-                <dd>{formatBusinessAddressOneLine()}</dd>
-              </div>
-              <div>
-                <dt className="text-[11px] uppercase tracking-wider text-muted-foreground mb-0.5">ΓΕΜΗ</dt>
-                <dd className="font-mono text-primary/90">{BUSINESS_GEMI}</dd>
-              </div>
-              {BUSINESS_AFM ? (
+              {BUSINESS_REGISTERED_NAME !== BUSINESS_TRADE_NAME && (
                 <div>
-                  <dt className="text-[11px] uppercase tracking-wider text-muted-foreground mb-0.5">ΑΦΜ & ΔΟΥ</dt>
-                  <dd>
-                    <span className="font-mono">{BUSINESS_AFM}</span>
-                    {BUSINESS_DOU ? <span> — ΔΟΥ {BUSINESS_DOU}</span> : null}
-                  </dd>
-                </div>
-              ) : (
-                <div>
-                  <dt className="text-[11px] uppercase tracking-wider text-muted-foreground mb-0.5">ΑΦΜ & ΔΟΥ</dt>
-                  <dd className="text-xs text-muted-foreground/70">
-                    Εμφανίζονται στα εκδιδόμενα παραστατικά. Για δημοσίευση στο site ορίστε VITE_BUSINESS_AFM / VITE_BUSINESS_DOU στο build ή επικοινωνήστε στο info@hitechdoctor.com.
-                  </dd>
+                  <dt className="text-[11px] uppercase tracking-wider text-muted-foreground mb-0.5">Νομική επωνυμία</dt>
+                  <dd className="text-foreground font-medium">{BUSINESS_REGISTERED_NAME}</dd>
                 </div>
               )}
+              <div>
+                <BusinessLegalBlock />
+              </div>
               <div>
                 <dt className="text-[11px] uppercase tracking-wider text-muted-foreground mb-0.5">Ωράριο</dt>
                 <dd>{BUSINESS_HOURS_SUMMARY}</dd>

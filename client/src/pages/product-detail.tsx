@@ -660,7 +660,9 @@ export default function ProductDetail() {
                 {formatPrice(product.price)}
               </p>
 
-              <PriceComparisonSection product={product} />
+              {!isLaptop && !isDesktop && !isRefurbishedIphone && (
+                <PriceComparisonSection product={product} />
+              )}
 
               {/* Main offer button */}
               <div className="mt-3 inline-block max-w-full rounded-xl p-[2px] bg-gradient-to-r from-primary/55 via-cyan-400/45 to-primary/55 bg-[length:200%_100%] animate-offer-shimmer">

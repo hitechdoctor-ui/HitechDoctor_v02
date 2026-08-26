@@ -48,6 +48,17 @@ export function formatBusinessAddressOneLine(): string {
   return `${BUSINESS_STREET_ADDRESS}, ${BUSINESS_ADDRESS_LOCALITY} ${BUSINESS_POSTAL_CODE}, ${BUSINESS_ADDRESS_REGION}, Ελλάδα`;
 }
 
+/** Μία γραμμή ΑΦΜ | ΔΟΥ όπως απαιτεί Merchant Center / footer. */
+export function formatBusinessAfmDouLine(): string {
+  if (BUSINESS_AFM && BUSINESS_DOU) {
+    return `ΑΦΜ: ${BUSINESS_AFM} | ΔΟΥ: ${BUSINESS_DOU}`;
+  }
+  if (BUSINESS_AFM) {
+    return `ΑΦΜ: ${BUSINESS_AFM}`;
+  }
+  return "ΑΦΜ και ΔΟΥ: αναγράφονται στα εκδιδόμενα παραστατικά";
+}
+
 /** Σύντομο τοπικό hook για meta descriptions (επισκευές / programmatic SEO). */
 export const BUSINESS_SEO_META_LOCAL =
   "Κατάστημα Μοσχάτο—εξυπηρέτηση Καλλιθέα, Αθήνα & αποστολές πανελλαδικά.";

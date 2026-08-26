@@ -5,15 +5,8 @@ import { RepairTrackerSection } from "@/components/repair-tracker-section";
 import { Wrench, Package, Shield, Phone, Mail, MapPin, Facebook, Instagram, ExternalLink, Smartphone, Cable, Laptop, Monitor, Headphones, Sparkles } from "lucide-react";
 import { SiTiktok, SiViber } from "react-icons/si";
 import { buildViberUrl } from "@/lib/viber";
-import {
-  BUSINESS_REGISTERED_NAME,
-  BUSINESS_TRADE_NAME,
-  BUSINESS_GEMI,
-  BUSINESS_AFM,
-  BUSINESS_DOU,
-  formatBusinessAddressOneLine,
-  BUSINESS_HOURS_SUMMARY,
-} from "@/lib/business-info";
+import { BusinessLegalBlock } from "@/components/business-legal-block";
+import { BUSINESS_HOURS_SUMMARY, formatBusinessAddressOneLine } from "@/lib/business-info";
 
 const NAV_MENUS = [
   {
@@ -122,41 +115,10 @@ export function Footer() {
               Επαγγελματική επισκευή κινητών, tablet, laptop και gaming console.
               Αξεσουάρ iPhone υψηλής ποιότητας. Εγγύηση εργασίας 6 μήνες.
             </p>
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 mb-4 space-y-2 text-[11px] text-muted-foreground leading-relaxed">
-              <p className="text-foreground font-semibold text-xs">Στοιχεία επιχείρησης</p>
-              <p>
-                <span className="text-muted-foreground/70">Επωνυμία: </span>
-                {BUSINESS_REGISTERED_NAME}
-                {BUSINESS_REGISTERED_NAME !== BUSINESS_TRADE_NAME && (
-                  <span className="text-muted-foreground/60"> ({BUSINESS_TRADE_NAME})</span>
-                )}
-              </p>
-              <p className="flex items-start gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
-                <span>{formatBusinessAddressOneLine()}</span>
-              </p>
-              <p>
-                <span className="text-muted-foreground/70">Αρ. ΓΕΜΗ: </span>
-                <span className="font-mono text-primary/80">{BUSINESS_GEMI}</span>
-              </p>
-              {BUSINESS_AFM ? (
-                <p>
-                  <span className="text-muted-foreground/70">ΑΦΜ: </span>
-                  <span className="font-mono">{BUSINESS_AFM}</span>
-                  {BUSINESS_DOU ? (
-                    <>
-                      <span className="text-muted-foreground/50"> · </span>
-                      <span className="text-muted-foreground/70">ΔΟΥ: </span>
-                      <span>{BUSINESS_DOU}</span>
-                    </>
-                  ) : null}
-                </p>
-              ) : (
-                <p className="text-muted-foreground/55 text-[10px]">
-                  ΑΦΜ και ΔΟΥ: αναγράφονται στα εκδιδόμενα παραστατικά· διατίθενται και κατόπιν αιτήματος στο {CONTACT[1].value}.
-                </p>
-              )}
-              <p className="text-muted-foreground/80 pt-1 border-t border-white/6">
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 mb-4">
+              <p className="text-foreground font-semibold text-xs mb-2">Στοιχεία επιχείρησης</p>
+              <BusinessLegalBlock variant="compact" />
+              <p className="text-[11px] text-muted-foreground/80 pt-2 mt-2 border-t border-white/6 leading-relaxed">
                 <span className="text-muted-foreground/70">Ωράριο: </span>
                 {BUSINESS_HOURS_SUMMARY}
               </p>

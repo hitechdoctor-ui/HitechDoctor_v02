@@ -43,6 +43,7 @@ const ServiceAppleWatch = lazyWithReload(() => import("./pages/service-apple-wat
 const ServicePlayStation = lazyWithReload(() => import("./pages/service-playstation"));
 const IpswDownload = lazyWithReload(() => import("./pages/ipsw-download"));
 const ImeiCheck = lazyWithReload(() => import("./pages/imei-check"));
+const ScreenProtectorCheckerPage = lazyWithReload(() => import("./pages/screen-protector-checker"));
 const DeviceShipping = lazyWithReload(() => import("./pages/device-shipping"));
 const AppleService = lazyWithReload(() => import("./pages/apple-service"));
 const WebDesigner = lazyWithReload(() => import("./pages/web-designer"));
@@ -207,6 +208,7 @@ function Router() {
           <Route path="/services/episkeui-playstation" component={ServicePlayStation} />
           <Route path="/services/ipsw-download" component={IpswDownload} />
           <Route path="/services/imei-check" component={ImeiCheck} />
+          <Route path="/tools/screen-protector-checker" component={ScreenProtectorCheckerPage} />
           <Route path="/services/apostoli-syskevis" component={DeviceShipping} />
           <Route path="/apple-service" component={AppleService} />
           <Route path="/web-designer" component={WebDesigner} />

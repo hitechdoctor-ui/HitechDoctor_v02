@@ -1,0 +1,500 @@
+[
+  {
+    "id": "shop-og-plus-big-curve-esd",
+    "label": "OG+ Big Shining Curve — ESD Anti-Static",
+    "source": "shop-inventory",
+    "screenSize": "6.67\"",
+    "screenType": "Curved",
+    "notchType": "Punch-hole",
+    "devices": [
+      {
+        "brand": "Xiaomi",
+        "model": "Redmi Note 9S",
+        "aliases": [
+          "Redmi Note 9S",
+          "Note 9S"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Redmi Note 9 Pro",
+        "aliases": [
+          "Redmi Note 9 Pro",
+          "Note 9 Pro"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Redmi Note 9 Pro Max",
+        "aliases": [
+          "Redmi Note 9 Pro Max",
+          "Note 9 Pro Max"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Redmi Note 10 Pro",
+        "aliases": [
+          "Redmi Note 10 Pro",
+          "Note 10 Pro"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Redmi Note 10 Pro Max",
+        "aliases": [
+          "Redmi Note 10 Pro Max",
+          "Note 10 Pro Max"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Redmi Note 10 Lite",
+        "aliases": [
+          "Redmi Note 10 Lite",
+          "Note 10 Lite"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Redmi Note 11 Pro",
+        "aliases": [
+          "Redmi Note 11 Pro",
+          "Note 11 Pro"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Redmi Note 11 Pro+",
+        "aliases": [
+          "Redmi Note 11 Pro+",
+          "Note 11 Pro+"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Redmi Note 11E Pro",
+        "aliases": [
+          "Redmi Note 11E Pro",
+          "Note 11E Pro"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Redmi Note 12 Pro 4G",
+        "aliases": [
+          "Redmi Note 12 Pro 4G",
+          "Note 12 Pro",
+          "Note 12 Pro 4G"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Redmi K40",
+        "aliases": [
+          "Redmi K40",
+          "K40"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Redmi K40S",
+        "aliases": [
+          "Redmi K40S",
+          "K40S"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Redmi K40 Pro",
+        "aliases": [
+          "Redmi K40 Pro",
+          "K40 Pro"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Redmi K40 Pro+",
+        "aliases": [
+          "Redmi K40 Pro+",
+          "K40 Pro+"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Redmi K30 Ultra",
+        "aliases": [
+          "Redmi K30 Ultra",
+          "K30 Ultra"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Redmi K30S",
+        "aliases": [
+          "Redmi K30S",
+          "K30S"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Redmi K30i",
+        "aliases": [
+          "Redmi K30i",
+          "K30i"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Redmi K30 Pro",
+        "aliases": [
+          "Redmi K30 Pro",
+          "K30 Pro"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Redmi K30 Pro Zoom",
+        "aliases": [
+          "Redmi K30 Pro Zoom",
+          "K30 Pro Zoom"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "POCO F4",
+        "aliases": [
+          "POCO F4",
+          "F4"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "POCO F3",
+        "aliases": [
+          "POCO F3",
+          "F3"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "POCO X2",
+        "aliases": [
+          "POCO X2",
+          "X2"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "POCO X3",
+        "aliases": [
+          "POCO X3",
+          "X3"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "POCO X3 Pro",
+        "aliases": [
+          "POCO X3 Pro",
+          "X3 Pro"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "POCO X3 NFC",
+        "aliases": [
+          "POCO X3 NFC",
+          "X3 NFC"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "POCO X4 Pro 5G",
+        "aliases": [
+          "POCO X4 Pro 5G",
+          "X4 Pro",
+          "X4 Pro 5G"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "POCO M2 Pro",
+        "aliases": [
+          "POCO M2 Pro",
+          "M2 Pro"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "POCO F2 Pro",
+        "aliases": [
+          "POCO F2 Pro",
+          "F2 Pro"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Mi 10i 5G",
+        "aliases": [
+          "Mi 10i 5G",
+          "10i",
+          "10i 5G"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Mi 10T 5G",
+        "aliases": [
+          "Mi 10T 5G",
+          "10T",
+          "10T 5G"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Mi 10T Pro 5G",
+        "aliases": [
+          "Mi 10T Pro 5G",
+          "10T Pro",
+          "10T Pro 5G"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Mi 10T Lite 5G",
+        "aliases": [
+          "Mi 10T Lite 5G",
+          "10T Lite",
+          "10T Lite 5G"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Mi 11T",
+        "aliases": [
+          "Mi 11T",
+          "11T"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Mi 11T Pro",
+        "aliases": [
+          "Mi 11T Pro",
+          "11T Pro"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Mi 11X",
+        "aliases": [
+          "Mi 11X",
+          "11X"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Mi 11X Pro",
+        "aliases": [
+          "Mi 11X Pro",
+          "11X Pro"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Mi 11i",
+        "aliases": [
+          "Mi 11i",
+          "11i"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Black Shark 4",
+        "aliases": [
+          "Black Shark 4",
+          "4"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Black Shark 4 Pro",
+        "aliases": [
+          "Black Shark 4 Pro",
+          "4 Pro"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Black Shark 4S",
+        "aliases": [
+          "Black Shark 4S",
+          "4S"
+        ]
+      },
+      {
+        "brand": "Xiaomi",
+        "model": "Black Shark 4S Pro",
+        "aliases": [
+          "Black Shark 4S Pro",
+          "4S Pro"
+        ]
+      },
+      {
+        "brand": "Samsung",
+        "model": "Galaxy A80",
+        "aliases": [
+          "Galaxy A80",
+          "A80"
+        ]
+      },
+      {
+        "brand": "Samsung",
+        "model": "Galaxy A90",
+        "aliases": [
+          "Galaxy A90",
+          "A90"
+        ]
+      },
+      {
+        "brand": "Huawei",
+        "model": "P Smart 2021",
+        "aliases": [
+          "P Smart 2021"
+        ]
+      },
+      {
+        "brand": "Honor",
+        "model": "X8",
+        "aliases": [
+          "X8"
+        ]
+      },
+      {
+        "brand": "Honor",
+        "model": "X8A",
+        "aliases": [
+          "X8A"
+        ]
+      },
+      {
+        "brand": "Honor",
+        "model": "X10",
+        "aliases": [
+          "X10"
+        ]
+      },
+      {
+        "brand": "LG",
+        "model": "K42",
+        "aliases": [
+          "K42"
+        ]
+      },
+      {
+        "brand": "LG",
+        "model": "K52",
+        "aliases": [
+          "K52"
+        ]
+      },
+      {
+        "brand": "LG",
+        "model": "K61",
+        "aliases": [
+          "K61"
+        ]
+      },
+      {
+        "brand": "LG",
+        "model": "K62",
+        "aliases": [
+          "K62"
+        ]
+      },
+      {
+        "brand": "LG",
+        "model": "K62 Plus",
+        "aliases": [
+          "K62 Plus"
+        ]
+      },
+      {
+        "brand": "LG",
+        "model": "K92",
+        "aliases": [
+          "K92"
+        ]
+      },
+      {
+        "brand": "OnePlus",
+        "model": "Ace 2V",
+        "aliases": [
+          "Ace 2V"
+        ]
+      },
+      {
+        "brand": "OnePlus",
+        "model": "Nord 3",
+        "aliases": [
+          "Nord 3"
+        ]
+      },
+      {
+        "brand": "OnePlus",
+        "model": "Nord CE 3",
+        "aliases": [
+          "Nord CE 3",
+          "Nord CE3"
+        ]
+      },
+      {
+        "brand": "OnePlus",
+        "model": "Nord N100",
+        "aliases": [
+          "Nord N100",
+          "N100",
+          "OnePlus Nord N100",
+          "1+ Nord N100"
+        ]
+      },
+      {
+        "brand": "Realme",
+        "model": "GT3",
+        "aliases": [
+          "GT3"
+        ]
+      },
+      {
+        "brand": "Realme",
+        "model": "GT Neo 5 SE",
+        "aliases": [
+          "GT Neo 5 SE"
+        ]
+      },
+      {
+        "brand": "Realme",
+        "model": "GT Neo5",
+        "aliases": [
+          "GT Neo5"
+        ]
+      },
+      {
+        "brand": "Vivo",
+        "model": "Y200",
+        "aliases": [
+          "Y200"
+        ]
+      },
+      {
+        "brand": "Vivo",
+        "model": "V29E Global",
+        "aliases": [
+          "V29E Global",
+          "V29E"
+        ]
+      }
+    ]
+  }
+]

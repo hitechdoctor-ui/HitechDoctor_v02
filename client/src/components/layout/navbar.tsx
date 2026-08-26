@@ -23,7 +23,7 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import { SiApple, SiSamsung, SiXiaomi, SiHuawei, SiOneplus } from "react-icons/si";
-import { NavbarAiChatBar } from "@/components/layout/navbar-ai-chat-bar";
+import { NavbarPromoBar } from "@/components/layout/navbar-promo-bar";
 import { SiViber } from "react-icons/si";
 import { buildViberUrl } from "@/lib/viber";
 
@@ -76,6 +76,12 @@ const OTHER_SERVICES = [
     icon: ScanSearch,
     color: "text-violet-400",
     badge: "Νέο",
+  },
+  {
+    name: "Συμβατότητα Τζαμιού",
+    href: "/tools/screen-protector-checker",
+    icon: Shield,
+    color: "text-sky-400",
   },
   {
     name: "Αποστολή Συσκευής",
@@ -665,7 +671,7 @@ export function Navbar() {
       </header>
 
       <div className="mb-6 border-b border-white/5 bg-gradient-to-b from-zinc-200/70 via-zinc-100/80 to-zinc-200/65 dark:from-zinc-950 dark:via-[#060d18] dark:to-zinc-950">
-        <NavbarAiChatBar />
+        <NavbarPromoBar />
       </div>
 
       <CartDrawer open={isCartOpen} onOpenChange={setIsCartOpen} />
