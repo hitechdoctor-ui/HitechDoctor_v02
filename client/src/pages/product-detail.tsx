@@ -3,7 +3,7 @@ import { Footer } from "@/components/layout/footer";
 import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { PriceComparisonSection } from "@/components/price-comparison-section";
 import { ReviewsSection } from "@/components/reviews-section";
-import { Seo } from "@/components/seo";
+import { resolveAbsoluteImageUrl } from "@shared/seo-meta";
 import { Helmet } from "react-helmet-async";
 import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -378,7 +378,13 @@ export default function ProductDetail() {
         <meta property="og:description" content={metaDesc.slice(0, 160)} />
         <meta property="og:type" content="product" />
         <meta property="og:url" content={canonicalUrl} />
-        {product.imageUrl && <meta property="og:image" content={product.imageUrl} />}
+        {product.imageUrl && (
+          <meta property="og:image" content={resolveAbsoluteImageUrl(product.imageUrl)} />
+        )}
+        <meta name="twitter:card" content="summary_large_image" />
+        {product.imageUrl && (
+          <meta name="twitter:image" content={resolveAbsoluteImageUrl(product.imageUrl)} />
+        )}
         <meta property="product:price:amount" content={Number(product.price).toFixed(2)} />
         <meta property="product:price:currency" content="EUR" />
         <meta

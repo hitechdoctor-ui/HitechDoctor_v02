@@ -44,7 +44,13 @@ export default function BlogPost() {
     <div className="min-h-screen bg-background">
       <ScrollProgressBar />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
-      <Seo title={`${post.title} | HiTech Doctor Blog`} description={post.excerpt} />
+      <Seo
+        title={`${post.title} | HiTech Doctor Blog`}
+        description={post.excerpt}
+        path={`/blog/${post.slug}`}
+        image={post.image}
+        type="article"
+      />
       <Navbar />
 
       <div className="pt-20">

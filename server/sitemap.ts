@@ -78,6 +78,7 @@ export async function buildPublicSitemapPaths(getProducts: () => Promise<Product
     "/services/imei-check",
     "/services/ipsw-download",
     "/services/apostoli-syskevis",
+    "/tools/screen-protector-checker",
     "/eshop-home",
     "/eshop",
     "/blog",

@@ -72,7 +72,7 @@ export function buildLocalBusinessJsonLd(): Record<string, unknown> {
     alternateName: BUSINESS_TRADE_NAME,
     description: `Επισκευή smartphone, tablet, laptop & υπολογιστών — σημείο στο ${BUSINESS_ADDRESS_LOCALITY} (${BUSINESS_ADDRESS_REGION}), κοντά στην Καλλιθέα & την ευρύτερη Αθήνα. Τηλ. ${BUSINESS_PHONE_DISPLAY}, email ${BUSINESS_EMAIL}.`,
     url: BUSINESS_SITE_URL_WWW,
-    image: `${BUSINESS_SITE_URL_WWW}/favicon.png`,
+    image: `${BUSINESS_SITE_URL_WWW}/og-image.png`,
     logo: `${BUSINESS_SITE_URL_WWW}/favicon.png`,
     priceRange: "££",
     telephone: BUSINESS_PHONE_E164,
