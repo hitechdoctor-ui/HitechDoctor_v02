@@ -137,6 +137,21 @@ const allServices = [
     href: "/services/episkeui-desktop",
   },
   {
+    id: "episkeui-all-in-one",
+    icon: Monitor,
+    title: "All-in-One PC (B2B)",
+    subtitle: "Dell OptiPlex AIO, HP EliteOne, iMac — Επιχειρήσεις",
+    description:
+      "Εξειδικευμένη επισκευή & αναβάθμιση All-in-One για επαγγελματίες. Οθόνη, μητρική, SSD/RAM, τιμολόγιο & προτεραιότητα service.",
+    features: ["Dell OptiPlex AIO series", "Επισκευή οθόνης & touch", "Αναβάθμιση SSD/RAM", "B2B τιμολόγιο"],
+    image: "https://images.unsplash.com/photo-1525547719578-a969d066bfcc?auto=format&fit=crop&q=80&w=900",
+    imageAlt: "Επισκευή All-in-One PC επιχειρήσεις Dell HP iMac",
+    priceFrom: "€40",
+    timeFrom: "1-3 ημέρες",
+    tag: "B2B",
+    href: "/services/episkeui-all-in-one",
+  },
+  {
     id: "it-support",
     icon: Cpu,
     title: "IT Support",

@@ -134,6 +134,30 @@ export default function ServiceDesktop() {
           </div>
         </section>
 
+        {/* All-in-One B2B cross-link */}
+        <section className="container mx-auto max-w-6xl px-4 pb-4">
+          <Link href="/services/episkeui-all-in-one">
+            <div className="rounded-xl border border-indigo-500/25 bg-indigo-950/20 p-4 transition-colors hover:border-indigo-400/40 sm:p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <Badge variant="outline" className="mb-2 border-indigo-400/40 bg-indigo-500/10 text-indigo-300 text-[10px]">
+                    B2B · Επιχειρήσεις
+                  </Badge>
+                  <p className="font-display font-bold text-foreground">
+                    Επισκευή All-in-One PC — Dell OptiPlex AIO, HP, iMac
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Εξειδικευμένο service για επαγγελματίες · τιμολόγιο & προτεραιότητα
+                  </p>
+                </div>
+                <Button variant="outline" className="shrink-0 border-indigo-500/30">
+                  Δείτε τη σελίδα <ArrowRight className="ml-1.5 h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </Link>
+        </section>
+
         {/* Brand cards */}
         <section className="container mx-auto px-4 py-8 max-w-6xl">
           <div className="flex items-center gap-3 mb-6">

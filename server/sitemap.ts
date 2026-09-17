@@ -73,6 +73,7 @@ export async function buildPublicSitemapPaths(getProducts: () => Promise<Product
     "/services/episkeui-laptop",
     "/services/episkeui-tablet",
     "/services/episkeui-desktop",
+    "/services/episkeui-all-in-one",
     "/services/episkeui-apple-watch",
     "/services/episkeui-playstation",
     "/services/imei-check",

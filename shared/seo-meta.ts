@@ -110,6 +110,11 @@ export const STATIC_PAGE_SEO: Record<string, StaticSeoEntry> = {
     title: "Επισκευή Desktop & IT Support",
     description: "Επισκευή υπολογιστών, upgrade, δίκτυα και IT support για επιχειρήσεις & ιδιώτες.",
   },
+  "/services/episkeui-all-in-one": {
+    title: "Επισκευή All-in-One Υπολογιστών (B2B & Επαγγελματίες)",
+    description:
+      "Εξειδικευμένο service All-in-One PC για επιχειρήσεις. Dell OptiPlex AIO, HP, Lenovo, iMac. Επισκευή οθόνης, αναβάθμιση SSD/RAM, τιμολόγιο.",
+  },
   "/services/episkeui-apple-watch": {
     title: "Επισκευή Apple Watch",
     description: "Εξειδικευμένη επισκευή Apple Watch — οθόνη, μπαταρία, Digital Crown. HiTech Doctor.",

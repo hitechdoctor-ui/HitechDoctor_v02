@@ -199,6 +199,14 @@ export function buildGlobalSearchIndex(): GlobalSearchIndexEntry[] {
     keywords: "desktop υπολογιστης επισκευη αναβαθμιση ram ssd psu τροφοδοτικο windows imac gaming pc",
   });
 
+  entries.push({
+    name: "Επισκευή All-in-One PC (B2B)",
+    href: "/services/episkeui-all-in-one",
+    sub: "Dell OptiPlex AIO · HP EliteOne · iMac · Επιχειρήσεις",
+    category: "desktop",
+    keywords: "all in one aio dell optiplex 5480 7480 hp eliteone imac b2b επιχειρηση επισκευη οθονης",
+  });
+
   for (const model of APPLE_WATCH_MODELS) {
     entries.push({
       name: `Επισκευή ${model.name}`,

@@ -38,6 +38,7 @@ const LaptopRepairDetail = lazyWithReload(() => import("./pages/laptop-repair-de
 const ServiceTablet = lazyWithReload(() => import("./pages/service-tablet"));
 const TabletRepairDetail = lazyWithReload(() => import("./pages/tablet-repair-detail"));
 const ServiceDesktop = lazyWithReload(() => import("./pages/service-desktop"));
+const ServiceAllInOne = lazyWithReload(() => import("./pages/service-all-in-one"));
 const DesktopRepairDetail = lazyWithReload(() => import("./pages/desktop-repair-detail"));
 const ServiceAppleWatch = lazyWithReload(() => import("./pages/service-apple-watch"));
 const ServicePlayStation = lazyWithReload(() => import("./pages/service-playstation"));
@@ -221,6 +222,7 @@ function Router() {
           <Route path="/portfolio/nikosapost-gr" component={PortfolioNikosapost} />
           <Route path="/portfolio/metamorfosi-moschato-gr" component={PortfolioMetamorfosi} />
           <Route path="/services/episkeui-desktop" component={ServiceDesktop} />
+          <Route path="/services/episkeui-all-in-one" component={ServiceAllInOne} />
           <Route path="/episkevi-desktop/:slug" component={DesktopRepairDetail} />
           <Route path="/services/episkeui-tablet" component={ServiceTablet} />
           <Route path="/episkevi-tablet/:slug" component={TabletRepairDetail} />

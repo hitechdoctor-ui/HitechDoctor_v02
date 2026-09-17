@@ -16,4 +16,9 @@ export const pool = new Pool({
   ssl: true, 
 });
 
+/** Αποφεύγει crash του process σε προσωρινά σφάλματα δικτύου (π.χ. Neon EADDRNOTAVAIL). */
+pool.on("error", (err) => {
+  console.error("[db] idle client error (pool will reconnect):", err.message);
+});
+
 export const db = drizzle(pool, { schema });
