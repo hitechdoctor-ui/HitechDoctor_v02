@@ -49,6 +49,7 @@ import {
   guessDeviceModelFromMessages,
 } from "@shared/repair-assistant";
 import { runSupplierSyncJob, syncJobs, newSyncJobId } from "./supplier-sync";
+import { syncInnovxEmailHtml } from "./innovx-email-sync";
 import {
   isPrivilegedAdminRole,
   isSuperAdminEmail,
@@ -154,6 +155,45 @@ export async function registerRoutes(
     } catch (err) {
       console.error("[sitemap.xml]", err);
       res.status(500).send("Sitemap error");
+    }
+  });
+
+  /** Innovx — αυτόματη εισαγωγή/ενημέρωση τιμών από HTML καθημερινού e-mail */
+  app.post("/api/webhooks/innovx-email", async (req, res) => {
+    try {
+      const secret = process.env.INNOVX_WEBHOOK_SECRET?.trim();
+      if (secret) {
+        const header =
+          req.get("x-innovx-webhook-secret") ??
+          req.get("authorization")?.replace(/^Bearer\s+/i, "");
+        if (header !== secret) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+      }
+
+      const bodySchema = z.object({
+        email_html: z.string().min(1, "Απαιτείται email_html"),
+        retail_margin: z.coerce.number().positive().optional(),
+        create_missing: z.boolean().optional(),
+      });
+      const body = bodySchema.parse(req.body);
+
+      const result = await syncInnovxEmailHtml(body.email_html, {
+        retailMargin: body.retail_margin,
+        createMissing: body.create_missing ?? false,
+      });
+
+      res.json({
+        status: result.status,
+        parsed_count: result.parsed_count,
+        products: result.products,
+      });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0]?.message ?? "Μη έγκυρα δεδομένα" });
+      }
+      console.error("[webhooks/innovx-email]", err);
+      res.status(500).json({ message: "Σφάλμα επεξεργασίας e-mail Innovx" });
     }
   });
 
