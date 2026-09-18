@@ -174,18 +174,19 @@ export async function registerRoutes(
       const bodySchema = z.object({
         email_html: z.string().min(1, "Απαιτείται email_html"),
         retail_margin: z.coerce.number().positive().optional(),
-        create_missing: z.boolean().optional(),
       });
       const body = bodySchema.parse(req.body);
 
       const result = await syncInnovxEmailHtml(body.email_html, {
         retailMargin: body.retail_margin,
-        createMissing: body.create_missing ?? false,
       });
 
       res.json({
         status: result.status,
         parsed_count: result.parsed_count,
+        deleted_count: result.deleted_count,
+        created_count: result.created_count,
+        sections_found: result.sections_found,
         products: result.products,
       });
     } catch (err) {

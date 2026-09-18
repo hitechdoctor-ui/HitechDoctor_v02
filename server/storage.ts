@@ -61,6 +61,7 @@ export interface IStorage {
   createProduct(product: InsertProduct): Promise<Product>;
   updateProduct(id: number, updates: Partial<InsertProduct>): Promise<Product>;
   deleteProduct(id: number): Promise<void>;
+  deleteProductsByVariantGroup(variantGroup: string): Promise<number>;
 
   // Customers
   getCustomers(): Promise<Customer[]>;
@@ -298,6 +299,14 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProduct(id: number): Promise<void> {
     await db.delete(products).where(eq(products.id, id));
+  }
+
+  async deleteProductsByVariantGroup(variantGroup: string): Promise<number> {
+    const deleted = await db
+      .delete(products)
+      .where(eq(products.variantGroup, variantGroup))
+      .returning({ id: products.id });
+    return deleted.length;
   }
 
   // --- Customers ---

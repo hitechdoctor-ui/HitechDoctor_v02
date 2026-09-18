@@ -1,10 +1,19 @@
 import * as cheerio from "cheerio";
 
+/** Tag στη βάση για προϊόντα που εισάγονται από Innovx email sync. */
+export const INNOVX_VARIANT_GROUP = "innovx";
+
+export type InnovxDeviceCategory = "mobile" | "tablet" | "smartwatch" | "accessory";
+
 export interface InnovxParsedProduct {
   title: string;
   wholesale_price: number;
-  category: string;
+  /** Raw section label από το email (π.χ. «ΚΙΝΗΤΑ APPLE»). */
+  section: string;
+  /** Κανονικοποιημένη κατηγορία συσκευής για αποθήκευση. */
+  device_category: InnovxDeviceCategory;
   retail_price: number;
+  image_url?: string;
 }
 
 export interface InnovxParseOptions {
@@ -19,26 +28,55 @@ export interface InnovxParseResult {
 
 /** Γνωστά section headers στα καθημερινά e-mails Innovx */
 export const INNOVX_SECTION_LABELS = [
+  "ACCESSORIES",
   "APPLE ACCESSORIES",
   "SMARTWATCH",
+  "SMARTWATCHES",
+  "MOBILES",
+  "TABLETS",
   "ΚΙΝΗΤΑ APPLE",
   "ΚΙΝΗΤΑ SAMSUNG",
   "ΚΙΝΗΤΑ XIAOMI",
-  "TABLETS",
+  "ΚΙΝΗΤΑ",
+  "ΤΑΜΠΛΕΤ",
+  "ΑΞΕΣΟΥΑΡ",
   "LAPTOPS",
 ] as const;
 
 const SECTION_DETECTORS: { label: string; pattern: RegExp }[] = [
   { label: "APPLE ACCESSORIES", pattern: /\bAPPLE\s+ACCESSORIES\b/i },
+  { label: "ACCESSORIES", pattern: /\bACCESSORIES\b/i },
+  { label: "ΑΞΕΣΟΥΑΡ", pattern: /ΑΞΕΣΟΥΑΡ/i },
+  { label: "SMARTWATCHES", pattern: /\bSMARTWATCHES\b/i },
   { label: "SMARTWATCH", pattern: /\bSMARTWATCH\b/i },
   { label: "ΚΙΝΗΤΑ APPLE", pattern: /ΚΙΝΗΤΑ\s+APPLE/i },
   { label: "ΚΙΝΗΤΑ SAMSUNG", pattern: /ΚΙΝΗΤΑ\s+SAMSUNG/i },
   { label: "ΚΙΝΗΤΑ XIAOMI", pattern: /ΚΙΝΗΤΑ\s+(?:XIAOMI|REDMI|POCO)/i },
+  { label: "ΚΙΝΗΤΑ", pattern: /ΚΙΝΗΤΑ\b/i },
+  { label: "MOBILES", pattern: /\bMOBILES?\b/i },
   { label: "TABLETS", pattern: /\bTABLETS?\b/i },
+  { label: "ΤΑΜΠΛΕΤ", pattern: /ΤΑΜΠΛΕΤ/i },
   { label: "LAPTOPS", pattern: /\bLAPTOPS?\b/i },
 ];
 
 const VAT_SUFFIX_RE = /\s*(?:χωρ\.|χωρίς\s*ΦΠΑ|\+ΦΠΑ)\s*$/i;
+
+function normalizeProductName(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[–—]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function titleToProductSlug(title: string): string {
+  return normalizeProductName(title)
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 120);
+}
 
 export function getInnovxRetailMargin(): number {
   const raw =
@@ -54,6 +92,45 @@ export function computeInnovxRetailPrice(
   margin = getInnovxRetailMargin(),
 ): number {
   return Math.round(wholesale * margin * 100) / 100;
+}
+
+export function mapSectionToDeviceCategory(section: string): InnovxDeviceCategory {
+  const upper = section.toUpperCase();
+
+  if (/SMARTWATCH/.test(upper)) return "smartwatch";
+  if (/TABLET|ΤΑΜΠΛΕΤ/.test(upper)) return "tablet";
+  if (/ACCESSOR|ΑΞΕΣΟΥΑΡ|APPLE ACCESSORIES/.test(upper)) return "accessory";
+  if (/ΚΙΝΗΤ|MOBILE|LAPTOP/.test(upper)) return "mobile";
+
+  return "mobile";
+}
+
+export function mapSectionToCatalog(section: string): {
+  category: string;
+  subcategory?: string;
+  brand?: string;
+} {
+  const device = mapSectionToDeviceCategory(section);
+
+  if (device === "smartwatch") {
+    return { category: "accessory", subcategory: "smartwatch", brand: inferBrand(section) };
+  }
+  if (device === "tablet") {
+    return { category: "tablet", brand: inferBrand(section) };
+  }
+  if (device === "accessory") {
+    return { category: "accessory", brand: inferBrand(section) };
+  }
+
+  return { category: "mobile", brand: inferBrand(section) };
+}
+
+function inferBrand(section: string): string | undefined {
+  const upper = section.toUpperCase();
+  if (/APPLE|ΚΙΝΗΤΑ APPLE/.test(upper)) return "Apple";
+  if (/SAMSUNG/.test(upper)) return "Samsung";
+  if (/XIAOMI|REDMI|POCO/.test(upper)) return "Xiaomi";
+  return undefined;
 }
 
 export function parseInnovxPrice(raw: string): number | null {
@@ -135,21 +212,33 @@ function extractTitleAndPrice(text: string): { title: string; price: number } | 
   return { title, price: trailing.price };
 }
 
+function extractRowImage($: cheerio.CheerioAPI, row: cheerio.Element): string | undefined {
+  const src =
+    $(row).find("img[src]").first().attr("src") ??
+    $(row).find("img[data-src]").first().attr("data-src");
+  const url = src?.trim();
+  if (!url || url.startsWith("cid:")) return undefined;
+  return url;
+}
+
 function pushProduct(
   map: Map<string, InnovxParsedProduct>,
   sections: Set<string>,
-  category: string,
+  section: string,
   title: string,
   wholesale: number,
   margin: number,
+  imageUrl?: string,
 ) {
   const key = title.toLowerCase().replace(/\s+/g, " ").trim();
-  sections.add(category);
+  sections.add(section);
   map.set(key, {
     title,
     wholesale_price: wholesale,
-    category,
+    section,
+    device_category: mapSectionToDeviceCategory(section),
     retail_price: computeInnovxRetailPrice(wholesale, margin),
+    image_url: imageUrl,
   });
 }
 
@@ -159,7 +248,7 @@ function parseTableRows($: cheerio.CheerioAPI, margin: number): {
 } {
   const products = new Map<string, InnovxParsedProduct>();
   const sections = new Set<string>();
-  let currentSection = "GENERAL";
+  let currentSection = "MOBILES";
 
   $("table tr").each((_, row) => {
     const cells = $(row)
@@ -177,13 +266,15 @@ function parseTableRows($: cheerio.CheerioAPI, margin: number): {
       return;
     }
 
+    const rowImage = extractRowImage($, row);
+
     if (cells.length >= 2) {
       const priceCell = cells[cells.length - 1]!;
       const price = parseInnovxPrice(priceCell);
       if (price != null) {
         const title = cells.slice(0, -1).join(" ").trim();
         if (title.length >= 5) {
-          pushProduct(products, sections, currentSection, title, price, margin);
+          pushProduct(products, sections, currentSection, title, price, margin, rowImage);
           return;
         }
       }
@@ -191,7 +282,7 @@ function parseTableRows($: cheerio.CheerioAPI, margin: number): {
 
     const extracted = extractTitleAndPrice(rowText);
     if (extracted) {
-      pushProduct(products, sections, currentSection, extracted.title, extracted.price, margin);
+      pushProduct(products, sections, currentSection, extracted.title, extracted.price, margin, rowImage);
     }
   });
 
@@ -204,7 +295,7 @@ function parseBlockLines($: cheerio.CheerioAPI, margin: number): {
 } {
   const products = new Map<string, InnovxParsedProduct>();
   const sections = new Set<string>();
-  let currentSection = "GENERAL";
+  let currentSection = "MOBILES";
 
   const blocks = $("body")
     .find("p, li, div, span, strong, b, h1, h2, h3, h4")
@@ -220,9 +311,13 @@ function parseBlockLines($: cheerio.CheerioAPI, margin: number): {
       continue;
     }
 
+    const img =
+      $(el).find("img[src]").first().attr("src") ??
+      ($(el).is("img") ? $(el).attr("src") : undefined);
+
     const extracted = extractTitleAndPrice(text);
     if (extracted) {
-      pushProduct(products, sections, currentSection, extracted.title, extracted.price, margin);
+      pushProduct(products, sections, currentSection, extracted.title, extracted.price, margin, img?.trim());
     }
   }
 
@@ -235,7 +330,7 @@ function parsePlainTextFallback(html: string, margin: number): {
 } {
   const products = new Map<string, InnovxParsedProduct>();
   const sections = new Set<string>();
-  let currentSection = "GENERAL";
+  let currentSection = "MOBILES";
 
   const plain = html
     .replace(/<br\s*\/?>/gi, "\n")

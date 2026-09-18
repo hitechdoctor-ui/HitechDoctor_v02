@@ -1,92 +1,58 @@
 import type { InsertProduct, Product } from "@shared/schema";
 import { storage } from "./storage";
 import {
+  INNOVX_VARIANT_GROUP,
+  mapSectionToCatalog,
   type InnovxParsedProduct,
   parseInnovxEmailHtml,
   type InnovxParseOptions,
+  titleToProductSlug,
 } from "./services/innovx-parser";
+import {
+  buildInnovxImageIndex,
+  resolveInnovxProductImage,
+  type InnovxImageSource,
+} from "./services/innovx-product-image";
+
+export { INNOVX_VARIANT_GROUP, titleToProductSlug } from "./services/innovx-parser";
 
 export type InnovxSyncProductResult = InnovxParsedProduct & {
-  action: "updated" | "created" | "skipped";
-  product_id?: number;
-  slug?: string;
-  reason?: string;
+  action: "created";
+  product_id: number;
+  slug: string;
+  image_url: string;
+  image_source: InnovxImageSource;
 };
 
 export interface InnovxEmailSyncOptions extends InnovxParseOptions {
+  /** @deprecated Πλέον γίνεται πάντα πλήρης re-import (διαγραφή + δημιουργία). */
   createMissing?: boolean;
 }
 
 export interface InnovxEmailSyncResult {
   status: "success";
   parsed_count: number;
-  updated_count: number;
+  deleted_count: number;
   created_count: number;
-  skipped_count: number;
   sections_found: string[];
   products: InnovxSyncProductResult[];
 }
 
-function normalizeName(value: string): string {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[–—]/g, "-")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-export function titleToProductSlug(title: string): string {
-  return normalizeName(title)
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 120);
-}
-
-function mapInnovxSection(section: string): {
-  category: string;
-  subcategory?: string;
-  brand?: string;
-} {
-  switch (section) {
-    case "APPLE ACCESSORIES":
-      return { category: "accessory" };
-    case "SMARTWATCH":
-      return { category: "accessory", subcategory: "smartwatch" };
-    case "ΚΙΝΗΤΑ APPLE":
-      return { category: "mobile", brand: "Apple" };
-    case "ΚΙΝΗΤΑ SAMSUNG":
-      return { category: "mobile", brand: "Samsung" };
-    case "ΚΙΝΗΤΑ XIAOMI":
-      return { category: "mobile", brand: "Xiaomi" };
-    case "TABLETS":
-      return { category: "tablet" };
-    case "LAPTOPS":
-      return { category: "laptop" };
-    default:
-      return { category: "mobile" };
+function ensureUniqueSlug(baseSlug: string, usedSlugs: Set<string>, catalog: Product[]): string {
+  if (!usedSlugs.has(baseSlug)) {
+    const existing = catalog.find((p) => p.slug === baseSlug);
+    if (!existing || existing.variantGroup === INNOVX_VARIANT_GROUP) {
+      return baseSlug;
+    }
   }
-}
 
-function findMatchingProduct(
-  title: string,
-  slug: string,
-  catalog: Product[],
-): Product | undefined {
-  const normTitle = normalizeName(title);
-
-  const bySlug = catalog.find((p) => p.slug === slug);
-  if (bySlug) return bySlug;
-
-  const byExactName = catalog.find((p) => normalizeName(p.name) === normTitle);
-  if (byExactName) return byExactName;
-
-  const byContains = catalog.find((p) => {
-    const n = normalizeName(p.name);
-    return n.includes(normTitle) || normTitle.includes(n);
-  });
-  return byContains;
+  let candidate = `${baseSlug}-innovx`;
+  let n = 2;
+  while (usedSlugs.has(candidate) || catalog.some((p) => p.slug === candidate)) {
+    candidate = `${baseSlug}-innovx-${n}`;
+    n++;
+  }
+  return candidate;
 }
 
 export async function syncInnovxEmailHtml(
@@ -95,45 +61,30 @@ export async function syncInnovxEmailHtml(
 ): Promise<InnovxEmailSyncResult> {
   const parsed = parseInnovxEmailHtml(emailHtml, options);
   const catalog = await storage.getProducts();
+  const imageIndex = buildInnovxImageIndex(catalog);
   const now = new Date();
 
+  const deleted_count = await storage.deleteProductsByVariantGroup(INNOVX_VARIANT_GROUP);
+
   const results: InnovxSyncProductResult[] = [];
-  let updated_count = 0;
+  const usedSlugs = new Set<string>();
   let created_count = 0;
-  let skipped_count = 0;
 
   for (const item of parsed.products) {
-    const slug = titleToProductSlug(item.title);
-    const existing = findMatchingProduct(item.title, slug, catalog);
+    const baseSlug = titleToProductSlug(item.title);
+    const slug = ensureUniqueSlug(baseSlug, usedSlugs, catalog);
+    usedSlugs.add(slug);
+
+    const mapped = mapSectionToCatalog(item.section);
     const retailStr = item.retail_price.toFixed(2);
+    const resolvedImage = resolveInnovxProductImage({
+      title: item.title,
+      slug: baseSlug,
+      deviceCategory: item.device_category,
+      emailImageUrl: item.image_url,
+      imageIndex,
+    });
 
-    if (existing) {
-      await storage.updateProduct(existing.id, {
-        price: retailStr,
-        lastPriceUpdate: now,
-      });
-      updated_count++;
-      results.push({
-        ...item,
-        action: "updated",
-        product_id: existing.id,
-        slug: existing.slug ?? slug,
-      });
-      continue;
-    }
-
-    if (!options.createMissing) {
-      skipped_count++;
-      results.push({
-        ...item,
-        action: "skipped",
-        slug,
-        reason: "Δεν βρέθηκε αντιστοιχία στη βάση (create_missing=false)",
-      });
-      continue;
-    }
-
-    const mapped = mapInnovxSection(item.category);
     const insert: InsertProduct = {
       name: item.title,
       description: item.title,
@@ -142,26 +93,31 @@ export async function syncInnovxEmailHtml(
       subcategory: mapped.subcategory ?? null,
       slug,
       brand: mapped.brand ?? null,
+      imageUrl: resolvedImage.imageUrl,
+      images: [resolvedImage.imageUrl],
+      variantGroup: INNOVX_VARIANT_GROUP,
       lastPriceUpdate: now,
     };
 
     const created = await storage.createProduct(insert);
     catalog.push(created);
     created_count++;
+
     results.push({
       ...item,
       action: "created",
       product_id: created.id,
-      slug: created.slug ?? slug,
+      slug,
+      image_url: resolvedImage.imageUrl,
+      image_source: resolvedImage.source,
     });
   }
 
   return {
     status: "success",
     parsed_count: parsed.products.length,
-    updated_count,
+    deleted_count,
     created_count,
-    skipped_count,
     sections_found: parsed.sections_found,
     products: results,
   };
