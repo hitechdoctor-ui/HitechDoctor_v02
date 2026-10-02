@@ -1,8 +1,13 @@
 {
   "__meta": {
     "version": 1,
-    "description": "Κατάλογος συσκευών Innovx / χονδρική. Το πεδίο price = τιμή αγοράς (EUR). Η τιμή πώλησης υπολογίζεται στο sync (×1.35).",
-    "retail_markup": 1.35
+    "description": "Κατάλογος Innovx / χονδρική. Το price = τιμή αγοράς (EUR). Markup πώλησης στο sync: feature-phone ×2, accessory/smartwatch ×1.5, mid-range/tablet ×1.35, flagship ×1.25.",
+    "retail_markup_tiers": {
+      "feature_phone": 2,
+      "accessory_smartwatch": 1.5,
+      "mid_range_tablet": 1.35,
+      "premium_flagship": 1.25
+    }
   },
   "products": [
     {
@@ -55,7 +60,7 @@
       "brand": "Nokia",
       "color": "Blue",
       "slug": "nokia-108-dual-sim-blue",
-      "image_url": "https://fdn2.gsmarena.com/vv/bigpic/nokia-108-dual-sim.jpg"
+      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Nokia%20108%20Dual%20SIM%20Blue"
     },
     {
       "name": "Nokia 125 Black",
@@ -75,7 +80,7 @@
       "brand": "Nokia",
       "color": "Black",
       "slug": "nokia-150-dual-sim-greek-menu-black",
-      "image_url": "https://fdn2.gsmarena.com/vv/bigpic/nokia-150-2020.jpg"
+      "image_url": "https://images.ctfassets.net/wcfotm6rrl7u/2GcoS4hf3hfGZcb27kzQ0g/c2b5b672260814fab44518bb59d5ece3/nokia-150-Black-front_back-int.png"
     },
     {
       "name": "Nokia 150 Dual SIM Κινητό (Ελληνικό Μενού) Pink",
@@ -85,7 +90,7 @@
       "brand": "Nokia",
       "color": "Pink",
       "slug": "nokia-150-dual-sim-greek-menu-pink",
-      "image_url": "https://fdn2.gsmarena.com/vv/bigpic/nokia-150-2020.jpg"
+      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Nokia%20150%20Dual%20SIM%20%CE%9A%CE%B9%CE%BD%CE%B7%CF%84%CF%8C%20(%CE%95%CE%BB%CE%BB%CE%B7%CE%BD%CE%B9%CE%BA%CF%8C%20%CE%9C%CE%B5%CE%BD%CE%BF%CF%8D)%20Pink"
     },
     {
       "name": "Nokia 150 Dual SIM Κινητό (Ελληνικό Μενού) Purple",
@@ -95,7 +100,7 @@
       "brand": "Nokia",
       "color": "Purple",
       "slug": "nokia-150-dual-sim-greek-menu-purple",
-      "image_url": "https://fdn2.gsmarena.com/vv/bigpic/nokia-150-2020.jpg"
+      "image_url": "https://images.ctfassets.net/wcfotm6rrl7u/5SlobedjONLdkeIejQm304/2068e2123ff3fb42c3e37b263ab44f10/Nokia_150_Music-Purple-FrontBack-INT.png"
     },
     {
       "name": "Nokia 150 Dual SIM Κινητό (Ελληνικό Μενού) Blue",
@@ -105,7 +110,7 @@
       "brand": "Nokia",
       "color": "Blue",
       "slug": "nokia-150-dual-sim-greek-menu-blue",
-      "image_url": "https://fdn2.gsmarena.com/vv/bigpic/nokia-150-2020.jpg"
+      "image_url": "https://images.ctfassets.net/wcfotm6rrl7u/10tOVWZE2Hrwgf3vADjzvz/e753414fc1b918c44d42d653ec5cc2e8/HMD_150_Music-LightBlue-FrontBack-INT.png"
     },
     {
       "name": "Nokia 3310 Dual SIM (16MB) (Greek Menu) Yellow",
@@ -116,7 +121,7 @@
       "color": "Yellow",
       "storage": "16MB",
       "slug": "nokia-3310-dual-sim-16mb-greek-menu-yellow",
-      "image_url": "https://fdn2.gsmarena.com/vv/bigpic/nokia-3310-2017.jpg"
+      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Nokia%203310%20Dual%20SIM%20(16MB)%20(Greek%20Menu)%20Yellow"
     },
     {
       "name": "Nokia 2660 Flip Dual SIM Mobile Phone with buttons (Greek Menu) Black",
@@ -136,7 +141,7 @@
       "brand": "Nokia",
       "color": "Ocean Black",
       "slug": "nokia-2720-flip-dual-sim-ocean-black",
-      "image_url": "https://placehold.co/800x800/e8eef5/334155/png?text=Nokia%202720%20Flip%20Dual%20SIM%20Ocean%20Black"
+      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Nokia%202720%20Flip%20Dual%20SIM%20Ocean%20Black"
     },
     {
       "name": "Nokia 5310 Dual SIM Κινητό με Κουμπιά (Ελληνικό Μενού) White/Red",
@@ -156,7 +161,7 @@
       "brand": "Nokia",
       "color": "Blue",
       "slug": "nokia-2660-flip-dual-sim-greek-menu-blue",
-      "image_url": "https://fdn2.gsmarena.com/vv/bigpic/nokia-2660-flip.jpg"
+      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Nokia%202660%20Flip%20Dual%20SIM%20(Greek%20Menu)%20Blue"
     },
     {
       "name": "Nokia 3210 Dual SIM Κινητό με Κουμπιά Scuba Blue",
@@ -230,7 +235,7 @@
       "storage": "256GB",
       "color": "White",
       "slug": "apple-iphone-17-8-256gb-white",
-      "image_url": "https://d.scdn.gr/images/sku_main_images/062972/62972550/xlarge_20250910132335_apple_iphone_17_8gb_256gb_black.jpeg"
+      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Apple%20iPhone%2017%20(8%2F256GB)%20White"
     },
     {
       "name": "Apple iPhone 17 Pro 256GB - Cosmic Orange",
@@ -251,7 +256,7 @@
       "storage": "256GB",
       "color": "Black",
       "slug": "apple-iphone-18-pro-12-256gb-black",
-      "image_url": "/images/iphone-17-pro-max-256gb-deep-blue-back-front.webp"
+      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Apple%20iPhone%2018%20Pro%20(12%2F256GB)%20Black"
     },
     {
       "name": "Apple iPhone 18 Pro (12/256GB) Burgundy",
@@ -262,7 +267,7 @@
       "storage": "256GB",
       "color": "Burgundy",
       "slug": "apple-iphone-18-pro-12-256gb-burgundy",
-      "image_url": "/images/iphone-17-pro-max-256gb-cosmic-orange-back-front.webp"
+      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Apple%20iPhone%2018%20Pro%20(12%2F256GB)%20Burgundy"
     },
     {
       "name": "Apple iPhone 18 Pro (12/256GB) Silver",
@@ -284,7 +289,7 @@
       "storage": "256GB",
       "color": "Black",
       "slug": "apple-iphone-18-pro-max-12-256gb-black",
-      "image_url": "/images/iphone-17-pro-max-256gb-deep-blue-back-front.webp"
+      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Apple%20iPhone%2018%20Pro%20Max%20(12%2F256GB)%20Black"
     },
     {
       "name": "Apple iPhone 18 Pro Max (12/256GB) Glacier",
@@ -295,7 +300,7 @@
       "storage": "256GB",
       "color": "Glacier",
       "slug": "apple-iphone-18-pro-max-12-256gb-glacier",
-      "image_url": "/images/iphone-17-pro-max-256gb-silver-back-front.webp"
+      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Apple%20iPhone%2018%20Pro%20Max%20(12%2F256GB)%20Glacier"
     },
     {
       "name": "Samsung Galaxy A16 4GB/128GB - Black",
@@ -361,7 +366,7 @@
       "storage": "256GB",
       "color": "Awesome Charcoal",
       "slug": "samsung-galaxy-a37-5g-8gb-256gb-awesome-charcoal",
-      "image_url": "https://c.scdn.gr/images/sku_main_images/059321/59321064/xlarge_20250319165639_samsung_galaxy_a36_5g_dual_sim_6gb_128gb_awesome_black.jpeg"
+      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Samsung%20Galaxy%20A37%205G%208GB%2F256GB%20-%20Awesome%20Charcoal"
     },
     {
       "name": "Samsung Galaxy A57 5G (8/128GB) Awesome Navy",
@@ -372,7 +377,7 @@
       "storage": "128GB",
       "color": "Awesome Navy",
       "slug": "samsung-galaxy-a57-5g-8-128gb-awesome-navy",
-      "image_url": "https://c.scdn.gr/images/sku_main_images/059321/59321064/xlarge_20250319165639_samsung_galaxy_a36_5g_dual_sim_6gb_128gb_awesome_black.jpeg"
+      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Samsung%20Galaxy%20A57%205G%20(8%2F128GB)%20Awesome%20Navy"
     },
     {
       "name": "Samsung Galaxy A57 5G (8/256GB) Awesome Navy",
@@ -383,7 +388,7 @@
       "storage": "256GB",
       "color": "Awesome Navy",
       "slug": "samsung-galaxy-a57-5g-8-256gb-awesome-navy",
-      "image_url": "https://c.scdn.gr/images/sku_main_images/059321/59321064/xlarge_20250319165639_samsung_galaxy_a36_5g_dual_sim_6gb_128gb_awesome_black.jpeg"
+      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Samsung%20Galaxy%20A57%205G%20(8%2F256GB)%20Awesome%20Navy"
     },
     {
       "name": "Samsung Galaxy A57 5G (8/256GB) Awesome Gray",
@@ -394,7 +399,7 @@
       "storage": "256GB",
       "color": "Awesome Gray",
       "slug": "samsung-galaxy-a57-5g-8-256gb-awesome-gray",
-      "image_url": "https://c.scdn.gr/images/sku_main_images/059321/59321064/xlarge_20250319165639_samsung_galaxy_a36_5g_dual_sim_6gb_128gb_awesome_black.jpeg"
+      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Samsung%20Galaxy%20A57%205G%20(8%2F256GB)%20Awesome%20Gray"
     },
     {
       "name": "Samsung Galaxy A57 5G (8/256GB) Awesome Icyblue",
@@ -405,7 +410,7 @@
       "storage": "256GB",
       "color": "Awesome Icyblue",
       "slug": "samsung-galaxy-a57-5g-8-256gb-awesome-icyblue",
-      "image_url": "https://c.scdn.gr/images/sku_main_images/059321/59321064/xlarge_20250319165639_samsung_galaxy_a36_5g_dual_sim_6gb_128gb_awesome_black.jpeg"
+      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Samsung%20Galaxy%20A57%205G%20(8%2F256GB)%20Awesome%20Icyblue"
     },
     {
       "name": "Samsung Galaxy A57 5G (8/256GB) Awesome Lilac",
@@ -416,7 +421,7 @@
       "storage": "256GB",
       "color": "Awesome Lilac",
       "slug": "samsung-galaxy-a57-5g-8-256gb-awesome-lilac",
-      "image_url": "https://c.scdn.gr/images/sku_main_images/059321/59321064/xlarge_20250319165639_samsung_galaxy_a36_5g_dual_sim_6gb_128gb_awesome_black.jpeg"
+      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Samsung%20Galaxy%20A57%205G%20(8%2F256GB)%20Awesome%20Lilac"
     },
     {
       "name": "Samsung Galaxy S26 Ultra 5G (12/256GB) Sky Blue",
@@ -427,7 +432,7 @@
       "storage": "256GB",
       "color": "Sky Blue",
       "slug": "samsung-galaxy-s26-ultra-5g-12-256gb-sky-blue",
-      "image_url": "https://d.scdn.gr/images/sku_main_images/062896/62896023/xlarge_20250904164453_samsung_galaxy_s25_fe_5g_dual_sim_8_256gb_jetblack.jpeg"
+      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Samsung%20Galaxy%20S26%20Ultra%205G%20(12%2F256GB)%20Sky%20Blue"
     },
     {
       "name": "Samsung Galaxy S26 Ultra 5G (12/512GB) Black",
@@ -438,7 +443,7 @@
       "storage": "512GB",
       "color": "Black",
       "slug": "samsung-galaxy-s26-ultra-5g-12-512gb-black",
-      "image_url": "https://d.scdn.gr/images/sku_main_images/062896/62896023/xlarge_20250904164453_samsung_galaxy_s25_fe_5g_dual_sim_8_256gb_jetblack.jpeg"
+      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Samsung%20Galaxy%20S26%20Ultra%205G%20(12%2F512GB)%20Black"
     },
     {
       "name": "Xiaomi Redmi A7 Pro NFC Dual SIM (4/64GB) Μαύρο",
@@ -460,7 +465,7 @@
       "storage": "64GB",
       "color": "Blue",
       "slug": "xiaomi-redmi-a7-pro-nfc-dual-sim-4-64gb-blue",
-      "image_url": "https://d.scdn.gr/images/sku_main_images/059838/59838897/xlarge_20250416093249_xiaomi_redmi_a5_4g_dual_sim_3gb_64gb_mayro.jpeg"
+      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Xiaomi%20Redmi%20A7%20Pro%20NFC%20Dual%20SIM%20(4%2F64GB)%20Blue"
     },
     {
       "name": "Xiaomi Redmi 17 4G Dual SIM NFC 4GB RAM 128GB - Black",
@@ -482,7 +487,7 @@
       "storage": "128GB",
       "color": "Oak Green",
       "slug": "xiaomi-redmi-17-4g-dual-sim-nfc-128gb-oak-green",
-      "image_url": "https://b.scdn.gr/images/sku_main_images/062042/62042146/xlarge_20250806112755_xiaomi_redmi_15_nfc_5g_dual_sim_8gb_256gb_titan_gray.jpeg"
+      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Xiaomi%20Redmi%2017%204G%20Dual%20SIM%20NFC%204GB%20RAM%20128GB%20-%20Oak%20Gree"
     },
     {
       "name": "Xiaomi Redmi 17 4G Dual SIM NFC 4GB RAM 128GB - Deep Blue",
@@ -493,7 +498,7 @@
       "storage": "128GB",
       "color": "Deep Blue",
       "slug": "xiaomi-redmi-17-4g-dual-sim-nfc-128gb-deep-blue",
-      "image_url": "https://b.scdn.gr/images/sku_main_images/062042/62042146/xlarge_20250806112755_xiaomi_redmi_15_nfc_5g_dual_sim_8gb_256gb_titan_gray.jpeg"
+      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Xiaomi%20Redmi%2017%204G%20Dual%20SIM%20NFC%204GB%20RAM%20128GB%20-%20Deep%20Blu"
     },
     {
       "name": "Xiaomi Redmi 17 4G Dual SIM NFC 4GB RAM 256GB - Black",
@@ -515,7 +520,7 @@
       "storage": "256GB",
       "color": "Blue",
       "slug": "xiaomi-redmi-17-4g-dual-sim-nfc-256gb-blue",
-      "image_url": "https://b.scdn.gr/images/sku_main_images/062042/62042146/xlarge_20250806112755_xiaomi_redmi_15_nfc_5g_dual_sim_8gb_256gb_titan_gray.jpeg"
+      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Xiaomi%20Redmi%2017%204G%20Dual%20SIM%20NFC%204GB%20RAM%20256GB%20-%20Blue"
     },
     {
       "name": "Xiaomi Redmi 17 5G Dual SIM NFC 4GB RAM 128GB - Black",
@@ -581,7 +586,7 @@
       "storage": "512GB",
       "color": "Deep Blue",
       "slug": "xiaomi-17t-pro-5g-12-512gb-deep-blue",
-      "image_url": "https://d.scdn.gr/images/sku_main_images/065037/65037111/xlarge_20260119095656_xiaomi_redmi_note_15_pro_nfc_5g_dual_sim_8gb_256gb_black.jpeg"
+      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Xiaomi%2017T%20Pro%205G%20(12%2F512GB)%20Deep%20Blue"
     },
     {
       "name": "Apple AirPods Pro 3 White",

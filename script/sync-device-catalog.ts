@@ -15,10 +15,26 @@ import {
   type InnovxDeviceCategory,
 } from "../server/services/innovx-product-image";
 
-/** Τιμές στο device-catalog.json = χονδρική· η τιμή πώλησης = cost × markup. */
-const DEVICE_CATALOG_RETAIL_MARKUP = 1.35;
+/** Τιμές στο device-catalog.json = χονδρική (EUR). Η τιμή πώλησης = cost × markup ανά κατηγορία. */
+const MARKUP_FEATURE_PHONE = 2.0;
+const MARKUP_ACCESSORY_WATCH = 1.5;
+const MARKUP_MID_RANGE = 1.35;
+const MARKUP_PREMIUM_FLAGSHIP = 1.25;
+
+const PREMIUM_FLAGSHIP_SLUG =
+  /^(apple-iphone-(16|17|18)|samsung-galaxy-s26-ultra|xiaomi-17t-pro)/;
 
 type CatalogRow = (typeof catalog.products)[number];
+
+function retailMarkupForRow(row: CatalogRow): number {
+  if (row.subcategory === "feature-phone") return MARKUP_FEATURE_PHONE;
+  if (row.subcategory === "smartwatch") return MARKUP_ACCESSORY_WATCH;
+  if (row.category === "accessory") return MARKUP_ACCESSORY_WATCH;
+  if (row.subcategory === "tablet") return MARKUP_MID_RANGE;
+  const slug = row.slug ?? "";
+  if (PREMIUM_FLAGSHIP_SLUG.test(slug)) return MARKUP_PREMIUM_FLAGSHIP;
+  return MARKUP_MID_RANGE;
+}
 
 type SeedProduct = {
   name: string;
@@ -63,7 +79,7 @@ function toSeedProduct(row: CatalogRow, imageIndex: ReturnType<typeof buildInnov
     name: row.name,
     description: row.description ?? `${row.name}.`,
     full_description: row.full_description ?? null,
-    price: (Number(row.price) * DEVICE_CATALOG_RETAIL_MARKUP).toFixed(2),
+    price: (Number(row.price) * retailMarkupForRow(row)).toFixed(2),
     category: row.category,
     subcategory: row.subcategory ?? null,
     slug,
