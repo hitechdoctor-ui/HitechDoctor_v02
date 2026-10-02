@@ -232,6 +232,9 @@ const SUBCATEGORY_LABELS: Record<string, string> = {
   cases: "Θήκη",
   chargers: "Φορτιστής / Καλώδιο",
   headphones: "Ασύρματα ακουστικά",
+  smartwatch: "Smartwatch",
+  tablet: "Tablet",
+  "feature-phone": "Κινητό με κουμπιά",
   mobile: "Κινητό",
   "refurbished-iphones": "Refurbished iPhone",
 };
