@@ -328,15 +328,19 @@ export default function ProductDetail() {
     );
   }
 
-  // ── 404 ─────────────────────────────────────────────────────────────────
+  // ── 404 / 410 (HTTP status από server middleware) ───────────────────────
   if (!product) {
     return (
       <div className="min-h-screen bg-background circuit-bg flex flex-col">
+        <Helmet>
+          <title>Προϊόν δεν βρέθηκε | HiTech Doctor eShop</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
         <Navbar />
         <main className="flex-1 flex flex-col items-center justify-center text-center px-4">
           <Package className="w-20 h-20 text-primary/20 mb-6" />
           <h1 className="text-3xl font-display font-bold mb-3">Προϊόν δεν βρέθηκε</h1>
-          <p className="text-muted-foreground mb-8">Το προϊόν που ψάχνεις δεν υπάρχει ή έχει αφαιρεθεί.</p>
+          <p className="text-muted-foreground mb-8">Το προϊόν που ψάχνεις δεν υπάρχει ή έχει αφαιρεθεί από τον κατάλογο.</p>
           <Link href="/eshop">
             <Button data-testid="button-back-eshop">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -1053,7 +1057,7 @@ export default function ProductDetail() {
                   {related.map((rel) => (
                     <Link
                       key={rel.id}
-                      href={`/eshop/${rel.slug}`}
+                      href={rel.slug ? `/eshop/${rel.slug}` : "/eshop"}
                       data-testid={`related-product-${rel.id}`}
                       className="group flex flex-col bg-card/60 border border-border hover:border-primary/50 rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-[0_0_20px_rgba(0,210,200,0.12)]"
                     >

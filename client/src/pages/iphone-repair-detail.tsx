@@ -341,7 +341,7 @@ function SidebarProducts({ activeTab }: { activeTab: TabId }) {
         <p className="text-xs text-muted-foreground/50">Δεν βρέθηκαν προϊόντα.</p>
       )}
       {products.slice(0, 4).map((p: any) => (
-        <Link key={p.id} href={`/eshop/${p.slug || p.id}`}>
+        <Link key={p.id} href={p.slug ? `/eshop/${p.slug}` : "/eshop"}>
           <div className="flex gap-3 p-2 rounded-xl border border-white/8 bg-white/2 hover:border-primary/30 hover:bg-primary/4 transition-all cursor-pointer group" data-testid={`sidebar-product-${p.id}`}>
             {p.imageUrl && (
               <img

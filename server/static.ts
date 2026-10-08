@@ -17,7 +17,14 @@ export function serveStatic(app: Express) {
     const indexPath = path.resolve(distPath, "index.html");
     const html = await fs.promises.readFile(indexPath, "utf-8");
     const enriched = await prepareSpaHtml(html, req.originalUrl, storage);
-    res.status(200).set({ "Content-Type": "text/html" }).send(enriched);
+    const status =
+      typeof res.locals.spaHttpStatus === "number" && res.locals.spaHttpStatus >= 400
+        ? res.locals.spaHttpStatus
+        : 200;
+    if (status === 410) {
+      res.setHeader("Cache-Control", "no-store");
+    }
+    res.status(status).set({ "Content-Type": "text/html" }).send(enriched);
   }
 
   app.get("/", sendSpaIndex);

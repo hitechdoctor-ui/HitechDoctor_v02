@@ -57,6 +57,7 @@ import {
   normalizeAdminEmail,
 } from "@shared/admin-roles";
 import { buildSitemapXml } from "./sitemap";
+import { registerEshopProductHttpStatus } from "./eshop-product-http";
 
 const BCRYPT_ROUNDS = 12;
 
@@ -145,10 +146,15 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
 
+  registerEshopProductHttpStatus(app);
+
   /** Dynamic sitemap.xml (SEO) — μόνο δημόσιες σελίδες, canonical origin, χωρίς trailing slash */
   app.get("/sitemap.xml", async (_req, res) => {
     try {
-      const xml = await buildSitemapXml(() => storage.getProducts());
+      const xml = await buildSitemapXml(
+        () => storage.getProducts(),
+        () => storage.getProductCategories(),
+      );
       res.setHeader("Content-Type", "application/xml; charset=utf-8");
       res.setHeader("Cache-Control", "public, max-age=1800");
       res.send(xml);

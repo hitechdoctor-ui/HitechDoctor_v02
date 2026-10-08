@@ -60,7 +60,28 @@ function uniqueSorted(paths: string[]): string[] {
   return Array.from(new Set(paths.map(normalizeSitemapPath))).sort((a, b) => a.localeCompare(b, "el"));
 }
 
-export async function buildPublicSitemapPaths(getProducts: () => Promise<Product[]>): Promise<string[]> {
+type ProductCategoryRow = { category: string; subcategory: string | null; count: number };
+
+function eshopTabPathForCategory(category: string, subcategory: string | null): string | null {
+  if (category === "mobile") return "/eshop?tab=mobile";
+  /** Tablet / feature-phone δεν έχουν ξεχωριστό tab — μόνο URLs προϊόντων + `/eshop`. */
+  if (category === "tablet") return null;
+  if (category === "refurbished-iphones") return "/eshop?tab=refurbished-iphones";
+  if (category === "laptop") return "/eshop?tab=laptop";
+  if (category === "desktop") return "/eshop?tab=desktop";
+  if (category === "accessory") {
+    if (subcategory === "screen-protectors") return "/eshop?tab=screen-protectors";
+    if (subcategory === "cases") return "/eshop?tab=cases";
+    if (subcategory === "chargers") return "/eshop?tab=chargers";
+    if (subcategory === "headphones" || subcategory === "smartwatch") return "/eshop?tab=headphones";
+  }
+  return null;
+}
+
+export async function buildPublicSitemapPaths(
+  getProducts: () => Promise<Product[]>,
+  getCategories?: () => Promise<ProductCategoryRow[]>,
+): Promise<string[]> {
   const staticPaths = [
     "/",
     "/services",
@@ -164,19 +185,34 @@ export async function buildPublicSitemapPaths(getProducts: () => Promise<Product
   const blogPaths = [...blogSlugs].map((slug) => `/blog/${slug}`);
 
   const products = await getProducts();
-  const productPaths = (products ?? [])
-    .map((p) => p.slug?.trim())
-    .filter((slug): slug is string => typeof slug === "string" && slug.length > 0)
-    .map((slug) => `/eshop/${slug}`);
+  const activeSlugs = new Set(
+    (products ?? [])
+      .map((p) => p.slug?.trim().toLowerCase())
+      .filter((slug): slug is string => typeof slug === "string" && slug.length > 0),
+  );
+  const productPaths = [...activeSlugs].map((slug) => `/eshop/${slug}`);
 
-  return uniqueSorted([...staticPaths, ...repairPaths, ...blogPaths, ...productPaths]).filter(
+  const eshopCategoryPaths: string[] = ["/eshop"];
+  if (getCategories) {
+    const rows = await getCategories();
+    for (const row of rows ?? []) {
+      if (!row.count || row.count <= 0) continue;
+      const tabPath = eshopTabPathForCategory(row.category, row.subcategory);
+      if (tabPath) eshopCategoryPaths.push(tabPath);
+    }
+  }
+
+  return uniqueSorted([...staticPaths, ...repairPaths, ...blogPaths, ...eshopCategoryPaths, ...productPaths]).filter(
     isPublicSitemapPath,
   );
 }
 
-export async function buildSitemapXml(getProducts: () => Promise<Product[]>): Promise<string> {
+export async function buildSitemapXml(
+  getProducts: () => Promise<Product[]>,
+  getCategories?: () => Promise<ProductCategoryRow[]>,
+): Promise<string> {
   const origin = getCanonicalSiteOrigin();
-  const paths = await buildPublicSitemapPaths(getProducts);
+  const paths = await buildPublicSitemapPaths(getProducts, getCategories);
 
   return (
     `<?xml version="1.0" encoding="UTF-8"?>\n` +

@@ -13,10 +13,14 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps) 
   const { addToWishlist, isInWishlist, addToCart, isInCart } = useStore()
   const inWishlist = isInWishlist(product.id)
   const inCart = isInCart(product.id)
+  const productHref =
+    typeof (product as { slug?: string }).slug === "string" && (product as { slug?: string }).slug
+      ? `/eshop/${(product as { slug: string }).slug}`
+      : "/eshop"
 
   if (variant === "horizontal") {
     return (
-      <Link href={`/eshop/${product.id}`}>
+      <Link href={productHref}>
         <div className="flex gap-3 p-3 bg-card rounded-xl border border-border cursor-pointer">
           <div className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
             <img
@@ -57,7 +61,7 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps) 
 
   if (variant === "compact") {
     return (
-      <Link href={`/eshop/${product.id}`}>
+      <Link href={productHref}>
         <div className="block group cursor-pointer">
           <div className="relative aspect-square rounded-xl overflow-hidden bg-muted">
             <img
@@ -90,7 +94,7 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps) 
   }
 
   return (
-    <Link href={`/eshop/${product.id}`}>
+    <Link href={productHref}>
       <div className="block group cursor-pointer">
         <div className="bg-card rounded-2xl border border-border overflow-hidden">
           <div className="relative aspect-square bg-muted">

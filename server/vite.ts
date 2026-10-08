@@ -51,7 +51,11 @@ export async function setupVite(server: Server, app: Express) {
       );
       const page = await vite.transformIndexHtml(url, template);
       const enriched = await prepareSpaHtml(page, url, storage);
-      res.status(200).set({ "Content-Type": "text/html" }).end(enriched);
+      const status =
+        typeof res.locals.spaHttpStatus === "number" && res.locals.spaHttpStatus >= 400
+          ? res.locals.spaHttpStatus
+          : 200;
+      res.status(status).set({ "Content-Type": "text/html" }).end(enriched);
     } catch (e) {
       vite.ssrFixStacktrace(e as Error);
       next(e);

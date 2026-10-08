@@ -43,7 +43,7 @@ function SidebarProducts({ subcategory, label }: { subcategory: string; label: s
       <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70 border-b border-white/8 pb-2">{label}</p>
       {products.length === 0 && <p className="text-xs text-muted-foreground/50">Δεν βρέθηκαν προϊόντα.</p>}
       {products.slice(0, 4).map((p: any) => (
-        <Link key={p.id} href={`/eshop/${p.slug || p.id}`}>
+        <Link key={p.id} href={p.slug ? `/eshop/${p.slug}` : "/eshop"}>
           <div className="flex gap-3 p-2 rounded-xl border border-white/8 bg-white/2 hover:border-primary/30 hover:bg-primary/4 transition-all cursor-pointer group" data-testid={`sidebar-product-${p.id}`}>
             {p.imageUrl && <img src={p.imageUrl} alt={p.name} className="w-14 h-14 rounded-lg object-contain bg-white/5 shrink-0 p-1" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />}
             <div className="min-w-0">

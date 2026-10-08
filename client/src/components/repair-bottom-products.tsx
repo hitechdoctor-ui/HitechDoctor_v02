@@ -20,7 +20,7 @@ function useAccessoryProducts(subcategory: string) {
 
 function ProductCard({ product }: { product: Product }) {
   return (
-    <Link href={`/eshop/${(product as any).slug || product.id}`}>
+    <Link href={(product as { slug?: string }).slug ? `/eshop/${(product as { slug: string }).slug}` : "/eshop"}>
       <div className="group flex flex-col rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-md hover:shadow-primary/8 transition-all duration-200 overflow-hidden cursor-pointer h-full">
         {(product as any).imageUrl ? (
           <div className="aspect-square bg-muted/30 flex items-center justify-center p-3">

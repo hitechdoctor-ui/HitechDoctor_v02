@@ -3,17 +3,17 @@
  * featuredSlug: slug προϊόντος από admin/eShop. Κενό = πρώτο διαθέσιμο laptop.
  */
 export const NAVBAR_PROMO_CONFIG = {
-  featuredSlug: "dynabook-satellite-pro-c50d-b-ryzen5-grade-b",
+  featuredSlug: "lenovo-thinkpad-l540-i5-4300m-grade-b-240ssd",
   badge: "Μεταχειρισμένο Laptop",
-  headline: "Dynabook Satellite Pro · Ryzen 5 · πληκτρολόγιο GR",
+  headline: "ThinkPad L540 · i5 · SSD · GRADE B",
   ctaLabel: "Δείτε προσφορά",
   fallbackHref: "/eshop?tab=laptop",
   /** Εμφανίζεται άμεσα αν το API δεν έχει ακόμα το προϊόν (π.χ. πριν το seed). */
   staticFallback: {
-    name: "Dynabook Satellite Pro C50D-B Ryzen 5 GRADE B",
-    description: "SSD · 8GB DDR4 · πληκτρολόγιο GR/EN · 1 χρόνο εγγύηση",
+    name: "Lenovo Thinkpad L540 Intel i5-4300M GRADE B",
+    description: "240GB SSD · 8GB RAM · 1 χρόνο εγγύηση",
     price: "250",
-    imageUrl: "/images/laptops/dynabook-satellite-pro-c50d-b-ryzen5.jpg",
-    href: "/eshop/dynabook-satellite-pro-c50d-b-ryzen5-grade-b",
+    imageUrl: "/images/laptops/lenovo-thinkpad-l540.jpg",
+    href: "/eshop?tab=laptop",
   },
 } as const;

@@ -1,5 +1,6 @@
 import type { Express, RequestHandler } from "express";
 import { GSC_404_EXACT_REDIRECTS } from "./gsc-404-redirects";
+import { isRemovedEshopSlug } from "./eshop-product-http";
 
 /**
  * Μόνιμα 301 redirects για URLs που εμφανίστηκαν ως 404 στο Search Console (παλιό Shopify/WP).
@@ -196,6 +197,13 @@ export function registerRedirects(app: Express): void {
     }
 
     if (path.startsWith("/product/")) {
+      const legacySlug = path.slice("/product/".length).split("/")[0]?.trim();
+      if (legacySlug && isRemovedEshopSlug(legacySlug)) {
+        return res.status(410).type("text/plain").send("Gone");
+      }
+      if (legacySlug) {
+        return res.status(404).type("text/plain").send("Not Found");
+      }
       return res.redirect(301, "/eshop");
     }
 
@@ -205,6 +213,17 @@ export function registerRedirects(app: Express): void {
     }
 
     if (path.startsWith("/products/")) {
+      const rest = path.slice("/products/".length).replace(/^\/+/, "");
+      const first = rest.split("/")[0]?.trim();
+      if (first && IPHONE_SLUG_ALIASES[first]) {
+        return res.redirect(301, `/episkevi-iphone/${IPHONE_SLUG_ALIASES[first]}`);
+      }
+      if (first && isRemovedEshopSlug(first)) {
+        return res.status(410).type("text/plain").send("Gone");
+      }
+      if (first) {
+        return res.status(404).type("text/plain").send("Not Found");
+      }
       return res.redirect(301, "/eshop");
     }
 
