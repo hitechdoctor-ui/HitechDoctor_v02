@@ -749,6 +749,46 @@ export async function registerRoutes(
     }
   });
 
+  // Admin customer detail endpoints
+  app.get("/api/admin/customers/:id", async (req, res) => {
+    try {
+      const u = await requireSuperAdmin(req, res);
+      if (!u) return;
+      const id = parseInt(req.params.id);
+      const customer = await storage.getCustomer(id);
+      if (!customer) return res.status(404).json({ message: "Customer not found" });
+      res.json(customer);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch customer" });
+    }
+  });
+
+  app.get("/api/admin/customers/:id/orders", async (req, res) => {
+    try {
+      const u = await requireSuperAdmin(req, res);
+      if (!u) return;
+      const id = parseInt(req.params.id);
+      const orderList = await storage.getCustomerOrders(id);
+      res.json(orderList);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch customer orders" });
+    }
+  });
+
+  app.get("/api/admin/customers/:id/repairs", async (req, res) => {
+    try {
+      const u = await requireSuperAdmin(req, res);
+      if (!u) return;
+      const id = parseInt(req.params.id);
+      const customer = await storage.getCustomer(id);
+      if (!customer) return res.status(404).json({ message: "Customer not found" });
+      const repairs = await storage.getRepairRequestsByEmail(customer.email);
+      res.json(repairs);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch customer repairs" });
+    }
+  });
+
   app.get("/api/customers/:id/inquiries", async (req, res) => {
     try {
       const u = await requireSuperAdmin(req, res);
@@ -1774,7 +1814,7 @@ export async function registerRoutes(
     }
   });
 
-  /** eShop: «Θέλω καλύτερη προσφορά» — αποθήκευση + email διαχειριστή */
+  /** eShop: «Θέλω καλύτερη προσφορά» — αποθήκευση + email διαχειριστή + Viber */
   app.post("/api/product-offer-interest", async (req, res) => {
     try {
       const input = productOfferInterestPublicSchema.parse(req.body);
@@ -1790,7 +1830,17 @@ export async function registerRoutes(
         offerType: input.offerType ?? null,
       });
       res.status(201).json({ ok: true, id: row.id });
+      
+      // Email notification to admin
       sendProductOfferInterestEmail(row).catch((e) => console.error("[email] product offer interest failed:", e));
+      
+      // Viber notification to admin (using admin contact from env or hardcoded admin Viber ID)
+      const adminViberId = process.env.ADMIN_VIBER_USER_ID?.trim();
+      if (adminViberId) {
+        const viberText = `🛒 eShop — Νέα Εκδήλωση Ενδιαφέροντος\n\nΠροϊόν: ${row.productName}\nΠελάτης: ${row.customerName}\nΤηλ: ${row.phone}\nΗμ/νία: ${new Date().toLocaleString("el-GR")}`;
+        sendViberText(adminViberId, viberText).catch((e) => console.error("[viber] product offer interest failed:", e));
+      }
+      
       // Upsert to CRM — use phone-derived placeholder email when no real email available
       const phonePlaceholder = `${input.phone.replace(/\D/g, "").slice(-10)}@lead.hitechdoctor.com`;
       storage.upsertCustomerByEmail(input.customerName.trim(), phonePlaceholder, input.phone.trim()).catch((e) =>

@@ -14,6 +14,10 @@ import {
   resolveInnovxProductImage,
   type InnovxDeviceCategory,
 } from "../server/services/innovx-product-image";
+import {
+  buildIphone17_256gbFullDescription,
+  isIphone17_256gbSlug,
+} from "../server/seed-data/descriptions/iphone-17-256gb-full-description";
 
 /** Τιμές στο device-catalog.json = χονδρική (EUR). Η τιμή πώλησης = cost × markup ανά κατηγορία. */
 const MARKUP_FEATURE_PHONE = 2.0;
@@ -166,7 +170,11 @@ function toSeedProduct(row: CatalogRow, imageIndex: ReturnType<typeof buildInnov
   return {
     name: row.name,
     description: buildCatalogProductDescription(row),
-    full_description: row.full_description ?? null,
+    full_description:
+      (row as CatalogRow & { full_description?: string | null }).full_description?.trim() ||
+      (isIphone17_256gbSlug(slug)
+        ? buildIphone17_256gbFullDescription(row.name, row.color ?? "")
+        : null),
     price: retailPriceForRow(row),
     category: row.category,
     subcategory: row.subcategory ?? null,

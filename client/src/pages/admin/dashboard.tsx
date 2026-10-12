@@ -32,6 +32,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import { AnalyticsDashboard } from "@/components/admin/analytics-dashboard";
+import { NotificationMonitor } from "@/components/admin/notification-monitor";
 
 // ── Status config ────────────────────────────────────────────────────────────
 const STATUSES = [
@@ -586,10 +587,8 @@ export default function AdminDashboard() {
 
       <div className="mb-8">
         <h1 className="text-3xl font-display font-bold">Επισκόπηση</h1>
-        <p className="text-muted-foreground mt-1">Αιτήματα επισκευής, προϊόντα eShop και στατιστικά</p>
+        <p className="text-muted-foreground mt-1">Μηνύματα, αιτήματα επισκευής και προϊόντα eShop</p>
       </div>
-
-      {superAdmin ? <AnalyticsDashboard /> : null}
 
       {/* ── Stats ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
@@ -615,7 +614,8 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {superAdmin ? (
+      {/* ── 🔥 ΠΡΩΤΑ: Πελάτες eShop — Καλύτερη προσφορά ── */}
+      {superAdmin && offerInterests.length > 0 ? (
         <div className="mb-6">
           <ProductOfferInterestsCustomersSection rows={offerInterests} isLoading={offerInterestsLoading} />
         </div>
@@ -626,8 +626,13 @@ export default function AdminDashboard() {
         <RepairRequestsSection />
       </div>
 
+      {superAdmin ? <AnalyticsDashboard /> : null}
+
       {/* ── eShop Product Search ── */}
       <EShopSearchSection />
+
+      {/* ── Real-time Notification Monitor (browser notifications + sound) ── */}
+      {superAdmin ? <NotificationMonitor enabled={true} /> : null}
     </AdminLayout>
   );
 }

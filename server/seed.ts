@@ -173,6 +173,7 @@ export async function mergeDeviceCatalogMediaFromJson() {
           ? p.images.map((u) => u.trim()).filter(Boolean)
           : [imageUrl];
       const description = (p.description ?? "").trim();
+      const fullDescription = (p.full_description ?? "").trim();
       const price = p.price != null ? String(p.price).trim() : "";
       await db
         .update(products)
@@ -180,6 +181,7 @@ export async function mergeDeviceCatalogMediaFromJson() {
           imageUrl,
           images,
           ...(description ? { description } : {}),
+          ...(fullDescription ? { fullDescription } : {}),
           ...(price ? { price } : {}),
         })
         .where(eq(products.slug, slug));
