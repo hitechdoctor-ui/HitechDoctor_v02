@@ -117,7 +117,7 @@ const PRICING = [
 
 const inlineFormSchema = z.object({
   firstName: z.string().min(2, "Εισάγετε το όνομά σας"),
-  lastName: z.string().min(2, "Εισάγετε το επίθετό σας"),
+  lastName: z.string().optional(),
   phone: z.string().min(10, "Εισάγετε έγκυρο αριθμό τηλεφώνου"),
   email: z.string().email("Μη έγκυρο email"),
   notes: z.string().optional(),
@@ -1046,7 +1046,7 @@ export default function WebDesigner() {
                         name="lastName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-xs font-bold text-amber-300/70 uppercase tracking-widest">Επίθετο</FormLabel>
+                            <FormLabel className="text-xs font-bold text-amber-300/70 uppercase tracking-widest">Επίθετο <span className="text-[10px] font-normal normal-case text-amber-400/50">(προαιρετικό)</span></FormLabel>
                             <FormControl>
                               <Input {...field} placeholder="π.χ. Παπαδόπουλος" className="border-amber-500/20 bg-amber-500/5 focus:border-amber-400/50" data-testid="input-inline-lastname" />
                             </FormControl>

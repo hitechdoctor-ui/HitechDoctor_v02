@@ -97,7 +97,7 @@ export const orderItems = pgTable("order_items", {
 export const repairRequests = pgTable("repair_requests", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   firstName: text("first_name").notNull(),
-  lastName: text("last_name").notNull(),
+  lastName: text("last_name"),
   phone: text("phone").notNull(),
   email: text("email").notNull(),
   deviceName: text("device_name").notNull(),
@@ -232,7 +232,7 @@ export const ipswDownloadEvents = pgTable("ipsw_download_events", {
 export const websiteInquiries = pgTable("website_inquiries", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   firstName: text("first_name").notNull(),
-  lastName: text("last_name").notNull(),
+  lastName: text("last_name"),
   phone: text("phone").notNull(),
   email: text("email").notNull(),
   prepayment: numeric("prepayment"),
@@ -319,6 +319,7 @@ export const productOfferInterests = pgTable("product_offer_interests", {
   /** Για σύνδεσμο στο admin προς `/eshop/:slug` */
   productSlug: text("product_slug"),
   customerName: text("customer_name").notNull(),
+  email: text("email").notNull(),
   phone: text("phone").notNull(),
   /** Πρόσθετη περιγραφή / σημειώσεις πελάτη */
   notes: text("notes"),
@@ -350,6 +351,7 @@ export const insertProductOfferInterestSchema = createInsertSchema(productOfferI
 export const productOfferInterestPublicSchema = z.object({
   productId: z.number().int().positive(),
   customerName: z.string().min(1, "Συμπληρώστε το όνομά σας").max(200),
+  email: z.string().email("Μη έγκυρο email").max(200),
   phone: z.string().min(10, "Μη έγκυρο κινητό").max(32),
   notes: z.string().max(1000).optional(),
   offerType: z.enum(["better_price", "bundle", "bulk"]).optional(),

@@ -295,7 +295,7 @@ export function RepairRequestModal({
                   <FormField control={form.control} name="lastName" render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs font-semibold flex items-center gap-1.5">
-                        <User className="w-3 h-3 text-primary" />Επίθετο <span className="text-primary">*</span>
+                        <User className="w-3 h-3 text-primary" />Επίθετο <span className="text-muted-foreground text-[10px] font-normal">(προαιρετικό)</span>
                       </FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="Παπαδόπουλος" className="bg-card border-white/10 focus:border-primary/40 h-9 text-sm" data-testid="input-last-name" />

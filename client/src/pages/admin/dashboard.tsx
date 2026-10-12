@@ -421,6 +421,7 @@ function ProductOfferInterestsCustomersSection({
                 <TableRow>
                   <TableHead className="text-xs">Ημερομηνία</TableHead>
                   <TableHead className="text-xs">Όνομα</TableHead>
+                  <TableHead className="text-xs">Email</TableHead>
                   <TableHead className="text-xs">Κινητό</TableHead>
                   <TableHead className="text-xs">Προϊόν</TableHead>
                 </TableRow>
@@ -432,6 +433,14 @@ function ProductOfferInterestsCustomersSection({
                       {formatDate(row.createdAt)}
                     </TableCell>
                     <TableCell className="text-sm font-medium text-foreground">{row.customerName}</TableCell>
+                    <TableCell>
+                      <a
+                        href={`mailto:${row.email}`}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        {row.email}
+                      </a>
+                    </TableCell>
                     <TableCell>
                       <a
                         href={`tel:${row.phone.replace(/\s/g, "")}`}

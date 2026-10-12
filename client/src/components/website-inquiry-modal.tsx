@@ -19,7 +19,7 @@ const fmt = (n: number) => n.toFixed(2).replace(".", ",") + " €";
 
 const formSchema = z.object({
   firstName: z.string().min(2, "Εισάγετε το όνομά σας"),
-  lastName: z.string().min(2, "Εισάγετε το επίθετό σας"),
+  lastName: z.string().optional(),
   phone: z.string().min(10, "Εισάγετε έγκυρο αριθμό τηλεφώνου"),
   email: z.string().email("Μη έγκυρο email"),
   prepaymentRaw: z.string().optional(),
@@ -158,7 +158,7 @@ export function WebsiteInquiryModal({ open, onOpenChange }: Props) {
                   name="lastName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Επίθετο</FormLabel>
+                      <FormLabel className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Επίθετο <span className="text-[10px] font-normal normal-case">(προαιρετικό)</span></FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="π.χ. Παπαδόπουλος" data-testid="input-inquiry-lastname" />
                       </FormControl>

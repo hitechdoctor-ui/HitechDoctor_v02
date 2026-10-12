@@ -1827,6 +1827,7 @@ export async function registerRoutes(
         productName: product.name,
         productSlug: product.slug ?? null,
         customerName: input.customerName.trim(),
+        email: input.email.trim(),
         phone: input.phone.trim(),
         notes: input.notes?.trim() ?? null,
         offerType: input.offerType ?? null,
@@ -1839,13 +1840,12 @@ export async function registerRoutes(
       // Viber notification to admin (using admin contact from env or hardcoded admin Viber ID)
       const adminViberId = process.env.ADMIN_VIBER_USER_ID?.trim();
       if (adminViberId) {
-        const viberText = `🛒 eShop — Νέα Εκδήλωση Ενδιαφέροντος\n\nΠροϊόν: ${row.productName}\nΠελάτης: ${row.customerName}\nΤηλ: ${row.phone}\nΗμ/νία: ${new Date().toLocaleString("el-GR")}`;
+        const viberText = `🛒 eShop — Νέα Εκδήλωση Ενδιαφέροντος\n\nΠροϊόν: ${row.productName}\nΠελάτης: ${row.customerName}\nEmail: ${row.email}\nΤηλ: ${row.phone}\nΗμ/νία: ${new Date().toLocaleString("el-GR")}`;
         sendViberText(adminViberId, viberText).catch((e) => console.error("[viber] product offer interest failed:", e));
       }
       
-      // Upsert to CRM — use phone-derived placeholder email when no real email available
-      const phonePlaceholder = `${input.phone.replace(/\D/g, "").slice(-10)}@lead.hitechdoctor.com`;
-      storage.upsertCustomerByEmail(input.customerName.trim(), phonePlaceholder, input.phone.trim()).catch((e) =>
+      // Upsert to CRM — use real email from form
+      storage.upsertCustomerByEmail(input.customerName.trim(), input.email.trim(), input.phone.trim()).catch((e) =>
         console.error("[crm] product-offer-interest upsert failed:", e)
       );
     } catch (err) {

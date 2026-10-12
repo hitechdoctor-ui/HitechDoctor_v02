@@ -34,7 +34,7 @@ function StatusBadge({ status }: { status: string }) {
 
 const editSchema = z.object({
   firstName: z.string().min(1, "Υποχρεωτικό"),
-  lastName: z.string().min(1, "Υποχρεωτικό"),
+  lastName: z.string().optional(),
   phone: z.string().min(10, "Μη έγκυρο τηλέφωνο"),
   email: z.string().email("Μη έγκυρο email"),
   notes: z.string().optional(),

@@ -172,8 +172,8 @@ export function Navbar() {
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30 group-hover:bg-primary/30 transition-colors" aria-hidden="true">
-            <Wrench className="w-5 h-5 text-primary" aria-hidden="true" />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105" aria-hidden="true">
+            <img src="/images/hitechdoctor-logo.png" alt="HitechDoctor Logo" className="w-full h-full object-contain" />
           </div>
           <div>
             <h1 className="text-xl font-display font-bold leading-none">
@@ -194,7 +194,7 @@ export function Navbar() {
               location === "/" ? "text-primary" : "text-muted-foreground"
             }`}
           >
-            <Wrench className="w-4 h-4" />
+            <img src="/images/hitechdoctor-logo.png" alt="" className="w-4 h-4 object-contain" />
             Αρχική
           </Link>
 
@@ -522,7 +522,7 @@ export function Navbar() {
               </a>
               <nav className="flex flex-col gap-2">
                 <Link href="/" className={`flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium ${location === "/" ? "text-primary bg-primary/10" : "text-foreground"}`}>
-                  <Wrench className="w-5 h-5" />
+                  <img src="/images/hitechdoctor-logo.png" alt="" className="w-5 h-5 object-contain" />
                   Αρχική
                 </Link>
 

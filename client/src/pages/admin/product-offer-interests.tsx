@@ -83,6 +83,7 @@ export default function AdminProductOfferInterests() {
                       <TableHead>Ημερομηνία</TableHead>
                       <TableHead>Προϊόν</TableHead>
                       <TableHead>Όνομα</TableHead>
+                      <TableHead>Email</TableHead>
                       <TableHead>Κινητό</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -109,6 +110,11 @@ export default function AdminProductOfferInterests() {
                           )}
                         </TableCell>
                         <TableCell>{row.customerName}</TableCell>
+                        <TableCell>
+                          <a href={`mailto:${row.email}`} className="text-primary hover:underline text-sm">
+                            {row.email}
+                          </a>
+                        </TableCell>
                         <TableCell>
                           <a href={`tel:${row.phone.replace(/\s/g, "")}`} className="text-primary font-medium hover:underline">
                             {row.phone}

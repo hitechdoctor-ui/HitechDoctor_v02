@@ -445,6 +445,7 @@ export async function sendProductOfferInterestEmail(row: ProductOfferInterest): 
   }
   const pn = escHtml(row.productName);
   const cn = escHtml(row.customerName);
+  const em = escHtml(row.email);
   const ph = escHtml(row.phone);
   const telHref = escHtml(row.phone.replace(/\s/g, ""));
   const subject = `Εκδήλωση ενδιαφέροντος για ${row.productName}`;
@@ -462,6 +463,7 @@ export async function sendProductOfferInterestEmail(row: ProductOfferInterest): 
         <tr><td style="padding:8px 0;color:#888;width:40%;">Προϊόν</td><td style="padding:8px 0;color:#fff;font-weight:600;">${pn}</td></tr>
         <tr><td style="padding:8px 0;color:#888;">ID προϊόντος</td><td style="padding:8px 0;color:#aaa;font-family:monospace;">${row.productId}</td></tr>
         <tr><td style="padding:8px 0;color:#888;">Όνομα</td><td style="padding:8px 0;color:#fff;">${cn}</td></tr>
+        <tr><td style="padding:8px 0;color:#888;">Email</td><td style="padding:8px 0;"><a href="mailto:${em}" style="color:#00D2C8;font-weight:700;text-decoration:none;">${em}</a></td></tr>
         <tr><td style="padding:8px 0;color:#888;">Κινητό</td><td style="padding:8px 0;"><a href="tel:${telHref}" style="color:#00D2C8;font-weight:700;text-decoration:none;">${ph}</a></td></tr>
         <tr><td style="padding:8px 0;color:#888;">Ημερομηνία</td><td style="padding:8px 0;color:#ccc;">${new Date(row.createdAt!).toLocaleString("el-GR")}</td></tr>
       </table>

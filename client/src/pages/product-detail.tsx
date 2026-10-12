@@ -22,7 +22,7 @@ import {
   ShoppingCart, CheckCircle2, ChevronRight, ChevronLeft, Shield,
   Clock, Star, ArrowLeft, Package, Truck, ZoomIn, X, Smartphone, Loader2, Tag,
   HardDrive, Palette, Award, Wrench, BadgeCheck, RotateCcw, HeadphonesIcon,
-  Gift, Boxes,
+  Gift, Boxes, PlayCircle,
 } from "lucide-react";
 import type { Product } from "@shared/schema";
 import { cn } from "@/lib/utils";
@@ -53,9 +53,9 @@ const formatPrice = (p: string | number) =>
 
 // ── Perks shown below product ──────────────────────────────────────────────
 const PERKS = [
-  { icon: Truck, label: "Αποστολή σε 1-2 εργάσιμες" },
+  { icon: Truck, label: "Αποστολή σε 3-5 εργάσιμες" },
   { icon: Shield, label: "Εγγύηση 12 μήνες" },
-  { icon: Clock, label: "Άμεση διαθεσιμότητα" },
+  { icon: Clock, label: "Κατόπιν παραγγελίας" },
   { icon: Star, label: "Αξιολόγηση πελατών 4.9/5" },
 ];
 
@@ -205,6 +205,7 @@ export default function ProductDetail() {
   const [offerOpen, setOfferOpen] = useState(false);
   const [offerType, setOfferType] = useState<"better_price" | "bundle" | "bulk">("better_price");
   const [offerName, setOfferName] = useState("");
+  const [offerEmail, setOfferEmail] = useState("");
   const [offerPhone, setOfferPhone] = useState("");
   const [offerNotes, setOfferNotes] = useState("");
   const [offerSending, setOfferSending] = useState(false);
@@ -236,6 +237,22 @@ export default function ProductDetail() {
     variantProducts.length > 1 &&
     !!product?.variantGroup &&
     product.variantGroup !== "device-catalog";
+
+  // Helper to detect YouTube URLs and extract video ID
+  const getYouTubeVideoId = (url: string): string | null => {
+    if (!url) return null;
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/,
+      /youtube\.com\/embed\/([^&\s]+)/,
+    ];
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match?.[1]) return match[1];
+    }
+    return null;
+  };
+
+  const isYouTubeUrl = (url: string): boolean => !!getYouTubeVideoId(url);
 
   const gallery: string[] = product?.images?.length
     ? product.images
@@ -274,12 +291,23 @@ export default function ProductDetail() {
   const submitBetterOffer = async () => {
     if (!product) return;
     const name = offerName.trim();
+    const email = offerEmail.trim();
     const phone = offerPhone.trim();
-    if (!name || phone.length < 10) {
+    if (!name || !email || phone.length < 10) {
       toast({
         variant: "destructive",
         title: "Συμπληρώστε τα στοιχεία",
-        description: "Όνομα και κινητό (τουλάχιστον 10 ψηφία).",
+        description: "Όνομα, email και κινητό (τουλάχιστον 10 ψηφία) είναι υποχρεωτικά.",
+      });
+      return;
+    }
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast({
+        variant: "destructive",
+        title: "Μη έγκυρο email",
+        description: "Παρακαλώ εισάγετε ένα έγκυρο email.",
       });
       return;
     }
@@ -291,6 +319,7 @@ export default function ProductDetail() {
         body: JSON.stringify({
           productId: product.id,
           customerName: name,
+          email,
           phone,
           notes: offerNotes.trim() || undefined,
           offerType,
@@ -440,49 +469,63 @@ export default function ProductDetail() {
               {/* Main image — clickable → lightbox */}
               <div
                 className={cn(
-                  "group aspect-square rounded-2xl overflow-hidden pcb-border relative cursor-zoom-in select-none flex items-center justify-center",
+                  "group aspect-square rounded-2xl overflow-hidden pcb-border relative select-none flex items-center justify-center",
+                  isYouTubeUrl(gallery[activeImg] || "") ? "" : "cursor-zoom-in",
                   isRefurbishedIphone || isMobileGallery
                     ? "bg-white"
                     : isPhoneGallery
                       ? "bg-gradient-to-br from-zinc-900 via-zinc-950 to-black"
                       : "bg-card"
                 )}
-                onClick={() => gallery.length > 0 && setLightboxOpen(true)}
+                onClick={() => gallery.length > 0 && !isYouTubeUrl(gallery[activeImg] || "") && setLightboxOpen(true)}
                 data-testid="product-main-image"
               >
                 {gallery[activeImg] ? (
-                  <>
-                    <img
-                      src={gallery[activeImg]}
-                      alt={buildImageAlt(gallery[activeImg], product.name)}
-                      className={cn(
-                        "transition-transform duration-300",
-                        isRefurbishedIphone
-                          ? "h-[85%] w-auto max-w-[92%] object-contain group-hover:scale-[1.03]"
-                          : isMobileGallery
-                            ? "w-full h-full object-contain object-center group-hover:scale-[1.02]"
-                          : isPhoneGallery
-                            ? "w-full h-full object-contain p-6 sm:p-8 group-hover:scale-[1.03]"
-                            : "w-full h-full object-cover group-hover:scale-105"
-                      )}
-                      loading="eager"
-                      decoding="async"
-                      width="800"
-                      height="800"
-                    />
-                    {/* Zoom overlay */}
-                    <div className={cn(
-                      "absolute inset-0 flex items-end justify-end p-4 opacity-0 group-hover:opacity-100 transition-opacity",
-                      isRefurbishedIphone
-                        ? "bg-gradient-to-t from-black/10 to-transparent"
-                        : "bg-gradient-to-t from-black/30 to-transparent"
-                    )}>
-                      <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-sm rounded-lg px-3 py-1.5">
-                        <ZoomIn className="w-4 h-4 text-white" />
-                        <span className="text-white text-xs font-medium">Μεγέθυνση</span>
-                      </div>
+                  isYouTubeUrl(gallery[activeImg]) ? (
+                    // YouTube video embed
+                    <div className="absolute inset-0 w-full h-full">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${getYouTubeVideoId(gallery[activeImg])}?rel=0&modestbranding=1`}
+                        title="Product video"
+                        className="w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
                     </div>
-                  </>
+                  ) : (
+                    <>
+                      <img
+                        src={gallery[activeImg]}
+                        alt={buildImageAlt(gallery[activeImg], product.name)}
+                        className={cn(
+                          "transition-transform duration-300",
+                          isRefurbishedIphone
+                            ? "h-[85%] w-auto max-w-[92%] object-contain group-hover:scale-[1.03]"
+                            : isMobileGallery
+                              ? "w-full h-full object-contain object-center group-hover:scale-[1.02]"
+                            : isPhoneGallery
+                              ? "w-full h-full object-contain p-6 sm:p-8 group-hover:scale-[1.03]"
+                              : "w-full h-full object-cover group-hover:scale-105"
+                        )}
+                        loading="eager"
+                        decoding="async"
+                        width="800"
+                        height="800"
+                      />
+                      {/* Zoom overlay */}
+                      <div className={cn(
+                        "absolute inset-0 flex items-end justify-end p-4 opacity-0 group-hover:opacity-100 transition-opacity",
+                        isRefurbishedIphone
+                          ? "bg-gradient-to-t from-black/10 to-transparent"
+                          : "bg-gradient-to-t from-black/30 to-transparent"
+                      )}>
+                        <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-sm rounded-lg px-3 py-1.5">
+                          <ZoomIn className="w-4 h-4 text-white" />
+                          <span className="text-white text-xs font-medium">Μεγέθυνση</span>
+                        </div>
+                      </div>
+                    </>
+                  )
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <Package className="w-24 h-24 text-primary/20" />
@@ -500,37 +543,54 @@ export default function ProductDetail() {
               {/* Thumbnails — visible only when gallery has >1 image */}
               {gallery.length > 1 && (
                 <div className="flex gap-2.5 mt-3" data-testid="product-thumbnails">
-                  {gallery.map((src, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setActiveImg(i)}
-                      data-testid={`thumb-${i}`}
-                      className={`relative flex-1 aspect-square rounded-xl overflow-hidden border-2 transition-all duration-200 focus:outline-none ${
-                        i === activeImg
-                          ? "border-primary shadow-[0_0_12px_rgba(0,210,200,0.5)]"
-                          : "border-border/50 hover:border-primary/60 opacity-70 hover:opacity-100"
-                      } ${isRefurbishedIphone || isMobileGallery ? "bg-white" : ""}`}
-                    >
-                      <img
-                        src={src}
-                        alt={buildImageAlt(src, product.name)}
-                        className={cn(
-                          "w-full h-full",
-                          isRefurbishedIphone
-                            ? "object-contain p-2 bg-white"
-                            : isMobileGallery
-                              ? "object-contain bg-white"
-                            : isPhoneGallery
-                              ? "object-contain p-1 bg-zinc-950/80"
-                              : "object-cover"
+                  {gallery.map((src, i) => {
+                    const videoId = getYouTubeVideoId(src);
+                    const isVideo = !!videoId;
+                    const thumbSrc = isVideo 
+                      ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`
+                      : src;
+                    
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => setActiveImg(i)}
+                        data-testid={`thumb-${i}`}
+                        className={`relative flex-1 aspect-square rounded-xl overflow-hidden border-2 transition-all duration-200 focus:outline-none ${
+                          i === activeImg
+                            ? "border-primary shadow-[0_0_12px_rgba(0,210,200,0.5)]"
+                            : "border-border/50 hover:border-primary/60"
+                        } ${isRefurbishedIphone || isMobileGallery ? "bg-white" : ""}`}
+                      >
+                        <img
+                          src={thumbSrc}
+                          alt={buildImageAlt(src, product.name)}
+                          className={cn(
+                            "w-full h-full",
+                            isRefurbishedIphone
+                              ? "object-contain p-2"
+                              : isMobileGallery
+                                ? "object-contain"
+                              : isPhoneGallery
+                                ? "object-contain p-1"
+                                : "object-cover"
+                          )}
+                          loading="lazy"
+                          decoding="async"
+                          width="200"
+                          height="200"
+                        />
+                        {/* Dark overlay on non-active thumbnails */}
+                        {i !== activeImg && (
+                          <div className="absolute inset-0 bg-black/50 hover:bg-black/30 transition-colors" />
                         )}
-                        loading="lazy"
-                        decoding="async"
-                        width="200"
-                        height="200"
-                      />
-                    </button>
-                  ))}
+                        {isVideo && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                            <PlayCircle className="w-8 h-8 text-white drop-shadow-lg" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
 
@@ -725,7 +785,7 @@ export default function ProductDetail() {
                 open={offerOpen}
                 onOpenChange={(o) => {
                   setOfferOpen(o);
-                  if (!o) { setOfferName(""); setOfferPhone(""); setOfferNotes(""); }
+                  if (!o) { setOfferName(""); setOfferEmail(""); setOfferPhone(""); setOfferNotes(""); }
                 }}
               >
                 <DialogContent className="sm:max-w-md border-border bg-card" data-testid="dialog-better-offer">
@@ -753,7 +813,19 @@ export default function ProductDetail() {
                         value={offerName}
                         onChange={(e) => setOfferName(e.target.value)}
                         autoComplete="name"
-                        placeholder="π.χ. Γιάννης Παπαδόπουλος"
+                        placeholder="π.χ. Γιάννης"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="offer-email">Email <span className="text-primary">*</span></Label>
+                      <Input
+                        id="offer-email"
+                        type="email"
+                        inputMode="email"
+                        value={offerEmail}
+                        onChange={(e) => setOfferEmail(e.target.value)}
+                        autoComplete="email"
+                        placeholder="π.χ. gianni@example.com"
                       />
                     </div>
                     <div className="space-y-2">
