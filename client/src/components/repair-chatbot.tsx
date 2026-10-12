@@ -36,6 +36,7 @@ type Turn = RepairAssistantTurn;
 const WELCOME = REPAIR_CHAT_WELCOME;
 
 const INTRO_SESSION_KEY = "htd_chat_intro_done";
+const AUTO_OPEN_SESSION_KEY = "htd_chat_auto_open_done";
 const COOKIE_STORE_KEY = "htd_cookie_consent";
 
 // Module-level Set: resets on every page load (no sessionStorage issues)
@@ -63,6 +64,7 @@ export function RepairChatbot() {
   const [open, setOpen] = useState(false);
   const openRef = useRef(false);
   openRef.current = open;
+  const [panelExiting, setPanelExiting] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Turn[]>([]);
   const [loading, setLoading] = useState(false);
@@ -72,9 +74,59 @@ export function RepairChatbot() {
   const [repairFormDeviceName, setRepairFormDeviceName] = useState("");
   const [showAttention, setShowAttention] = useState(false);
   const attentionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoOpenedRef = useRef(false);
+  const userEngagedRef = useRef(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [navbarAiBarCollapsed, setNavbarAiBarCollapsed] = useState(getNavbarAiBarCollapsed);
   const clientContextRef = useRef<RepairChatClientContext>("desktop");
+
+  const markEngaged = useCallback(() => {
+    userEngagedRef.current = true;
+    autoOpenedRef.current = false;
+  }, []);
+
+  const closePanel = useCallback((animated = true) => {
+    if (panelExiting || !openRef.current) return;
+    autoOpenedRef.current = false;
+    if (!animated || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+      setPanelExiting(false);
+      setOpen(false);
+      return;
+    }
+    setPanelExiting(true);
+    if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+    exitTimerRef.current = setTimeout(() => {
+      setOpen(false);
+      setPanelExiting(false);
+      exitTimerRef.current = null;
+    }, 480);
+  }, [panelExiting]);
+
+  const openPanel = useCallback((opts?: { auto?: boolean; seedWelcome?: boolean }) => {
+    if (exitTimerRef.current) {
+      clearTimeout(exitTimerRef.current);
+      exitTimerRef.current = null;
+    }
+    setPanelExiting(false);
+    if (opts?.auto) autoOpenedRef.current = true;
+    else {
+      autoOpenedRef.current = false;
+      userEngagedRef.current = true;
+    }
+    setOpen(true);
+    setUnreadCount(0);
+    if (opts?.seedWelcome) {
+      setMessages((prev) => {
+        if (prev.length > 0) return prev;
+        const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+        const ctx = detectRepairChatClientContext(ua);
+        clientContextRef.current = ctx;
+        return [{ role: "assistant" as const, content: buildRepairChatContextualWelcome(ctx) }];
+      });
+    }
+  }, []);
 
   useEffect(() => {
     return subscribeNavbarAiBarCollapsed(setNavbarAiBarCollapsed);
@@ -85,12 +137,52 @@ export function RepairChatbot() {
     clientContextRef.current = detectRepairChatClientContext(navigator.userAgent);
   }, []);
 
-  // ── Scroll: μόνο για χρωματισμό του κουμπιού (όχι απόκρυψη του παραθύρου) ──
+  // ── Πρώτη είσοδος στη σελίδα: άνοιγμα chat μία φορά ανά session ──
   useEffect(() => {
-    const onScroll = () => setPageScrolled(window.scrollY > 32);
+    try {
+      if (sessionStorage.getItem(AUTO_OPEN_SESSION_KEY)) return;
+    } catch {
+      return;
+    }
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const delay = reduceMotion ? 250 : 1100;
+    const t = setTimeout(() => {
+      try {
+        sessionStorage.setItem(AUTO_OPEN_SESSION_KEY, "1");
+      } catch {
+        /* ignore */
+      }
+      openPanel({ auto: true, seedWelcome: true });
+    }, delay);
+
+    return () => clearTimeout(t);
+  }, [openPanel]);
+
+  // ── Scroll: χρώμα FAB + αυτόματο κλείσιμο του intro chat ──
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      setPageScrolled(y > 32);
+      if (
+        autoOpenedRef.current &&
+        !userEngagedRef.current &&
+        openRef.current &&
+        !panelExiting &&
+        y > 110
+      ) {
+        closePanel(true);
+      }
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, [closePanel, panelExiting]);
+
+  useEffect(() => {
+    return () => {
+      if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+    };
   }, []);
 
   // ── Cookie acceptance + first scroll → attention animation (once/session) ─
@@ -137,22 +229,16 @@ export function RepairChatbot() {
   useEffect(() => {
     const openFromHero = (e: Event) => {
       const detail = (e as CustomEvent<OpenRepairChatDetail>).detail ?? {};
-      setOpen(true);
+      openPanel({ seedWelcome: true });
       const q = detail.draftQuery?.trim();
       if (q) {
+        markEngaged();
         setInput(q);
-        return;
       }
-      setMessages((prev) => {
-        if (prev.length > 0) return prev;
-        const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
-        const ctx = detectRepairChatClientContext(ua);
-        return [{ role: "assistant" as const, content: buildRepairChatContextualWelcome(ctx) }];
-      });
     };
     window.addEventListener(OPEN_REPAIR_CHAT_EVENT, openFromHero);
     return () => window.removeEventListener(OPEN_REPAIR_CHAT_EVENT, openFromHero);
-  }, []);
+  }, [openPanel, markEngaged]);
 
   // ── Scroll-depth proactive messages → inject into chat ───────────────────
   useEffect(() => {
@@ -216,6 +302,7 @@ export function RepairChatbot() {
   const send = useCallback(async () => {
     const text = input.trim();
     if (!text || loading) return;
+    markEngaged();
     if (!serviceTermsAccepted) {
       toast({
         variant: "destructive",
@@ -278,12 +365,12 @@ export function RepairChatbot() {
     } finally {
       setLoading(false);
     }
-  }, [input, loading, messages, serviceTermsAccepted, toast, setLocation]);
+  }, [input, loading, messages, serviceTermsAccepted, toast, setLocation, markEngaged]);
 
   return (
     <div className="relative z-[158] flex flex-col items-end gap-2 pointer-events-none shrink-0">
       {/* Attention bubble: shown once after cookie consent + first scroll */}
-      {showAttention && !open && (
+      {showAttention && !open && !panelExiting && (
         <div
           className="pointer-events-auto animate-in slide-in-from-bottom-2 fade-in duration-500 flex items-center gap-2 rounded-xl border border-primary/30 bg-card/95 backdrop-blur-sm px-3 py-2 shadow-lg shadow-black/30 text-sm font-semibold text-foreground max-w-[min(240px,calc(100vw-2rem))]"
           aria-hidden
@@ -292,14 +379,17 @@ export function RepairChatbot() {
           Μπορώ να βοηθήσω;
         </div>
       )}
-      {open && (
+      {(open || panelExiting) && (
         <div
           className={cn(
-            "pointer-events-auto rounded-2xl border border-primary/20 bg-card/95 backdrop-blur-md flex flex-col overflow-hidden",
+            "pointer-events-auto rounded-2xl border border-primary/20 bg-card/95 backdrop-blur-md flex flex-col overflow-hidden origin-bottom-right",
             "shadow-[0_8px_40px_rgba(0,0,0,0.45)] max-sm:shadow-2xl",
             /* Κινητό: πλάτος οθόνης με περιθώρια, πάνω από το κάτω μενού/FAB — όχι «κρυμμένο» στη γωνία */
             "max-sm:fixed max-sm:z-[160] max-sm:left-3 max-sm:right-3 max-sm:mx-auto max-sm:bottom-[calc(5.25rem+env(safe-area-inset-bottom)+3.75rem)] max-sm:max-h-[min(72dvh,560px)] max-sm:w-auto max-sm:max-w-lg",
-            "sm:relative sm:w-[min(100vw-2rem,400px)] sm:max-h-[min(70vh,560px)]"
+            "sm:relative sm:w-[min(100vw-2rem,400px)] sm:max-h-[min(70vh,560px)]",
+            panelExiting
+              ? "motion-safe:animate-out motion-safe:fade-out-0 motion-safe:zoom-out-95 motion-safe:slide-out-to-bottom-8 motion-safe:duration-500 motion-safe:fill-mode-forwards"
+              : "motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95 motion-safe:slide-in-from-bottom-6 motion-safe:duration-500"
           )}
           role="dialog"
           aria-label="Συνομιλία AI Doctor"
@@ -319,7 +409,7 @@ export function RepairChatbot() {
               variant="ghost"
               size="icon"
               className="shrink-0 h-10 w-10 rounded-xl text-foreground hover:bg-white/10"
-              onClick={() => setOpen(false)}
+              onClick={() => closePanel(true)}
               aria-label="Κλείσιμο"
             >
               <X className="h-5 w-5 stroke-[2.5]" aria-hidden />
@@ -356,17 +446,35 @@ export function RepairChatbot() {
           </ChatWindow>
 
           <div className="border-t border-white/10 bg-background/80 p-3">
-            <label className="flex items-start gap-2.5 cursor-pointer select-none mb-3">
+            <label
+              className={cn(
+                "flex items-start gap-2.5 cursor-pointer select-none mb-3 rounded-xl border px-2.5 py-2 transition-colors",
+                serviceTermsAccepted
+                  ? "border-emerald-500/35 bg-emerald-500/10"
+                  : "border-primary/60 repair-terms-pulse"
+              )}
+            >
               <input
                 type="checkbox"
                 checked={serviceTermsAccepted}
-                onChange={(e) => setServiceTermsAccepted(e.target.checked)}
-                className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/30 bg-card text-primary focus:ring-primary"
+                onChange={(e) => {
+                  markEngaged();
+                  setServiceTermsAccepted(e.target.checked);
+                }}
+                className={cn(
+                  "mt-0.5 h-4 w-4 shrink-0 rounded border-white/30 bg-card text-primary focus:ring-primary",
+                  !serviceTermsAccepted && "ring-2 ring-primary/70 ring-offset-1 ring-offset-background"
+                )}
                 data-testid="checkbox-repair-chat-terms"
               />
-              <span className="text-[11px] leading-snug text-muted-foreground">
-                <span className="text-primary font-semibold">*</span> Αποδέχομαι τους Όρους Service και την Εγγύηση 3 μηνών.{" "}
-                <Link href="/oroi-episkeuis" className="text-primary hover:underline">
+              <span
+                className={cn(
+                  "text-[11px] leading-snug",
+                  serviceTermsAccepted ? "text-muted-foreground" : "text-foreground font-semibold"
+                )}
+              >
+                <span className="text-primary font-bold">*</span> Αποδέχομαι τους Όρους Service και την Εγγύηση 3 μηνών.{" "}
+                <Link href="/oroi-episkeuis" className="text-primary hover:underline font-semibold">
                   Όροι επισκευής
                 </Link>
               </span>
@@ -374,7 +482,10 @@ export function RepairChatbot() {
             <div className="flex gap-2">
             <Input
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => {
+                markEngaged();
+                setInput(e.target.value);
+              }}
               placeholder="Περιγράψτε τη βλάβη…"
               className="bg-card border-white/10 text-sm h-10"
               disabled={loading}
@@ -403,7 +514,7 @@ export function RepairChatbot() {
       )}
 
       {/* Pulsing ring during attention animation */}
-      {showAttention && !open && (
+      {showAttention && !open && !panelExiting && (
         <span
           className="absolute bottom-0 right-0 h-12 w-12 rounded-full animate-ping opacity-60 pointer-events-none"
           style={{ background: "radial-gradient(circle, hsl(185 100% 42%) 0%, transparent 70%)" }}
@@ -413,12 +524,12 @@ export function RepairChatbot() {
 
       <div className="relative pointer-events-auto">
         {/* Unread badge */}
-        {unreadCount > 0 && !open && (
+        {unreadCount > 0 && !open && !panelExiting && (
           <span className="absolute -top-1 -right-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-md animate-in zoom-in duration-300">
             {unreadCount}
           </span>
         )}
-        {navbarAiBarCollapsed && !open && (
+        {navbarAiBarCollapsed && !open && !panelExiting && (
           <span
             className="pointer-events-none absolute -left-0.5 -top-0.5 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-primary/40 bg-gradient-to-br from-primary/90 to-cyan-600 text-primary-foreground shadow-md motion-safe:animate-pulse"
             aria-hidden
@@ -429,10 +540,11 @@ export function RepairChatbot() {
       <Button
         type="button"
         onClick={() => {
-          setOpen((o) => {
-            if (!o) setUnreadCount(0); // reset unread when opening
-            return !o;
-          });
+          if (open || panelExiting) {
+            closePanel(true);
+          } else {
+            openPanel({ seedWelcome: true });
+          }
           if (showAttention) {
             setShowAttention(false);
             if (attentionTimerRef.current) clearTimeout(attentionTimerRef.current);
@@ -443,16 +555,16 @@ export function RepairChatbot() {
           pageScrolled
             ? "border-amber-400/70 bg-gradient-to-br from-amber-400 to-yellow-500 text-neutral-900 hover:opacity-95 shadow-amber-500/35"
             : "border-primary/30 bg-gradient-to-br from-primary to-cyan-600 text-white hover:opacity-95 shadow-primary/25",
-          showAttention && !open && "motion-safe:animate-bounce",
-          !open && !showAttention && "motion-safe:animate-fab-bounce",
-          open && "motion-reduce:animate-none animate-none",
-          open && (pageScrolled ? "ring-2 ring-amber-400/60" : "ring-2 ring-primary/50")
+          showAttention && !open && !panelExiting && "motion-safe:animate-bounce",
+          !open && !panelExiting && !showAttention && "motion-safe:animate-fab-bounce",
+          (open || panelExiting) && "motion-reduce:animate-none animate-none",
+          (open || panelExiting) && (pageScrolled ? "ring-2 ring-amber-400/60" : "ring-2 ring-primary/50")
         )}
-        aria-expanded={open}
-        aria-label={open ? "Κλείσιμο συνομιλίας" : "Άνοιγμα συνομιλίας AI Doctor"}
+        aria-expanded={open && !panelExiting}
+        aria-label={open && !panelExiting ? "Κλείσιμο συνομιλίας" : "Άνοιγμα συνομιλίας AI Doctor"}
         data-testid="button-repair-chat-toggle"
       >
-        {open ? <X className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
+        {open && !panelExiting ? <X className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
       </Button>
       </div>
 

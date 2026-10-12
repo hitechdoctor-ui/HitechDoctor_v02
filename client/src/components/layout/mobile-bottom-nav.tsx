@@ -1,6 +1,6 @@
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "wouter";
-import { Home, Wrench, MessageCircle, ShoppingCart } from "lucide-react";
+import { Home, MessageCircle, ShoppingCart } from "lucide-react";
 import { requestOpenRepairChat } from "@/lib/repair-chat-events";
 import { cn } from "@/lib/utils";
 
@@ -16,10 +16,14 @@ function isRepairsPath(path: string): boolean {
 export function MobileBottomNav() {
   const [loc] = useLocation();
 
-  /** Portal στο body: αποφεύγει “σπασμένο” fixed όταν κάποιος πρόγονος έχει transform/filter (το fixed γίνεται σχετικό με εκείνο το container αντί για το viewport). */
+  /**
+   * Portal στο body: αποφεύγει “σπασμένο” fixed όταν πρόγονος έχει transform/filter.
+   * Χωρίς backdrop-filter: στο iOS Safari το blur σε position:fixed συχνά κάνει
+   * τη μπάρα να ανεβαίνει με το scroll (ιδίως σε μεγάλες σελίδες όπως το eShop).
+   */
   const nav = (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-[140] w-full border-t border-white/10 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 pb-[env(safe-area-inset-bottom)]"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-[140] w-full border-t border-white/10 bg-background pb-[env(safe-area-inset-bottom)]"
       aria-label="Κύρια πλοήγηση"
     >
       <div className="mx-auto flex h-16 w-full max-w-lg items-stretch justify-around">

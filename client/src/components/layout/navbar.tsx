@@ -26,6 +26,27 @@ import { SiApple, SiSamsung, SiXiaomi, SiHuawei, SiOneplus } from "react-icons/s
 import { NavbarPromoBar } from "@/components/layout/navbar-promo-bar";
 import { SiViber } from "react-icons/si";
 import { buildViberUrl } from "@/lib/viber";
+import { cn } from "@/lib/utils";
+
+/** Μικρό κόκκινο φωτάκι δίπλα στο ενεργό μενού */
+function NavActiveDot({ active }: { active: boolean }) {
+  if (!active) return null;
+  return (
+    <span
+      className="ml-0.5 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-red-500 shadow-[0_0_8px_2px_rgba(239,68,68,0.85)] motion-safe:animate-pulse"
+      aria-hidden
+    />
+  );
+}
+
+function navIconClass(active: boolean) {
+  return cn(
+    "shrink-0 transition-all duration-200",
+    active
+      ? "text-primary drop-shadow-[0_0_8px_rgba(0,210,200,0.75)] scale-110"
+      : "text-muted-foreground opacity-75"
+  );
+}
 
 // ── Category meta: subcategory (or "mobile") → display info ──────────────────
 const CATEGORY_META: Record<string, { label: string; icon: React.ElementType; color: string; bg: string; tab: string }> = {
@@ -190,23 +211,34 @@ export function Navbar() {
           {/* Αρχική */}
           <Link
             href="/"
-            className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors hover:text-primary flex items-center gap-2 ${
+            className={cn(
+              "text-sm font-medium px-3 py-2 rounded-lg transition-colors hover:text-primary flex items-center gap-2",
               location === "/" ? "text-primary" : "text-muted-foreground"
-            }`}
+            )}
           >
-            <img src="/images/hitechdoctor-logo.png" alt="" className="w-4 h-4 object-contain" />
+            <img
+              src="/images/hitechdoctor-logo.png"
+              alt=""
+              className={cn(
+                "w-4 h-4 object-contain transition-all duration-200",
+                location === "/" && "scale-110 drop-shadow-[0_0_8px_rgba(239,68,68,0.9)]"
+              )}
+            />
             Αρχική
+            <NavActiveDot active={location === "/"} />
           </Link>
 
           <Link
             href="/apple-service"
             data-testid="nav-expert-hub"
-            className={`text-sm font-medium px-3 py-2 rounded-lg transition-colors hover:text-primary flex items-center gap-2 ${
+            className={cn(
+              "text-sm font-medium px-3 py-2 rounded-lg transition-colors hover:text-primary flex items-center gap-2",
               isActive("/apple-service") ? "text-primary" : "text-muted-foreground"
-            }`}
+            )}
           >
-            <SiApple className="w-4 h-4 opacity-90" />
+            <SiApple className={cn("w-4 h-4", navIconClass(isActive("/apple-service")))} />
             Expert Hub
+            <NavActiveDot active={isActive("/apple-service")} />
           </Link>
 
           {/* Υπηρεσίες + eShop + Info — shared NavigationMenu */}
@@ -216,12 +248,14 @@ export function Navbar() {
               {/* ─── Υπηρεσίες ─── */}
               <NavigationMenuItem>
                 <NavigationMenuTrigger
-                  className={`text-sm font-medium bg-transparent hover:bg-transparent data-[state=open]:bg-transparent px-3 py-2 flex items-center gap-2 transition-colors ${
+                  className={cn(
+                    "text-sm font-medium bg-transparent hover:bg-transparent data-[state=open]:bg-transparent px-3 py-2 flex items-center gap-2 transition-colors",
                     isActive("/services") ? "text-primary" : "text-muted-foreground hover:text-primary"
-                  }`}
+                  )}
                 >
-                  <Zap className="w-4 h-4" />
+                  <Zap className={cn("w-4 h-4", navIconClass(isActive("/services")))} />
                   Υπηρεσίες
+                  <NavActiveDot active={isActive("/services")} />
                 </NavigationMenuTrigger>
 
                 <NavigationMenuContent>
@@ -323,12 +357,14 @@ export function Navbar() {
               {/* ─── eShop (dynamic categories) ─── */}
               <NavigationMenuItem>
                 <NavigationMenuTrigger
-                  className={`text-sm font-medium bg-transparent hover:bg-transparent data-[state=open]:bg-transparent px-3 py-2 flex items-center gap-2 transition-colors ${
+                  className={cn(
+                    "text-sm font-medium bg-transparent hover:bg-transparent data-[state=open]:bg-transparent px-3 py-2 flex items-center gap-2 transition-colors",
                     isActive("/eshop") ? "text-primary" : "text-muted-foreground hover:text-primary"
-                  }`}
+                  )}
                 >
-                  <Package className="w-4 h-4" />
+                  <Package className={cn("w-4 h-4", navIconClass(isActive("/eshop")))} />
                   eShop
+                  <NavActiveDot active={isActive("/eshop")} />
                 </NavigationMenuTrigger>
 
                 <NavigationMenuContent>
@@ -400,14 +436,35 @@ export function Navbar() {
               {/* ─── Info ─── */}
               <NavigationMenuItem>
                 <NavigationMenuTrigger
-                  className={`text-sm font-medium bg-transparent hover:bg-transparent data-[state=open]:bg-transparent px-3 py-2 flex items-center gap-2 transition-colors ${
+                  className={cn(
+                    "text-sm font-medium bg-transparent hover:bg-transparent data-[state=open]:bg-transparent px-3 py-2 flex items-center gap-2 transition-colors",
                     isActive("/sxetika-me-mas") || isActive("/epikoinonia") || isActive("/faq") || isActive("/blog") || isActive("/web-designer")
                       ? "text-primary"
                       : "text-muted-foreground hover:text-primary"
-                  }`}
+                  )}
                 >
-                  <Info className="w-4 h-4" />
+                  <Info
+                    className={cn(
+                      "w-4 h-4",
+                      navIconClass(
+                        isActive("/sxetika-me-mas") ||
+                          isActive("/epikoinonia") ||
+                          isActive("/faq") ||
+                          isActive("/blog") ||
+                          isActive("/web-designer")
+                      )
+                    )}
+                  />
                   Info
+                  <NavActiveDot
+                    active={
+                      isActive("/sxetika-me-mas") ||
+                      isActive("/epikoinonia") ||
+                      isActive("/faq") ||
+                      isActive("/blog") ||
+                      isActive("/web-designer")
+                    }
+                  />
                 </NavigationMenuTrigger>
 
                 <NavigationMenuContent>
@@ -521,20 +578,36 @@ export function Navbar() {
                 Viber
               </a>
               <nav className="flex flex-col gap-2">
-                <Link href="/" className={`flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium ${location === "/" ? "text-primary bg-primary/10" : "text-foreground"}`}>
-                  <img src="/images/hitechdoctor-logo.png" alt="" className="w-5 h-5 object-contain" />
+                <Link
+                  href="/"
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium",
+                    location === "/" ? "text-primary bg-primary/10" : "text-foreground"
+                  )}
+                >
+                  <img
+                    src="/images/hitechdoctor-logo.png"
+                    alt=""
+                    className={cn(
+                      "w-5 h-5 object-contain transition-all",
+                      location === "/" && "drop-shadow-[0_0_8px_rgba(239,68,68,0.9)]"
+                    )}
+                  />
                   Αρχική
+                  <NavActiveDot active={location === "/"} />
                 </Link>
 
                 <Link
                   href="/apple-service"
                   data-testid="nav-mobile-expert-hub"
-                  className={`flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium ${
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium",
                     isActive("/apple-service") ? "text-primary bg-primary/10" : "text-foreground"
-                  }`}
+                  )}
                 >
-                  <SiApple className="w-5 h-5 opacity-90" />
+                  <SiApple className={cn("w-5 h-5", navIconClass(isActive("/apple-service")))} />
                   Expert Hub
+                  <NavActiveDot active={isActive("/apple-service")} />
                 </Link>
 
                 {/* Mobile: Υπηρεσίες */}
@@ -542,13 +615,17 @@ export function Navbar() {
                   <button
                     type="button"
                     onClick={() => setMobileServicesOpen((v) => !v)}
-                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium transition-colors ${isActive("/services") ? "text-primary bg-primary/10" : "text-foreground hover:bg-white/5"}`}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium transition-colors",
+                      isActive("/services") ? "text-primary bg-primary/10" : "text-foreground hover:bg-white/5"
+                    )}
                     aria-expanded={mobileServicesOpen}
                     aria-controls="nav-mobile-services-panel"
                     id="nav-mobile-services-trigger"
                   >
-                    <Zap className="w-5 h-5 shrink-0" aria-hidden />
+                    <Zap className={cn("w-5 h-5 shrink-0", navIconClass(isActive("/services")))} aria-hidden />
                     Υπηρεσίες
+                    <NavActiveDot active={isActive("/services")} />
                     <ChevronRight className={`w-4 h-4 ml-auto transition-transform shrink-0 ${mobileServicesOpen ? "rotate-90" : ""}`} aria-hidden />
                   </button>
                   {mobileServicesOpen && (
@@ -603,13 +680,17 @@ export function Navbar() {
                   <button
                     type="button"
                     onClick={() => setMobileEshopOpen((v) => !v)}
-                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium transition-colors ${isActive("/eshop") ? "text-primary bg-primary/10" : "text-foreground hover:bg-white/5"}`}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium transition-colors",
+                      isActive("/eshop") ? "text-primary bg-primary/10" : "text-foreground hover:bg-white/5"
+                    )}
                     aria-expanded={mobileEshopOpen}
                     aria-controls="nav-mobile-eshop-panel"
                     id="nav-mobile-eshop-trigger"
                   >
-                    <Package className="w-5 h-5 shrink-0" aria-hidden />
+                    <Package className={cn("w-5 h-5 shrink-0", navIconClass(isActive("/eshop")))} aria-hidden />
                     eShop
+                    <NavActiveDot active={isActive("/eshop")} />
                     <ChevronRight className={`w-4 h-4 ml-auto transition-transform shrink-0 ${mobileEshopOpen ? "rotate-90" : ""}`} aria-hidden />
                   </button>
                   {mobileEshopOpen && (

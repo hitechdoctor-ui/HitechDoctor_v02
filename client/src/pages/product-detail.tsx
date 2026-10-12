@@ -471,11 +471,9 @@ export default function ProductDetail() {
                 className={cn(
                   "group aspect-square rounded-2xl overflow-hidden pcb-border relative select-none flex items-center justify-center",
                   isYouTubeUrl(gallery[activeImg] || "") ? "" : "cursor-zoom-in",
-                  isRefurbishedIphone || isMobileGallery
-                    ? "bg-white"
-                    : isPhoneGallery
-                      ? "bg-gradient-to-br from-zinc-900 via-zinc-950 to-black"
-                      : "bg-card"
+                  isPhoneGallery
+                    ? "bg-gradient-to-br from-zinc-900 via-zinc-950 to-black"
+                    : "bg-card"
                 )}
                 onClick={() => gallery.length > 0 && !isYouTubeUrl(gallery[activeImg] || "") && setLightboxOpen(true)}
                 data-testid="product-main-image"
@@ -559,7 +557,7 @@ export default function ProductDetail() {
                           i === activeImg
                             ? "border-primary shadow-[0_0_12px_rgba(0,210,200,0.5)]"
                             : "border-border/50 hover:border-primary/60"
-                        } ${isRefurbishedIphone || isMobileGallery ? "bg-white" : ""}`}
+                        }`}
                       >
                         <img
                           src={thumbSrc}

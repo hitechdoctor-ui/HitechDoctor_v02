@@ -229,6 +229,32 @@
     box-shadow: inset 0 0 0 1px rgba(0, 210, 200, 0.04);
   }
 
+  /* Repair chat — έντονο pulse για υποχρεωτική αποδοχή όρων */
+  @keyframes repair-terms-pulse {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 rgba(0, 210, 200, 0.55), 0 0 12px rgba(0, 210, 200, 0.25);
+      border-color: rgba(0, 210, 200, 0.55);
+      background-color: rgba(0, 210, 200, 0.08);
+    }
+    50% {
+      box-shadow: 0 0 0 6px rgba(0, 210, 200, 0), 0 0 22px rgba(0, 210, 200, 0.55);
+      border-color: rgba(0, 210, 200, 0.95);
+      background-color: rgba(0, 210, 200, 0.18);
+    }
+  }
+  .repair-terms-pulse {
+    animation: repair-terms-pulse 1.4s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .repair-terms-pulse {
+      animation: none;
+      box-shadow: 0 0 0 2px rgba(0, 210, 200, 0.45);
+      border-color: rgba(0, 210, 200, 0.7);
+      background-color: rgba(0, 210, 200, 0.12);
+    }
+  }
+
   /* Navbar AI bar — ήπια κίνηση για προσοχή (παύση σε focus & prefers-reduced-motion) */
   @keyframes navbar-ai-ambient-light {
     0%,

@@ -24,9 +24,16 @@ import {
   Droplets,
   Camera,
   ChevronRight,
+  ShoppingCart,
+  Package,
 } from "lucide-react";
 import { Link } from "wouter";
 import { requestOpenRepairChat } from "@/lib/repair-chat-events";
+import { useProducts } from "@/hooks/use-products";
+import { useCartStore } from "@/store/cart";
+import { useToast } from "@/hooks/use-toast";
+import type { Product } from "@shared/schema";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const homeServices = [
   { icon: Smartphone, title: "Επισκευή Κινητών", href: "/services/episkeui-kiniton" },
@@ -71,7 +78,128 @@ const HERO_IMG_MOBILE =
 const HERO_IMG_DESKTOP =
   "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=900";
 
+function formatPrice(price: string | number): string {
+  const n = typeof price === "number" ? price : Number(price);
+  if (!Number.isFinite(n)) return "";
+  return new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR" }).format(n);
+}
+
+/** Κύριες κατηγορίες eShop για την αρχική — 2 προϊόντα η καθεμία */
+const HOME_PRODUCT_CATEGORIES: { key: string; label: string; match: (p: Product) => boolean; href: string }[] = [
+  {
+    key: "mobile",
+    label: "Κινητά",
+    match: (p) => p.category === "mobile",
+    href: "/eshop?category=mobile",
+  },
+  {
+    key: "refurbished-iphones",
+    label: "Refurbished iPhone",
+    match: (p) => p.category === "refurbished-iphones",
+    href: "/eshop?category=refurbished-iphones",
+  },
+  {
+    key: "laptop",
+    label: "Laptop",
+    match: (p) => p.category === "laptop",
+    href: "/eshop?category=laptop",
+  },
+  {
+    key: "desktop",
+    label: "Desktop PC",
+    match: (p) => p.category === "desktop",
+    href: "/eshop?category=desktop",
+  },
+  {
+    key: "accessory",
+    label: "Αξεσουάρ",
+    match: (p) =>
+      p.category === "accessory" ||
+      p.category === "Φορτιστές & Καλώδια" ||
+      p.subcategory === "chargers" ||
+      p.subcategory === "cases" ||
+      p.subcategory === "headphones" ||
+      p.subcategory === "smartwatch",
+    href: "/eshop",
+  },
+];
+
+function pickTwoPerCategory(products: Product[]): { key: string; label: string; href: string; products: Product[] }[] {
+  return HOME_PRODUCT_CATEGORIES.map((cat) => {
+    const items = products
+      .filter(cat.match)
+      .sort((a, b) => b.id - a.id)
+      .slice(0, 2);
+    return { key: cat.key, label: cat.label, href: cat.href, products: items };
+  }).filter((g) => g.products.length > 0);
+}
+
+function HomeProductCard({ product }: { product: Product }) {
+  const addItem = useCartStore((s) => s.addItem);
+  const { toast } = useToast();
+
+  const handleAdd = () => {
+    addItem(product);
+    toast({ title: "Προστέθηκε στο καλάθι", description: `${product.name} προστέθηκε επιτυχώς!`, duration: 3000 });
+  };
+
+  return (
+    <div className="bg-card pcb-border rounded-2xl flex flex-col overflow-hidden group hover:-translate-y-1 hover:shadow-[0_0_28px_rgba(0,210,200,0.12)] transition-all duration-300">
+      <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
+        <div className="relative h-44 sm:h-52 overflow-hidden cursor-pointer flex items-center justify-center">
+          {product.imageUrl ? (
+            <img
+              src={product.imageUrl}
+              alt={product.name}
+              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 p-3"
+              loading="lazy"
+            />
+          ) : (
+            <Package className="w-14 h-14 text-primary/30" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
+          <div className="absolute bottom-3 right-3 bg-black/70 backdrop-blur border border-primary/40 px-2.5 py-1 rounded-lg">
+            <span className="text-primary font-bold text-sm">{formatPrice(product.price)}</span>
+          </div>
+        </div>
+      </Link>
+
+      <div className="flex flex-col flex-1 p-4 gap-3">
+        <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
+          <h3 className="font-display font-bold text-foreground text-sm sm:text-base leading-tight hover:text-primary transition-colors cursor-pointer line-clamp-2">
+            {product.name}
+          </h3>
+        </Link>
+        <Button
+          onClick={handleAdd}
+          className="h-9 text-sm font-semibold mt-auto"
+          style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))", boxShadow: "0 0 16px rgba(0,210,200,0.2)" }}
+        >
+          <ShoppingCart className="w-4 h-4 mr-2" />
+          Προσθήκη στο Καλάθι
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function ProductSkeleton() {
+  return (
+    <div className="bg-card pcb-border rounded-2xl overflow-hidden">
+      <Skeleton className="h-44 sm:h-52 w-full bg-white/5" />
+      <div className="p-4 space-y-3">
+        <Skeleton className="h-5 w-3/4 bg-white/5" />
+        <Skeleton className="h-9 w-full bg-white/5 mt-2" />
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
+  const { data: productsData, isLoading: productsLoading } = useProducts();
+
+  const categoryGroups = Array.isArray(productsData) ? pickTwoPerCategory(productsData) : [];
+
   return (
     <div className="min-h-screen bg-background relative overflow-x-hidden">
       <Seo
@@ -207,6 +335,64 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </section>
+
+        {/* ── Προϊόντα eShop — 2 ανά κατηγορία, αμέσως μετά το hero ── */}
+        <section className="container mx-auto px-4 pt-4 pb-10 lg:pt-2 lg:pb-12" aria-label="Προϊόντα eShop ανά κατηγορία">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl lg:text-3xl font-display font-bold text-foreground mb-1">
+                Από το eShop
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Δύο επιλογές από κάθε κατηγορία
+              </p>
+            </div>
+            <Link href="/eshop">
+              <span className="text-sm text-primary font-medium flex items-center gap-0.5 cursor-pointer hover:gap-1 transition-all">
+                Όλα τα προϊόντα <ChevronRight className="w-4 h-4" />
+              </span>
+            </Link>
+          </div>
+
+          {productsLoading ? (
+            <div className="space-y-8">
+              {[1, 2, 3].map((g) => (
+                <div key={g}>
+                  <Skeleton className="h-6 w-32 mb-4 bg-white/5" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <ProductSkeleton />
+                    <ProductSkeleton />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : categoryGroups.length > 0 ? (
+            <div className="space-y-10">
+              {categoryGroups.map((group) => (
+                <div key={group.key}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-display font-bold text-foreground">{group.label}</h3>
+                    <Link href={group.href}>
+                      <span className="text-sm text-primary font-medium flex items-center gap-0.5 cursor-pointer">
+                        Περισσότερα <ChevronRight className="w-4 h-4" />
+                      </span>
+                    </Link>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {group.products.map((product) => (
+                      <HomeProductCard key={product.id} product={product} />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>Δεν υπάρχουν προϊόντα προς το παρόν</p>
+            </div>
+          )}
         </section>
 
         {/* ── Highlights bar ── */}

@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo, useEffect, Fragment } from "react";
+import { createPortal } from "react-dom";
 import { useSearch } from "wouter";
 import {
   ShoppingCart,
@@ -1183,35 +1184,41 @@ export default function EShop() {
       </main>
       <Footer />
 
-      {/* ── Floating Filter Button (all tabs) ── */}
-      {allProducts && allProducts.length > 0 && (
-        <button
-          onClick={() => setFilterDrawerOpen(true)}
-          aria-label="Φίλτρα αναζήτησης"
-          data-testid="button-filter-drawer"
-          className="fixed right-4 bottom-36 z-[152] w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform duration-200 hover:scale-110 active:scale-95 group"
-          style={{
-            background: activeFiltersCount > 0
-              ? "linear-gradient(135deg, hsl(185 100% 36%), hsl(200 90% 46%))"
-              : "linear-gradient(135deg, #1f2937, #374151)",
-            boxShadow: activeFiltersCount > 0
-              ? "0 4px 20px rgba(0,210,200,0.4)"
-              : "0 4px 16px rgba(0,0,0,0.5)",
-          }}
-        >
-          <SlidersVertical className="w-5 h-5 text-white" />
-          {activeFiltersCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-black text-[10px] font-bold flex items-center justify-center">
-              {activeFiltersCount}
+      {/* ── Floating Filter Button — portal στο body ώστε να μην «ανεβαίνει» με το scroll (iOS / containing block) ── */}
+      {typeof document !== "undefined" &&
+        allProducts &&
+        allProducts.length > 0 &&
+        createPortal(
+          <button
+            type="button"
+            onClick={() => setFilterDrawerOpen(true)}
+            aria-label="Φίλτρα αναζήτησης"
+            data-testid="button-filter-drawer"
+            className="fixed right-4 z-[152] w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform duration-200 hover:scale-110 active:scale-95 group bottom-[calc(5.25rem+env(safe-area-inset-bottom)+3.75rem)] sm:bottom-24 sm:right-6"
+            style={{
+              background:
+                activeFiltersCount > 0
+                  ? "linear-gradient(135deg, hsl(185 100% 36%), hsl(200 90% 46%))"
+                  : "linear-gradient(135deg, #1f2937, #374151)",
+              boxShadow:
+                activeFiltersCount > 0
+                  ? "0 4px 20px rgba(0,210,200,0.4)"
+                  : "0 4px 16px rgba(0,0,0,0.5)",
+            }}
+          >
+            <SlidersVertical className="w-5 h-5 text-white" />
+            {activeFiltersCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-black text-[10px] font-bold flex items-center justify-center">
+                {activeFiltersCount}
+              </span>
+            )}
+            <span className="pointer-events-none absolute right-14 bg-gray-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-xl">
+              Φίλτρα
+              <span className="absolute right-[-5px] top-1/2 -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-transparent border-l-gray-900" />
             </span>
-          )}
-          {/* Tooltip */}
-          <span className="pointer-events-none absolute right-14 bg-gray-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-xl">
-            Φίλτρα
-            <span className="absolute right-[-5px] top-1/2 -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-l-4 border-transparent border-l-gray-900" />
-          </span>
-        </button>
-      )}
+          </button>,
+          document.body
+        )}
 
       {/* ── Filter Drawer Sheet ── */}
       <Sheet open={filterDrawerOpen} onOpenChange={setFilterDrawerOpen}>
