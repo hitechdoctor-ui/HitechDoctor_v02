@@ -230,8 +230,12 @@ export default function ProductDetail() {
   ).sort((a, b) => Number(a.price) - Number(b.price));
   const isPreOrder = !!(product as any)?.preOrder;
   const isRefurbishedIphone = product?.category === "refurbished-iphones";
-  const isPhoneGallery =
-    product?.category === "mobile" || isRefurbishedIphone;
+  const isMobileGallery = product?.category === "mobile";
+  const isPhoneGallery = isMobileGallery || isRefurbishedIphone;
+  const showColorVariantPicker =
+    variantProducts.length > 1 &&
+    !!product?.variantGroup &&
+    product.variantGroup !== "device-catalog";
 
   const gallery: string[] = product?.images?.length
     ? product.images
@@ -430,14 +434,14 @@ export default function ProductDetail() {
         <section className="container mx-auto px-4 pt-8 pb-16">
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
 
-            {/* ── Left: Gallery ── */}
-            <div className="relative">
+            {/* ── Left: Gallery (sticky on desktop scroll) ── */}
+            <div className="relative lg:sticky lg:top-20 lg:self-start">
 
               {/* Main image — clickable → lightbox */}
               <div
                 className={cn(
                   "group aspect-square rounded-2xl overflow-hidden pcb-border relative cursor-zoom-in select-none flex items-center justify-center",
-                  isRefurbishedIphone
+                  isRefurbishedIphone || isMobileGallery
                     ? "bg-white"
                     : isPhoneGallery
                       ? "bg-gradient-to-br from-zinc-900 via-zinc-950 to-black"
@@ -455,6 +459,8 @@ export default function ProductDetail() {
                         "transition-transform duration-300",
                         isRefurbishedIphone
                           ? "h-[85%] w-auto max-w-[92%] object-contain group-hover:scale-[1.03]"
+                          : isMobileGallery
+                            ? "w-full h-full object-contain object-center group-hover:scale-[1.02]"
                           : isPhoneGallery
                             ? "w-full h-full object-contain p-6 sm:p-8 group-hover:scale-[1.03]"
                             : "w-full h-full object-cover group-hover:scale-105"
@@ -503,7 +509,7 @@ export default function ProductDetail() {
                         i === activeImg
                           ? "border-primary shadow-[0_0_12px_rgba(0,210,200,0.5)]"
                           : "border-border/50 hover:border-primary/60 opacity-70 hover:opacity-100"
-                      } ${isRefurbishedIphone ? "bg-white" : ""}`}
+                      } ${isRefurbishedIphone || isMobileGallery ? "bg-white" : ""}`}
                     >
                       <img
                         src={src}
@@ -512,6 +518,8 @@ export default function ProductDetail() {
                           "w-full h-full",
                           isRefurbishedIphone
                             ? "object-contain p-2 bg-white"
+                            : isMobileGallery
+                              ? "object-contain bg-white"
                             : isPhoneGallery
                               ? "object-contain p-1 bg-zinc-950/80"
                               : "object-cover"
@@ -789,12 +797,18 @@ export default function ProductDetail() {
               {/* Description */}
               <p className="text-muted-foreground leading-relaxed">{product.description}</p>
 
-              {/* ── Color variants (same variantGroup) ── */}
-              {variantProducts.length > 1 && (
+              {product.color && (
+                <p className="text-sm font-semibold text-foreground">
+                  Χρώμα:{" "}
+                  <span className="text-primary font-bold">{product.color}</span>
+                </p>
+              )}
+
+              {/* ── Color variants (ίδιο variantGroup, όχι ολόκληρο device-catalog) ── */}
+              {showColorVariantPicker && (
                 <div>
                   <p className="text-sm font-semibold text-foreground mb-3">
-                    Χρώμα:{" "}
-                    <span className="text-primary font-bold">{product.color}</span>
+                    Άλλες εκδόσεις
                   </p>
                   <div className="flex flex-wrap gap-3">
                     {variantProducts.map((v) => {
