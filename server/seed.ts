@@ -158,6 +158,31 @@ export async function mergeSeedCompetitorPricesFromJson() {
   }
 }
 
+/** Εικόνες + gallery για κινητά/tablets (device-catalog) — χωρίς χειροκίνητο sync --db. */
+export async function mergeDeviceCatalogMediaFromJson() {
+  try {
+    let n = 0;
+    for (const raw of rawData) {
+      const p = raw as SeedProductJson & { variant_group?: string | null; images?: string[] | null };
+      if (p.variant_group !== "device-catalog") continue;
+      const slug = (p.slug ?? "").trim();
+      const imageUrl = (p.image_url ?? "").trim();
+      if (!slug || !imageUrl) continue;
+      const images =
+        Array.isArray(p.images) && p.images.length > 0
+          ? p.images.map((u) => u.trim()).filter(Boolean)
+          : [imageUrl];
+      await db.update(products).set({ imageUrl, images }).where(eq(products.slug, slug));
+      n += 1;
+    }
+    if (n > 0) {
+      console.log(`[seed] Device catalog: updated image_url/images for ${n} product(s) from products.json`);
+    }
+  } catch (err) {
+    console.error("[seed] mergeDeviceCatalogMediaFromJson:", err);
+  }
+}
+
 /** Ενημερώνει εικόνες refurbished iPhone από το JSON (για ήδη υπάρχοντα slugs στο Railway). */
 export async function mergeRefurbishedImagesFromJson() {
   try {

@@ -15,6 +15,7 @@ import {
   seedCatalogNewProductsFromJson,
   mergeSeedCompetitorPricesFromJson,
   mergeRefurbishedImagesFromJson,
+  mergeDeviceCatalogMediaFromJson,
   seedAdminIfEmpty,
 } from "./seed";
 
@@ -180,6 +181,7 @@ async function checkSubscriptionExpiry() {
             await seedProductsIfEmpty();
             await seedCatalogNewProductsFromJson();
             await mergeRefurbishedImagesFromJson();
+            await mergeDeviceCatalogMediaFromJson();
             await mergeSeedCompetitorPricesFromJson();
             await seedAdminIfEmpty();
           } catch (e) {
