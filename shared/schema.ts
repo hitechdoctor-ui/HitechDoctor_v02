@@ -58,6 +58,8 @@ export const products = pgTable("products", {
   manualBestPrice: boolean("manual_bestprice").default(false),
   preOrder: boolean("pre_order").default(false),
   variantGroup: text("variant_group"),
+  /** Απόκρυψη Price Comparison section για συγκεκριμένα προϊόντα */
+  hidePriceComparison: boolean("hide_price_comparison").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

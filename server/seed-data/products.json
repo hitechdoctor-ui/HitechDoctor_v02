@@ -1338,15 +1338,19 @@
   },
   {
     "name": "Apple iPhone 18 Pro (12/256GB) Burgundy",
-    "description": "Apple iPhone 18 Pro (12/256GB) Burgundy — Apple iPhone 5G (12GB, 256GB, Burgundy), Dynamic Island, premium κάμερες και iOS. Αγορά iPhone online από HiTech Doctor Αθήνα · νέο smartphone Apple, εγγύηση 12 μήνες, άμεση διαθεσιμότητα eShop, ασφαλείς πληρωμές και αποστολή.",
-    "full_description": null,
-    "price": "1723.75",
+    "description": "Apple iPhone 18 Pro (12/256GB) Burgundy — Apple iPhone 5G (12GB, 256GB, Burgundy), Dynamic Island, premium κάμερες και iOS. Αγορά iPhone online από HitechDoctor Αθήνα · νέο smartphone Apple, εγγύηση 12 μήνες, άμεση διαθεσιμότητα eShop, ασφαλείς πληρωμές και αποστολή. Δείτε το επίσημο video: https://youtu.be/PjAyUhf52D0",
+    "full_description": "<h2>Apple iPhone 18 Pro Burgundy — Επαγγελματική Απόδοση & Πολυτελής Σχεδιασμός</h2>\n\n<p>Το <strong>Apple iPhone 18 Pro</strong> σε εκπληκτικό χρώμα <strong>Burgundy</strong> συνδυάζει cutting-edge τεχνολογία με premium αισθητική. Με 12GB RAM, 256GB αποθηκευτικό χώρο και το πιο προηγμένο chip της Apple, προσφέρει ανώτερη απόδοση για επαγγελματίες και power users.</p>\n\n<h3>🎥 Δείτε το Επίσημο Video</h3>\n<p>Ανακαλύψτε όλες τις δυνατότητες: <a href=\"https://youtu.be/PjAyUhf52D0\" target=\"_blank\" rel=\"noopener\">Apple iPhone 18 Pro Official Video</a></p>\n\n<h3>🚀 Βασικά Χαρακτηριστικά</h3>\n<ul>\n<li><strong>12GB RAM</strong> — Απαράμιλλη ταχύτητα multitasking</li>\n<li><strong>256GB Storage</strong> — Άφθονος χώρος για apps, φωτογραφίες και videos</li>\n<li><strong>Burgundy Premium Finish</strong> — Κομψό και διακριτικό χρώμα</li>\n<li><strong>Dynamic Island</strong> — Καινοτόμο UI experience</li>\n<li><strong>Pro Camera System</strong> — Professional φωτογραφία & video</li>\n<li><strong>5G Connectivity</strong> — Ultrafast mobile internet</li>\n</ul>\n\n<h3>📦 Τι Περιλαμβάνει η Συσκευασία</h3>\n<ul>\n<li>iPhone 18 Pro Burgundy</li>\n<li>USB-C Charge Cable</li>\n<li>Οδηγίες χρήσης</li>\n</ul>\n\n<h3>✅ Γιατί HitechDoctor;</h3>\n<ul>\n<li>🛡️ <strong>Εγγύηση 12 μηνών</strong></li>\n<li>📦 <strong>Άμεση διαθεσιμότητα</strong></li>\n<li>🚚 <strong>Γρήγορη αποστολή</strong> 1-2 εργάσιμες</li>\n<li>💳 <strong>Ασφαλείς πληρωμές</strong></li>\n<li>🏪 <strong>Έδρα στην Αθήνα</strong> — Μοσχάτο</li>\n</ul>\n\n<p><em>Σημείωση: Οι τιμές μπορεί να αλλάξουν χωρίς προειδοποίηση.</em></p>",
+    "price": "1529.00",
     "category": "mobile",
     "subcategory": null,
     "slug": "apple-iphone-18-pro-12-256gb-burgundy",
-    "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Apple%20iPhone%2018%20Pro%20(12%2F256GB)%20Burgundy",
+    "image_url": "/images/iphone-18-pro/iphone-18-pro-burgundy-back-front.png",
     "images": [
-      "https://placehold.co/600x600/e8eef5/334155/png?text=Apple%20iPhone%2018%20Pro%20(12%2F256GB)%20Burgundy"
+      "/images/iphone-18-pro/iphone-18-pro-burgundy-back-front.png",
+      "/images/iphone-18-pro/iphone-18-pro-burgundy-display.png",
+      "/images/iphone-18-pro/iphone-18-pro-burgundy-what-in-box.jpg",
+      "/images/iphone-18-pro/iphone-18-pro-burgundy-energy-label.jpg",
+      "https://www.youtube.com/watch?v=PjAyUhf52D0"
     ],
     "compatible_models": null,
     "brand": "Apple",
@@ -1354,7 +1358,8 @@
     "color": "Burgundy",
     "storage": "256GB",
     "pre_order": false,
-    "variant_group": "device-catalog"
+    "variant_group": "device-catalog",
+    "hide_price_comparison": true
   },
   {
     "name": "Apple iPhone 18 Pro (12/256GB) Silver",

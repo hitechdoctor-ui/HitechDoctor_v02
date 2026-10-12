@@ -103,12 +103,12 @@ export function Footer() {
 
           {/* Brand column */}
           <div className="lg:col-span-2">
-            <Link href="/" className="flex items-center gap-2.5 mb-4 group">
-              <div className="w-9 h-9 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center group-hover:bg-primary/30 transition-colors">
-                <Wrench className="w-4.5 h-4.5 text-primary" />
+            <Link href="/" className="flex items-center gap-2.5 mb-4 group" aria-label="HitechDoctor - Αρχική Σελίδα">
+              <div className="w-9 h-9 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center group-hover:bg-primary/30 transition-colors" aria-hidden="true">
+                <Wrench className="w-4.5 h-4.5 text-primary" aria-hidden="true" />
               </div>
               <span className="text-xl font-display font-bold text-foreground">
-                HiTech <span className="text-primary">Doctor</span>
+                <span className="text-primary">Hitech</span>Doctor
               </span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs mb-3">
@@ -138,19 +138,19 @@ export function Footer() {
             </div>
 
             <div className="flex items-center gap-3">
-              <a href="https://facebook.com/hitechdoctor" target="_blank" rel="noopener noreferrer" aria-label="Facebook — HiTech Doctor" data-testid="footer-social-facebook"
+              <a href="https://facebook.com/hitechdoctor" target="_blank" rel="noopener noreferrer" aria-label="Facebook — HitechDoctor" data-testid="footer-social-facebook"
                 className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:border-blue-500/40 hover:bg-blue-500/10 transition-all">
                 <Facebook className="w-3.5 h-3.5 text-muted-foreground" aria-hidden />
               </a>
-              <a href="https://instagram.com/hitechdoctor" target="_blank" rel="noopener noreferrer" aria-label="Instagram — HiTech Doctor" data-testid="footer-social-instagram"
+              <a href="https://instagram.com/hitechdoctor" target="_blank" rel="noopener noreferrer" aria-label="Instagram — HitechDoctor" data-testid="footer-social-instagram"
                 className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:border-pink-500/40 hover:bg-pink-500/10 transition-all">
                 <Instagram className="w-3.5 h-3.5 text-muted-foreground" aria-hidden />
               </a>
-              <a href="https://tiktok.com/@hitechdoctor" target="_blank" rel="noopener noreferrer" aria-label="TikTok — HiTech Doctor" data-testid="footer-social-tiktok"
+              <a href="https://tiktok.com/@hitechdoctor" target="_blank" rel="noopener noreferrer" aria-label="TikTok — HitechDoctor" data-testid="footer-social-tiktok"
                 className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center hover:border-white/30 hover:bg-white/10 transition-all">
                 <SiTiktok className="w-3.5 h-3.5 text-muted-foreground" aria-hidden />
               </a>
-              <a href={buildViberUrl()} target="_blank" rel="noopener noreferrer" aria-label="Viber — HiTech Doctor" data-testid="footer-social-viber"
+              <a href={buildViberUrl()} target="_blank" rel="noopener noreferrer" aria-label="Viber — HitechDoctor" data-testid="footer-social-viber"
                 className="w-8 h-8 rounded-lg bg-[#7360f2]/15 border border-[#7360f2]/35 flex items-center justify-center hover:border-[#7360f2]/55 hover:bg-[#7360f2]/25 transition-all">
                 <SiViber className="w-3.5 h-3.5 text-[#7360f2]" aria-hidden />
               </a>
@@ -214,9 +214,9 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="mt-8 pt-6 border-t border-white/6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} HiTech Doctor. Με επιφύλαξη παντός δικαιώματος. Design & Development by{" "}
+            © {new Date().getFullYear()} HitechDoctor. Με επιφύλαξη παντός δικαιώματος. Design & Development by{" "}
             <a href="https://hitechdoctor.com" target="_blank" rel="noopener noreferrer" className="text-foreground/90 underline-offset-2 hover:text-primary hover:underline transition-colors">
-              HiTech Doctor
+              HitechDoctor
             </a>
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5">

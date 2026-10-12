@@ -67,7 +67,7 @@ export function RepairTrackerSection() {
           className="inline-flex items-center gap-2 self-start rounded-xl border border-[#7360f2]/30 bg-[#7360f2]/8 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-[#7360f2]/15"
         >
           <SiViber className="h-4 w-4 shrink-0" style={{ color: VIBER_HEX }} />
-          <span className="text-[13px] leading-snug">Άνοιγμα Viber (HiTech Doctor)</span>
+          <span className="text-[13px] leading-snug">Άνοιγμα Viber (HitechDoctor)</span>
         </a>
       </div>
 

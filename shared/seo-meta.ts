@@ -19,11 +19,11 @@ export interface StaticSeoEntry {
   type?: OgType;
 }
 
-/** Αποφεύγει διπλό suffix όταν το title ήδη αναφέρει HiTech Doctor. */
+/** Αποφεύγει διπλό suffix όταν το title ήδη αναφέρει HitechDoctor. */
 export function buildDocumentTitle(title: string): string {
   const t = title.trim();
-  if (/HiTech Doctor/i.test(t)) return t;
-  return `${t} | HiTech Doctor`;
+  if (/HitechDoctor|HiTech Doctor/i.test(t)) return t;
+  return `${t} | HitechDoctor`;
 }
 
 /** Meta description ~160 χαρακτήρες. */
@@ -65,9 +65,9 @@ const ESHOP_OG = "/images/refurbished-othones-iphone.png";
 /** Στατικά meta για δημόσιες σελίδες — χρησιμοποιούνται από client Seo και server HTML injection. */
 export const STATIC_PAGE_SEO: Record<string, StaticSeoEntry> = {
   "/": {
-    title: "HiTech Doctor | Εξειδικευμένο Κέντρο Επισκευής Tech",
+    title: "HitechDoctor | Εξειδικευμένο Κέντρο Επισκευής Tech στην Αθήνα",
     description:
-      "Ο τεχνολογικός σας γιατρός στην Αθήνα. Επαγγελματική επισκευή σε iPhone, Samsung, Xiaomi, Tablet, Laptop, Mac & IT Support με 12 χρόνια εμπειρίας.",
+      "HitechDoctor - Ο τεχνολογικός σας γιατρός στην Αθήνα. Επαγγελματική επισκευή iPhone, Samsung, Xiaomi, Tablet, Laptop, Mac & IT Support με 12+ χρόνια εμπειρίας. Μοσχάτο, κοντά στην Καλλιθέα.",
   },
   "/services": {
     title: "Υπηρεσίες Επισκευής & IT Support",
@@ -79,12 +79,12 @@ export const STATIC_PAGE_SEO: Record<string, StaticSeoEntry> = {
     description: "Επισκευή smartphone όλων των μαρκών — οθόνη, μπαταρία, θύρες. HiTech Doctor Μοσχάτο.",
   },
   "/services/episkeui-iphone": {
-    title: "Επισκευή iPhone Αθήνα",
-    description: "Εξειδικευμένη επισκευή iPhone — οθόνη, μπαταρία, Face ID, θύρες. Express service στο Μοσχάτο.",
+    title: "Επισκευή iPhone Αθήνα | HitechDoctor",
+    description: "HitechDoctor - Εξειδικευμένη επισκευή iPhone στην Αθήνα. Οθόνη, μπαταρία, Face ID, θύρες. Express service στο Μοσχάτο.",
   },
   "/services/episkeui-samsung": {
-    title: "Επισκευή Samsung Αθήνα",
-    description: "Επισκευή Samsung Galaxy — AMOLED οθόνη, μπαταρία, θύρες φόρτισης. HiTech Doctor.",
+    title: "Επισκευή Samsung Αθήνα | HitechDoctor",
+    description: "HitechDoctor - Επισκευή Samsung Galaxy στην Αθήνα. AMOLED οθόνη, μπαταρία, θύρες φόρτισης. Μοσχάτο.",
   },
   "/services/episkeui-xiaomi": {
     title: "Επισκευή Xiaomi / Redmi / POCO",
@@ -142,8 +142,8 @@ export const STATIC_PAGE_SEO: Record<string, StaticSeoEntry> = {
       "Διαδραστικό εργαλείο: βρείτε ποιες συσκευές μοιράζονται το ίδιο προστατευτικό τζάμι οθόνης.",
   },
   "/apple-service": {
-    title: "Apple Service — Εξειδικευμένο Apple Hub",
-    description: "Apple Expert Hub: επισκευές iPhone/iPad/Mac, IPSW, IMEI check, genuine parts.",
+    title: "Apple Service — Εξειδικευμένο Apple Hub | HitechDoctor",
+    description: "HitechDoctor Apple Expert Hub - Εξειδικευμένες επισκευές iPhone, iPad, Mac. IPSW downloads, IMEI check, γνήσια ανταλλακτικά. Αθήνα, Μοσχάτο.",
   },
   "/web-designer": {
     title: "Web Designer Αθήνα — Κατασκευή Ιστοσελίδων & E-Shop",
@@ -156,9 +156,9 @@ export const STATIC_PAGE_SEO: Record<string, StaticSeoEntry> = {
     image: ESHOP_OG,
   },
   "/eshop": {
-    title: "eShop — Αξεσουάρ & Κινητά iPhone",
+    title: "eShop — Αξεσουάρ & Κινητά iPhone | HitechDoctor",
     description:
-      "Κινητά τηλέφωνα, τζάμια προστασίας iPhone, θήκες και φορτιστές. Δωρεάν αποστολή από €30.",
+      "HitechDoctor eShop - Κινητά τηλέφωνα, τζάμια προστασίας iPhone, θήκες και φορτιστές. Δωρεάν αποστολή από €30.",
     image: ESHOP_OG,
   },
   "/blog": {
@@ -216,9 +216,9 @@ export const STATIC_PAGE_SEO: Record<string, StaticSeoEntry> = {
 };
 
 export const DEFAULT_PAGE_SEO: StaticSeoEntry = {
-  title: "HiTech Doctor | Εξειδικευμένο Κέντρο Επισκευής Tech",
+  title: "HitechDoctor | Εξειδικευμένο Κέντρο Επισκευής Tech",
   description:
-    "Επισκευή iPhone, Samsung, laptop & tablet στο Μοσχάτο. Express service, γραπτή εγγύηση, eShop.",
+    "HitechDoctor - Επισκευή iPhone, Samsung, laptop & tablet στο Μοσχάτο, Αθήνα. Express service, γραπτή εγγύηση, eShop.",
 };
 
 export function staticSeoToPageMeta(

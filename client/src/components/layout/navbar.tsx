@@ -172,12 +172,16 @@ export function Navbar() {
 
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30 group-hover:bg-primary/30 transition-colors" aria-hidden>
-            <Wrench className="w-5 h-5 text-primary" />
+          <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30 group-hover:bg-primary/30 transition-colors" aria-hidden="true">
+            <Wrench className="w-5 h-5 text-primary" aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-xl font-display font-bold leading-none">HiTech</h1>
-            <p className="text-xs text-primary font-semibold tracking-wider">DOCTOR</p>
+            <h1 className="text-xl font-display font-bold leading-none">
+              HitechDoctor
+            </h1>
+            <p className="text-[10px] text-muted-foreground font-medium tracking-wide">
+              Εξειδικευμένο Tech Service
+            </p>
           </div>
         </Link>
 
@@ -470,7 +474,7 @@ export function Navbar() {
             target="_blank"
             rel="noopener noreferrer"
             className="hidden md:flex items-center justify-center p-2 rounded-xl border border-[#7360f2]/35 bg-[#7360f2]/12 hover:bg-[#7360f2]/20 hover:border-[#7360f2]/50 transition-all"
-            aria-label="Viber — HiTech Doctor"
+            aria-label="Viber — HitechDoctor"
             title="Viber"
             data-testid="nav-viber"
           >

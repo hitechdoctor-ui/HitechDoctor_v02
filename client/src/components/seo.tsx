@@ -39,8 +39,12 @@ export function Seo({ title, description, image, url, path, type = "website", ke
       <meta property="og:type" content={type} />
       {canonical && <meta property="og:url" content={canonical} />}
       <meta property="og:image" content={ogImage} />
-      <meta property="og:site_name" content="HiTech Doctor" />
+      <meta property="og:site_name" content="HitechDoctor" />
       <meta property="og:locale" content="el_GR" />
+      
+      {/* Additional SEO for AI discovery */}
+      <meta name="author" content="HitechDoctor" />
+      <meta name="publisher" content="HitechDoctor" />
 
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={siteTitle} />

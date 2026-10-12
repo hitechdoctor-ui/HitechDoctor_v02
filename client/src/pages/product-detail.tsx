@@ -678,7 +678,7 @@ export default function ProductDetail() {
                 {formatPrice(product.price)}
               </p>
 
-              {!isLaptop && !isDesktop && !isRefurbishedIphone && (
+              {!isLaptop && !isDesktop && !isRefurbishedIphone && !(product as any).hidePriceComparison && (
                 <PriceComparisonSection product={product} />
               )}
 

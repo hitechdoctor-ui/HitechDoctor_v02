@@ -80,6 +80,7 @@ function seedJsonToInsertRow(p: SeedProductJson): InsertRow {
     storage: p.storage ?? null,
     preOrder: p.pre_order ?? false,
     variantGroup: p.variant_group ?? null,
+    hidePriceComparison: (p as any).hide_price_comparison ?? false,
   };
   const c = competitorFieldsFromSeedJson(p);
   if (c) Object.assign(row, c);
@@ -175,6 +176,7 @@ export async function mergeDeviceCatalogMediaFromJson() {
       const description = (p.description ?? "").trim();
       const fullDescription = (p.full_description ?? "").trim();
       const price = p.price != null ? String(p.price).trim() : "";
+      const hidePriceComparison = (p as any).hide_price_comparison ?? false;
       await db
         .update(products)
         .set({
@@ -183,6 +185,7 @@ export async function mergeDeviceCatalogMediaFromJson() {
           ...(description ? { description } : {}),
           ...(fullDescription ? { fullDescription } : {}),
           ...(price ? { price } : {}),
+          hidePriceComparison,
         })
         .where(eq(products.slug, slug));
       n += 1;

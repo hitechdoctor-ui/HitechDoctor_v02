@@ -63,8 +63,10 @@ export function injectPageSeoIntoHtml(
   out = upsertMeta(out, "property", "og:type", type);
   out = upsertMeta(out, "property", "og:url", meta.url);
   out = upsertMeta(out, "property", "og:image", image);
-  out = upsertMeta(out, "property", "og:site_name", "HiTech Doctor");
+  out = upsertMeta(out, "property", "og:site_name", "HitechDoctor");
   out = upsertMeta(out, "property", "og:locale", "el_GR");
+  out = upsertMeta(out, "name", "author", "HitechDoctor");
+  out = upsertMeta(out, "name", "publisher", "HitechDoctor");
   out = upsertMeta(out, "name", "twitter:card", "summary_large_image");
   out = upsertMeta(out, "name", "twitter:title", title);
   out = upsertMeta(out, "name", "twitter:description", description);

@@ -608,6 +608,8 @@ export async function registerRoutes(
     }
   });
 
+  // GET /api/products - Returns ALL products including ALL color/storage variants
+  // Each variant (e.g., iPhone 17 Pro Max in different colors) is a separate product
   app.get(api.products.list.path, async (req, res) => {
     try {
       const category = req.query.category as string | undefined;

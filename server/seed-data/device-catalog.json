@@ -289,14 +289,21 @@
     },
     {
       "name": "Apple iPhone 18 Pro (12/256GB) Burgundy",
-      "price": 1379,
+      "price": 1529,
       "category": "mobile",
       "brand": "Apple",
       "ram": "12GB",
       "storage": "256GB",
       "color": "Burgundy",
       "slug": "apple-iphone-18-pro-12-256gb-burgundy",
-      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Apple%20iPhone%2018%20Pro%20(12%2F256GB)%20Burgundy"
+      "image_url": "/images/iphone-18-pro/iphone-18-pro-burgundy-back-front.png",
+      "images": [
+        "/images/iphone-18-pro/iphone-18-pro-burgundy-back-front.png",
+        "/images/iphone-18-pro/iphone-18-pro-burgundy-display.png",
+        "/images/iphone-18-pro/iphone-18-pro-burgundy-what-in-box.jpg",
+        "/images/iphone-18-pro/iphone-18-pro-burgundy-energy-label.jpg",
+        "https://www.youtube.com/watch?v=PjAyUhf52D0"
+      ]
     },
     {
       "name": "Apple iPhone 18 Pro (12/256GB) Silver",

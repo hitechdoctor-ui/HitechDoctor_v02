@@ -30,6 +30,7 @@ import {
   Headphones,
   BatteryFull,
   Sparkles,
+  Search,
 } from "lucide-react";
 import { Link } from "wouter";
 import type { Product } from "@shared/schema";
@@ -268,6 +269,8 @@ function RefurbishedIphoneCard({ product }: { product: Product }) {
       onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = `0 8px 40px ${colorHex}44`; }}
       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
       data-testid={`card-product-${product.id}`}
+      data-variant-group={(product as any).variantGroup || undefined}
+      data-product-color={p.color || undefined}
     >
       <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
         <div className="relative h-72 sm:h-80 overflow-hidden bg-white">
@@ -360,6 +363,8 @@ function MobileCard({ product }: { product: Product }) {
       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = `0 8px 40px ${colorHex}44`; }}
       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
       data-testid={`card-product-${product.id}`}
+      data-variant-group={(product as any).variantGroup || undefined}
+      data-product-color={p.color || undefined}
     >
       {/* ── Image area ── */}
       <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
@@ -800,6 +805,8 @@ export default function EShop() {
   const [filterRamType, setFilterRamType] = useState("");
   const [filterRamSize, setFilterRamSize] = useState("");
   const [filterFormFactor, setFilterFormFactor] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const clearAllFilters = () => {
     setFilterBrand("");
@@ -812,7 +819,17 @@ export default function EShop() {
     setFilterRamType("");
     setFilterRamSize("");
     setFilterFormFactor("");
+    setSearchQuery("");
+    setDebouncedSearch("");
   };
+
+  // Debounce search input (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Sync URL params → state when user navigates from navbar mega-menu
   useEffect(() => {
@@ -830,6 +847,8 @@ export default function EShop() {
     setFilterRamType("");
     setFilterRamSize("");
     setFilterFormFactor("");
+    setSearchQuery("");
+    setDebouncedSearch("");
   }, [search]);
 
   const isMobileTab = activeTab === "mobile";
@@ -858,10 +877,32 @@ export default function EShop() {
 
   const { data: allProducts, isLoading } = useProducts(fetchCategory, fetchSubcategory);
 
+  // ── IMPORTANT: ALL color variants are shown as SEPARATE product cards ──
+  // Do NOT filter by variantGroup. Each color variant should appear as its
+  // own card in the grid with its own image, name, and price.
+  // The variant picker on the product detail page remains separate functionality.
   const products = useMemo(() => {
     if (!allProducts) return [];
     return allProducts.filter((p) => {
       const pp = p as any;
+      
+      // Search filter - match against name, description, brand, category, subcategory
+      if (debouncedSearch) {
+        const query = debouncedSearch.toLowerCase();
+        const searchableText = [
+          p.name,
+          p.description,
+          pp.brand,
+          p.category,
+          p.subcategory,
+          SUBCATEGORY_LABELS[p.subcategory ?? ""],
+        ].filter(Boolean).join(" ").toLowerCase();
+        
+        if (!searchableText.includes(query)) return false;
+      }
+      
+      // Filter by user-selected attributes (brand, color, storage, etc.)
+      // but do NOT deduplicate or hide variants with the same variantGroup
       if (filterBrand && pp.brand !== filterBrand) return false;
       if (filterColor && pp.color !== filterColor) return false;
       if (filterStorage && pp.storage !== filterStorage) return false;
@@ -874,7 +915,7 @@ export default function EShop() {
       if (filterFormFactor && getDesktopFormFactor(p.name) !== filterFormFactor) return false;
       return true;
     });
-  }, [allProducts, filterBrand, filterColor, filterStorage, filterGrade, filterCpuFamily, filterCpuGen, filterScreenSize, filterRamType, filterRamSize, filterFormFactor]);
+  }, [allProducts, debouncedSearch, filterBrand, filterColor, filterStorage, filterGrade, filterCpuFamily, filterCpuGen, filterScreenSize, filterRamType, filterRamSize, filterFormFactor]);
 
   const isScreenProtector = (p: Product) => p.subcategory === "screen-protectors";
 
@@ -945,7 +986,7 @@ export default function EShop() {
     };
   }, [allProducts]);
 
-  const activeFiltersCount = [filterBrand, filterColor, filterStorage, filterGrade, filterCpuFamily, filterCpuGen, filterScreenSize, filterRamType, filterRamSize, filterFormFactor].filter(Boolean).length;
+  const activeFiltersCount = [debouncedSearch, filterBrand, filterColor, filterStorage, filterGrade, filterCpuFamily, filterCpuGen, filterScreenSize, filterRamType, filterRamSize, filterFormFactor].filter(Boolean).length;
 
   return (
     <div className="min-h-screen bg-background circuit-bg">
@@ -1059,6 +1100,41 @@ export default function EShop() {
 
         <PriceDisclaimer className="mb-4 max-w-2xl" emphasis />
 
+        {/* ── Search Input ── */}
+        {!isLoading && allProducts && allProducts.length > 0 && (
+          <div className="mb-6 relative max-w-2xl">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary pointer-events-none z-10" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Αναζήτηση προϊόντων (όνομα, μάρκα, κατηγορία)..."
+                className="w-full h-14 pl-12 pr-12 rounded-2xl bg-card/80 border-2 border-primary/20 focus:border-primary text-foreground placeholder:text-muted-foreground text-base font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-[0_0_20px_rgba(0,210,200,0.08)]"
+                data-testid="search-input"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setDebouncedSearch("");
+                  }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors group"
+                  aria-label="Καθαρισμός αναζήτησης"
+                  data-testid="clear-search"
+                >
+                  <X className="w-4 h-4 text-primary group-hover:text-primary" />
+                </button>
+              )}
+            </div>
+            {debouncedSearch && (
+              <p className="mt-2 text-sm text-muted-foreground">
+                Αποτελέσματα για: <span className="text-primary font-semibold">{debouncedSearch}</span>
+              </p>
+            )}
+          </div>
+        )}
+
         {/* ── Product grid ── */}
         {isLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
@@ -1069,13 +1145,19 @@ export default function EShop() {
             <Tag className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-30" />
             <h3 className="text-xl font-bold mb-2">Δεν βρέθηκαν προϊόντα</h3>
             <p className="text-muted-foreground text-sm">
-              {filterBrand || filterColor || filterStorage
-                ? "Δοκιμάστε να αλλάξετε ή να καθαρίσετε τα φίλτρα."
+              {debouncedSearch || filterBrand || filterColor || filterStorage
+                ? "Δοκιμάστε να αλλάξετε ή να καθαρίσετε τα φίλτρα και την αναζήτηση."
                 : "Δοκιμάστε να αλλάξετε κατηγορία."}
             </p>
-            {(filterBrand || filterColor || filterStorage) && (
+            {(debouncedSearch || filterBrand || filterColor || filterStorage) && (
               <button
-                onClick={() => { setFilterBrand(""); setFilterColor(""); setFilterStorage(""); }}
+                onClick={() => { 
+                  setFilterBrand(""); 
+                  setFilterColor(""); 
+                  setFilterStorage(""); 
+                  setSearchQuery("");
+                  setDebouncedSearch("");
+                }}
                 className="mt-4 px-4 py-2 rounded-xl bg-primary/15 border border-primary/25 text-primary text-sm font-semibold hover:bg-primary/20 transition-colors"
               >
                 Καθαρισμός φίλτρων
@@ -1083,6 +1165,8 @@ export default function EShop() {
             )}
           </div>
         ) : (
+          // ── Each product gets its own card, including ALL color/storage variants ──
+          // iPhone 17 Pro Max in Deep Blue, Cosmic Orange, and Silver each show separately
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
             {products.map((product) =>
               isRefurbishedIphone(product)

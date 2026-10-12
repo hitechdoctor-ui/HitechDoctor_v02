@@ -251,6 +251,9 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   // --- Products ---
+  // Returns ALL products matching category/subcategory filters.
+  // IMPORTANT: Does NOT deduplicate or filter by variantGroup.
+  // Each color/storage variant is returned as a separate product for the catalog.
   async getProducts(category?: string, subcategory?: string): Promise<Product[]> {
     const conditions = [];
     if (category) conditions.push(eq(products.category, category));

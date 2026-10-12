@@ -68,15 +68,45 @@ export function buildLocalBusinessJsonLd(): Record<string, unknown> {
     "@context": "https://schema.org",
     "@type": ["LocalBusiness", "Organization"],
     additionalType: "https://schema.org/MobilePhoneRepair",
-    name: BUSINESS_REGISTERED_NAME,
-    alternateName: BUSINESS_TRADE_NAME,
-    description: `Επισκευή smartphone, tablet, laptop & υπολογιστών — σημείο στο ${BUSINESS_ADDRESS_LOCALITY} (${BUSINESS_ADDRESS_REGION}), κοντά στην Καλλιθέα & την ευρύτερη Αθήνα. Τηλ. ${BUSINESS_PHONE_DISPLAY}, email ${BUSINESS_EMAIL}.`,
+    name: "HitechDoctor",
+    alternateName: ["HiTech Doctor", BUSINESS_TRADE_NAME],
+    legalName: BUSINESS_REGISTERED_NAME,
+    description: `HitechDoctor - Εξειδικευμένο κέντρο επισκευής τεχνολογίας. Επισκευή iPhone, Samsung, Xiaomi, tablet, laptop & υπολογιστών στο ${BUSINESS_ADDRESS_LOCALITY} (${BUSINESS_ADDRESS_REGION}), κοντά στην Καλλιθέα & Αθήνα. Τηλ. ${BUSINESS_PHONE_DISPLAY}, email ${BUSINESS_EMAIL}.`,
     url: BUSINESS_SITE_URL_WWW,
     image: `${BUSINESS_SITE_URL_WWW}/og-image.png`,
-    logo: `${BUSINESS_SITE_URL_WWW}/favicon.png`,
+    logo: {
+      "@type": "ImageObject",
+      url: `${BUSINESS_SITE_URL_WWW}/favicon.png`,
+      contentUrl: `${BUSINESS_SITE_URL_WWW}/favicon.png`,
+      width: "512",
+      height: "512",
+    },
     priceRange: "££",
     telephone: BUSINESS_PHONE_E164,
     email: BUSINESS_EMAIL,
+    slogan: "Ο τεχνολογικός σας γιατρός",
+    foundingDate: "2013",
+    knowsAbout: [
+      "iPhone repair",
+      "Samsung repair",
+      "Mobile phone repair",
+      "Laptop repair",
+      "Tablet repair",
+      "Computer repair",
+      "IT support",
+      "Apple service",
+      "Screen replacement",
+      "Battery replacement"
+    ],
+    serviceType: [
+      "Επισκευή κινητών τηλεφώνων",
+      "Επισκευή iPhone",
+      "Επισκευή Samsung",
+      "Επισκευή laptop",
+      "Επισκευή tablet",
+      "IT Support",
+      "Apple service center"
+    ],
     address: {
       "@type": "PostalAddress",
       streetAddress: BUSINESS_STREET_ADDRESS,
@@ -133,4 +163,147 @@ export function buildLocalBusinessJsonLd(): Record<string, unknown> {
   }
 
   return merged;
+}
+
+/** 
+ * Separate Organization schema for enhanced AI discovery and brand recognition.
+ * Focuses on the brand identity and services for AI models like ChatGPT, Claude, Perplexity.
+ */
+export function buildOrganizationJsonLd(): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": `${BUSINESS_SITE_URL_WWW}#organization`,
+    name: "HitechDoctor",
+    alternateName: ["HiTech Doctor", BUSINESS_TRADE_NAME],
+    legalName: BUSINESS_REGISTERED_NAME,
+    description: "HitechDoctor - Εξειδικευμένο κέντρο επισκευής τεχνολογίας στην Αθήνα. Επισκευή iPhone, Samsung, Xiaomi, tablet, laptop και υπολογιστών με 12+ χρόνια εμπειρίας.",
+    url: BUSINESS_SITE_URL_WWW,
+    logo: {
+      "@type": "ImageObject",
+      url: `${BUSINESS_SITE_URL_WWW}/favicon.png`,
+      contentUrl: `${BUSINESS_SITE_URL_WWW}/favicon.png`,
+      width: "512",
+      height: "512",
+      caption: "HitechDoctor Logo"
+    },
+    image: `${BUSINESS_SITE_URL_WWW}/og-image.png`,
+    slogan: "Ο τεχνολογικός σας γιατρός",
+    brand: {
+      "@type": "Brand",
+      name: "HitechDoctor",
+      logo: `${BUSINESS_SITE_URL_WWW}/favicon.png`,
+      slogan: "Ο τεχνολογικός σας γιατρός"
+    },
+    foundingDate: "2013",
+    telephone: BUSINESS_PHONE_E164,
+    email: BUSINESS_EMAIL,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: BUSINESS_STREET_ADDRESS,
+      addressLocality: BUSINESS_ADDRESS_LOCALITY,
+      addressRegion: BUSINESS_ADDRESS_REGION,
+      postalCode: BUSINESS_POSTAL_CODE,
+      addressCountry: BUSINESS_COUNTRY_CODE
+    },
+    sameAs: BUSINESS_SAME_AS,
+    areaServed: [
+      {
+        "@type": "City",
+        name: "Αθήνα"
+      },
+      {
+        "@type": "City",
+        name: "Μοσχάτο"
+      },
+      {
+        "@type": "City",
+        name: "Καλλιθέα"
+      },
+      {
+        "@type": "AdministrativeArea",
+        name: "Αττική"
+      },
+      {
+        "@type": "Country",
+        name: "Ελλάδα"
+      }
+    ],
+    knowsAbout: [
+      "iPhone repair Athens",
+      "Samsung repair Greece", 
+      "Mobile phone repair",
+      "Laptop repair",
+      "Tablet repair",
+      "Computer repair",
+      "IT support",
+      "Apple service center",
+      "Screen replacement",
+      "Battery replacement",
+      "Data recovery",
+      "Επισκευή iPhone Αθήνα",
+      "Επισκευή Samsung",
+      "Επισκευή κινητών",
+      "Επισκευή laptop",
+      "Επισκευή tablet"
+    ],
+    hasOfferCatalog: {
+      "@type": "OfferCatalog",
+      name: "Υπηρεσίες Επισκευής",
+      itemListElement: [
+        {
+          "@type": "OfferCatalog",
+          name: "Επισκευή Κινητών",
+          itemListElement: [
+            {
+              "@type": "Offer",
+              itemOffered: {
+                "@type": "Service",
+                name: "Επισκευή iPhone",
+                description: "Εξειδικευμένη επισκευή iPhone - οθόνη, μπαταρία, Face ID, κάμερα"
+              }
+            },
+            {
+              "@type": "Offer",
+              itemOffered: {
+                "@type": "Service",
+                name: "Επισκευή Samsung",
+                description: "Επισκευή Samsung Galaxy - AMOLED οθόνη, μπαταρία, θύρες"
+              }
+            },
+            {
+              "@type": "Offer",
+              itemOffered: {
+                "@type": "Service",
+                name: "Επισκευή Xiaomi",
+                description: "Επισκευή Xiaomi, Redmi, POCO - οθόνη, μπαταρία, θύρες"
+              }
+            }
+          ]
+        },
+        {
+          "@type": "OfferCatalog",
+          name: "Επισκευή Υπολογιστών",
+          itemListElement: [
+            {
+              "@type": "Offer",
+              itemOffered: {
+                "@type": "Service",
+                name: "Επισκευή Laptop",
+                description: "Επισκευή laptop - οθόνη, πληκτρολόγιο, SSD upgrade, format"
+              }
+            },
+            {
+              "@type": "Offer",
+              itemOffered: {
+                "@type": "Service",
+                name: "Επισκευή Desktop",
+                description: "Επισκευή υπολογιστών, αναβάθμιση, IT support"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  };
 }
