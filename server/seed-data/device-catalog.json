@@ -243,6 +243,11 @@
     {
       "name": "Apple iPhone 17 256GB - Black",
       "price": 799,
+      "retail_price": 1100,
+      "price_skroutz": "1109.95",
+      "price_kotsovolos": "1139.99",
+      "manual_skroutz": true,
+      "manual_kotsovolos": true,
       "category": "mobile",
       "brand": "Apple",
       "ram": "8GB",

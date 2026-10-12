@@ -36,6 +36,19 @@ function retailMarkupForRow(row: CatalogRow): number {
   return MARKUP_MID_RANGE;
 }
 
+type CatalogPricingExtras = {
+  retail_price?: number;
+  price_skroutz?: string;
+  price_kotsovolos?: string;
+  price_bestprice?: string;
+  manual_skroutz?: boolean;
+  manual_kotsovolos?: boolean;
+  manual_bestprice?: boolean;
+  url_skroutz?: string;
+  url_kotsovolos?: string;
+  url_bestprice?: string;
+};
+
 type SeedProduct = {
   name: string;
   description: string;
@@ -53,7 +66,36 @@ type SeedProduct = {
   storage: string | null;
   pre_order: boolean;
   variant_group: string | null;
-};
+} & CatalogPricingExtras;
+
+function retailPriceForRow(row: CatalogRow): string {
+  const extras = row as CatalogRow & CatalogPricingExtras;
+  if (extras.retail_price != null && Number.isFinite(Number(extras.retail_price))) {
+    return Number(extras.retail_price).toFixed(2);
+  }
+  return (Number(row.price) * retailMarkupForRow(row)).toFixed(2);
+}
+
+function competitorFieldsFromCatalog(row: CatalogRow): CatalogPricingExtras {
+  const p = row as CatalogRow & CatalogPricingExtras;
+  const out: CatalogPricingExtras = {};
+  if (p.price_kotsovolos?.trim()) {
+    out.price_kotsovolos = p.price_kotsovolos.trim();
+    out.manual_kotsovolos = p.manual_kotsovolos ?? true;
+    if (p.url_kotsovolos?.trim()) out.url_kotsovolos = p.url_kotsovolos.trim();
+  }
+  if (p.price_skroutz?.trim()) {
+    out.price_skroutz = p.price_skroutz.trim();
+    out.manual_skroutz = p.manual_skroutz ?? true;
+    if (p.url_skroutz?.trim()) out.url_skroutz = p.url_skroutz.trim();
+  }
+  if (p.price_bestprice?.trim()) {
+    out.price_bestprice = p.price_bestprice.trim();
+    out.manual_bestprice = p.manual_bestprice ?? true;
+    if (p.url_bestprice?.trim()) out.url_bestprice = p.url_bestprice.trim();
+  }
+  return out;
+}
 
 function deviceCategoryForRow(row: CatalogRow): InnovxDeviceCategory {
   if (row.category === "tablet") return "tablet";
@@ -125,7 +167,7 @@ function toSeedProduct(row: CatalogRow, imageIndex: ReturnType<typeof buildInnov
     name: row.name,
     description: buildCatalogProductDescription(row),
     full_description: row.full_description ?? null,
-    price: (Number(row.price) * retailMarkupForRow(row)).toFixed(2),
+    price: retailPriceForRow(row),
     category: row.category,
     subcategory: row.subcategory ?? null,
     slug,
@@ -138,7 +180,28 @@ function toSeedProduct(row: CatalogRow, imageIndex: ReturnType<typeof buildInnov
     storage: row.storage ?? null,
     pre_order: row.pre_order ?? false,
     variant_group: row.variant_group ?? "device-catalog",
+    ...competitorFieldsFromCatalog(row),
   };
+}
+
+function competitorDbPatch(row: SeedProduct) {
+  const patch: Record<string, unknown> = {};
+  if (row.price_kotsovolos?.trim()) {
+    patch.priceKotsovolos = row.price_kotsovolos.trim();
+    patch.manualKotsovolos = row.manual_kotsovolos ?? true;
+    if (row.url_kotsovolos?.trim()) patch.urlKotsovolos = row.url_kotsovolos.trim();
+  }
+  if (row.price_skroutz?.trim()) {
+    patch.priceSkroutz = row.price_skroutz.trim();
+    patch.manualSkroutz = row.manual_skroutz ?? true;
+    if (row.url_skroutz?.trim()) patch.urlSkroutz = row.url_skroutz.trim();
+  }
+  if (row.price_bestprice?.trim()) {
+    patch.priceBestPrice = row.price_bestprice.trim();
+    patch.manualBestPrice = row.manual_bestprice ?? true;
+    if (row.url_bestprice?.trim()) patch.urlBestPrice = row.url_bestprice.trim();
+  }
+  return patch;
 }
 
 function updateProductsJson(nextDeviceRows: SeedProduct[]) {
@@ -208,6 +271,7 @@ async function syncDatabase(nextDeviceRows: SeedProduct[]) {
       preOrder: row.pre_order,
       variantGroup: row.variant_group,
       lastPriceUpdate: new Date(),
+      ...competitorDbPatch(row),
     };
 
     const found = existingBySlug.get(row.slug);
