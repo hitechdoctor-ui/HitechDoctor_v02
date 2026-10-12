@@ -205,7 +205,7 @@
       "image_url": "https://c.scdn.gr/images/sku_main_images/055820/55820509/xlarge_20240913102458_apple_iphone_16_5g_8gb_128gb_black_proparagelia.jpeg"
     },
     {
-      "name": "Apple iPhone 17 (8/256GB) Lavender",
+      "name": "Apple iPhone 17 256GB - Lavender",
       "price": 799,
       "category": "mobile",
       "brand": "Apple",
@@ -214,10 +214,11 @@
       "color": "Lavender",
       "slug": "apple-iphone-17-8-256gb-lavender",
       "variant_group": "apple-iphone-17-8-256gb",
-      "image_url": "https://d.scdn.gr/images/sku_main_images/062972/62972550/xlarge_20250910132335_apple_iphone_17_8gb_256gb_black.jpeg"
+      "image_url": "/images/mobile/apple-iphone-17-8-256gb-lavender-main.jpg",
+      "images": ["/images/mobile/apple-iphone-17-8-256gb-lavender-main.jpg"]
     },
     {
-      "name": "Apple iPhone 17 (8/256GB) Mist Blue",
+      "name": "Apple iPhone 17 256GB - Mist Blue",
       "price": 799,
       "category": "mobile",
       "brand": "Apple",
@@ -226,10 +227,11 @@
       "color": "Mist Blue",
       "slug": "apple-iphone-17-8-256gb-mist-blue",
       "variant_group": "apple-iphone-17-8-256gb",
-      "image_url": "https://d.scdn.gr/images/sku_main_images/062972/62972550/xlarge_20250910132335_apple_iphone_17_8gb_256gb_black.jpeg"
+      "image_url": "/images/mobile/apple-iphone-17-8-256gb-mist-blue-main.jpg",
+      "images": ["/images/mobile/apple-iphone-17-8-256gb-mist-blue-main.jpg"]
     },
     {
-      "name": "Apple iPhone 17 (8/256GB) White",
+      "name": "Apple iPhone 17 256GB - White",
       "price": 799,
       "category": "mobile",
       "brand": "Apple",
@@ -238,7 +240,8 @@
       "color": "White",
       "slug": "apple-iphone-17-8-256gb-white",
       "variant_group": "apple-iphone-17-8-256gb",
-      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Apple%20iPhone%2017%20(8%2F256GB)%20White"
+      "image_url": "/images/mobile/apple-iphone-17-8-256gb-white-main.jpg",
+      "images": ["/images/mobile/apple-iphone-17-8-256gb-white-main.jpg"]
     },
     {
       "name": "Apple iPhone 17 256GB - Black",

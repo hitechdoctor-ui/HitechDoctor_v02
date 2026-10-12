@@ -57,6 +57,8 @@ const COLOR_HEX: Record<string, string> = {
   sage: "#a3e635",
   purple: "#c084fc",
   lavender: "#ddd6fe",
+  "mist blue": "#93c5fd",
+  "awesome navy": "#1e3a5f",
   pink: "#f472b6",
   red: "#f87171",
   orange: "#fb923c",
@@ -348,9 +350,8 @@ function MobileCard({ product }: { product: Product }) {
     toast({ title: "Προστέθηκε στο καλάθι", description: product.name, duration: 3000 });
   };
 
-  const modelName = extractModelName(product.name, p.brand, p.storage, p.color);
-  const brandBg = getBrandBg(p.brand);
   const colorHex = getColorHex(p.color);
+  const cardTitle = product.name?.trim() || extractModelName(product.name, p.brand, p.storage, p.color);
 
   return (
     <div
@@ -362,22 +363,20 @@ function MobileCard({ product }: { product: Product }) {
     >
       {/* ── Image area ── */}
       <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
-        <div className="relative h-64 overflow-hidden" style={{ background: brandBg }}>
+        <div className="relative h-64 overflow-hidden bg-white">
           {product.imageUrl ? (
             <img
               src={product.imageUrl}
               alt={`${product.name} — HiTech Doctor`}
-              className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500 ease-out"
-              style={{ objectPosition: "center 20%" }}
+              className="w-full h-full object-contain object-center p-2 group-hover:scale-[1.03] transition-transform duration-500 ease-out"
               loading="lazy"
             />
           ) : (
-            <div className="w-full h-full group-hover:scale-105 transition-transform duration-500 ease-out">
+            <div className="w-full h-full group-hover:scale-105 transition-transform duration-500 ease-out" style={{ background: getBrandBg(p.brand) }}>
               <ColoredPhoneIcon color={p.color} brand={p.brand} />
             </div>
           )}
-          {/* subtle gradient at bottom so price badge is readable */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none" />
 
           {/* brand badge */}
           {p.brand && (
@@ -406,7 +405,7 @@ function MobileCard({ product }: { product: Product }) {
           {/* Model name as main title */}
           <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
             <h3 className="font-display font-bold text-foreground text-[15px] leading-snug mb-0.5 hover:text-primary transition-colors">
-              {modelName}
+              {cardTitle}
             </h3>
           </Link>
 
@@ -419,8 +418,19 @@ function MobileCard({ product }: { product: Product }) {
               </span>
             )}
             {p.color && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/5 border border-white/15 text-muted-foreground text-[11px]">
-                <Palette className="w-3 h-3" />
+              <span
+                className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[11px] font-semibold"
+                style={{
+                  borderColor: `${colorHex}66`,
+                  background: `${colorHex}18`,
+                  color: colorHex,
+                }}
+              >
+                <span
+                  className="w-2.5 h-2.5 rounded-full border border-white/30 shrink-0"
+                  style={{ background: colorHex }}
+                  aria-hidden
+                />
                 {p.color}
               </span>
             )}
