@@ -1227,7 +1227,7 @@
     "color": "Lavender",
     "storage": "256GB",
     "pre_order": false,
-    "variant_group": "apple-iphone-17-8-256gb"
+    "variant_group": "device-catalog"
   },
   {
     "name": "Apple iPhone 17 256GB - Mist Blue",
@@ -1247,7 +1247,7 @@
     "color": "Mist Blue",
     "storage": "256GB",
     "pre_order": false,
-    "variant_group": "apple-iphone-17-8-256gb"
+    "variant_group": "device-catalog"
   },
   {
     "name": "Apple iPhone 17 256GB - White",
@@ -1267,7 +1267,7 @@
     "color": "White",
     "storage": "256GB",
     "pre_order": false,
-    "variant_group": "apple-iphone-17-8-256gb"
+    "variant_group": "device-catalog"
   },
   {
     "name": "Apple iPhone 17 256GB - Black",
@@ -1290,7 +1290,7 @@
     "color": "Black",
     "storage": "256GB",
     "pre_order": false,
-    "variant_group": "apple-iphone-17-8-256gb",
+    "variant_group": "device-catalog",
     "price_kotsovolos": "1139.99",
     "manual_kotsovolos": true,
     "price_skroutz": "1109.95",
