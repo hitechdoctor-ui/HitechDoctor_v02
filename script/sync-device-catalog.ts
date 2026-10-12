@@ -75,6 +75,12 @@ function toSeedProduct(row: CatalogRow, imageIndex: ReturnType<typeof buildInnov
         imageIndex,
       });
 
+  const gallery =
+    Array.isArray((row as CatalogRow & { images?: string[] }).images) &&
+    (row as CatalogRow & { images?: string[] }).images!.length > 0
+      ? (row as CatalogRow & { images?: string[] }).images!.map((u) => u.trim()).filter(Boolean)
+      : [resolved.imageUrl];
+
   return {
     name: row.name,
     description: row.description ?? `${row.name}.`,
@@ -83,8 +89,8 @@ function toSeedProduct(row: CatalogRow, imageIndex: ReturnType<typeof buildInnov
     category: row.category,
     subcategory: row.subcategory ?? null,
     slug,
-    image_url: resolved.imageUrl,
-    images: [resolved.imageUrl],
+    image_url: gallery[0] ?? resolved.imageUrl,
+    images: gallery,
     compatible_models: null,
     brand: row.brand ?? null,
     ram: row.ram ?? null,

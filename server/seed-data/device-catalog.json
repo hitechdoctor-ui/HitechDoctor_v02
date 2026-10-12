@@ -377,7 +377,12 @@
       "storage": "128GB",
       "color": "Awesome Navy",
       "slug": "samsung-galaxy-a57-5g-8-128gb-awesome-navy",
-      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Samsung%20Galaxy%20A57%205G%20(8%2F128GB)%20Awesome%20Navy"
+      "image_url": "/images/mobile/samsung-galaxy-a57-5g-8-128gb-awesome-navy-main.jpg",
+      "images": [
+        "/images/mobile/samsung-galaxy-a57-5g-8-128gb-awesome-navy-main.jpg",
+        "/images/mobile/samsung-galaxy-a57-5g-8-128gb-awesome-navy-front.jpg",
+        "/images/mobile/samsung-galaxy-a57-5g-8-128gb-awesome-navy-back.jpg"
+      ]
     },
     {
       "name": "Samsung Galaxy A57 5G (8/256GB) Awesome Navy",
