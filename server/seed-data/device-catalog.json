@@ -213,6 +213,7 @@
       "storage": "256GB",
       "color": "Lavender",
       "slug": "apple-iphone-17-8-256gb-lavender",
+      "variant_group": "apple-iphone-17-8-256gb",
       "image_url": "https://d.scdn.gr/images/sku_main_images/062972/62972550/xlarge_20250910132335_apple_iphone_17_8gb_256gb_black.jpeg"
     },
     {
@@ -224,6 +225,7 @@
       "storage": "256GB",
       "color": "Mist Blue",
       "slug": "apple-iphone-17-8-256gb-mist-blue",
+      "variant_group": "apple-iphone-17-8-256gb",
       "image_url": "https://d.scdn.gr/images/sku_main_images/062972/62972550/xlarge_20250910132335_apple_iphone_17_8gb_256gb_black.jpeg"
     },
     {
@@ -235,7 +237,26 @@
       "storage": "256GB",
       "color": "White",
       "slug": "apple-iphone-17-8-256gb-white",
+      "variant_group": "apple-iphone-17-8-256gb",
       "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Apple%20iPhone%2017%20(8%2F256GB)%20White"
+    },
+    {
+      "name": "Apple iPhone 17 256GB - Black",
+      "price": 799,
+      "category": "mobile",
+      "brand": "Apple",
+      "ram": "8GB",
+      "storage": "256GB",
+      "color": "Black",
+      "slug": "apple-iphone-17-8-256gb-black",
+      "variant_group": "apple-iphone-17-8-256gb",
+      "image_url": "/images/mobile/apple-iphone-17-8-256gb-black-main.jpg",
+      "images": [
+        "/images/mobile/apple-iphone-17-8-256gb-black-main.jpg",
+        "/images/mobile/apple-iphone-17-8-256gb-black-front.jpg",
+        "/images/mobile/apple-iphone-17-8-256gb-black-camera.jpg",
+        "/images/mobile/apple-iphone-17-8-256gb-black-box.jpg"
+      ]
     },
     {
       "name": "Apple iPhone 17 Pro 256GB - Cosmic Orange",

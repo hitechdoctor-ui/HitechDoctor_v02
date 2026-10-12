@@ -172,7 +172,17 @@ export async function mergeDeviceCatalogMediaFromJson() {
         Array.isArray(p.images) && p.images.length > 0
           ? p.images.map((u) => u.trim()).filter(Boolean)
           : [imageUrl];
-      await db.update(products).set({ imageUrl, images }).where(eq(products.slug, slug));
+      const description = (p.description ?? "").trim();
+      const price = p.price != null ? String(p.price).trim() : "";
+      await db
+        .update(products)
+        .set({
+          imageUrl,
+          images,
+          ...(description ? { description } : {}),
+          ...(price ? { price } : {}),
+        })
+        .where(eq(products.slug, slug));
       n += 1;
     }
     if (n > 0) {

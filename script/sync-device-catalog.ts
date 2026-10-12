@@ -62,6 +62,46 @@ function deviceCategoryForRow(row: CatalogRow): InnovxDeviceCategory {
   return "mobile";
 }
 
+/** SEO περιγραφή με λέξεις-κλειδιά — χρησιμοποιείται όταν λείπει custom description στο catalog. */
+function buildCatalogProductDescription(row: CatalogRow): string {
+  const custom = (row as CatalogRow & { description?: string }).description?.trim();
+  if (custom) return custom;
+
+  const brand = (row.brand ?? "").trim();
+  const color = (row.color ?? "").trim();
+  const storage = (row.storage ?? "").trim();
+  const ram = (row.ram ?? "").trim();
+  const name = row.name;
+  const specBits = [ram, storage, color].filter(Boolean);
+  const specsSuffix = specBits.length ? ` (${specBits.join(", ")})` : "";
+
+  if (row.subcategory === "feature-phone") {
+    return `${name} — κινητό με κουμπιά${color ? ` σε ${color}` : ""}, dual SIM, εύκολη χρήση και μεγάλη αυτονομία μπαταρίας. Αγορά online από HiTech Doctor Αθήνα · eShop κινητών Nokia, εγγύηση, ανταλλακτικά και γρήγορη αποστολή σε όλη την Ελλάδα.`;
+  }
+
+  if (row.subcategory === "smartwatch") {
+    return `${name} — smartwatch ${brand}${specsSuffix}, ειδοποιήσεις, fitness και συμβατότητα smartphone. Αγορά online HiTech Doctor eShop, εγγύηση 12 μήνες, ανταλλακτικά ρολογιών και αποστολή 1–2 εργάσιμες.`;
+  }
+
+  if (row.subcategory === "tablet" || row.category === "tablet") {
+    return `${name} — tablet ${brand}${specsSuffix} για streaming, σπουδές και εργασία. Αγορά tablet online από HiTech Doctor Αθήνα, eShop, εγγύηση 12 μήνες, competitive τιμές και παράδοση σε όλη την Ελλάδα.`;
+  }
+
+  if (/iphone/i.test(name)) {
+    return `${name} — Apple iPhone 5G${specsSuffix}, Dynamic Island, premium κάμερες και iOS. Αγορά iPhone online από HiTech Doctor Αθήνα · νέο smartphone Apple, εγγύηση 12 μήνες, άμεση διαθεσιμότητα eShop, ασφαλείς πληρωμές και αποστολή.`;
+  }
+
+  if (brand === "Samsung" || /galaxy/i.test(name)) {
+    return `${name} — Samsung Galaxy smartphone 5G${specsSuffix}, κάμερα, AMOLED οθόνη και One UI. Αγορά Samsung online HiTech Doctor Αθήνα, eShop κινητά, εγγύηση 12 μήνες, γρήγορη αποστολή.`;
+  }
+
+  if (/xiaomi|redmi|poco|17t/i.test(name) || brand === "Xiaomi") {
+    return `${name} — Xiaomi smartphone 5G${specsSuffix}, ισχυρές κάμερες και MIUI/HyperOS. Αγορά Xiaomi online από HiTech Doctor eShop Αθήνα, εγγύηση 12 μήνες, ανταλλακτικά και παράδοση.`;
+  }
+
+  return `${name}${specsSuffix} — smartphone για καθημερινή χρήση, 5G και modern οθόνη. Αγορά online από HiTech Doctor eShop Αθήνα, εγγύηση 12 μήνες, competitive τιμές κινητών και αποστολή 1–2 εργάσιμες.`;
+}
+
 function toSeedProduct(row: CatalogRow, imageIndex: ReturnType<typeof buildInnovxImageIndex>): SeedProduct {
   const slug = row.slug ?? titleToProductSlug(row.name);
   const explicit = row.image_url?.trim();
@@ -83,7 +123,7 @@ function toSeedProduct(row: CatalogRow, imageIndex: ReturnType<typeof buildInnov
 
   return {
     name: row.name,
-    description: row.description ?? `${row.name}.`,
+    description: buildCatalogProductDescription(row),
     full_description: row.full_description ?? null,
     price: (Number(row.price) * retailMarkupForRow(row)).toFixed(2),
     category: row.category,
