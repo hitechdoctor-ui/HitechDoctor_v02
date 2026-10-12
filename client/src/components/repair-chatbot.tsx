@@ -384,9 +384,9 @@ export function RepairChatbot() {
           className={cn(
             "pointer-events-auto rounded-2xl border border-primary/20 bg-card/95 backdrop-blur-md flex flex-col overflow-hidden origin-bottom-right",
             "shadow-[0_8px_40px_rgba(0,0,0,0.45)] max-sm:shadow-2xl",
-            /* Κινητό: πλάτος οθόνης με περιθώρια, πάνω από το κάτω μενού/FAB — όχι «κρυμμένο» στη γωνία */
-            "max-sm:fixed max-sm:z-[160] max-sm:left-3 max-sm:right-3 max-sm:mx-auto max-sm:bottom-[calc(5.25rem+env(safe-area-inset-bottom)+3.75rem)] max-sm:max-h-[min(72dvh,560px)] max-sm:w-auto max-sm:max-w-lg",
-            "sm:relative sm:w-[min(100vw-2rem,400px)] sm:max-h-[min(70vh,560px)]",
+            /* Κινητό: πάνω από bottom nav + accessibility + κίτρινο FAB (το FAB έχει z πάνω από το panel) */
+            "max-sm:fixed max-sm:z-[160] max-sm:left-3 max-sm:right-3 max-sm:mx-auto max-sm:bottom-[calc(5.25rem+env(safe-area-inset-bottom)+7.25rem)] max-sm:max-h-[min(68dvh,520px)] max-sm:w-auto max-sm:max-w-lg",
+            "sm:relative sm:z-[160] sm:w-[min(100vw-2rem,400px)] sm:max-h-[min(70vh,560px)]",
             panelExiting
               ? "motion-safe:animate-out motion-safe:fade-out-0 motion-safe:zoom-out-95 motion-safe:slide-out-to-bottom-8 motion-safe:duration-500 motion-safe:fill-mode-forwards"
               : "motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95 motion-safe:slide-in-from-bottom-6 motion-safe:duration-500"
@@ -522,7 +522,13 @@ export function RepairChatbot() {
         />
       )}
 
-      <div className="relative pointer-events-auto">
+      {/* z-[170] όταν ανοιχτό: το panel είναι z-160 και αλλιώς καλύπτει το κίτρινο κουμπί */}
+      <div
+        className={cn(
+          "relative pointer-events-auto",
+          (open || panelExiting) && "z-[170]"
+        )}
+      >
         {/* Unread badge */}
         {unreadCount > 0 && !open && !panelExiting && (
           <span className="absolute -top-1 -right-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-md animate-in zoom-in duration-300">

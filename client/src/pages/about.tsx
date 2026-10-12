@@ -14,9 +14,9 @@ const TEAM = [
 ];
 
 const STATS = [
+  { value: "2005", label: "Έτος έναρξης λειτουργίας" },
   { value: "3.000+", label: "Επισκευές ολοκληρώθηκαν" },
   { value: "98%", label: "Ικανοποιημένοι πελάτες" },
-  { value: "1 ώρα", label: "Μέσος χρόνος επισκευής" },
   { value: "6 μήνες", label: "Εγγύηση εργασίας" },
 ];
 
@@ -33,7 +33,7 @@ export default function About() {
     <div className="min-h-screen bg-background">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       <Seo
-        title="Ποιος είναι ο HiTech Doctor; | 12 Χρόνια Εμπειρίας"
+        title="Ποιος είναι ο HiTech Doctor; | Από το 2005"
         description="Γνωρίστε την ομάδα μας. Προσφέρουμε αξιόπιστες, γρήγορες και εγγυημένες λύσεις για κάθε ηλεκτρονική συσκευή, με υπευθυνότητα και τις καλύτερες τιμές της αγοράς."
         url="https://hitechdoctor.com/sxetika-me-mas"
       />
@@ -60,7 +60,7 @@ export default function About() {
               <h2 className="text-2xl font-display font-bold mb-5">Η ιστορία μας</h2>
               <div className="space-y-4 text-muted-foreground leading-relaxed">
                 <p>Όλα ξεκίνησαν από ένα σπασμένο iPhone και την απόφαση να μην πληρώσουμε ένα τυχαίο service για δεύτερης ποιότητας δουλειά.</p>
-                <p>Σήμερα, με <strong className="text-foreground">8+ χρόνια εμπειρίας</strong>, έχουμε επισκευάσει πάνω από 3.000 συσκευές. iPhone, Samsung, iPad, laptop, PlayStation — αν έχει chip, το φτιάχνουμε.</p>
+                <p>Σήμερα, με <strong className="text-foreground">λειτουργία από το 2005</strong> και πάνω από <strong className="text-foreground">20 χρόνια εμπειρίας</strong>, έχουμε επισκευάσει πάνω από 3.000 συσκευές. iPhone, Samsung, iPad, laptop, PlayStation — αν έχει chip, το φτιάχνουμε.</p>
                 <p>Πιστεύουμε ότι ο πελάτης πρέπει να φεύγει από εμάς με πλήρη εικόνα: τι επισκευάστηκε, με ποιο ανταλλακτικό, και γιατί. <strong className="text-foreground">Χωρίς εκπλήξεις στην τιμή. Χωρίς ψεύτικες υποσχέσεις.</strong></p>
               </div>
             </div>
