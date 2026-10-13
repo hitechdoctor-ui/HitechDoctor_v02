@@ -4,6 +4,7 @@ import { Helmet } from "react-helmet-async";
 import HomeBelowFold from "./home-below-fold";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useMemo, useState, useEffect } from "react";
 import {
   Smartphone,
   Tablet,
@@ -24,8 +25,10 @@ import {
   Droplets,
   Camera,
   ChevronRight,
-  ShoppingCart,
+  ChevronLeft,
   Package,
+  ShoppingCart,
+  Headphones,
 } from "lucide-react";
 import { Link } from "wouter";
 import { requestOpenRepairChat } from "@/lib/repair-chat-events";
@@ -34,6 +37,7 @@ import { useCartStore } from "@/store/cart";
 import { useToast } from "@/hooks/use-toast";
 import type { Product } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 const homeServices = [
   { icon: Smartphone, title: "Επισκευή Κινητών", href: "/services/episkeui-kiniton" },
@@ -84,112 +88,417 @@ function formatPrice(price: string | number): string {
   return new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR" }).format(n);
 }
 
-/** Κύριες κατηγορίες eShop για την αρχική — 2 προϊόντα η καθεμία */
-const HOME_PRODUCT_CATEGORIES: { key: string; label: string; match: (p: Product) => boolean; href: string }[] = [
-  {
-    key: "mobile",
-    label: "Κινητά",
-    match: (p) => p.category === "mobile",
-    href: "/eshop?category=mobile",
-  },
-  {
-    key: "refurbished-iphones",
-    label: "Refurbished iPhone",
-    match: (p) => p.category === "refurbished-iphones",
-    href: "/eshop?category=refurbished-iphones",
-  },
-  {
-    key: "laptop",
-    label: "Laptop",
-    match: (p) => p.category === "laptop",
-    href: "/eshop?category=laptop",
-  },
-  {
-    key: "desktop",
-    label: "Desktop PC",
-    match: (p) => p.category === "desktop",
-    href: "/eshop?category=desktop",
-  },
-  {
-    key: "accessory",
-    label: "Αξεσουάρ",
-    match: (p) =>
-      p.category === "accessory" ||
-      p.category === "Φορτιστές & Καλώδια" ||
-      p.subcategory === "chargers" ||
-      p.subcategory === "cases" ||
-      p.subcategory === "headphones" ||
-      p.subcategory === "smartwatch",
-    href: "/eshop",
-  },
-];
+type HomeEshopTab = "new" | "sale" | "top";
 
-function pickTwoPerCategory(products: Product[]): { key: string; label: string; href: string; products: Product[] }[] {
-  return HOME_PRODUCT_CATEGORIES.map((cat) => {
-    const items = products
-      .filter(cat.match)
-      .sort((a, b) => b.id - a.id)
-      .slice(0, 2);
-    return { key: cat.key, label: cat.label, href: cat.href, products: items };
-  }).filter((g) => g.products.length > 0);
+function competitorPrices(p: Product): number[] {
+  return [p.priceSkroutz, p.priceKotsovolos, p.priceBestPrice]
+    .map((v) => Number(v))
+    .filter((n) => Number.isFinite(n) && n > 0);
 }
 
-function HomeProductCard({ product }: { product: Product }) {
-  const addItem = useCartStore((s) => s.addItem);
-  const { toast } = useToast();
+/** Highest competitor price above ours — used as strikethrough / discount badge */
+function compareAtPrice(p: Product): number | null {
+  const our = Number(p.price);
+  if (!Number.isFinite(our)) return null;
+  const higher = competitorPrices(p).filter((n) => n > our + 0.5);
+  if (!higher.length) return null;
+  return Math.max(...higher);
+}
 
-  const handleAdd = () => {
-    addItem(product);
-    toast({ title: "Προστέθηκε στο καλάθι", description: `${product.name} προστέθηκε επιτυχώς!`, duration: 3000 });
-  };
+function savingsAmount(p: Product): number | null {
+  const cmp = compareAtPrice(p);
+  const our = Number(p.price);
+  if (cmp == null || !Number.isFinite(our)) return null;
+  return Math.round((cmp - our) * 100) / 100;
+}
 
+function HomeEshopGridCard({ product }: { product: Product }) {
+  const save = savingsAmount(product);
+  const compare = compareAtPrice(product);
   return (
-    <div className="bg-card pcb-border rounded-2xl flex flex-col overflow-hidden group hover:-translate-y-1 hover:shadow-[0_0_28px_rgba(0,210,200,0.12)] transition-all duration-300">
-      <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
-        <div className="relative h-44 sm:h-52 overflow-hidden cursor-pointer flex items-center justify-center">
+    <Link href={product.slug ? `/eshop/${product.slug}` : "/eshop"}>
+      <article className="group relative flex h-full flex-col px-3 py-4 text-center sm:px-4">
+        <div className="relative mx-auto mb-3 aspect-square w-full max-w-[140px] overflow-hidden bg-white sm:max-w-[160px]">
           {product.imageUrl ? (
             <img
               src={product.imageUrl}
               alt={product.name}
-              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 p-3"
+              className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.04]"
               loading="lazy"
             />
           ) : (
-            <Package className="w-14 h-14 text-primary/30" />
+            <div className="flex h-full items-center justify-center">
+              <Package className="h-10 w-10 text-primary/25" />
+            </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
-          <div className="absolute bottom-3 right-3 bg-black/70 backdrop-blur border border-primary/40 px-2.5 py-1 rounded-lg">
-            <span className="text-primary font-bold text-sm">{formatPrice(product.price)}</span>
-          </div>
+          {save != null && save > 0 && (
+            <span className="absolute right-0 top-0 bg-emerald-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+              -{formatPrice(save)}
+            </span>
+          )}
         </div>
-      </Link>
-
-      <div className="flex flex-col flex-1 p-4 gap-3">
-        <Link href={product.slug ? `/eshop/${product.slug}` : "#"}>
-          <h3 className="font-display font-bold text-foreground text-sm sm:text-base leading-tight hover:text-primary transition-colors cursor-pointer line-clamp-2">
+        <div className="mt-auto space-y-1">
+          <div className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-0.5">
+            <span className="text-base font-bold tabular-nums text-primary sm:text-lg">
+              {formatPrice(product.price)}
+            </span>
+            {compare != null && (
+              <span className="text-xs tabular-nums text-muted-foreground line-through">
+                {formatPrice(compare)}
+              </span>
+            )}
+          </div>
+          <h3 className="line-clamp-2 text-xs font-medium leading-snug text-foreground/80 group-hover:text-primary sm:text-[13px]">
             {product.name}
           </h3>
-        </Link>
-        <Button
-          onClick={handleAdd}
-          className="h-9 text-sm font-semibold mt-auto"
-          style={{ background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))", boxShadow: "0 0 16px rgba(0,210,200,0.2)" }}
-        >
-          <ShoppingCart className="w-4 h-4 mr-2" />
-          Προσθήκη στο Καλάθι
-        </Button>
+        </div>
+      </article>
+    </Link>
+  );
+}
+
+function HomeEshopShowcase({ products }: { products: Product[] }) {
+  const [tab, setTab] = useState<HomeEshopTab>("new");
+  const [dealIdx, setDealIdx] = useState(0);
+
+  const sortedNewest = useMemo(
+    () => [...products].sort((a, b) => b.id - a.id),
+    [products],
+  );
+
+  const onSale = useMemo(
+    () =>
+      sortedNewest
+        .filter((p) => savingsAmount(p) != null)
+        .sort((a, b) => (savingsAmount(b) ?? 0) - (savingsAmount(a) ?? 0)),
+    [sortedNewest],
+  );
+
+  const bestDeals = useMemo(() => {
+    const withSave = onSale.slice(0, 8);
+    if (withSave.length > 0) return withSave;
+    return sortedNewest.slice(0, 6);
+  }, [onSale, sortedNewest]);
+
+  const topRated = useMemo(() => {
+    const winners = sortedNewest.filter((p) => {
+      const our = Number(p.price);
+      const comps = competitorPrices(p);
+      return comps.length > 0 && comps.every((c) => our <= c);
+    });
+    if (winners.length >= 6) return winners.slice(0, 10);
+    return sortedNewest
+      .filter((p) => (p.imageUrl || "").startsWith("/images/"))
+      .slice(0, 10);
+  }, [sortedNewest]);
+
+  const gridProducts = useMemo(() => {
+    const list =
+      tab === "new" ? sortedNewest : tab === "sale" ? (onSale.length ? onSale : sortedNewest) : topRated;
+    return list.slice(0, 10);
+  }, [tab, sortedNewest, onSale, topRated]);
+
+  useEffect(() => {
+    if (bestDeals.length < 2) return;
+    const t = window.setInterval(() => {
+      setDealIdx((i) => (i + 1) % bestDeals.length);
+    }, 6000);
+    return () => window.clearInterval(t);
+  }, [bestDeals.length]);
+
+  useEffect(() => {
+    setDealIdx(0);
+  }, [bestDeals.length]);
+
+  const deal = bestDeals[dealIdx] ?? bestDeals[0];
+  const tabs: { id: HomeEshopTab; label: string }[] = [
+    { id: "new", label: "Νέες αφίξεις" },
+    { id: "sale", label: "Σε προσφορά" },
+    { id: "top", label: "Κορυφαία" },
+  ];
+
+  return (
+    <div className="grid gap-5 lg:grid-cols-[minmax(240px,280px)_minmax(0,1fr)] lg:gap-6">
+      {/* Deals of the week */}
+      <aside className="flex flex-col border border-primary/35 bg-card/40">
+        <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
+          <h3 className="text-sm font-display font-bold text-foreground sm:text-base">
+            Προσφορές εβδομάδας
+          </h3>
+          <div className="flex items-center gap-0.5">
+            <button
+              type="button"
+              className="rounded p-1 text-muted-foreground hover:bg-primary/10 hover:text-primary disabled:opacity-40"
+              aria-label="Προηγούμενη προσφορά"
+              disabled={bestDeals.length < 2}
+              onClick={() =>
+                setDealIdx((i) => (i - 1 + bestDeals.length) % bestDeals.length)
+              }
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              className="rounded p-1 text-muted-foreground hover:bg-primary/10 hover:text-primary disabled:opacity-40"
+              aria-label="Επόμενη προσφορά"
+              disabled={bestDeals.length < 2}
+              onClick={() => setDealIdx((i) => (i + 1) % bestDeals.length)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        {deal ? (
+          <Link href={deal.slug ? `/eshop/${deal.slug}` : "/eshop"} className="flex flex-1 flex-col px-4 pb-2 pt-4">
+            <p className="text-2xl font-extrabold tabular-nums text-primary sm:text-3xl">
+              {formatPrice(deal.price)}
+            </p>
+            {compareAtPrice(deal) != null && (
+              <p className="mt-0.5 text-sm text-muted-foreground line-through">
+                {formatPrice(compareAtPrice(deal)!)}
+              </p>
+            )}
+            <p className="mt-2 line-clamp-2 text-sm font-semibold leading-snug text-foreground">
+              {deal.name}
+            </p>
+            <div className="relative mt-4 flex flex-1 items-center justify-center bg-white py-4">
+              {deal.imageUrl ? (
+                <img
+                  src={deal.imageUrl}
+                  alt={deal.name}
+                  className="max-h-52 w-full object-cover object-center sm:max-h-64"
+                  loading="lazy"
+                />
+              ) : (
+                <Package className="h-16 w-16 text-primary/25" />
+              )}
+            </div>
+          </Link>
+        ) : (
+          <div className="flex flex-1 items-center justify-center p-8 text-sm text-muted-foreground">
+            Δεν υπάρχουν προσφορές
+          </div>
+        )}
+
+        <div className="mt-auto grid grid-cols-2 divide-x divide-border/60 border-t border-border/60 text-xs font-medium">
+          <button
+            type="button"
+            className="flex items-center justify-center gap-1 px-2 py-3 text-muted-foreground hover:bg-primary/5 hover:text-primary disabled:opacity-40"
+            disabled={bestDeals.length < 2}
+            onClick={() =>
+              setDealIdx((i) => (i - 1 + bestDeals.length) % bestDeals.length)
+            }
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
+            Προηγούμενη
+          </button>
+          <button
+            type="button"
+            className="flex items-center justify-center gap-1 px-2 py-3 text-muted-foreground hover:bg-primary/5 hover:text-primary disabled:opacity-40"
+            disabled={bestDeals.length < 2}
+            onClick={() => setDealIdx((i) => (i + 1) % bestDeals.length)}
+          >
+            Επόμενη
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </aside>
+
+      {/* Tabs + grid */}
+      <div className="min-w-0 border border-border/50 bg-card/30">
+        <div className="flex flex-wrap items-end gap-x-6 gap-y-1 border-b border-border/60 px-3 sm:px-4">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              className={cn(
+                "relative -mb-px pb-3 pt-3 text-sm font-semibold transition-colors",
+                tab === t.id
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {t.label}
+              {tab === t.id && (
+                <span className="absolute inset-x-0 bottom-0 h-0.5 bg-primary" />
+              )}
+            </button>
+          ))}
+          <Link href="/eshop" className="ml-auto pb-3 pt-3 text-xs font-medium text-primary hover:underline">
+            Όλα τα προϊόντα
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-2 divide-x divide-y divide-border/40 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
+          {gridProducts.map((p) => (
+            <HomeEshopGridCard key={p.id} product={p} />
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
-function ProductSkeleton() {
+const GADGET_CATEGORIES: {
+  key: string;
+  label: string;
+  href: string;
+  icon: typeof Smartphone;
+  match: (p: Product) => boolean;
+}[] = [
+  {
+    key: "desktop",
+    label: "Desktop PC",
+    href: "/eshop?category=desktop",
+    icon: Monitor,
+    match: (p) => p.category === "desktop",
+  },
+  {
+    key: "laptop",
+    label: "Laptop",
+    href: "/eshop?category=laptop",
+    icon: Laptop,
+    match: (p) => p.category === "laptop",
+  },
+  {
+    key: "mobile",
+    label: "Κινητά",
+    href: "/eshop?tab=mobile",
+    icon: Smartphone,
+    match: (p) => p.category === "mobile",
+  },
+  {
+    key: "headphones",
+    label: "Ακουστικά",
+    href: "/eshop?tab=headphones",
+    icon: Headphones,
+    match: (p) =>
+      p.subcategory === "headphones" ||
+      /airpods|ακουστικ|earpod|headphone/i.test(p.name),
+  },
+  {
+    key: "accessory",
+    label: "Αξεσουάρ",
+    href: "/eshop",
+    icon: Package,
+    match: (p) =>
+      p.category === "accessory" ||
+      p.subcategory === "chargers" ||
+      p.subcategory === "cases" ||
+      p.subcategory === "screen-protectors",
+  },
+];
+
+function HomeGadgetsAccessories({ products }: { products: Product[] }) {
+  const [activeCat, setActiveCat] = useState(GADGET_CATEGORIES[2]?.key ?? "mobile");
+  const addItem = useCartStore((s) => s.addItem);
+  const { toast } = useToast();
+
+  const active = GADGET_CATEGORIES.find((c) => c.key === activeCat) ?? GADGET_CATEGORIES[0];
+
+  const stripProducts = useMemo(() => {
+    const list = products.filter(active.match).sort((a, b) => b.id - a.id);
+    if (list.length >= 4) return list.slice(0, 8);
+    // fallback: newest overall so the strip is never empty
+    return [...products].sort((a, b) => b.id - a.id).slice(0, 8);
+  }, [products, active]);
+
   return (
-    <div className="bg-card pcb-border rounded-2xl overflow-hidden">
-      <Skeleton className="h-44 sm:h-52 w-full bg-white/5" />
-      <div className="p-4 space-y-3">
-        <Skeleton className="h-5 w-3/4 bg-white/5" />
-        <Skeleton className="h-9 w-full bg-white/5 mt-2" />
+    <div className="overflow-hidden rounded-2xl border border-border/50 bg-card/40 lg:grid lg:grid-cols-[minmax(220px,280px)_minmax(0,1fr)]">
+      {/* Category sidebar */}
+      <aside className="border-b border-border/50 bg-background/80 px-5 py-6 lg:border-b-0 lg:border-r lg:border-border/50">
+        <h3 className="mb-5 max-w-[14rem] text-lg font-display font-bold leading-snug text-foreground sm:text-xl">
+          Gadgets &amp; αξεσουάρ σήμερα
+        </h3>
+        <ul className="space-y-0.5">
+          {GADGET_CATEGORIES.map((cat) => {
+            const Icon = cat.icon;
+            const selected = cat.key === activeCat;
+            return (
+              <li key={cat.key}>
+                <button
+                  type="button"
+                  onClick={() => setActiveCat(cat.key)}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-sm transition-colors",
+                    selected
+                      ? "bg-primary/10 font-semibold text-primary"
+                      : "text-muted-foreground hover:bg-muted/40 hover:text-foreground",
+                  )}
+                >
+                  <Icon className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
+                  <span className="flex-1">{cat.label}</span>
+                  <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-50" aria-hidden />
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+        <Link href={active.href}>
+          <span className="mt-5 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
+            Δες όλα <ChevronRight className="h-3.5 w-3.5" />
+          </span>
+        </Link>
+      </aside>
+
+      {/* Horizontal product strip */}
+      <div
+        className="relative min-w-0 bg-muted/20 px-4 py-5 sm:px-6 sm:py-6"
+        style={{
+          backgroundImage:
+            "radial-gradient(ellipse at 80% 20%, rgba(0,210,200,0.08), transparent 55%)",
+        }}
+      >
+        <div className="-mx-1 flex gap-4 overflow-x-auto pb-2 pt-1 scrollbar-thin snap-x snap-mandatory">
+          {stripProducts.map((product) => (
+            <article
+              key={product.id}
+              className="group relative flex w-[160px] shrink-0 snap-start flex-col rounded-xl border border-border/40 bg-card p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-md sm:w-[180px]"
+            >
+              <Link href={product.slug ? `/eshop/${product.slug}` : "/eshop"} className="flex flex-1 flex-col">
+                <div className="relative mb-3 aspect-square w-full overflow-hidden rounded-lg bg-white">
+                  {product.imageUrl ? (
+                    <img
+                      src={product.imageUrl}
+                      alt={product.name}
+                      className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.04]"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center">
+                      <Package className="h-10 w-10 text-primary/25" />
+                    </div>
+                  )}
+                </div>
+                <p className="text-center text-lg font-extrabold tabular-nums text-primary">
+                  {formatPrice(product.price)}
+                </p>
+                <h4 className="mt-1 line-clamp-2 min-h-[2.5rem] text-center text-xs font-medium leading-snug text-muted-foreground group-hover:text-foreground">
+                  {product.name}
+                </h4>
+              </Link>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-3 h-9 w-full border-primary/40 text-xs font-semibold text-primary opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-primary/10 hover:text-primary"
+                onClick={() => {
+                  addItem(product);
+                  toast({
+                    title: "Προστέθηκε στο καλάθι",
+                    description: product.name,
+                    duration: 2500,
+                  });
+                }}
+              >
+                <ShoppingCart className="mr-1.5 h-3.5 w-3.5" />
+                Προσθήκη
+              </Button>
+            </article>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -197,8 +506,7 @@ function ProductSkeleton() {
 
 export default function Home() {
   const { data: productsData, isLoading: productsLoading } = useProducts();
-
-  const categoryGroups = Array.isArray(productsData) ? pickTwoPerCategory(productsData) : [];
+  const products = Array.isArray(productsData) ? productsData : [];
 
   return (
     <div className="min-h-screen bg-background relative overflow-x-hidden">
@@ -337,62 +645,39 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Προϊόντα eShop — 2 ανά κατηγορία, αμέσως μετά το hero ── */}
-        <section className="container mx-auto px-4 pt-4 pb-10 lg:pt-2 lg:pb-12" aria-label="Προϊόντα eShop ανά κατηγορία">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl lg:text-3xl font-display font-bold text-foreground mb-1">
-                Από το eShop
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Δύο επιλογές από κάθε κατηγορία
-              </p>
-            </div>
-            <Link href="/eshop">
-              <span className="text-sm text-primary font-medium flex items-center gap-0.5 cursor-pointer hover:gap-1 transition-all">
-                Όλα τα προϊόντα <ChevronRight className="w-4 h-4" />
-              </span>
-            </Link>
+        {/* ── Από το eShop — deals sidebar + tabbed product grid ── */}
+        <section className="container mx-auto px-4 pt-4 pb-10 lg:pt-2 lg:pb-12" aria-label="Από το eShop">
+          <div className="mb-5">
+            <h2 className="mb-1 text-2xl font-display font-bold text-foreground lg:text-3xl">
+              Από το eShop
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Προσφορές εβδομάδας, νέες αφίξεις και κορυφαίες επιλογές
+            </p>
           </div>
 
           {productsLoading ? (
-            <div className="space-y-8">
-              {[1, 2, 3].map((g) => (
-                <div key={g}>
-                  <Skeleton className="h-6 w-32 mb-4 bg-white/5" />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <ProductSkeleton />
-                    <ProductSkeleton />
-                  </div>
-                </div>
-              ))}
+            <div className="grid gap-5 lg:grid-cols-[280px_1fr]">
+              <Skeleton className="h-[420px] w-full bg-white/5" />
+              <Skeleton className="h-[420px] w-full bg-white/5" />
             </div>
-          ) : categoryGroups.length > 0 ? (
-            <div className="space-y-10">
-              {categoryGroups.map((group) => (
-                <div key={group.key}>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-display font-bold text-foreground">{group.label}</h3>
-                    <Link href={group.href}>
-                      <span className="text-sm text-primary font-medium flex items-center gap-0.5 cursor-pointer">
-                        Περισσότερα <ChevronRight className="w-4 h-4" />
-                      </span>
-                    </Link>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {group.products.map((product) => (
-                      <HomeProductCard key={product.id} product={product} />
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+          ) : products.length > 0 ? (
+            <HomeEshopShowcase products={products} />
           ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <div className="py-12 text-center text-muted-foreground">
+              <Package className="mx-auto mb-3 h-12 w-12 opacity-50" />
               <p>Δεν υπάρχουν προϊόντα προς το παρόν</p>
             </div>
           )}
+        </section>
+
+        {/* ── Gadgets & αξεσουάρ — category sidebar + horizontal cards ── */}
+        <section className="container mx-auto px-4 pb-10 lg:pb-12" aria-label="Gadgets και αξεσουάρ">
+          {productsLoading ? (
+            <Skeleton className="h-[280px] w-full rounded-2xl bg-white/5" />
+          ) : products.length > 0 ? (
+            <HomeGadgetsAccessories products={products} />
+          ) : null}
         </section>
 
         {/* ── Highlights bar ── */}

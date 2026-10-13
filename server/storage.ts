@@ -258,10 +258,15 @@ export class DatabaseStorage implements IStorage {
     const conditions = [];
     if (category) conditions.push(eq(products.category, category));
     if (subcategory) conditions.push(eq(products.subcategory, subcategory));
+    // Newest first so recently added catalog items appear at the top of eShop/home
     if (conditions.length > 0) {
-      return await db.select().from(products).where(and(...conditions));
+      return await db
+        .select()
+        .from(products)
+        .where(and(...conditions))
+        .orderBy(desc(products.id));
     }
-    return await db.select().from(products);
+    return await db.select().from(products).orderBy(desc(products.id));
   }
 
   async getProduct(id: number): Promise<Product | undefined> {

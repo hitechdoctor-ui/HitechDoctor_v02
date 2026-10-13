@@ -554,11 +554,16 @@ export function Navbar() {
             )}
           </button>
 
-          {/* Mobile Menu */}
+          {/* Mobile Menu — thicker icon + bordered chip so it reads clearly on phones */}
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden" aria-label="Άνοιγμα μενού πλοήγησης">
-                <Menu className="w-5 h-5" />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden h-11 w-11 rounded-xl border-2 border-foreground/30 bg-background/90 text-foreground shadow-sm hover:border-primary hover:bg-primary/10 hover:text-primary"
+                aria-label="Άνοιγμα μενού πλοήγησης"
+              >
+                <Menu className="h-7 w-7" strokeWidth={2.75} aria-hidden />
               </Button>
             </SheetTrigger>
             <SheetContent

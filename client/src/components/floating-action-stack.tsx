@@ -4,7 +4,7 @@ import { RepairChatbot } from "@/components/repair-chatbot";
 
 /**
  * Κάθετη στήλη FAB: προσβασιμότητα + AI Doctor (RepairChatbot σε όλες τις δημόσιες σελίδες).
- * Στο eShop το κουμπί φίλτρων έχει z-[154] — `elevateZForOverlay` ανεβάζει τη στήλη ώστε το chat να μην καλύπτεται.
+ * Στο eShop το κουμπί φίλτρων είναι z-[170] και πιο ψηλά από chat/accessibility — `elevateZForOverlay` κρατά τη στήλη πάνω από άλλα overlays.
  */
 export function FloatingActionStack({
   showRepairChat = true,

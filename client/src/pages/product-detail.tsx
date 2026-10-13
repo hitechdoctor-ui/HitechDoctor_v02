@@ -471,9 +471,7 @@ export default function ProductDetail() {
                 className={cn(
                   "group aspect-square rounded-2xl overflow-hidden pcb-border relative select-none flex items-center justify-center",
                   isYouTubeUrl(gallery[activeImg] || "") ? "" : "cursor-zoom-in",
-                  isPhoneGallery
-                    ? "bg-gradient-to-br from-zinc-900 via-zinc-950 to-black"
-                    : "bg-card"
+                  isPhoneGallery ? "bg-white" : "bg-card"
                 )}
                 onClick={() => gallery.length > 0 && !isYouTubeUrl(gallery[activeImg] || "") && setLightboxOpen(true)}
                 data-testid="product-main-image"
@@ -496,14 +494,10 @@ export default function ProductDetail() {
                         src={gallery[activeImg]}
                         alt={buildImageAlt(gallery[activeImg], product.name)}
                         className={cn(
-                          "transition-transform duration-300",
-                          isRefurbishedIphone
-                            ? "h-[85%] w-auto max-w-[92%] object-contain group-hover:scale-[1.03]"
-                            : isMobileGallery
-                              ? "w-full h-full object-contain object-center group-hover:scale-[1.02]"
-                            : isPhoneGallery
-                              ? "w-full h-full object-contain p-6 sm:p-8 group-hover:scale-[1.03]"
-                              : "w-full h-full object-cover group-hover:scale-105"
+                          "w-full h-full transition-transform duration-300",
+                          isPhoneGallery
+                            ? "object-cover object-center group-hover:scale-[1.02]"
+                            : "object-cover group-hover:scale-105"
                         )}
                         loading="eager"
                         decoding="async"
@@ -511,12 +505,7 @@ export default function ProductDetail() {
                         height="800"
                       />
                       {/* Zoom overlay */}
-                      <div className={cn(
-                        "absolute inset-0 flex items-end justify-end p-4 opacity-0 group-hover:opacity-100 transition-opacity",
-                        isRefurbishedIphone
-                          ? "bg-gradient-to-t from-black/10 to-transparent"
-                          : "bg-gradient-to-t from-black/30 to-transparent"
-                      )}>
+                      <div className="absolute inset-0 flex items-end justify-end p-4 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-t from-black/20 to-transparent">
                         <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-sm rounded-lg px-3 py-1.5">
                           <ZoomIn className="w-4 h-4 text-white" />
                           <span className="text-white text-xs font-medium">Μεγέθυνση</span>
@@ -562,16 +551,7 @@ export default function ProductDetail() {
                         <img
                           src={thumbSrc}
                           alt={buildImageAlt(src, product.name)}
-                          className={cn(
-                            "w-full h-full",
-                            isRefurbishedIphone
-                              ? "object-contain p-2"
-                              : isMobileGallery
-                                ? "object-contain"
-                              : isPhoneGallery
-                                ? "object-contain p-1"
-                                : "object-cover"
-                          )}
+                          className="w-full h-full object-cover object-center"
                           loading="lazy"
                           decoding="async"
                           width="200"

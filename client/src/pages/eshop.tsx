@@ -219,7 +219,8 @@ interface Tab {
   icon: React.ElementType;
 }
 
-const TABS: Tab[] = [
+/** Tabs για κινητά + αξεσουάρ (χωρίς Laptop/Desktop) */
+const PHONE_ACCESSORY_TABS: Tab[] = [
   { id: "", label: "Όλα", icon: Package },
   { id: "mobile", label: "Κινητά", icon: Smartphone },
   { id: "refurbished-iphones", label: "Refurbished iPhone", icon: Sparkles },
@@ -227,9 +228,15 @@ const TABS: Tab[] = [
   { id: "cases", label: "Θήκες", icon: Smartphone },
   { id: "chargers", label: "Φορτιστές & Καλώδια", icon: Cable },
   { id: "headphones", label: "Ασύρματα ακουστικά", icon: Headphones },
+];
+
+const COMPUTER_TABS: Tab[] = [
   { id: "laptop", label: "Laptop", icon: Laptop },
   { id: "desktop", label: "Desktop PC", icon: Monitor },
 ];
+
+/** Γρήγορη επιλογή μάρκας στα κινητά (αντί για Laptop/Desktop στο ίδιο μενού) */
+const MOBILE_BRAND_QUICK = ["Apple", "Samsung", "Xiaomi", "Redmi", "POCO"] as const;
 
 const SUBCATEGORY_LABELS: Record<string, string> = {
   "screen-protectors": "Τζάμι Προστασίας",
@@ -863,6 +870,21 @@ export default function EShop() {
     activeTab === "chargers" ||
     activeTab === "headphones";
 
+  /** Στα κινητά/αξεσουάρ δεν δείχνουμε Laptop/Desktop — μόνο όταν είμαστε ήδη σε υπολογιστές ή στο «Όλα». */
+  const visibleTabs = useMemo(() => {
+    if (isComputerTab) {
+      return [
+        { id: "mobile" as TabId, label: "Κινητά", icon: Smartphone },
+        ...COMPUTER_TABS,
+      ];
+    }
+    if (isMobileTab || isRefurbishedTab || isSubcategoryTab) {
+      return PHONE_ACCESSORY_TABS;
+    }
+    // tab === "" (Όλα): κινητά + αξεσουάρ + υπολογιστές
+    return [...PHONE_ACCESSORY_TABS, ...COMPUTER_TABS];
+  }, [isComputerTab, isMobileTab, isRefurbishedTab, isSubcategoryTab]);
+
   const fetchCategory = isMobileTab
     ? "mobile"
     : isRefurbishedTab
@@ -884,7 +906,7 @@ export default function EShop() {
   // The variant picker on the product detail page remains separate functionality.
   const products = useMemo(() => {
     if (!allProducts) return [];
-    return allProducts.filter((p) => {
+    const filtered = allProducts.filter((p) => {
       const pp = p as any;
       
       // Search filter - match against name, description, brand, category, subcategory
@@ -916,6 +938,8 @@ export default function EShop() {
       if (filterFormFactor && getDesktopFormFactor(p.name) !== filterFormFactor) return false;
       return true;
     });
+    // Newest catalog entries first (highest id = last ones we added)
+    return filtered.sort((a, b) => b.id - a.id);
   }, [allProducts, debouncedSearch, filterBrand, filterColor, filterStorage, filterGrade, filterCpuFamily, filterCpuGen, filterScreenSize, filterRamType, filterRamSize, filterFormFactor]);
 
   const isScreenProtector = (p: Product) => p.subcategory === "screen-protectors";
@@ -1040,22 +1064,60 @@ export default function EShop() {
         </div>
 
         {/* ── Category tabs ── */}
-        <div className="flex flex-wrap gap-2 mb-8 p-2 bg-card/50 rounded-xl border border-border w-fit">
-          {TABS.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => handleTabChange(id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                activeTab === id
-                  ? "bg-primary text-primary-foreground shadow-[0_0_14px_rgba(0,210,200,0.35)]"
-                  : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
-              }`}
-              data-testid={`tab-${id || "all"}`}
-            >
-              <Icon className="w-4 h-4" />
-              {label}
-            </button>
-          ))}
+        <div className="flex flex-col gap-2 mb-8">
+          <div className="flex flex-wrap gap-2 p-2 bg-card/50 rounded-xl border border-border w-fit">
+            {visibleTabs.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id || "all"}
+                onClick={() => handleTabChange(id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  activeTab === id
+                    ? "bg-primary text-primary-foreground shadow-[0_0_14px_rgba(0,210,200,0.35)]"
+                    : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                }`}
+                data-testid={`tab-${id || "all"}`}
+              >
+                <Icon className="w-4 h-4" />
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Στα Κινητά: γρήγορες μάρκες αντί για Laptop/Desktop */}
+          {isMobileTab && (
+            <div className="flex flex-wrap gap-2 p-2 bg-card/50 rounded-xl border border-border w-fit">
+              <span className="flex items-center px-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                Μάρκες
+              </span>
+              <button
+                type="button"
+                onClick={() => setFilterBrand("")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  !filterBrand
+                    ? "bg-primary/20 text-primary border border-primary/40"
+                    : "text-muted-foreground hover:bg-white/5 border border-transparent"
+                }`}
+                data-testid="tab-brand-all"
+              >
+                Όλες
+              </button>
+              {MOBILE_BRAND_QUICK.map((brand) => (
+                <button
+                  key={brand}
+                  type="button"
+                  onClick={() => setFilterBrand(filterBrand === brand ? "" : brand)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    filterBrand === brand
+                      ? "bg-primary/20 text-primary border border-primary/40"
+                      : "text-muted-foreground hover:bg-white/5 border border-transparent"
+                  }`}
+                  data-testid={`tab-brand-${brand.toLowerCase()}`}
+                >
+                  {brand}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* ── Mobile filters ── */}
@@ -1194,7 +1256,7 @@ export default function EShop() {
             onClick={() => setFilterDrawerOpen(true)}
             aria-label="Φίλτρα αναζήτησης"
             data-testid="button-filter-drawer"
-            className="fixed right-4 z-[152] w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform duration-200 hover:scale-110 active:scale-95 group bottom-[calc(5.25rem+env(safe-area-inset-bottom)+3.75rem)] sm:bottom-24 sm:right-6"
+            className="fixed right-4 z-[170] w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform duration-200 hover:scale-110 active:scale-95 group bottom-[calc(5.25rem+env(safe-area-inset-bottom)+8rem)] sm:bottom-40 sm:right-6"
             style={{
               background:
                 activeFiltersCount > 0

@@ -1,78 +1,86 @@
 #!/usr/bin/env tsx
 /**
- * Update iPhone 18 Pro Max products with correct images and descriptions
+ * Update iPhone 18 Pro Max products with correct local images and descriptions.
+ * Prefers seed rows that have /images/… (not placehold.co).
  */
 
-import 'dotenv/config';
-import { db } from '../server/db.js';
-import { products } from '../shared/schema.js';
-import { eq } from 'drizzle-orm';
-import rawData from '../server/seed-data/products.json' assert { type: 'json' };
+import "dotenv/config";
+import { db } from "../server/db.js";
+import { products } from "../shared/schema.js";
+import { eq } from "drizzle-orm";
+import rawData from "../server/seed-data/products.json" assert { type: "json" };
+
+function isLocalImage(url: string | undefined | null): boolean {
+  return typeof url === "string" && url.startsWith("/images/");
+}
 
 async function updateIPhone18ProMax() {
   try {
-    console.log('🔄 Updating iPhone 18 Pro Max products...\n');
-    
-    // Find the products in seed data
-    const iphone18ProMaxProducts = rawData.filter((p: any) => 
-      p.name.includes('iPhone 18 Pro Max') && 
-      (p.name.includes('Black') || p.name.includes('Glacier'))
-    );
-    
-    console.log(`Found ${iphone18ProMaxProducts.length} products in seed data\n`);
-    
-    for (const seedProduct of iphone18ProMaxProducts as any[]) {
+    console.log("🔄 Updating iPhone 18 Pro Max products...\n");
+
+    const byName = new Map<string, any>();
+    for (const p of rawData as any[]) {
+      if (!p?.name?.includes("iPhone 18 Pro Max")) continue;
+      if (!p.name.includes("Black") && !p.name.includes("Glacier")) continue;
+      const img = p.image_url || p.images?.[0];
+      const prev = byName.get(p.name);
+      // Prefer entries with local gallery images
+      if (!prev || (isLocalImage(img) && !isLocalImage(prev.image_url || prev.images?.[0]))) {
+        byName.set(p.name, p);
+      }
+    }
+
+    const list = Array.from(byName.values());
+    console.log(`Found ${list.length} product(s) to sync\n`);
+
+    for (const seedProduct of list) {
       console.log(`📝 Updating: ${seedProduct.name}`);
-      
-      // Find existing product by name
-      const existing = await db.select()
+      const images: string[] = Array.isArray(seedProduct.images)
+        ? seedProduct.images
+        : seedProduct.image_url
+          ? [seedProduct.image_url]
+          : [];
+      const imageUrl = seedProduct.image_url || images[0] || null;
+
+      const existing = await db
+        .select()
         .from(products)
         .where(eq(products.name, seedProduct.name))
         .limit(1);
-      
+
+      const values = {
+        description: seedProduct.description,
+        fullDescription: seedProduct.full_description ?? null,
+        price: String(seedProduct.price),
+        category: seedProduct.category,
+        subcategory: seedProduct.subcategory || null,
+        slug: seedProduct.slug,
+        imageUrl,
+        images: images.length ? images : null,
+        brand: seedProduct.brand,
+        color: seedProduct.color,
+        storage: seedProduct.storage,
+        variantGroup: seedProduct.variant_group ?? "device-catalog",
+        hidePriceComparison: seedProduct.hide_price_comparison || false,
+        preOrder: false,
+        compatibleModels: null as string[] | null,
+        ram: "12GB",
+      };
+
       if (existing.length === 0) {
-        console.log(`  ➕ Product not found, inserting...`);
-        await db.insert(products).values({
-          name: seedProduct.name,
-          description: seedProduct.description,
-          fullDescription: seedProduct.full_description,
-          price: String(seedProduct.price),
-          category: seedProduct.category,
-          subcategory: seedProduct.subcategory || null,
-          slug: seedProduct.slug,
-          imageUrl: seedProduct.images?.[0] || null,
-          images: seedProduct.images || null,
-          brand: seedProduct.brand,
-          color: seedProduct.color,
-          storage: seedProduct.storage,
-          variantGroup: seedProduct.variant_group,
-          hidePriceComparison: seedProduct.hide_price_comparison || false,
-          preOrder: false,
-          compatibleModels: null,
-          ram: '12GB',
-        });
-        console.log(`  ✅ Inserted\n`);
+        console.log("  ➕ Inserting...");
+        await db.insert(products).values(values);
+        console.log("  ✅ Inserted\n");
       } else {
-        console.log(`  🔄 Product exists (ID: ${existing[0].id}), updating...`);
-        await db.update(products)
-          .set({
-            description: seedProduct.description,
-            fullDescription: seedProduct.full_description,
-            price: String(seedProduct.price),
-            imageUrl: seedProduct.images?.[0] || null,
-            images: seedProduct.images || null,
-            variantGroup: seedProduct.variant_group,
-            hidePriceComparison: seedProduct.hide_price_comparison || false,
-            ram: '12GB',
-          })
-          .where(eq(products.id, existing[0].id));
-        console.log(`  ✅ Updated\n`);
+        console.log(`  🔄 Updating ID ${existing[0].id}...`);
+        await db.update(products).set(values).where(eq(products.id, existing[0].id));
+        console.log("  ✅ Updated\n");
       }
     }
-    
-    console.log('✅ All iPhone 18 Pro Max products updated successfully!');
+
+    console.log("✅ iPhone 18 Pro Max products updated!");
   } catch (error) {
-    console.error('❌ Error updating products:', error);
+    console.error("❌ Error updating products:", error);
     process.exit(1);
   } finally {
     process.exit(0);

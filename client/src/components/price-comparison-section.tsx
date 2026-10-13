@@ -3,9 +3,7 @@ import type { Product } from "@shared/schema";
 const formatPrice = (p: string | number) =>
   new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR" }).format(Number(p));
 
-const MISSING_PRICE = "-- €";
-
-/** Order: Skroutz, BestPrice, Kotsovolos */
+/** Order: Skroutz, BestPrice, Kotsovolos — only shown when price exists */
 const STORES: {
   key: "skroutz" | "bestprice" | "kotsovolos";
   label: string;
@@ -32,15 +30,18 @@ export function PriceComparisonSection({ product }: { product: Product }) {
   const our = Number(product.price);
   if (!Number.isFinite(our)) return null;
 
+  // Only stores with a real price — no "-- €" placeholders for missing shops
   const rows = STORES.map((s) => ({
     ...s,
     price: priceFor(product, s.key),
-  }));
+  })).filter((r): r is (typeof STORES)[number] & { price: number } => r.price != null);
 
-  const competitorValues = rows.map((r) => r.price).filter((p): p is number => p != null);
-  const minCompetitor = competitorValues.length ? Math.min(...competitorValues) : null;
-  const weAreLowest =
-    competitorValues.length > 0 && minCompetitor != null && our <= minCompetitor;
+  // No competitor prices at all → hide entire Price Comparison block
+  if (rows.length === 0) return null;
+
+  const competitorValues = rows.map((r) => r.price);
+  const minCompetitor = Math.min(...competitorValues);
+  const weAreLowest = our <= minCompetitor;
 
   const last = product.lastPriceUpdate
     ? new Intl.DateTimeFormat("en-GB", {
@@ -77,24 +78,21 @@ export function PriceComparisonSection({ product }: { product: Product }) {
           <span className="text-base font-extrabold tabular-nums text-primary sm:text-lg">{formatPrice(our)}</span>
         </div>
 
-        {rows.map((row) => {
-          const p = row.price;
-          return (
-            <div
-              key={row.key}
-              className="flex min-w-[7.5rem] flex-1 flex-col justify-between rounded-lg border border-white/15 bg-background/60 px-3 py-2.5 sm:max-w-[11rem] sm:flex-initial"
+        {rows.map((row) => (
+          <div
+            key={row.key}
+            className="flex min-w-[7.5rem] flex-1 flex-col justify-between rounded-lg border border-white/15 bg-background/60 px-3 py-2.5 sm:max-w-[11rem] sm:flex-initial"
+          >
+            <span
+              className={`inline-flex w-fit max-w-full items-center justify-center rounded px-2 py-0.5 text-[10px] font-bold ${row.className}`}
             >
-              <span
-                className={`inline-flex w-fit max-w-full items-center justify-center rounded px-2 py-0.5 text-[10px] font-bold ${row.className}`}
-              >
-                {row.label}
-              </span>
-              <span className="text-base font-semibold tabular-nums text-foreground sm:text-lg">
-                {p != null ? formatPrice(p) : MISSING_PRICE}
-              </span>
-            </div>
-          );
-        })}
+              {row.label}
+            </span>
+            <span className="text-base font-semibold tabular-nums text-foreground sm:text-lg">
+              {formatPrice(row.price)}
+            </span>
+          </div>
+        ))}
       </div>
 
       <p className="text-[10px] text-muted-foreground/70 leading-relaxed">

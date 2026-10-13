@@ -277,17 +277,6 @@
       "image_url": "/images/iphone-17-pro-max-256gb-cosmic-orange-back-front.webp"
     },
     {
-      "name": "Apple iPhone 18 Pro (12/256GB) Black",
-      "price": 1379,
-      "category": "mobile",
-      "brand": "Apple",
-      "ram": "12GB",
-      "storage": "256GB",
-      "color": "Black",
-      "slug": "apple-iphone-18-pro-12-256gb-black",
-      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Apple%20iPhone%2018%20Pro%20(12%2F256GB)%20Black"
-    },
-    {
       "name": "Apple iPhone 18 Pro (12/256GB) Burgundy",
       "price": 1529,
       "category": "mobile",
@@ -318,58 +307,76 @@
     },
     {
       "name": "Apple iPhone 18 Pro Max (12/256GB) Black",
-      "price": 1550,
+      "price": 1376,
+      "retail_price": 1720,
       "category": "mobile",
       "brand": "Apple",
       "ram": "12GB",
       "storage": "256GB",
       "color": "Black",
       "slug": "apple-iphone-18-pro-max-12-256gb-black",
-      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Apple%20iPhone%2018%20Pro%20Max%20(12%2F256GB)%20Black"
+      "image_url": "/images/iphone-18-pro-max/black-01.png",
+      "images": [
+        "/images/iphone-18-pro-max/black-01.png",
+        "/images/iphone-18-pro-max/black-02.png",
+        "/images/iphone-18-pro-max/black-03.jpg",
+        "https://www.youtube.com/watch?v=FaFL2JDqq9w"
+      ]
     },
     {
       "name": "Apple iPhone 18 Pro Max (12/256GB) Glacier",
-      "price": 1555,
+      "price": 1376,
+      "retail_price": 1720,
       "category": "mobile",
       "brand": "Apple",
       "ram": "12GB",
       "storage": "256GB",
       "color": "Glacier",
       "slug": "apple-iphone-18-pro-max-12-256gb-glacier",
-      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Apple%20iPhone%2018%20Pro%20Max%20(12%2F256GB)%20Glacier"
+      "image_url": "/images/iphone-18-pro-max/glacier-01.png",
+      "images": [
+        "/images/iphone-18-pro-max/glacier-01.png",
+        "/images/iphone-18-pro-max/glacier-02.png",
+        "/images/iphone-18-pro-max/glacier-03.png",
+        "/images/iphone-18-pro-max/glacier-04.png",
+        "https://www.youtube.com/watch?v=FaFL2JDqq9w"
+      ]
     },
     {
       "name": "Samsung Galaxy A16 4GB/128GB - Black",
-      "price": 138,
+      "price": 130,
+      "retail_price": 175,
       "category": "mobile",
       "brand": "Samsung",
       "ram": "4GB",
       "storage": "128GB",
       "color": "Black",
       "slug": "samsung-galaxy-a16-4gb-128gb-black",
-      "image_url": "https://b.scdn.gr/images/sku_main_images/057685/57685129/20241218164946_samsung_galaxy_a16_4g_dual_sim_4gb_128gb_black.jpeg"
+      "image_url": "/images/samsung-galaxy-a16/black-01.jpg",
+      "images": [
+        "/images/samsung-galaxy-a16/black-01.jpg",
+        "/images/samsung-galaxy-a16/black-03.jpg",
+        "/images/samsung-galaxy-a16/black-02.jpg",
+        "/images/samsung-galaxy-a16/black-04.jpg"
+      ]
     },
     {
       "name": "Samsung Galaxy A17 4G 4GB/128GB - Gray",
-      "price": 146,
+      "price": 141,
+      "retail_price": 190,
       "category": "mobile",
       "brand": "Samsung",
       "ram": "4GB",
       "storage": "128GB",
       "color": "Gray",
       "slug": "samsung-galaxy-a17-4g-4gb-128gb-gray",
-      "image_url": "https://d.scdn.gr/images/sku_main_images/063015/63015056/xlarge_20250915123740_samsung_galaxy_a17_4g_dual_sim_4gb_128gb_mayro.jpeg"
-    },
-    {
-      "name": "Samsung Galaxy A17 4G 4GB/128GB - Black",
-      "price": 146,
-      "category": "mobile",
-      "brand": "Samsung",
-      "ram": "4GB",
-      "storage": "128GB",
-      "color": "Black",
-      "slug": "samsung-galaxy-a17-4g-4gb-128gb-black",
-      "image_url": "https://d.scdn.gr/images/sku_main_images/063015/63015056/xlarge_20250915123740_samsung_galaxy_a17_4g_dual_sim_4gb_128gb_mayro.jpeg"
+      "image_url": "/images/samsung-galaxy-a17/gray-01.jpg",
+      "images": [
+        "/images/samsung-galaxy-a17/gray-01.jpg",
+        "/images/samsung-galaxy-a17/gray-03.jpg",
+        "/images/samsung-galaxy-a17/gray-02.jpg",
+        "/images/samsung-galaxy-a17/gray-04.jpg"
+      ]
     },
     {
       "name": "Samsung Galaxy A27 5G Dual SIM (6/128GB) Black",
@@ -384,14 +391,24 @@
     },
     {
       "name": "Samsung Galaxy A27 5G Dual SIM (8/256GB) Black",
-      "price": 243,
+      "price": 215,
+      "retail_price": 290,
       "category": "mobile",
       "brand": "Samsung",
       "ram": "8GB",
       "storage": "256GB",
       "color": "Black",
       "slug": "samsung-galaxy-a27-5g-dual-sim-8-256gb-black",
-      "image_url": "https://d.scdn.gr/images/sku_main_images/059363/59363684/xlarge_20250321104230_samsung_galaxy_a26_5g_dual_sim_6gb_128gb_black.jpeg"
+      "image_url": "/images/samsung-galaxy-a27/black-01.jpg",
+      "images": [
+        "/images/samsung-galaxy-a27/black-01.jpg",
+        "/images/samsung-galaxy-a27/black-03.jpg",
+        "/images/samsung-galaxy-a27/black-02.jpg"
+      ],
+      "price_skroutz": "290.00",
+      "manual_skroutz": true,
+      "price_kotsovolos": "499.99",
+      "manual_kotsovolos": true
     },
     {
       "name": "Samsung Galaxy A37 5G 8GB/256GB - Awesome Charcoal",
@@ -422,14 +439,25 @@
     },
     {
       "name": "Samsung Galaxy A57 5G (8/256GB) Awesome Navy",
-      "price": 330,
+      "price": 311,
+      "retail_price": 420,
       "category": "mobile",
       "brand": "Samsung",
       "ram": "8GB",
       "storage": "256GB",
       "color": "Awesome Navy",
       "slug": "samsung-galaxy-a57-5g-8-256gb-awesome-navy",
-      "image_url": "https://placehold.co/600x600/e8eef5/334155/png?text=Samsung%20Galaxy%20A57%205G%20(8%2F256GB)%20Awesome%20Navy"
+      "image_url": "/images/samsung-galaxy-a57/awesome-navy-256-01.jpg",
+      "images": [
+        "/images/samsung-galaxy-a57/awesome-navy-256-01.jpg",
+        "/images/samsung-galaxy-a57/awesome-navy-256-03.jpg",
+        "/images/samsung-galaxy-a57/awesome-navy-256-02.jpg",
+        "/images/samsung-galaxy-a57/awesome-navy-256-04.jpg"
+      ],
+      "price_skroutz": "430.00",
+      "manual_skroutz": true,
+      "price_kotsovolos": "669.99",
+      "manual_kotsovolos": true
     },
     {
       "name": "Samsung Galaxy A57 5G (8/256GB) Awesome Gray",
