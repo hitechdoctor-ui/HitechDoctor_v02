@@ -2,6 +2,7 @@ import { createPortal } from "react-dom";
 import { Link, useLocation } from "wouter";
 import { Home, MessageCircle, ShoppingCart } from "lucide-react";
 import { requestOpenRepairChat } from "@/lib/repair-chat-events";
+import { BrandLogo } from "@/components/brand-logo";
 import { cn } from "@/lib/utils";
 
 function isRepairsPath(path: string): boolean {
@@ -45,7 +46,7 @@ export function MobileBottomNav() {
             isRepairsPath(loc) && "text-primary"
           )}
         >
-          <img src="/images/hitechdoctor-logo.png?v=3" alt="" className="h-5 w-5 shrink-0 object-contain" />
+          <BrandLogo decorative className="h-5 w-5 shrink-0" />
           <span className="text-[10px] font-semibold leading-tight">Επισκευές</span>
         </Link>
 

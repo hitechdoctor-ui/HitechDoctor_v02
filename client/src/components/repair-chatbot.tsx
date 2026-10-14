@@ -145,13 +145,23 @@ export function RepairChatbot() {
     clientContextRef.current = detectRepairChatClientContext(navigator.userAgent);
   }, []);
 
-  // ── Πρώτη είσοδος στη σελίδα: άνοιγμα chat μία φορά ανά session ──
+  // ── Πρώτη είσοδος: άνοιγμα chat μία φορά/session (όχι σε tool pages) ──
   useEffect(() => {
     try {
       if (sessionStorage.getItem(AUTO_OPEN_SESSION_KEY)) return;
     } catch {
       return;
     }
+
+    // Μην καλύπτεις εργαλεία (τζάμι, IMEI, IPSW, status) με overlay/chat
+    const path = loc.split("?")[0] || "";
+    const skipAutoOpen =
+      path.startsWith("/tools/") ||
+      path === "/services/imei-check" ||
+      path === "/services/ipsw-download" ||
+      path === "/check-status" ||
+      path.startsWith("/check-status/");
+    if (skipAutoOpen) return;
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const delay = reduceMotion ? 250 : 1100;
@@ -165,7 +175,7 @@ export function RepairChatbot() {
     }, delay);
 
     return () => clearTimeout(t);
-  }, [openPanel]);
+  }, [openPanel, loc]);
 
   // ── Scroll: χρώμα FAB + αυτόματο κλείσιμο του intro chat ──
   useEffect(() => {

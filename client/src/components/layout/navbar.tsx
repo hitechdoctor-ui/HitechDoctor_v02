@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { SiApple, SiSamsung, SiXiaomi, SiHuawei, SiOneplus } from "react-icons/si";
 import { NavbarPromoBar } from "@/components/layout/navbar-promo-bar";
+import { BrandLogo } from "@/components/brand-logo";
 import { SiViber } from "react-icons/si";
 import { buildViberUrl } from "@/lib/viber";
 import { cn } from "@/lib/utils";
@@ -194,7 +195,7 @@ export function Navbar() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105" aria-hidden="true">
-            <img src="/images/hitechdoctor-logo.png?v=3" alt="HitechDoctor Logo" className="w-full h-full object-contain" />
+            <BrandLogo className="h-full w-full" />
           </div>
           <div>
             <h1 className="text-xl font-display font-bold leading-none">
@@ -216,11 +217,10 @@ export function Navbar() {
               location === "/" ? "text-primary" : "text-muted-foreground"
             )}
           >
-            <img
-              src="/images/hitechdoctor-logo.png?v=3"
-              alt=""
+            <BrandLogo
+              decorative
               className={cn(
-                "w-4 h-4 object-contain transition-all duration-200",
+                "h-4 w-4 transition-all duration-200",
                 location === "/" && "scale-110 drop-shadow-[0_0_8px_rgba(239,68,68,0.9)]"
               )}
             />
@@ -590,11 +590,10 @@ export function Navbar() {
                     location === "/" ? "text-primary bg-primary/10" : "text-foreground"
                   )}
                 >
-                  <img
-                    src="/images/hitechdoctor-logo.png?v=3"
-                    alt=""
+                  <BrandLogo
+                    decorative
                     className={cn(
-                      "w-5 h-5 object-contain transition-all",
+                      "h-5 w-5 transition-all",
                       location === "/" && "drop-shadow-[0_0_8px_rgba(239,68,68,0.9)]"
                     )}
                   />

@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { PriceDisclaimer } from "@/components/price-disclaimer";
 import { RepairTrackerSection } from "@/components/repair-tracker-section";
+import { BrandLogo } from "@/components/brand-logo";
 import { Wrench, Package, Shield, Phone, Mail, MapPin, Facebook, Instagram, ExternalLink, Smartphone, Cable, Laptop, Monitor, Headphones, Sparkles } from "lucide-react";
 import { SiTiktok, SiViber } from "react-icons/si";
 import { buildViberUrl } from "@/lib/viber";
@@ -105,7 +106,7 @@ export function Footer() {
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2.5 mb-4 group" aria-label="HitechDoctor - Αρχική Σελίδα">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105" aria-hidden="true">
-                <img src="/images/hitechdoctor-logo.png?v=3" alt="HitechDoctor Logo" className="w-full h-full object-contain" />
+                <BrandLogo className="h-full w-full" />
               </div>
               <span className="text-xl font-display font-bold text-foreground">
                 <span className="text-primary">Hitech</span>Doctor

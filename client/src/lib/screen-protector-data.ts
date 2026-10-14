@@ -32,10 +32,11 @@ interface CatalogDevice {
 }
 
 function normalizeSearch(value: string): string {
+  // Avoid \\p{Diacritic} — fails in some older WebViews and breaks search on first keystroke.
   return value
     .toLowerCase()
     .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/[″"']/g, "")
     .replace(/[^a-z0-9\s]/g, " ")
     .replace(/\s+/g, " ")
