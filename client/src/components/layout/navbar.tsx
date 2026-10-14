@@ -194,7 +194,7 @@ export function Navbar() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105" aria-hidden="true">
-            <img src="/images/hitechdoctor-logo.png" alt="HitechDoctor Logo" className="w-full h-full object-contain" />
+            <img src="/images/hitechdoctor-logo.png?v=3" alt="HitechDoctor Logo" className="w-full h-full object-contain" />
           </div>
           <div>
             <h1 className="text-xl font-display font-bold leading-none">
@@ -217,7 +217,7 @@ export function Navbar() {
             )}
           >
             <img
-              src="/images/hitechdoctor-logo.png"
+              src="/images/hitechdoctor-logo.png?v=3"
               alt=""
               className={cn(
                 "w-4 h-4 object-contain transition-all duration-200",
@@ -591,7 +591,7 @@ export function Navbar() {
                   )}
                 >
                   <img
-                    src="/images/hitechdoctor-logo.png"
+                    src="/images/hitechdoctor-logo.png?v=3"
                     alt=""
                     className={cn(
                       "w-5 h-5 object-contain transition-all",

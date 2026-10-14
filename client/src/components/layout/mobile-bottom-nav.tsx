@@ -45,7 +45,7 @@ export function MobileBottomNav() {
             isRepairsPath(loc) && "text-primary"
           )}
         >
-          <img src="/images/hitechdoctor-logo.png" alt="" className="h-5 w-5 shrink-0 object-contain" />
+          <img src="/images/hitechdoctor-logo.png?v=3" alt="" className="h-5 w-5 shrink-0 object-contain" />
           <span className="text-[10px] font-semibold leading-tight">Επισκευές</span>
         </Link>
 
