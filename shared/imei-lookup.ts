@@ -11,7 +11,7 @@ export type ImeiLookupSuccess = {
   tac: string;
   /** Optional extra lines from provider */
   details?: string;
-  provider: "imei_info_v4" | "custom_url";
+  provider: "imei_info_v4" | "custom_url" | "tac_db";
 };
 
 export type ImeiLookupFailure = {

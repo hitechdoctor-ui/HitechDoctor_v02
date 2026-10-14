@@ -3,3 +3,7 @@ dist
 .env
 .DS_Store
 uploads/**/*.pdf
+# Cached free TAC database (~11MB, downloaded on first IMEI lookup)
+server/data/tac_full.csv
+server/data/tac_full.csv.tmp
+server/data/tac_learned.json

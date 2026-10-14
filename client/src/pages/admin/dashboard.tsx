@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Package, ShoppingCart, Users, Euro, Wrench,
+  Package, ShoppingCart, Users, Wrench, MessageSquare,
   Clock, CheckCircle2, XCircle, AlertCircle, Hash, Smartphone, Phone, Mail,
   Lock, Search, X, ExternalLink, Tag, Loader2,
 } from "lucide-react";
@@ -24,16 +24,13 @@ import {
 import {
   apiRequest,
   getAdminAuthHeaders,
-  QUERY_FINANCIAL_REPAIR_REVENUE,
   invalidateRepairFinancialQueries,
 } from "@/lib/queryClient";
-import { type RepairRequest, type Product, type ProductOfferInterest } from "@shared/schema";
+import { type RepairRequest, type Product, type ProductOfferInterest, type WebsiteInquiry } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import { AnalyticsDashboard } from "@/components/admin/analytics-dashboard";
-import { NotificationMonitor } from "@/components/admin/notification-monitor";
-
 // ── Status config ────────────────────────────────────────────────────────────
 const STATUSES = [
   { value: "pending", label: "Νέο", icon: AlertCircle, color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/30" },
@@ -394,7 +391,7 @@ function ProductOfferInterestsCustomersSection({
           <div>
             <CardTitle className="text-base font-display font-bold">Πελάτες eShop — Καλύτερη προσφορά</CardTitle>
             <CardDescription className="text-xs mt-0.5 max-w-xl">
-              Όνομα και κινητό από το eShop — η κάρτα «Πελάτες» πάνω δείχνει και πόσα τέτοια αιτήματα υπάρχουν.
+              Όνομα και κινητό από το eShop — συμπεριλαμβάνονται στην κάρτα «Φόρμες επικοινωνίας» πάνω.
             </CardDescription>
           </div>
         </div>
@@ -477,8 +474,6 @@ function ProductOfferInterestsCustomersSection({
 }
 
 // ── Main Dashboard ───────────────────────────────────────────────────────────
-type RepairRevenueRow = { id: number; createdAt: string; total: number; customerName: string; email: string };
-
 export default function AdminDashboard() {
   const { data: adminMe } = useQuery({
     queryKey: ["/api/admin/me"],
@@ -495,21 +490,18 @@ export default function AdminDashboard() {
   const { data: repairRequests } = useQuery<RepairRequest[]>({
     queryKey: ["/api/admin/repair-requests"],
   });
-  const { data: repairRevenue = [] } = useQuery<RepairRevenueRow[]>({
-    queryKey: QUERY_FINANCIAL_REPAIR_REVENUE,
-    enabled: superAdmin,
-    queryFn: () =>
-      fetch("/api/financial/repair-revenue", {
-        credentials: "include",
+  const { data: websiteInquiries = [] } = useQuery<WebsiteInquiry[]>({
+    queryKey: ["/api/website-inquiries"],
+    queryFn: async () => {
+      const res = await fetch("/api/website-inquiries", {
         headers: getAdminAuthHeaders(),
-      }).then((r) => {
-        if (!r.ok) throw new Error("Failed to fetch repair revenue");
-        return r.json();
-      }),
+      });
+      if (!res.ok) throw new Error("Failed to fetch website inquiries");
+      return res.json();
+    },
   });
   const { data: offerInterests = [], isLoading: offerInterestsLoading } = useQuery<ProductOfferInterest[]>({
     queryKey: ["admin-product-offer-interests"],
-    enabled: superAdmin,
     queryFn: async () => {
       const res = await fetch("/api/admin/product-offer-interests", {
         headers: getAdminAuthHeaders(),
@@ -519,41 +511,48 @@ export default function AdminDashboard() {
     },
   });
 
-  const todayRevenue = useMemo(() => {
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    let sum = 0;
-    for (const order of orders ?? []) {
-      if (order.status !== "completed") continue;
-      const created = new Date(order.createdAt);
-      if (created >= todayStart) sum += Number(order.totalAmount);
-    }
-    if (superAdmin) {
-      for (const r of repairRevenue) {
-        const created = new Date(r.createdAt);
-        if (created >= todayStart) sum += r.total;
-      }
-    }
-    return sum;
-  }, [orders, repairRevenue, superAdmin]);
-
   const pendingRepairs = repairRequests?.filter((r) => r.status === "pending").length ?? 0;
+  const pendingInquiries = websiteInquiries.filter((i) => i.status === "pending").length;
+  const formNewTotal = pendingInquiries + offerInterests.length;
 
   const stats = useMemo(() => {
-    const revenueToday = todayRevenue;
+    const formParts: string[] = [];
+    if (pendingInquiries > 0) {
+      formParts.push(
+        `${pendingInquiries} ${pendingInquiries === 1 ? "ιστοσελίδα" : "ιστοσελίδες"}`,
+      );
+    }
+    if (offerInterests.length > 0) {
+      formParts.push(
+        `${offerInterests.length} ${offerInterests.length === 1 ? "προσφορά" : "προσφορές"} eShop`,
+      );
+    }
+
     const rows: Array<{
       title: string;
       value: string | number;
-      icon: typeof Euro;
+      icon: typeof MessageSquare;
       color: string;
       subtext?: string;
       subtextClass?: string;
+      href?: string;
     }> = [
       {
-        title: "Έσοδα Σήμερα",
-        value: new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR" }).format(revenueToday),
-        icon: Euro,
-        color: "text-green-400",
+        title: "Φόρμες επικοινωνίας",
+        value: formNewTotal,
+        icon: MessageSquare,
+        color: formNewTotal > 0 ? "text-amber-400" : "text-green-400",
+        subtext:
+          formNewTotal > 0
+            ? formParts.join(" · ") || `${formNewTotal} νέα`
+            : "Κανένα νέο",
+        subtextClass: formNewTotal > 0 ? "text-amber-400" : "text-muted-foreground",
+        href:
+          pendingInquiries > 0
+            ? "/admin/website-inquiries"
+            : offerInterests.length > 0
+              ? "/admin/product-offer-interests"
+              : "/admin/website-inquiries",
       },
       { title: "Παραγγελίες", value: orders?.length ?? 0, icon: ShoppingCart, color: "text-blue-400" },
       { title: "Προϊόντα", value: products?.length ?? 0, icon: Package, color: "text-purple-400" },
@@ -564,11 +563,6 @@ export default function AdminDashboard() {
         value: customers?.length ?? 0,
         icon: Users,
         color: "text-orange-400",
-        subtext:
-          offerInterests.length > 0
-            ? `${offerInterests.length} ${offerInterests.length === 1 ? "αίτημα" : "αιτήματα"} «καλύτερη προσφορά» eShop`
-            : undefined,
-        subtextClass: "text-orange-400/95",
       });
     }
     rows.push({
@@ -577,14 +571,16 @@ export default function AdminDashboard() {
       icon: Wrench,
       color: "text-primary",
       subtext: pendingRepairs > 0 ? `${pendingRepairs} νέα` : undefined,
+      href: "/admin/repair-requests",
     });
     return rows;
   }, [
-    todayRevenue,
+    formNewTotal,
+    pendingInquiries,
+    offerInterests.length,
     orders,
     products,
     customers,
-    offerInterests.length,
     repairRequests?.length,
     pendingRepairs,
     superAdmin,
@@ -601,30 +597,52 @@ export default function AdminDashboard() {
 
       {/* ── Stats ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-        {stats.map((stat, i) => (
-          <Card key={i} className="bg-card border-white/5 tech-glow">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground">{stat.title}</CardTitle>
-              <stat.icon className={`w-5 h-5 ${stat.color}`} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              {stat.subtext && (
-                <p
-                  className={`text-xs mt-0.5 font-medium ${
-                    "subtextClass" in stat && stat.subtextClass ? stat.subtextClass : "text-yellow-400"
-                  }`}
-                >
-                  {stat.subtext}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+        {stats.map((stat, i) => {
+          const inner = (
+            <Card
+              className={`bg-card border-white/5 tech-glow h-full ${
+                stat.href ? "transition-colors hover:border-white/20 hover:bg-white/[0.03]" : ""
+              } ${
+                i === 0 && formNewTotal > 0
+                  ? "border-amber-500/30 ring-1 ring-amber-500/20"
+                  : ""
+              }`}
+            >
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-xs font-medium text-muted-foreground">{stat.title}</CardTitle>
+                <stat.icon className={`w-5 h-5 ${stat.color}`} />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stat.value}</div>
+                {stat.subtext && (
+                  <p
+                    className={`text-xs mt-0.5 font-medium ${
+                      "subtextClass" in stat && stat.subtextClass ? stat.subtextClass : "text-yellow-400"
+                    }`}
+                  >
+                    {stat.subtext}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          );
+          if (stat.href) {
+            return (
+              <Link
+                key={i}
+                href={stat.href}
+                className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              >
+                {inner}
+              </Link>
+            );
+          }
+          return <div key={i}>{inner}</div>;
+        })}
       </div>
 
-      {/* ── 🔥 ΠΡΩΤΑ: Πελάτες eShop — Καλύτερη προσφορά ── */}
-      {superAdmin && offerInterests.length > 0 ? (
+      {/* ── ΠΡΩΤΑ: Πελάτες eShop — Καλύτερη προσφορά ── */}
+      {offerInterests.length > 0 ? (
         <div className="mb-6">
           <ProductOfferInterestsCustomersSection rows={offerInterests} isLoading={offerInterestsLoading} />
         </div>
@@ -639,9 +657,6 @@ export default function AdminDashboard() {
 
       {/* ── eShop Product Search ── */}
       <EShopSearchSection />
-
-      {/* ── Real-time Notification Monitor (browser notifications + sound) ── */}
-      {superAdmin ? <NotificationMonitor enabled={true} /> : null}
     </AdminLayout>
   );
 }

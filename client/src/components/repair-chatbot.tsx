@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,6 +78,8 @@ export function RepairChatbot() {
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoOpenedRef = useRef(false);
   const userEngagedRef = useRef(false);
+  /** Πρώτη αυτόματη εμφάνιση: overlay + pulse στο Χ μέχρι να κλείσει */
+  const [firstVisitSpotlight, setFirstVisitSpotlight] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [navbarAiBarCollapsed, setNavbarAiBarCollapsed] = useState(getNavbarAiBarCollapsed);
   const clientContextRef = useRef<RepairChatClientContext>("desktop");
@@ -84,11 +87,13 @@ export function RepairChatbot() {
   const markEngaged = useCallback(() => {
     userEngagedRef.current = true;
     autoOpenedRef.current = false;
+    setFirstVisitSpotlight(false);
   }, []);
 
   const closePanel = useCallback((animated = true) => {
     if (panelExiting || !openRef.current) return;
     autoOpenedRef.current = false;
+    setFirstVisitSpotlight(false);
     if (!animated || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
       setPanelExiting(false);
@@ -110,10 +115,13 @@ export function RepairChatbot() {
       exitTimerRef.current = null;
     }
     setPanelExiting(false);
-    if (opts?.auto) autoOpenedRef.current = true;
-    else {
+    if (opts?.auto) {
+      autoOpenedRef.current = true;
+      setFirstVisitSpotlight(true);
+    } else {
       autoOpenedRef.current = false;
       userEngagedRef.current = true;
+      setFirstVisitSpotlight(false);
     }
     setOpen(true);
     setUnreadCount(0);
@@ -367,8 +375,27 @@ export function RepairChatbot() {
     }
   }, [input, loading, messages, serviceTermsAccepted, toast, setLocation, markEngaged]);
 
+  const showFirstVisitChrome = firstVisitSpotlight && (open || panelExiting);
+
   return (
     <div className="relative z-[158] flex flex-col items-end gap-2 pointer-events-none shrink-0">
+      {/* Σκούρο φίλτρο στο υπόλοιπο site — μόνο στην πρώτη αυτόματη εμφάνιση */}
+      {showFirstVisitChrome &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <button
+            type="button"
+            aria-label="Κλείσιμο συνομιλίας"
+            className={cn(
+              "fixed inset-0 z-[145] border-0 bg-black/55 backdrop-blur-[2px] cursor-default",
+              "motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-500",
+              panelExiting && "motion-safe:animate-out motion-safe:fade-out-0 motion-safe:duration-500 motion-safe:fill-mode-forwards",
+            )}
+            onClick={() => closePanel(true)}
+          />,
+          document.body,
+        )}
+
       {/* Attention bubble: shown once after cookie consent + first scroll */}
       {showAttention && !open && !panelExiting && (
         <div
@@ -393,6 +420,7 @@ export function RepairChatbot() {
           )}
           role="dialog"
           aria-label="Συνομιλία AI Doctor"
+          aria-modal={showFirstVisitChrome ? true : undefined}
         >
           <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-white/10 bg-primary/10">
             <div className="flex items-center gap-2 min-w-0">
@@ -408,7 +436,10 @@ export function RepairChatbot() {
               type="button"
               variant="ghost"
               size="icon"
-              className="shrink-0 h-10 w-10 rounded-xl text-foreground hover:bg-white/10"
+              className={cn(
+                "shrink-0 h-10 w-10 rounded-xl text-foreground hover:bg-white/10 border border-transparent",
+                firstVisitSpotlight && !panelExiting && "chat-close-pulse text-red-200",
+              )}
               onClick={() => closePanel(true)}
               aria-label="Κλείσιμο"
             >

@@ -43,7 +43,7 @@ import type { ImeiLookupSuccess } from "@shared/imei-lookup";
 const GLASS =
   "rounded-3xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-2xl shadow-[0_8px_48px_rgba(0,0,0,0.45)]";
 
-const SAMPLE_IMEI = "353456789012347";
+const SAMPLE_IMEI = "350424818150276";
 
 const STEPS = [
   {
@@ -301,9 +301,8 @@ export default function ImeiCheckPage() {
                 πρώτα ψηφία) και πολλά ακόμη όταν συνδεθεί πραγματική υπηρεσία έρευνας.
               </p>
               <p className="mt-3 text-sm text-zinc-500">
-                Τα αποτελέσματα (μοντέλο, iCloud/Find My, εγγύηση) προέρχονται από το{" "}
-                <span className="text-zinc-400">IMEI.info API</span> μέσω του server — χρειάζεται έγκυρο κλειδί
-                στο .env.
+                Χωρίς κλειδί API εμφανίζεται το μοντέλο από την ελεύθερη βάση TAC. Με{" "}
+                <span className="text-zinc-400">IMEI_INFO_API_KEY</span> προστίθενται και iCloud/Find My + εγγύηση.
               </p>
             </div>
 
@@ -373,10 +372,10 @@ export default function ImeiCheckPage() {
               </div>
 
               <p className="mt-6 text-sm leading-relaxed text-zinc-400">
-                Ρυθμίστε στο server το <span className="font-mono text-xs text-cyan-300/90">IMEI_INFO_API_KEY</span>{" "}
-                (IMEI.info) ή προαιρετικά <span className="font-mono text-xs text-cyan-300/90">IMEI_LOOKUP_URL_TEMPLATE</span>{" "}
-                για δικό σας endpoint (placeholders <span className="font-mono">{"{imei}"}</span>,{" "}
-                <span className="font-mono">{"{key}"}</span>).
+                Ο έλεγχος μοντέλου δουλεύει αμέσως (TAC). Για πλήρη στοιχεία iCloud/εγγύηση, ορίστε{" "}
+                <span className="font-mono text-xs text-cyan-300/90">IMEI_INFO_API_KEY</span> (IMEI.info) ή{" "}
+                <span className="font-mono text-xs text-cyan-300/90">IMEI_LOOKUP_URL_TEMPLATE</span> στο .env του
+                server.
               </p>
 
               <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-white/[0.06] pt-6">

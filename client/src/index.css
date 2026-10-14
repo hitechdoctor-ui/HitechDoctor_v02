@@ -229,6 +229,37 @@
     box-shadow: inset 0 0 0 1px rgba(0, 210, 200, 0.04);
   }
 
+  /* First-visit chat — απαλό κόκκινο pulse στο κουμπί κλεισίματος (Χ) */
+  @keyframes chat-close-pulse {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.45), 0 0 10px rgba(239, 68, 68, 0.28);
+      transform: scale(1);
+      background-color: rgba(248, 113, 113, 0.16);
+      border-color: rgba(248, 113, 113, 0.5);
+      color: rgb(254, 202, 202);
+    }
+    50% {
+      box-shadow: 0 0 0 8px rgba(248, 113, 113, 0), 0 0 20px rgba(239, 68, 68, 0.4);
+      transform: scale(1.08);
+      background-color: rgba(248, 113, 113, 0.28);
+      border-color: rgba(239, 68, 68, 0.75);
+      color: rgb(254, 226, 226);
+    }
+  }
+  .chat-close-pulse {
+    animation: chat-close-pulse 1.25s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .chat-close-pulse {
+      animation: none;
+      box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.5);
+      background-color: rgba(248, 113, 113, 0.2);
+      border-color: rgba(239, 68, 68, 0.65);
+      color: rgb(254, 202, 202);
+    }
+  }
+
   /* Repair chat — έντονο pulse για υποχρεωτική αποδοχή όρων */
   @keyframes repair-terms-pulse {
     0%,

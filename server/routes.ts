@@ -1330,8 +1330,10 @@ export async function registerRoutes(
   // --- Website Inquiries API ---
   app.get("/api/website-inquiries", async (req, res) => {
     try {
-      const u = await requireSuperAdmin(req, res);
-      if (!u) return;
+      const u = await getAdminUserFromRequest(req);
+      if (!u) {
+        return res.status(401).json({ message: "Σύνδεση απαιτείται" });
+      }
       const inquiries = await storage.getWebsiteInquiries();
       res.json(inquiries);
     } catch (error) {
@@ -1453,7 +1455,7 @@ export async function registerRoutes(
     }
   });
 
-  /** IMEI lookup — IMEI.info API v4 (IMEI_INFO_API_KEY) or custom GET URL (IMEI_LOOKUP_URL_TEMPLATE). */
+  /** IMEI lookup — IMEI.info / custom URL, or free TAC DB fallback for model. */
   app.post("/api/imei/lookup", async (req, res) => {
     try {
       const schema = z.object({ imei: z.string().min(10).max(32) });
@@ -1859,8 +1861,10 @@ export async function registerRoutes(
 
   app.get("/api/admin/product-offer-interests", async (req, res) => {
     try {
-      const user = await requireSuperAdmin(req, res);
-      if (!user) return;
+      const user = await getAdminUserFromRequest(req);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const rows = await storage.getProductOfferInterests();
       res.json(rows);
     } catch {

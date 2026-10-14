@@ -1,10 +1,31 @@
 import { Resend } from "resend";
 import type { RepairReceipt, RepairRequest, Subscription, WebsiteInquiry, ProductOfferInterest, BoxnowDropoffRequest } from "@shared/schema";
+import { getSuperAdminEmail, normalizeAdminEmail } from "@shared/admin-roles";
 
 /** Branded sender (domain verified in Resend). */
 const FROM_EMAIL_BRANDED = "HiTech Doctor <noreply@hitechdoctor.com>";
 const ADMIN_EMAIL = "info@hitechdoctor.com";
 const DEFAULT_GOOGLE_REVIEW_URL = "https://g.page/r/CdfDDY1VPmuKEAE/review";
+
+/**
+ * Λίστα email που λαμβάνουν ειδοποιήσεις φορμών.
+ * `ADMIN_NOTIFY_EMAIL` (comma-separated) υπερκαλύπτει/επεκτείνει· πάντα περιλαμβάνει
+ * info@ και SUPER_ADMIN_EMAIL (fallback hitechdoctor@gmail.com).
+ */
+export function getAdminNotifyEmails(): string[] {
+  const set = new Set<string>();
+  const add = (raw: string | undefined | null) => {
+    if (!raw) return;
+    for (const part of String(raw).split(/[,;\s]+/)) {
+      const e = normalizeAdminEmail(part);
+      if (e.includes("@")) set.add(e);
+    }
+  };
+  add(process.env.ADMIN_NOTIFY_EMAIL);
+  add(ADMIN_EMAIL);
+  add(getSuperAdminEmail());
+  return Array.from(set);
+}
 
 function escHtml(s: string): string {
   return s
@@ -306,11 +327,12 @@ export async function sendRepairConfirmationEmail(req: RepairRequest): Promise<v
     console.log("[email] RESEND_API_KEY not set — skipping email send");
     return;
   }
+  const admins = getAdminNotifyEmails();
   try {
     const { error } = await resend.emails.send({
       from: FROM_EMAIL_BRANDED,
       to: [req.email],
-      bcc: [ADMIN_EMAIL],
+      bcc: admins,
       subject: `Αίτημα Επισκευής ${INVOICE_NUM(req.id)} — HiTech Doctor`,
       html: buildConfirmationEmail(req),
       replyTo: ADMIN_EMAIL,
@@ -319,6 +341,29 @@ export async function sendRepairConfirmationEmail(req: RepairRequest): Promise<v
     else console.log(`[email] Confirmation sent to ${req.email} (${INVOICE_NUM(req.id)})`);
   } catch (err) {
     console.error("[email] Failed to send:", err);
+  }
+
+  // Ξεχωριστή ειδοποίηση στους διαχειριστές (φαίνεται στο inbox ως «ΝΕΟ ΑΙΤΗΜΑ»)
+  try {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL_BRANDED,
+      to: admins,
+      subject: `🔔 ΝΕΟ αίτημα επισκευής ${INVOICE_NUM(req.id)} — ${req.firstName} ${req.lastName}`,
+      html: `<!DOCTYPE html><html lang="el"><body style="font-family:Arial,sans-serif;background:#0d1117;color:#e0e0e0;padding:24px;">
+        <h1 style="color:#00D2C8;font-size:18px;">Νέο αίτημα επισκευής από τη φόρμα</h1>
+        <p><strong>Πελάτης:</strong> ${escHtml(req.firstName)} ${escHtml(req.lastName)}</p>
+        <p><strong>Τηλ:</strong> <a href="tel:${escHtml(req.phone.replace(/\s/g, ""))}" style="color:#00D2C8;">${escHtml(req.phone)}</a></p>
+        <p><strong>Email:</strong> <a href="mailto:${escHtml(req.email)}" style="color:#00D2C8;">${escHtml(req.email)}</a></p>
+        <p><strong>Συσκευή:</strong> ${escHtml(req.deviceName)}</p>
+        ${req.notes ? `<p><strong>Πρόβλημα:</strong> ${escHtml(req.notes)}</p>` : ""}
+        <p style="color:#888;font-size:12px;">Αριθμός: ${INVOICE_NUM(req.id)}</p>
+      </body></html>`,
+      replyTo: req.email,
+    });
+    if (error) console.error("[email] Repair admin alert error:", error);
+    else console.log(`[email] Repair admin alert sent to ${admins.join(", ")}`);
+  } catch (err) {
+    console.error("[email] Failed to send repair admin alert:", err);
   }
 }
 
@@ -346,7 +391,7 @@ export async function sendRepairReceiptEmail(params: {
     const { error } = await resend.emails.send({
       from: FROM_EMAIL_BRANDED,
       to: [params.receipt.customerEmail],
-      bcc: [ADMIN_EMAIL],
+      bcc: getAdminNotifyEmails(),
       subject: `Απόδειξη επισκευής ${INVOICE_NUM(params.repair.id)} — HiTech Doctor`,
       html,
       replyTo: ADMIN_EMAIL,
@@ -369,7 +414,7 @@ export async function sendSubscriptionRenewalEmail(sub: Subscription, daysLeft: 
     const { error } = await resend.emails.send({
       from: FROM_EMAIL_BRANDED,
       to: [sub.email],
-      bcc: [ADMIN_EMAIL],
+      bcc: getAdminNotifyEmails(),
       subject: `Η συνδρομή ${typeLabel} σας λήγει σε ${daysLeft} μέρες — HiTech Doctor`,
       html: buildSubscriptionRenewalEmail(sub, daysLeft),
     });
@@ -425,7 +470,7 @@ export async function sendRepairChatLeadEmail(params: {
   try {
     const { error } = await resend.emails.send({
       from: FROM_EMAIL_BRANDED,
-      to: [ADMIN_EMAIL],
+      to: getAdminNotifyEmails(),
       replyTo: params.email,
       subject,
       html,
@@ -473,7 +518,7 @@ export async function sendProductOfferInterestEmail(row: ProductOfferInterest): 
   try {
     const { error } = await resend.emails.send({
       from: FROM_EMAIL_BRANDED,
-      to: [ADMIN_EMAIL],
+      to: getAdminNotifyEmails(),
       subject,
       html,
     });
@@ -528,7 +573,7 @@ export async function sendBoxnowDropoffEmail(row: BoxnowDropoffRequest): Promise
   try {
     const { error } = await resend.emails.send({
       from: FROM_EMAIL_BRANDED,
-      to: [ADMIN_EMAIL],
+      to: getAdminNotifyEmails(),
       bcc: row.email ? [row.email] : undefined,
       subject,
       html,
@@ -549,7 +594,7 @@ export async function sendWebsiteInquiryEmail(inq: WebsiteInquiry): Promise<void
   try {
     const { error } = await resend.emails.send({
       from: FROM_EMAIL_BRANDED,
-      to: [ADMIN_EMAIL],
+      to: getAdminNotifyEmails(),
       subject: `Νέο αίτημα ιστοσελίδας: ${inq.firstName} ${inq.lastName} — HiTech Doctor`,
       html: buildWebsiteInquiryEmail(inq),
     });
@@ -570,7 +615,7 @@ export async function sendWebsiteInquiryClientEmail(inq: WebsiteInquiry): Promis
     const { error } = await resend.emails.send({
       from: FROM_EMAIL_BRANDED,
       to: [inq.email],
-      bcc: [ADMIN_EMAIL],
+      bcc: getAdminNotifyEmails(),
       subject: `Το αίτημά σας για κατασκευή ιστοσελίδας — HiTech Doctor`,
       html: `<!DOCTYPE html>
 <html lang="el"><head><meta charset="UTF-8"><title>Αίτημα Ιστοσελίδας</title></head>

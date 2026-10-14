@@ -24,6 +24,8 @@ export function ImeiResultCard({ loading, error, data, imeiDigits = "", classNam
   if (!loading && !error && !data) return null;
 
   const isError = Boolean(error && !loading);
+  const showApple =
+    Boolean(data?.model) && /iphone|ipad|apple watch|macbook|ipod/i.test(data!.model);
   return (
     <div className={cn("pointer-events-auto", className)}>
       <div
@@ -45,7 +47,7 @@ export function ImeiResultCard({ loading, error, data, imeiDigits = "", classNam
               <p className="mt-0.5 text-xs text-zinc-500">Έλεγχος IMEI συσκευής — Model, iCloud, Warranty</p>
             </div>
           </div>
-          <SiApple className="h-7 w-7 text-zinc-500 opacity-80" aria-hidden />
+          {showApple ? <SiApple className="h-7 w-7 text-zinc-500 opacity-80" aria-hidden /> : null}
         </div>
 
         {loading && (
@@ -65,7 +67,12 @@ export function ImeiResultCard({ loading, error, data, imeiDigits = "", classNam
           <div className="mt-5 space-y-4">
             <div className="flex flex-wrap items-center gap-2">
               <Badge className="border-0 bg-emerald-500/20 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
-                Live — {data.provider === "custom_url" ? "Custom API" : "IMEI.info API"}
+                Live —{" "}
+                {data.provider === "custom_url"
+                  ? "Custom API"
+                  : data.provider === "tac_db"
+                    ? "TAC DB (μοντέλο)"
+                    : "IMEI.info API"}
               </Badge>
             </div>
 

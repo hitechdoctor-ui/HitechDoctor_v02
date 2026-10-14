@@ -9,6 +9,7 @@ import { getAdminAuthHeaders } from "@/lib/queryClient";
 import { notifyAdminAuthChange } from "@/lib/admin-auth-events";
 import { ADMIN_TOKEN_STORAGE_KEY } from "@/lib/admin-auth-storage";
 import { AdminAuthPanel, decodeAdminToken } from "@/pages/auth-page";
+import { NotificationMonitor } from "@/components/admin/notification-monitor";
 
 const STORAGE_KEY = ADMIN_TOKEN_STORAGE_KEY;
 /** Διακριτικός ήχος όταν αυξάνεται ο αριθμός μη ολοκληρωμένων παραγγελιών (public). */
@@ -31,10 +32,8 @@ const SUPER_ADMIN_ROUTE_PREFIXES = [
   "/admin/website-subscriptions",
   "/admin/customers",
   "/admin/hubspot",
-  "/admin/website-inquiries",
   "/admin/sync",
   "/admin/repair-price-overrides",
-  "/admin/product-offer-interests",
   "/admin/oikonomika",
   "/admin/ipsw-downloads",
   "/admin/users",
@@ -408,6 +407,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           {children}
         </div>
       </main>
+
+      {/* Browser notifications + sound + favicon badge for νέες φόρμες */}
+      <NotificationMonitor enabled={!!token && adminInfo?.role !== "staff"} />
     </div>
   );
 }

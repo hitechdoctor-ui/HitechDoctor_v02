@@ -131,7 +131,7 @@ const HUB_CATEGORIES = [
     id: "imei",
     title: "Device Tools (IMEI)",
     titleEl: "Εργαλεία συσκευής (IMEI)",
-    description: "Έλεγχος IMEI με μοντέλο, iCloud και εγγύηση μέσω IMEI.info API (απαιτείται κλειδί στο server).",
+    description: "Έλεγχος IMEI: μοντέλο από TAC (δωρεάν) · iCloud/εγγύηση με IMEI.info API key.",
     icon: Smartphone,
     accent: "from-violet-500/25 to-fuchsia-600/10",
     href: "/services/imei-check",
