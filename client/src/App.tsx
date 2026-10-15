@@ -85,6 +85,7 @@ const AdminOrders = lazyWithReload(() => import("./pages/admin/orders"));
 const AdminCustomers = lazyWithReload(() => import("./pages/admin/customers"));
 const AdminCustomerDetail = lazyWithReload(() => import("./pages/admin/customer-detail"));
 const AdminRepairRequests = lazyWithReload(() => import("./pages/admin/repair-requests"));
+const AdminRepairCustomerCard = lazyWithReload(() => import("./pages/admin/repair-customer-card"));
 const AdminOikonomika = lazyWithReload(() => import("./pages/admin/oikonomika"));
 const AdminAntivirusSubscriptions = lazyWithReload(() => import("./pages/admin/antivirus-subscriptions"));
 const AdminWebsiteSubscriptions = lazyWithReload(() => import("./pages/admin/website-subscriptions"));
@@ -255,6 +256,7 @@ function Router() {
             )}
           />
           <Route path="/admin" component={AdminDashboard} />
+          <Route path="/admin/repair-requests/customer/:key" component={AdminRepairCustomerCard} />
           <Route path="/admin/repair-requests" component={AdminRepairRequests} />
           <Route
             path="/admin/website-inquiries"
