@@ -407,7 +407,7 @@ export function RepairRequestModal({
                 <FormField control={form.control} name="deviceName" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs font-semibold flex items-center gap-1.5">
-                      <Smartphone className="w-3 h-3 text-primary" />Όνομα Συσκευής <span className="text-primary">*</span>
+                      <Smartphone className="w-3 h-3 text-primary" />Όνομα Συσκευής <span className="text-muted-foreground text-[10px] font-normal">(προαιρετικό)</span>
                     </FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="π.χ. iPhone 15 Pro Max" className="bg-card border-white/10 focus:border-primary/40 h-9 text-sm" data-testid="input-device-name" />
@@ -421,7 +421,7 @@ export function RepairRequestModal({
                   <FormField control={form.control} name="serialNumber" render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs font-semibold flex items-center gap-1.5">
-                        <Hash className="w-3 h-3 text-primary" />Serial Number <span className="text-primary">*</span>
+                        <Hash className="w-3 h-3 text-primary" />Serial Number <span className="text-muted-foreground text-[10px] font-normal">(προαιρετικό)</span>
                       </FormLabel>
                       <FormControl>
                         <Input {...field} placeholder="XXXXXXXXXX" className="bg-card border-white/10 focus:border-primary/40 h-9 text-sm font-mono" data-testid="input-serial-number" />
@@ -552,7 +552,10 @@ export function RepairRequestModal({
                         checked={serviceTermsConsent}
                         onChange={(e) => {
                           setServiceTermsConsent(e.target.checked);
-                          if (e.target.checked) setServiceTermsError(false);
+                          if (e.target.checked) {
+                            setServiceTermsError(false);
+                            setSubmitError(null);
+                          }
                         }}
                         className="sr-only"
                         data-testid="checkbox-service-terms"
@@ -562,8 +565,8 @@ export function RepairRequestModal({
                           serviceTermsConsent
                             ? "bg-primary border-primary"
                             : serviceTermsError
-                              ? "border-red-400 bg-red-500/10"
-                              : "border-slate-400 bg-background dark:border-white/40 dark:bg-card"
+                              ? "border-red-400 bg-red-500/10 repair-terms-pulse"
+                              : "border-slate-400 bg-background dark:border-white/40 dark:bg-card repair-terms-pulse"
                         }`}
                       >
                         {serviceTermsConsent && (
@@ -600,14 +603,27 @@ export function RepairRequestModal({
                 >
                   <label className="flex items-start gap-3 cursor-pointer select-none" htmlFor="gdpr-consent">
                     <div className="mt-0.5 shrink-0">
-                      <input id="gdpr-consent" type="checkbox" checked={gdprConsent} onChange={(e) => { setGdprConsent(e.target.checked); if (e.target.checked) setGdprError(false); }} className="sr-only" data-testid="checkbox-gdpr" />
+                      <input
+                        id="gdpr-consent"
+                        type="checkbox"
+                        checked={gdprConsent}
+                        onChange={(e) => {
+                          setGdprConsent(e.target.checked);
+                          if (e.target.checked) {
+                            setGdprError(false);
+                            setSubmitError(null);
+                          }
+                        }}
+                        className="sr-only"
+                        data-testid="checkbox-gdpr"
+                      />
                       <div
                         className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
                           gdprConsent
                             ? "bg-primary border-primary"
                             : gdprError
-                              ? "border-red-400 bg-red-500/10"
-                              : "border-slate-400 bg-background dark:border-white/40 dark:bg-card"
+                              ? "border-red-400 bg-red-500/10 repair-terms-pulse"
+                              : "border-slate-400 bg-background dark:border-white/40 dark:bg-card repair-terms-pulse"
                         }`}
                       >
                         {gdprConsent && (
