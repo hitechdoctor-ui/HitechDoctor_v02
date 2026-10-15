@@ -472,7 +472,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <span className="text-sm font-display font-bold text-primary">HiTech Admin</span>
         </div>
 
-        <div className="p-4 md:p-8 lg:p-12 max-w-7xl mx-auto">
+        <div className="p-3 sm:p-5 md:p-6 lg:p-8 max-w-7xl mx-auto">
           {children}
         </div>
       </main>

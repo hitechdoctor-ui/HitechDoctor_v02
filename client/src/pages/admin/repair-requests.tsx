@@ -14,7 +14,7 @@ import { exportToCsv, formatDateEl } from "@/lib/csv-export";
 import { type RepairRequest } from "@shared/schema";
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
-import { RepairStatusBadge, REPAIR_STATUSES } from "@/components/admin/repair-detail-panel";
+import { RepairStatusBadge, RepairIdBadge, REPAIR_STATUSES } from "@/components/admin/repair-detail-panel";
 import {
   customerCardPath,
   groupRepairRequestsByCustomer,
@@ -277,9 +277,9 @@ function CustomerRow({ group }: { group: CustomerRepairGroup }) {
             )}
           </div>
           <div className="mt-1.5 flex flex-wrap items-center gap-2">
+            <RepairIdBadge id={latest.id} status={latest.status} />
             <RepairStatusBadge status={latest.status} />
-            <span className="text-[10px] text-muted-foreground">{formatDate(latest.createdAt)}</span>
-            <span className="text-[10px] font-mono text-muted-foreground/70">#{latest.id}</span>
+            <span className="text-xs text-muted-foreground">{formatDate(latest.createdAt)}</span>
           </div>
         </div>
         <div className="shrink-0 flex items-center gap-2 text-primary opacity-70 group-hover:opacity-100 transition-opacity">

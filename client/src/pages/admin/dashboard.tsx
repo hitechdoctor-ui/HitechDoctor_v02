@@ -4,7 +4,6 @@ import { useOrders } from "@/hooks/use-orders";
 import { useProducts } from "@/hooks/use-products";
 import { useCustomers } from "@/hooks/use-customers";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -15,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import {
   Package, ShoppingCart, Users, Wrench, MessageSquare,
-  Clock, CheckCircle2, XCircle, AlertCircle, Hash, Smartphone, Phone, Mail,
+  Hash, Smartphone, Phone, Mail,
   Lock, Search, X, ExternalLink, Tag, Loader2,
 } from "lucide-react";
 import {
@@ -31,23 +30,17 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import { AnalyticsDashboard } from "@/components/admin/analytics-dashboard";
-// ── Status config ────────────────────────────────────────────────────────────
-const STATUSES = [
-  { value: "pending", label: "Νέο", icon: AlertCircle, color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/30" },
-  { value: "in-progress", label: "Σε Εξέλιξη", icon: Clock, color: "text-blue-400", bg: "bg-blue-400/10 border-blue-400/30" },
-  { value: "completed", label: "Ολοκληρώθηκε", icon: CheckCircle2, color: "text-green-400", bg: "bg-green-400/10 border-green-400/30" },
-  { value: "cancelled", label: "Ακυρώθηκε", icon: XCircle, color: "text-red-400", bg: "bg-red-400/10 border-red-400/30" },
-];
+import {
+  RepairStatusBadge,
+  RepairIdBadge,
+  REPAIR_STATUSES,
+  repairStatusRowClass,
+} from "@/components/admin/repair-detail-panel";
+
+const STATUSES = REPAIR_STATUSES;
 
 function StatusBadge({ status }: { status: string }) {
-  const cfg = STATUSES.find((s) => s.value === status) ?? STATUSES[0];
-  const Icon = cfg.icon;
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold border ${cfg.bg} ${cfg.color}`}>
-      <Icon className="w-3 h-3" />
-      {cfg.label}
-    </span>
-  );
+  return <RepairStatusBadge status={status} />;
 }
 
 function formatDate(dateStr: string | Date | null) {
@@ -109,42 +102,58 @@ function RepairRequestsSection() {
   const filtered = useMemo(() => {
     if (!requests) return [];
     const q = search.toLowerCase().trim();
-    return requests.filter((r) => {
-      const matchesSearch =
-        !q ||
-        `${r.firstName} ${r.lastName}`.toLowerCase().includes(q) ||
-        r.email.toLowerCase().includes(q) ||
-        r.phone.includes(q) ||
-        r.deviceName.toLowerCase().includes(q) ||
-        r.serialNumber.toLowerCase().includes(q) ||
-        (r.notes ?? "").toLowerCase().includes(q);
-      const matchesStatus = statusFilter === "all" || r.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    });
+    return requests
+      .filter((r) => {
+        const matchesSearch =
+          !q ||
+          `${r.firstName} ${r.lastName}`.toLowerCase().includes(q) ||
+          r.email.toLowerCase().includes(q) ||
+          r.phone.includes(q) ||
+          r.deviceName.toLowerCase().includes(q) ||
+          r.serialNumber.toLowerCase().includes(q) ||
+          (r.notes ?? "").toLowerCase().includes(q);
+        const matchesStatus = statusFilter === "all" || r.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      })
+      .sort((a, b) => {
+        const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return tb - ta || b.id - a.id;
+      });
   }, [requests, search, statusFilter]);
 
+  const preview = filtered.slice(0, 5);
+  const hasMore = filtered.length > 5;
+
   return (
-    <Card className="bg-card border-white/8">
-      <CardHeader className="flex flex-col gap-3 pb-4 border-b border-white/8">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center">
-              <Wrench className="w-4.5 h-4.5 text-primary" />
+    <section className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.05] to-transparent overflow-hidden">
+      <div className="flex flex-col gap-2.5 px-3.5 sm:px-4 py-3 border-b border-white/8">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center">
+              <Wrench className="w-4 h-4 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-base font-display font-bold">Αιτήματα Επισκευής</CardTitle>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {filtered.length} / {requests?.length ?? 0} αιτήματα
+              <h2 className="text-sm sm:text-base font-display font-bold tracking-tight">Αιτήματα Επισκευής</h2>
+              <p className="text-[11px] text-muted-foreground">
+                {preview.length} πιο πρόσφατα · {requests?.length ?? 0} σύνολο
               </p>
             </div>
           </div>
-          {/* Status legend desktop */}
-          <div className="hidden lg:flex items-center gap-2">
-            {STATUSES.map((s) => <StatusBadge key={s.value} status={s.value} />)}
+          <div className="flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-1.5">
+              {STATUSES.map((s) => <StatusBadge key={s.value} status={s.value} />)}
+            </div>
+            <Link
+              href="/admin/repair-requests"
+              className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1 shrink-0"
+            >
+              Όλα
+              <ExternalLink className="w-3 h-3" />
+            </Link>
           </div>
         </div>
 
-        {/* Filters row */}
         <div className="flex flex-wrap gap-2">
           <SearchInput
             value={search}
@@ -153,7 +162,7 @@ function RepairRequestsSection() {
             testId="input-repair-search"
           />
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-9 text-xs w-40 border-white/10 bg-card" data-testid="select-status-filter">
+            <SelectTrigger className="h-9 text-xs w-40 border-white/10 bg-background/40" data-testid="select-status-filter">
               <SelectValue placeholder="Κατάσταση" />
             </SelectTrigger>
             <SelectContent className="bg-background border-white/10">
@@ -166,17 +175,17 @@ function RepairRequestsSection() {
             </SelectContent>
           </Select>
         </div>
-      </CardHeader>
-      <CardContent className="pt-4">
+      </div>
+      <div className="px-3.5 sm:px-4 py-3">
         {isLoading ? (
-          <div className="flex items-center justify-center py-16 text-muted-foreground text-sm">
+          <div className="flex items-center justify-center py-10 text-muted-foreground text-sm">
             <span className="w-5 h-5 border-2 border-primary/40 border-t-primary rounded-full animate-spin mr-3" />
             Φόρτωση αιτημάτων...
           </div>
-        ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <Search className="w-10 h-10 text-muted-foreground/20 mx-auto mb-3" />
-            <p className="text-sm font-semibold text-foreground mb-1">
+        ) : preview.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <Search className="w-8 h-8 text-muted-foreground/20 mx-auto mb-2" />
+            <p className="text-sm font-semibold text-foreground mb-0.5">
               {search || statusFilter !== "all" ? "Δεν βρέθηκαν αποτελέσματα" : "Κανένα αίτημα ακόμη"}
             </p>
             <p className="text-xs text-muted-foreground">
@@ -184,89 +193,92 @@ function RepairRequestsSection() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/8 text-left">
-                  {["#", "Πελάτης", "Επικοινωνία", "Συσκευή", "Serial / Κωδικός", "Ημερομηνία", "Κατάσταση"].map((h) => (
-                    <th key={h} className="pb-3 pr-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {filtered.map((req) => (
-                  <tr key={req.id} className="hover:bg-white/3 transition-colors" data-testid={`row-repair-${req.id}`}>
-                    <td className="py-4 pr-4">
-                      <span className="text-xs font-mono text-muted-foreground">#{req.id}</span>
-                    </td>
-                    <td className="py-4 pr-4">
-                      <p className="font-semibold text-foreground text-sm">{req.firstName} {req.lastName}</p>
-                    </td>
-                    <td className="py-4 pr-4">
-                      <div className="flex flex-col gap-0.5">
-                        <a href={`tel:${req.phone}`} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors">
-                          <Phone className="w-3 h-3 text-primary shrink-0" />{req.phone}
-                        </a>
-                        <a href={`mailto:${req.email}`} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors">
-                          <Mail className="w-3 h-3 text-primary shrink-0" />{req.email}
-                        </a>
-                      </div>
-                    </td>
-                    <td className="py-4 pr-4">
-                      <div className="flex items-start gap-1.5">
-                        <Smartphone className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-medium text-foreground">{req.deviceName}</p>
-                          {req.notes && (
-                            <p className="text-[10px] text-muted-foreground mt-0.5 max-w-[160px] truncate" title={req.notes}>
-                              {req.notes}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-4 pr-4">
-                      <div className="flex flex-col gap-0.5">
-                        <div className="flex items-center gap-1.5">
-                          <Hash className="w-3 h-3 text-primary shrink-0" />
-                          <span className="text-xs font-mono text-foreground">{req.serialNumber}</span>
-                        </div>
-                        {req.deviceCode && (
-                          <div className="flex items-center gap-1.5">
-                            <Lock className="w-3 h-3 text-primary shrink-0" />
-                            <span className="text-xs font-mono text-muted-foreground">{req.deviceCode}</span>
-                          </div>
+          <div>
+            <div className="hidden lg:grid grid-cols-[auto_minmax(7rem,1fr)_minmax(9rem,1.1fr)_minmax(8rem,1.1fr)_minmax(6rem,0.9fr)_auto_auto] gap-3 px-1 pb-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+              <span>#</span>
+              <span>Πελάτης</span>
+              <span>Επικοινωνία</span>
+              <span>Συσκευή</span>
+              <span>Serial / Κωδικός</span>
+              <span>Ημερομηνία</span>
+              <span>Κατάσταση</span>
+            </div>
+            <ul className="flex flex-col gap-2.5">
+              {preview.map((req) => (
+                <li
+                  key={req.id}
+                  className={`rounded-xl border px-3 py-2.5 transition-colors ${repairStatusRowClass(req.status)}`}
+                  data-testid={`row-repair-${req.id}`}
+                >
+                  <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-[auto_minmax(7rem,1fr)_minmax(9rem,1.1fr)_minmax(8rem,1.1fr)_minmax(6rem,0.9fr)_auto_auto] lg:items-center lg:gap-3">
+                    <RepairIdBadge id={req.id} status={req.status} />
+                    <p className="font-semibold text-foreground text-sm">{req.firstName} {req.lastName}</p>
+                    <div className="flex flex-col gap-0.5">
+                      <a href={`tel:${req.phone}`} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors">
+                        <Phone className="w-3 h-3 text-primary shrink-0" />{req.phone}
+                      </a>
+                      <a href={`mailto:${req.email}`} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors">
+                        <Mail className="w-3 h-3 text-primary shrink-0" />{req.email}
+                      </a>
+                    </div>
+                    <div className="flex items-start gap-1.5 min-w-0">
+                      <Smartphone className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{req.deviceName}</p>
+                        {req.notes && (
+                          <p className="text-[10px] text-muted-foreground mt-0.5 truncate" title={req.notes}>
+                            {req.notes}
+                          </p>
                         )}
                       </div>
-                    </td>
-                    <td className="py-4 pr-4">
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">{formatDate(req.createdAt)}</span>
-                    </td>
-                    <td className="py-4">
-                      <Select
-                        value={req.status}
-                        onValueChange={(val) => statusMutation.mutate({ id: req.id, status: val })}
-                      >
-                        <SelectTrigger className="h-8 text-xs w-40 border-white/10 bg-card" data-testid={`select-status-${req.id}`}>
-                          <SelectValue><StatusBadge status={req.status} /></SelectValue>
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border-white/10">
-                          {STATUSES.map((s) => (
-                            <SelectItem key={s.value} value={s.value} className="text-xs">
-                              <StatusBadge status={s.value} />
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <Hash className="w-3 h-3 text-primary shrink-0" />
+                        <span className="text-xs font-mono text-foreground">{req.serialNumber}</span>
+                      </div>
+                      {req.deviceCode && (
+                        <div className="flex items-center gap-1.5">
+                          <Lock className="w-3 h-3 text-primary shrink-0" />
+                          <span className="text-xs font-mono text-muted-foreground">{req.deviceCode}</span>
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">{formatDate(req.createdAt)}</span>
+                    <Select
+                      value={req.status}
+                      onValueChange={(val) => statusMutation.mutate({ id: req.id, status: val })}
+                    >
+                      <SelectTrigger className="h-8 text-xs w-full lg:w-40 border-white/15 bg-background/50" data-testid={`select-status-${req.id}`}>
+                        <SelectValue><StatusBadge status={req.status} /></SelectValue>
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border-white/10">
+                        {STATUSES.map((s) => (
+                          <SelectItem key={s.value} value={s.value} className="text-xs">
+                            <StatusBadge status={s.value} />
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            {hasMore ? (
+              <div className="mt-3 pt-3 border-t border-white/8 flex justify-center">
+                <Link
+                  href="/admin/repair-requests"
+                  className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1"
+                >
+                  Δες όλα τα αιτήματα ({filtered.length})
+                  <ExternalLink className="w-3 h-3" />
+                </Link>
+              </div>
+            ) : null}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
 }
 
@@ -279,35 +291,53 @@ function EShopSearchSection() {
   const filtered = useMemo(() => {
     if (!products) return [];
     const q = search.toLowerCase().trim();
-    return products.filter((p) => {
-      const matchesSearch =
-        !q ||
-        p.name.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q) ||
-        (p.slug ?? "").toLowerCase().includes(q);
-      const matchesCat =
-        categoryFilter === "all" ||
-        (p.subcategory ?? p.category) === categoryFilter;
-      return matchesSearch && matchesCat;
-    });
+    return products
+      .filter((p) => {
+        const matchesSearch =
+          !q ||
+          p.name.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q) ||
+          (p.slug ?? "").toLowerCase().includes(q);
+        const matchesCat =
+          categoryFilter === "all" ||
+          (p.subcategory ?? p.category) === categoryFilter;
+        return matchesSearch && matchesCat;
+      })
+      .sort((a, b) => {
+        const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return tb - ta || b.id - a.id;
+      });
   }, [products, search, categoryFilter]);
+
+  const preview = filtered.slice(0, 5);
+  const hasMore = filtered.length > 5;
 
   const formatPrice = (price: string | number) =>
     new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR" }).format(Number(price));
 
   return (
-    <Card className="bg-card border-white/8">
-      <CardHeader className="flex flex-col gap-3 pb-4 border-b border-white/8">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center">
-            <Package className="w-4.5 h-4.5 text-blue-400" />
+    <section className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.05] to-transparent overflow-hidden">
+      <div className="flex flex-col gap-2.5 px-3.5 sm:px-4 py-3 border-b border-white/8">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center">
+              <Package className="w-4 h-4 text-blue-400" />
+            </div>
+            <div>
+              <h2 className="text-sm sm:text-base font-display font-bold tracking-tight">eShop Προϊόντα</h2>
+              <p className="text-[11px] text-muted-foreground">
+                {preview.length} πιο πρόσφατα · {products?.length ?? 0} σύνολο
+              </p>
+            </div>
           </div>
-          <div>
-            <CardTitle className="text-base font-display font-bold">eShop Προϊόντα</CardTitle>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {filtered.length} / {products?.length ?? 0} προϊόντα
-            </p>
-          </div>
+          <Link
+            href="/admin/products"
+            className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1 shrink-0"
+          >
+            Όλα
+            <ExternalLink className="w-3 h-3" />
+          </Link>
         </div>
         <div className="flex flex-wrap gap-2">
           <SearchInput
@@ -317,7 +347,7 @@ function EShopSearchSection() {
             testId="input-eshop-search"
           />
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="h-9 text-xs w-44 border-white/10 bg-card" data-testid="select-category-filter">
+            <SelectTrigger className="h-9 text-xs w-44 border-white/10 bg-background/40" data-testid="select-category-filter">
               <SelectValue placeholder="Κατηγορία" />
             </SelectTrigger>
             <SelectContent className="bg-background border-white/10">
@@ -330,44 +360,57 @@ function EShopSearchSection() {
             </SelectContent>
           </Select>
         </div>
-      </CardHeader>
-      <CardContent className="pt-4">
-        {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <Search className="w-10 h-10 text-muted-foreground/20 mx-auto mb-3" />
-            <p className="text-sm font-semibold text-foreground mb-1">
+      </div>
+      <div className="px-3.5 sm:px-4 py-3">
+        {preview.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <Search className="w-8 h-8 text-muted-foreground/20 mx-auto mb-2" />
+            <p className="text-sm font-semibold text-foreground">
               {search ? "Δεν βρέθηκαν προϊόντα" : "Κανένα προϊόν"}
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {filtered.map((p) => (
-              <div
-                key={p.id}
-                className="flex items-center gap-3 p-3 rounded-xl border border-white/8 hover:border-white/15 transition-colors bg-background/30"
-                data-testid={`card-product-admin-${p.id}`}
-              >
-                {p.imageUrl ? (
-                  <img src={p.imageUrl} alt={p.name} className="w-12 h-12 rounded-lg object-cover border border-white/8 shrink-0" />
-                ) : (
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                    <Package className="w-5 h-5 text-primary" />
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {preview.map((p) => (
+                <div
+                  key={p.id}
+                  className="flex items-center gap-2.5 p-2.5 rounded-xl border border-white/8 hover:border-primary/25 hover:bg-primary/[0.04] transition-colors bg-background/20"
+                  data-testid={`card-product-admin-${p.id}`}
+                >
+                  {p.imageUrl ? (
+                    <img src={p.imageUrl} alt={p.name} className="w-10 h-10 rounded-lg object-cover border border-white/8 shrink-0" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                      <Package className="w-4 h-4 text-primary" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-foreground truncate">{p.name}</p>
+                    <p className="text-xs text-primary font-bold mt-0.5">{formatPrice(p.price)}</p>
+                    <p className="text-[10px] text-muted-foreground capitalize">{p.subcategory ?? p.category}</p>
                   </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-foreground truncate">{p.name}</p>
-                  <p className="text-xs text-primary font-bold mt-0.5">{formatPrice(p.price)}</p>
-                  <p className="text-[10px] text-muted-foreground capitalize mt-0.5">{p.subcategory ?? p.category}</p>
+                  <Link href={`/eshop/${p.slug}`}>
+                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/40 hover:text-primary transition-colors shrink-0" />
+                  </Link>
                 </div>
-                <Link href={`/eshop/${p.slug}`}>
-                  <ExternalLink className="w-4 h-4 text-muted-foreground/40 hover:text-primary transition-colors shrink-0" />
+              ))}
+            </div>
+            {hasMore ? (
+              <div className="mt-3 pt-3 border-t border-white/8 flex justify-center">
+                <Link
+                  href="/admin/products"
+                  className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1"
+                >
+                  Δες όλα τα προϊόντα ({filtered.length})
+                  <ExternalLink className="w-3 h-3" />
                 </Link>
               </div>
-            ))}
-          </div>
+            ) : null}
+          </>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
 }
 
@@ -379,58 +422,59 @@ function ProductOfferInterestsCustomersSection({
   rows: ProductOfferInterest[];
   isLoading: boolean;
 }) {
-  const recent = useMemo(() => rows.slice(0, 12), [rows]);
+  const recent = useMemo(() => rows.slice(0, 5), [rows]);
+  const hasMore = rows.length > 5;
 
   return (
-    <Card className="bg-card border-white/8 border-l-4 border-l-orange-500/35">
-      <CardHeader className="flex flex-col gap-3 pb-4 border-b border-white/8 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center shrink-0">
-            <Tag className="w-4.5 h-4.5 text-orange-400" />
+    <section className="rounded-2xl border border-white/10 border-l-[3px] border-l-orange-500/50 bg-gradient-to-b from-orange-500/[0.06] to-transparent overflow-hidden">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-3.5 sm:px-4 py-3 border-b border-white/8">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center shrink-0">
+            <Tag className="w-4 h-4 text-orange-400" />
           </div>
           <div>
-            <CardTitle className="text-base font-display font-bold">Πελάτες eShop — Καλύτερη προσφορά</CardTitle>
-            <CardDescription className="text-xs mt-0.5 max-w-xl">
-              Όνομα και κινητό από το eShop — συμπεριλαμβάνονται στην κάρτα «Φόρμες επικοινωνίας» πάνω.
-            </CardDescription>
+            <h2 className="text-sm sm:text-base font-display font-bold tracking-tight">Πελάτες eShop — Καλύτερη προσφορά</h2>
+            <p className="text-[11px] text-muted-foreground mt-0.5 max-w-xl">
+              {recent.length} πιο πρόσφατα · {rows.length} σύνολο
+            </p>
           </div>
         </div>
         <Link
           href="/admin/product-offer-interests"
-          className="text-xs text-primary font-medium hover:underline inline-flex items-center gap-1 shrink-0"
+          className="text-xs text-primary font-semibold hover:underline inline-flex items-center gap-1 shrink-0"
         >
           Όλες οι εγγραφές
           <ExternalLink className="w-3 h-3" />
         </Link>
-      </CardHeader>
-      <CardContent className="pt-4">
+      </div>
+      <div className="px-3.5 sm:px-4 py-3">
         {isLoading ? (
-          <div className="flex items-center justify-center py-12 text-muted-foreground text-sm gap-2">
-            <Loader2 className="w-5 h-5 animate-spin" />
+          <div className="flex items-center justify-center py-8 text-muted-foreground text-sm gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
             Φόρτωση…
           </div>
         ) : recent.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-10">Δεν υπάρχουν αιτήματα ακόμα.</p>
+          <p className="text-sm text-muted-foreground text-center py-8">Δεν υπάρχουν αιτήματα ακόμα.</p>
         ) : (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">Ημερομηνία</TableHead>
-                  <TableHead className="text-xs">Όνομα</TableHead>
-                  <TableHead className="text-xs">Email</TableHead>
-                  <TableHead className="text-xs">Κινητό</TableHead>
-                  <TableHead className="text-xs">Προϊόν</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider">Ημερομηνία</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider">Όνομα</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider">Email</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider">Κινητό</TableHead>
+                  <TableHead className="text-[10px] uppercase tracking-wider">Προϊόν</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {recent.map((row) => (
                   <TableRow key={row.id}>
-                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap py-2.5">
                       {formatDate(row.createdAt)}
                     </TableCell>
-                    <TableCell className="text-sm font-medium text-foreground">{row.customerName}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-sm font-medium text-foreground py-2.5">{row.customerName}</TableCell>
+                    <TableCell className="py-2.5">
                       <a
                         href={`mailto:${row.email}`}
                         className="text-xs text-primary hover:underline"
@@ -438,7 +482,7 @@ function ProductOfferInterestsCustomersSection({
                         {row.email}
                       </a>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-2.5">
                       <a
                         href={`tel:${row.phone.replace(/\s/g, "")}`}
                         className="text-xs text-primary inline-flex items-center gap-1 hover:underline"
@@ -447,7 +491,7 @@ function ProductOfferInterestsCustomersSection({
                         {row.phone}
                       </a>
                     </TableCell>
-                    <TableCell className="max-w-[200px]">
+                    <TableCell className="max-w-[200px] py-2.5">
                       <p className="text-xs text-foreground truncate" title={row.productName}>
                         {row.productName}
                       </p>
@@ -466,10 +510,21 @@ function ProductOfferInterestsCustomersSection({
                 ))}
               </TableBody>
             </Table>
+            {hasMore ? (
+              <div className="mt-3 pt-3 border-t border-white/8 flex justify-center">
+                <Link
+                  href="/admin/product-offer-interests"
+                  className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1"
+                >
+                  Δες όλες τις εγγραφές ({rows.length})
+                  <ExternalLink className="w-3 h-3" />
+                </Link>
+              </div>
+            ) : null}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
 }
 
@@ -590,48 +645,71 @@ export default function AdminDashboard() {
     <AdminLayout>
       <Seo title="Dashboard" description="Admin Dashboard" />
 
-      <div className="mb-8">
-        <h1 className="text-3xl font-display font-bold">Επισκόπηση</h1>
-        <p className="text-muted-foreground mt-1">Μηνύματα, αιτήματα επισκευής και προϊόντα eShop</p>
+      <div className="-mt-1 mb-4 flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-foreground">
+            Επισκόπηση
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+            Μηνύματα · επισκευές · eShop
+          </p>
+        </div>
+        <Link
+          href="/admin/repair-requests"
+          className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1"
+        >
+          Αιτήματα επισκευής
+          <ExternalLink className="w-3 h-3" />
+        </Link>
       </div>
 
+      {superAdmin ? (
+        <div className="mb-4">
+          <AnalyticsDashboard />
+        </div>
+      ) : null}
+
       {/* ── Stats ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3 mb-5">
         {stats.map((stat, i) => {
           const inner = (
-            <Card
-              className={`bg-card border-white/5 tech-glow h-full ${
-                stat.href ? "transition-colors hover:border-white/20 hover:bg-white/[0.03]" : ""
+            <div
+              className={`relative h-full overflow-hidden rounded-2xl border bg-gradient-to-br from-white/[0.06] to-transparent px-3.5 py-3.5 transition-all ${
+                stat.href ? "hover:border-primary/35 hover:from-primary/[0.08]" : ""
               } ${
                 i === 0 && formNewTotal > 0
-                  ? "border-amber-500/30 ring-1 ring-amber-500/20"
-                  : ""
+                  ? "border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.12)]"
+                  : "border-white/10"
               }`}
             >
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-xs font-medium text-muted-foreground">{stat.title}</CardTitle>
-                <stat.icon className={`w-5 h-5 ${stat.color}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                {stat.subtext && (
-                  <p
-                    className={`text-xs mt-0.5 font-medium ${
-                      "subtextClass" in stat && stat.subtextClass ? stat.subtextClass : "text-yellow-400"
-                    }`}
-                  >
-                    {stat.subtext}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground leading-tight">
+                  {stat.title}
+                </p>
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-background/40 border border-white/10 ${stat.color}`}>
+                  <stat.icon className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="text-2xl sm:text-[1.75rem] font-extrabold tabular-nums tracking-tight text-foreground">
+                {stat.value}
+              </div>
+              {stat.subtext && (
+                <p
+                  className={`text-[11px] mt-1 font-medium truncate ${
+                    "subtextClass" in stat && stat.subtextClass ? stat.subtextClass : "text-yellow-400"
+                  }`}
+                >
+                  {stat.subtext}
+                </p>
+              )}
+            </div>
           );
           if (stat.href) {
             return (
               <Link
                 key={i}
                 href={stat.href}
-                className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                className="block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
               >
                 {inner}
               </Link>
@@ -641,21 +719,16 @@ export default function AdminDashboard() {
         })}
       </div>
 
-      {/* ── ΠΡΩΤΑ: Πελάτες eShop — Καλύτερη προσφορά ── */}
+      <div className="mb-4">
+        <RepairRequestsSection />
+      </div>
+
       {offerInterests.length > 0 ? (
-        <div className="mb-6">
+        <div className="mb-4">
           <ProductOfferInterestsCustomersSection rows={offerInterests} isLoading={offerInterestsLoading} />
         </div>
       ) : null}
 
-      {/* ── Repair Requests (service CRM) ── */}
-      <div className="mb-6">
-        <RepairRequestsSection />
-      </div>
-
-      {superAdmin ? <AnalyticsDashboard /> : null}
-
-      {/* ── eShop Product Search ── */}
       <EShopSearchSection />
     </AdminLayout>
   );

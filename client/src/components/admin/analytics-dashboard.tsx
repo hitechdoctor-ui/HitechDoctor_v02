@@ -129,7 +129,7 @@ export function AnalyticsDashboard() {
   const visitTrend = stats ? pctVsYesterday(stats.today, stats.yesterday) : { value: 0, up: true };
 
   return (
-    <div className="space-y-6 mb-8">
+    <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
           <h2 className="text-lg font-display font-bold text-foreground flex items-center gap-2">

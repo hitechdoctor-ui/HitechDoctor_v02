@@ -16,6 +16,7 @@ import { useMemo } from "react";
 import {
   RepairDetailPanel,
   RepairStatusBadge,
+  RepairIdBadge,
   REPAIR_STATUSES,
 } from "@/components/admin/repair-detail-panel";
 import {
@@ -130,6 +131,12 @@ export default function AdminRepairCustomerCard() {
                 <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground">
                   {profile.firstName} {profile.lastName}
                 </h1>
+                {current?.createdAt ? (
+                  <p className="mt-1.5 text-sm sm:text-base font-semibold text-foreground/90 inline-flex items-center gap-1.5 tabular-nums">
+                    <Clock className="w-4 h-4 text-primary shrink-0" />
+                    {formatDate(current.createdAt)}
+                  </p>
+                ) : null}
                 <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm text-muted-foreground">
                   {profile.phone && (
                     <a href={`tel:${profile.phone}`} className="inline-flex items-center gap-1.5 hover:text-primary transition-colors">
@@ -163,11 +170,8 @@ export default function AdminRepairCustomerCard() {
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0 space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-xs font-mono text-muted-foreground">#{current.id}</span>
+                          <RepairIdBadge id={current.id} status={current.status} />
                           <RepairStatusBadge status={current.status} />
-                          <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Clock className="w-3 h-3" />{formatDate(current.createdAt)}
-                          </span>
                         </div>
                         <CardTitle className="text-lg font-display flex items-center gap-2">
                           <Smartphone className="w-4 h-4 text-primary shrink-0" />
@@ -262,9 +266,9 @@ export default function AdminRepairCustomerCard() {
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="space-y-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
-                              <span className="text-xs font-mono text-muted-foreground">#{req.id}</span>
+                              <RepairIdBadge id={req.id} status={req.status} />
                               <RepairStatusBadge status={req.status} />
-                              <span className="text-[10px] text-muted-foreground">{formatDate(req.createdAt)}</span>
+                              <span className="text-xs text-muted-foreground">{formatDate(req.createdAt)}</span>
                             </div>
                             <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
                               <Smartphone className="w-3.5 h-3.5 text-primary shrink-0" />

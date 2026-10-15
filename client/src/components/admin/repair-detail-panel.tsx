@@ -128,11 +128,43 @@ body { font-family:Arial,Helvetica,sans-serif; color:#1a1a2e; background:#fff; p
 
 // ── Status config ─────────────────────────────────────────────────────────────
 export const REPAIR_STATUSES = [
-  { value: "pending",     label: "Νέο",          icon: AlertCircle, color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/30" },
-  { value: "in-progress", label: "Σε Εξέλιξη",   icon: Clock,       color: "text-blue-400",   bg: "bg-blue-400/10 border-blue-400/30"   },
-  { value: "completed",   label: "Ολοκληρώθηκε", icon: CheckCircle2,color: "text-green-400",  bg: "bg-green-400/10 border-green-400/30" },
-  { value: "cancelled",   label: "Ακυρώθηκε",    icon: XCircle,     color: "text-red-400",    bg: "bg-red-400/10 border-red-400/30"     },
+  {
+    value: "pending",
+    label: "Νέο",
+    icon: AlertCircle,
+    color: "text-yellow-400",
+    bg: "bg-yellow-400/10 border-yellow-400/30",
+    row: "border-yellow-400/45 bg-yellow-400/[0.07] hover:bg-yellow-400/[0.11]",
+  },
+  {
+    value: "in-progress",
+    label: "Σε Εξέλιξη",
+    icon: Clock,
+    color: "text-blue-400",
+    bg: "bg-blue-400/10 border-blue-400/30",
+    row: "border-blue-400/45 bg-blue-400/[0.07] hover:bg-blue-400/[0.11]",
+  },
+  {
+    value: "completed",
+    label: "Ολοκληρώθηκε",
+    icon: CheckCircle2,
+    color: "text-green-400",
+    bg: "bg-green-400/10 border-green-400/30",
+    row: "border-green-400/45 bg-green-400/[0.07] hover:bg-green-400/[0.11]",
+  },
+  {
+    value: "cancelled",
+    label: "Ακυρώθηκε",
+    icon: XCircle,
+    color: "text-red-400",
+    bg: "bg-red-400/10 border-red-400/30",
+    row: "border-red-400/45 bg-red-400/[0.07] hover:bg-red-400/[0.11]",
+  },
 ];
+
+export function repairStatusRowClass(status: string): string {
+  return (REPAIR_STATUSES.find((s) => s.value === status) ?? REPAIR_STATUSES[0]).row;
+}
 
 export function RepairStatusBadge({ status }: { status: string }) {
   const cfg = REPAIR_STATUSES.find((s) => s.value === status) ?? REPAIR_STATUSES[0];
@@ -140,6 +172,18 @@ export function RepairStatusBadge({ status }: { status: string }) {
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${cfg.bg} ${cfg.color}`}>
       <Icon className="w-3 h-3" />{cfg.label}
+    </span>
+  );
+}
+
+export function RepairIdBadge({ id, status }: { id: number; status: string }) {
+  const cfg = REPAIR_STATUSES.find((s) => s.value === status) ?? REPAIR_STATUSES[0];
+  return (
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded-lg text-sm font-bold font-mono tabular-nums border ${cfg.bg} ${cfg.color}`}
+      title={`Αίτημα #${id} · ${cfg.label}`}
+    >
+      #{id}
     </span>
   );
 }
