@@ -196,16 +196,18 @@ export default function SamsungRepairDetail() {
   const hasOEM = model.screenPriceOEM !== undefined;
   const activeScreenPrice = (selectedScreenTier === "oem" && hasOEM) ? model.screenPriceOEM! : model.screenPrice;
 
-  const pageTitle = `Επισκευή ${model.name} — Τιμές Αλλαγής Οθόνης, Μπαταρίας & Θύρας | HiTech Doctor Αθήνα`;
+  const keywordScreen = `Αλλαγή Οθόνης ${model.name}`;
+  const pageTitle = `${keywordScreen} — Τιμές & Επισκευή στην Αθήνα | HiTech Doctor`;
   const pageDesc = hasOEM
-    ? `Επισκευή ${model.name}: οθόνη από €${model.screenPriceOEM} (OEM) ή €${model.screenPrice} (Γνήσια), μπαταρία €${model.batteryPrice}, θύρα USB-C €${model.portPrice}. ${BUSINESS_SEO_META_LOCAL}`
-    : `Επισκευή ${model.name}: οθόνη €${model.screenPrice}, μπαταρία €${model.batteryPrice}, θύρα USB-C €${model.portPrice}. ${BUSINESS_SEO_META_LOCAL}`;
+    ? `${keywordScreen} στην Αθήνα από €${model.screenPriceOEM} (OEM) ή €${model.screenPrice} (Γνήσια). Μπαταρία €${model.batteryPrice}, θύρα USB-C €${model.portPrice}. ${BUSINESS_SEO_META_LOCAL}`
+    : `${keywordScreen} στην Αθήνα €${model.screenPrice}. Μπαταρία €${model.batteryPrice}, θύρα USB-C €${model.portPrice}. ${BUSINESS_SEO_META_LOCAL}`;
   const canonicalUrl = `https://hitechdoctor.com/episkevi-samsung/${model.slug}`;
+  const keywordsMeta = `${keywordScreen}, αλλαγή οθόνης ${model.name}, επισκευή ${model.name}, αλλαγή μπαταρίας ${model.name}, ${model.name} service Αθήνα`;
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Service",
-    "name": `Επισκευή ${model.name}`,
+    "name": keywordScreen,
     "provider": {
       "@type": "LocalBusiness",
       "name": "HiTech Doctor",
@@ -214,11 +216,11 @@ export default function SamsungRepairDetail() {
       "address": { "@type": "PostalAddress", "addressLocality": "Αθήνα", "addressCountry": "GR" },
     },
     "description": pageDesc,
-    "serviceType": `Επισκευή ${model.name}`,
+    "serviceType": keywordScreen,
     "areaServed": "Αθήνα",
     "offers": [
-      { "@type": "Offer", "name": `Αλλαγή Οθόνης ${model.name} (Γνήσια)`, "price": model.screenPrice, "priceCurrency": "EUR" },
-      ...(hasOEM ? [{ "@type": "Offer", "name": `Αλλαγή Οθόνης ${model.name} (OEM)`, "price": model.screenPriceOEM, "priceCurrency": "EUR" }] : []),
+      { "@type": "Offer", "name": `${keywordScreen} (Γνήσια)`, "price": model.screenPrice, "priceCurrency": "EUR" },
+      ...(hasOEM ? [{ "@type": "Offer", "name": `${keywordScreen} (OEM)`, "price": model.screenPriceOEM, "priceCurrency": "EUR" }] : []),
       ...(model.hasInnerScreen && model.innerScreenPrice
         ? [{ "@type": "Offer", "name": `Αλλαγή Εσωτερικής Οθόνης ${model.name}`, "price": model.innerScreenPrice, "priceCurrency": "EUR" }]
         : []),
@@ -234,7 +236,7 @@ export default function SamsungRepairDetail() {
       { "@type": "ListItem", "position": 1, "name": "Αρχική", "item": "https://hitechdoctor.com" },
       { "@type": "ListItem", "position": 2, "name": "Υπηρεσίες", "item": "https://hitechdoctor.com/services" },
       { "@type": "ListItem", "position": 3, "name": "Επισκευή Samsung", "item": "https://hitechdoctor.com/services/episkeui-samsung" },
-      { "@type": "ListItem", "position": 4, "name": model.name, "item": canonicalUrl },
+      { "@type": "ListItem", "position": 4, "name": keywordScreen, "item": canonicalUrl },
     ],
   };
 
@@ -242,12 +244,11 @@ export default function SamsungRepairDetail() {
 
   return (
     <div className="min-h-screen bg-background circuit-bg">
-      <Seo title={pageTitle} description={pageDesc} url={canonicalUrl} />
+      <Seo title={pageTitle} description={pageDesc} url={canonicalUrl} keywords={keywordsMeta} />
       <Helmet>
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(breadcrumbLd)}</script>
         <link rel="canonical" href={canonicalUrl} />
-        <meta name="keywords" content={`επισκευή ${model.name}, αλλαγή οθόνης ${model.name}, αλλαγή μπαταρίας ${model.name}, ${model.name} service Αθήνα`} />
       </Helmet>
 
       <div className="fixed top-0 left-0 w-[500px] h-[500px] rounded-full pointer-events-none -translate-x-1/3 -translate-y-1/3"
@@ -264,7 +265,7 @@ export default function SamsungRepairDetail() {
           <ChevronRight className="w-3 h-3 opacity-40" />
           <Link href="/services/episkeui-samsung" className="hover:text-primary transition-colors">Επισκευή Samsung</Link>
           <ChevronRight className="w-3 h-3 opacity-40" />
-          <span className="text-foreground font-medium">{model.name}</span>
+          <span className="text-foreground font-medium">{keywordScreen}</span>
         </nav>
 
         {/* Hero */}
@@ -276,8 +277,8 @@ export default function SamsungRepairDetail() {
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-400">Foldable</span>
               )}
             </div>
-            <h1 className="text-3xl sm:text-4xl font-display font-extrabold text-foreground leading-tight">Επισκευή {model.name}</h1>
-            <p className="text-muted-foreground mt-1.5 text-sm">{model.screen} · Αθήνα, Ελλάδα</p>
+            <h1 className="text-3xl sm:text-4xl font-display font-extrabold text-foreground leading-tight">{keywordScreen}</h1>
+            <p className="text-muted-foreground mt-1.5 text-sm">Επισκευή {model.name} · {model.screen} · Αθήνα</p>
             <div className="flex flex-wrap gap-3 mt-4">
               {[{ icon: Shield, text: "Γραπτή Εγγύηση" }, { icon: Clock, text: "Από 30 λεπτά" }, { icon: Wrench, text: "Δωρεάν Διάγνωση" }].map((b) => (
                 <div key={b.text} className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -365,19 +366,19 @@ export default function SamsungRepairDetail() {
             {/* Screen section */}
             <section id="section-screen">
               <div className="relative w-full h-48 sm:h-56 rounded-2xl overflow-hidden mb-5 border border-white/8">
-                <img src={repairScreenImg} alt={`Αλλαγή οθόνης ${model.name}`} className="w-full h-full object-cover" />
+                <img src={repairScreenImg} alt={keywordScreen} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 <div className="absolute bottom-4 left-4">
-                  <p className="text-white font-display font-bold text-xl">Αλλαγή Οθόνης</p>
-                  <p className="text-white/70 text-sm">{model.name}</p>
+                  <p className="text-white font-display font-bold text-xl">{keywordScreen}</p>
+                  <p className="text-white/70 text-sm">Γνήσια & OEM · Αθήνα</p>
                 </div>
               </div>
 
-              <h2 className="text-xl font-display font-bold text-foreground mb-3">Αλλαγή Οθόνης {model.name} στην Αθήνα</h2>
+              <h2 className="text-xl font-display font-bold text-foreground mb-3">{keywordScreen} στην Αθήνα</h2>
               <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
                 {hasOEM
-                  ? <>Επιλέξτε ποιότητα ανταλλακτικού για την <strong className="text-foreground">Αλλαγή Οθόνης {model.name}</strong>:</>
-                  : <>Αλλαγή <strong className="text-foreground">Γνήσιας Οθόνης {model.name}</strong> με Samsung Original AMOLED panel:</>
+                  ? <>Επιλέξτε ποιότητα ανταλλακτικού για την <strong className="text-foreground">{keywordScreen}</strong>:</>
+                  : <><strong className="text-foreground">{keywordScreen}</strong> με Samsung Original AMOLED panel:</>
                 }
               </p>
 
@@ -578,10 +579,10 @@ export default function SamsungRepairDetail() {
                     a: `Η γνήσια οθόνη (€${model.screenPrice}) είναι original Samsung panel με πλήρη εγγύηση 12 μηνών και ίδια ποιότητα με το εργοστάσιο. Η OEM (€${model.screenPriceOEM}) είναι συμβατό AMOLED Α+ ποιότητας, πολύ καλά χρώματα και αφή, με εγγύηση 6 μηνών — ιδανική οικονομική επιλογή.`,
                   }] : []),
                   {
-                    q: `Πόσο κοστίζει η αλλαγή οθόνης ${model.name};`,
+                    q: `Πόσο κοστίζει η ${keywordScreen};`,
                     a: hasOEM
-                      ? `Η αλλαγή οθόνης ${model.name} κοστίζει €${model.screenPriceOEM} (OEM) ή €${model.screenPrice} (Γνήσια) με ΦΠΑ. Η τιμή περιλαμβάνει ανταλλακτικό και εργασία.`
-                      : `Η αλλαγή οθόνης ${model.name} κοστίζει €${model.screenPrice} με ΦΠΑ (γνήσια οθόνη). Η τιμή περιλαμβάνει ανταλλακτικό και εργασία.`,
+                      ? `Η ${keywordScreen} κοστίζει €${model.screenPriceOEM} (OEM) ή €${model.screenPrice} (Γνήσια) με ΦΠΑ. Η τιμή περιλαμβάνει ανταλλακτικό και εργασία.`
+                      : `Η ${keywordScreen} κοστίζει €${model.screenPrice} με ΦΠΑ (γνήσια οθόνη). Η τιμή περιλαμβάνει ανταλλακτικό και εργασία.`,
                   },
                   {
                     q: "Πόσο διαρκεί η επισκευή;",

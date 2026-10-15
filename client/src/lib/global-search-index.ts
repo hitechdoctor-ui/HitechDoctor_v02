@@ -95,13 +95,13 @@ export function buildGlobalSearchIndex(): GlobalSearchIndexEntry[] {
   for (const series of SAMSUNG_SERIES) {
     for (const model of series.models) {
       entries.push({
-        name: `Επισκευή ${model.name}`,
+        name: `Αλλαγή Οθόνης ${model.name}`,
         href: `/episkevi-samsung/${model.slug}`,
         sub: model.screenPriceOEM
           ? `Οθόνη από €${model.screenPriceOEM} · Μπαταρία €${model.batteryPrice}`
           : `Οθόνη €${model.screenPrice} · Μπαταρία €${model.batteryPrice}`,
         category: "samsung",
-        keywords: `samsung galaxy ${model.name.toLowerCase()} επισκευή αλλαγη οθονη μπαταρια`,
+        keywords: `αλλαγή οθόνης ${model.name.toLowerCase()} samsung galaxy επισκευή αλλαγη οθονη μπαταρια`,
       });
     }
   }

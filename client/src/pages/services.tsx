@@ -1,10 +1,11 @@
+import { useState } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { ReviewsSection } from "@/components/reviews-section";
 import { Seo } from "@/components/seo";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { RepairRequestModal } from "@/components/repair-request-modal";
 import {
   Smartphone,
   Tablet,
@@ -268,6 +269,8 @@ const jsonLd = {
 };
 
 export default function Services() {
+  const [repairOpen, setRepairOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-background circuit-bg">
       <Seo
@@ -290,13 +293,20 @@ export default function Services() {
       <main>
         {/* ── Hero ── */}
         <section className="container mx-auto px-4 pt-10 pb-16 text-center relative">
-          <Badge
-            variant="outline"
-            className="mb-5 border-primary/30 bg-primary/10 text-primary px-4 py-1.5 text-sm font-semibold tracking-wide"
+          <Button
+            type="button"
+            size="lg"
+            onClick={() => setRepairOpen(true)}
+            className="mb-6 h-14 px-8 sm:px-10 text-base sm:text-lg font-bold border-0 shadow-lg shadow-primary/25"
+            style={{
+              background: "linear-gradient(135deg, hsl(185 100% 42%), hsl(200 90% 50%))",
+              boxShadow: "0 0 28px rgba(0,210,200,0.35)",
+            }}
+            data-testid="button-services-repair-request"
           >
-            <Wrench className="w-3.5 h-3.5 mr-1.5" />
-            Επαγγελματικές Τεχνολογικές Υπηρεσίες
-          </Badge>
+            <Wrench className="w-5 h-5 mr-2 shrink-0" aria-hidden />
+            Αίτημα επισκευής
+          </Button>
           <h1 className="text-4xl lg:text-6xl font-display font-extrabold mb-6 leading-tight text-foreground">
             Υπηρεσίες που{" "}
             <span className="gradient-text">Εμπιστεύεσαι</span>
@@ -496,6 +506,14 @@ export default function Services() {
         <ReviewsSection />
       </main>
       <Footer />
+
+      <RepairRequestModal
+        open={repairOpen}
+        onOpenChange={setRepairOpen}
+        defaultDeviceName=""
+        defaultNotes=""
+        visitStoreVariant="generic"
+      />
     </div>
   );
 }
