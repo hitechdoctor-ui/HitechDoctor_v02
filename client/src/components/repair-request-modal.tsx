@@ -416,6 +416,23 @@ export function RepairRequestModal({
                   </FormItem>
                 )} />
 
+                {/* Περιγραφή προβλήματος — αμέσως κάτω από όνομα συσκευής */}
+                <FormField control={form.control} name="notes" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-semibold">Περιγραφή Προβλήματος</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        value={field.value ?? ""}
+                        placeholder="Περιγράψτε το πρόβλημα της συσκευής σας..."
+                        className="bg-card border-white/10 focus:border-primary/40 text-sm resize-none h-20"
+                        data-testid="input-notes"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-xs" />
+                  </FormItem>
+                )} />
+
                 {/* Serial & Κωδικός */}
                 <div className="grid grid-cols-2 gap-3">
                   <FormField control={form.control} name="serialNumber" render={({ field }) => (
@@ -516,23 +533,6 @@ export function RepairRequestModal({
                     <RepairPriceBreakdownCard totalInclVat={totalInclVatForBreakdown} className="mt-2" />
                   )}
                 </div>
-
-                {/* Σημειώσεις */}
-                <FormField control={form.control} name="notes" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-semibold">Περιγραφή Προβλήματος</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        value={field.value ?? ""}
-                        placeholder="Περιγράψτε το πρόβλημα της συσκευής σας..."
-                        className="bg-card border-white/10 focus:border-primary/40 text-sm resize-none h-20"
-                        data-testid="input-notes"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-xs" />
-                  </FormItem>
-                )} />
 
                 {/* Όροι service & εγγύηση */}
                 <div

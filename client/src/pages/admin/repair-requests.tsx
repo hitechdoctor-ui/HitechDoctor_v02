@@ -84,12 +84,12 @@ export default function AdminRepairRequests() {
   const byStatus = (v: string) => requests?.filter((r) => r.status === v).length ?? 0;
 
   const stats = [
-    { label: "Σύνολο",       value: requests?.length ?? 0, icon: Wrench,      color: "text-primary",    bg: "bg-primary/10 border-primary/20"       },
-    { label: "Νέα",          value: byStatus("pending"),   icon: AlertCircle,  color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/20" },
-    { label: "Σε Εξέλιξη",  value: byStatus("in-progress"),icon: Clock,       color: "text-blue-400",   bg: "bg-blue-400/10 border-blue-400/20"     },
-    { label: "Ολοκληρωμένα",value: byStatus("completed"),  icon: CheckCircle2, color: "text-green-400", bg: "bg-green-400/10 border-green-400/20"   },
-    { label: "Ακυρωμένα",   value: byStatus("cancelled"),  icon: XCircle,      color: "text-red-400",   bg: "bg-red-400/10 border-red-400/20"       },
-  ];
+    { label: "Σύνολο",       value: requests?.length ?? 0, icon: Wrench,      color: "text-primary",    bg: "bg-primary/10 border-primary/20",       filter: "all" },
+    { label: "Νέα",          value: byStatus("pending"),   icon: AlertCircle,  color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/20", filter: "pending" },
+    { label: "Σε Εξέλιξη",  value: byStatus("in-progress"),icon: Clock,       color: "text-blue-400",   bg: "bg-blue-400/10 border-blue-400/20",     filter: "in-progress" },
+    { label: "Ολοκληρωμένα",value: byStatus("completed"),  icon: CheckCircle2, color: "text-green-400", bg: "bg-green-400/10 border-green-400/20",   filter: "completed" },
+    { label: "Ακυρωμένα",   value: byStatus("cancelled"),  icon: XCircle,      color: "text-red-400",   bg: "bg-red-400/10 border-red-400/20",       filter: "cancelled" },
+  ] as const;
 
   return (
     <AdminLayout>
@@ -135,17 +135,33 @@ export default function AdminRepairRequests() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
-        {stats.map((s, i) => (
-          <Card key={i} className={`bg-card border ${s.bg}`}>
-            <CardHeader className="flex flex-row items-center justify-between pb-1 pt-3 px-4">
-              <CardTitle className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{s.label}</CardTitle>
-              <s.icon className={`w-4 h-4 ${s.color}`} />
-            </CardHeader>
-            <CardContent className="px-4 pb-3">
-              <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
-            </CardContent>
-          </Card>
-        ))}
+        {stats.map((s) => {
+          const isActive = statusFilter === s.filter;
+          return (
+            <button
+              key={s.filter}
+              type="button"
+              onClick={() => setStatusFilter(isActive && s.filter !== "all" ? "all" : s.filter)}
+              className={`text-left rounded-xl border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${s.bg} ${
+                isActive
+                  ? "ring-2 ring-primary/50 border-primary/40 shadow-[0_0_16px_rgba(0,210,200,0.12)]"
+                  : "hover:brightness-110"
+              }`}
+              aria-pressed={isActive}
+              data-testid={`filter-stat-${s.filter}`}
+            >
+              <Card className="bg-transparent border-0 shadow-none">
+                <CardHeader className="flex flex-row items-center justify-between pb-1 pt-3 px-4">
+                  <CardTitle className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{s.label}</CardTitle>
+                  <s.icon className={`w-4 h-4 ${s.color}`} />
+                </CardHeader>
+                <CardContent className="px-4 pb-3">
+                  <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
+                </CardContent>
+              </Card>
+            </button>
+          );
+        })}
       </div>
 
       <Card className="bg-card border-white/8">
