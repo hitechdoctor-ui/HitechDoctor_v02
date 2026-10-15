@@ -337,6 +337,32 @@ export const insertOrderItemSchema = createInsertSchema(orderItems).omit({ id: t
 export const insertRepairItemSchema = createInsertSchema(repairItems).omit({ id: true, createdAt: true }) as z.ZodTypeAny;
 export const insertRepairRequestSchema = createInsertSchema(repairRequests)
   .omit({ id: true, createdAt: true, assignedToUserId: true, viberUserId: true }) as z.ZodTypeAny;
+
+/**
+ * Δημόσιο POST /api/repair-requests — αυστηρά πεδία φόρμας.
+ * Το `price: ""` από numeric column σπάει το Postgres (500) — επιτρέπουμε μόνο έγκυρο ποσό ή παράλειψη/null.
+ */
+export const publicRepairRequestSchema = z.object({
+  firstName: z.string().trim().min(1, "Συμπληρώστε το όνομά σας").max(100),
+  lastName: z.string().trim().max(100).optional().nullable(),
+  phone: z.string().trim().min(10, "Συμπληρώστε έγκυρο κινητό").max(32),
+  email: z.string().trim().email("Μη έγκυρο email").max(200),
+  deviceName: z.string().trim().min(1, "Συμπληρώστε το όνομα συσκευής").max(200),
+  serialNumber: z.string().trim().min(1, "Συμπληρώστε serial number / IMEI").max(100),
+  deviceCode: z.string().trim().max(100).optional().nullable(),
+  notes: z.string().trim().max(2000).optional().nullable(),
+  status: z.string().optional().default("pending"),
+  price: z
+    .union([
+      z.null(),
+      z.undefined(),
+      z.literal(""),
+      z.string().regex(/^\d+(\.\d{1,2})?$/, "Μη έγκυρη τιμή"),
+    ])
+    .optional()
+    .transform((v) => (v === "" || v === undefined ? null : v)),
+  priceIncludesVat: z.boolean().optional().default(false),
+});
 /** JSON requests send ISO date strings; drizzle-zod expects Date objects — coerce so POST /api/subscriptions validates. */
 export const insertSubscriptionSchema = createInsertSchema(subscriptions)
   .omit({ id: true, createdAt: true })

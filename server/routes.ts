@@ -10,12 +10,12 @@ import { runFixmobilePdfSyncFromDisk, FIXMOBILE_UPLOAD_DIR, FIXMOBILE_PDF } from
 import type { AdminUser, RepairRequest } from "@shared/schema";
 import { api, errorSchemas } from "@shared/routes";
 import {
-  insertRepairRequestSchema,
   insertRepairItemSchema,
   insertSubscriptionSchema,
   insertWebsiteInquirySchema,
   checkoutPayloadSchema,
   productOfferInterestPublicSchema,
+  publicRepairRequestSchema,
   boxnowDropoffPublicSchema,
   insertSupplierSchema,
   insertRepairPriceOverrideSchema,
@@ -1070,12 +1070,25 @@ export async function registerRoutes(
 
   app.post("/api/repair-requests", async (req, res) => {
     try {
-      const input = insertRepairRequestSchema.parse(req.body);
+      const parsed = publicRepairRequestSchema.parse(req.body);
+      const input = {
+        firstName: parsed.firstName,
+        lastName: parsed.lastName || null,
+        phone: parsed.phone,
+        email: parsed.email,
+        deviceName: parsed.deviceName,
+        serialNumber: parsed.serialNumber,
+        deviceCode: parsed.deviceCode || null,
+        notes: parsed.notes || null,
+        status: parsed.status || "pending",
+        price: parsed.price,
+        priceIncludesVat: parsed.price != null ? Boolean(parsed.priceIncludesVat) : false,
+      };
       const request = await storage.createRepairRequest(input);
       res.status(201).json(request);
       sendRepairConfirmationEmail(request).catch((e) => console.error("[email] background send failed:", e));
       // Auto-upsert customer in CRM
-      const fullName = `${input.firstName} ${input.lastName}`.trim();
+      const fullName = `${input.firstName} ${input.lastName ?? ""}`.trim();
       storage.upsertCustomerByEmail(fullName, input.email, input.phone).catch((e) =>
         console.error("[crm] repair upsert failed:", e)
       );
@@ -1083,6 +1096,7 @@ export async function registerRoutes(
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: err.errors[0].message, field: err.errors[0].path.join('.') });
       }
+      console.error("[repair-requests POST]", err);
       res.status(500).json({ message: "Failed to create repair request" });
     }
   });

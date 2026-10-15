@@ -12,11 +12,10 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
 } from "@/components/ui/form";
-import { CheckCircle2, Wrench, Smartphone, Hash, Lock, Phone, Mail, User, Shield, ExternalLink, MapPin } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, Wrench, Smartphone, Hash, Lock, Phone, Mail, User, Shield, ExternalLink, MapPin } from "lucide-react";
 import { apiRequest, invalidateRepairFinancialQueries } from "@/lib/queryClient";
 import { PriceDisclaimer } from "@/components/price-disclaimer";
-import { insertRepairRequestSchema } from "@shared/schema";
-import { useToast } from "@/hooks/use-toast";
+import { publicRepairRequestSchema } from "@shared/schema";
 import { Link, useLocation } from "wouter";
 import { RepairPriceBreakdownCard } from "@/components/repair-price-breakdown";
 import {
@@ -25,7 +24,21 @@ import {
   type VisitStoreVariant,
 } from "@/lib/repair-submit-upsell";
 
-type FormValues = z.infer<typeof insertRepairRequestSchema>;
+const repairFormSchema = publicRepairRequestSchema.omit({ price: true, priceIncludesVat: true, status: true });
+type FormValues = z.infer<typeof repairFormSchema>;
+
+function parseApiErrorMessage(err: unknown): string {
+  const raw = err instanceof Error ? err.message : "";
+  const apiMsg = raw.includes(": ") ? raw.slice(raw.indexOf(": ") + 2) : raw;
+  try {
+    const parsed = JSON.parse(apiMsg) as { message?: string };
+    if (parsed?.message) return parsed.message;
+  } catch {
+    /* keep fallback */
+  }
+  if (apiMsg && apiMsg.length < 180 && !apiMsg.startsWith("{")) return apiMsg;
+  return "Δεν ήταν δυνατή η καταχώρηση. Ελέγξτε τα στοιχεία και δοκιμάστε ξανά.";
+}
 
 interface RepairRequestModalProps {
   open: boolean;
@@ -67,7 +80,7 @@ export function RepairRequestModal({
   const [serviceTermsError, setServiceTermsError] = useState(false);
   const [priceInput, setPriceInput] = useState("");
   const [selectedBox, setSelectedBox] = useState<"net" | "gross">("net");
-  const { toast } = useToast();
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const priceNum = parseFloat(priceInput);
@@ -85,7 +98,7 @@ export function RepairRequestModal({
     n.toLocaleString("el-GR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(insertRepairRequestSchema),
+    resolver: zodResolver(repairFormSchema),
     defaultValues: {
       firstName: "",
       lastName: "",
@@ -95,7 +108,6 @@ export function RepairRequestModal({
       serialNumber: "",
       deviceCode: "",
       notes: defaultNotes,
-      status: "pending",
     },
   });
 
@@ -116,20 +128,36 @@ export function RepairRequestModal({
 
   const mutation = useMutation({
     mutationFn: async (data: FormValues) => {
-      const res = await apiRequest("POST", "/api/repair-requests", {
-        ...data,
-        ...(hasPrice ? { price: netPrice.toFixed(2), priceIncludesVat: selectedBox === "gross" } : {}),
-      });
+      const payload: Record<string, unknown> = {
+        firstName: data.firstName,
+        lastName: data.lastName || null,
+        phone: data.phone,
+        email: data.email,
+        deviceName: data.deviceName,
+        serialNumber: data.serialNumber,
+        deviceCode: data.deviceCode || null,
+        notes: data.notes || null,
+        status: "pending",
+      };
+      if (hasPrice) {
+        payload.price = netPrice.toFixed(2);
+        payload.priceIncludesVat = selectedBox === "gross";
+      }
+      const res = await apiRequest("POST", "/api/repair-requests", payload);
       return (await res.json()) as { id: number };
     },
     onSuccess: (created) => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/repair-requests"] });
       invalidateRepairFinancialQueries(queryClient);
+      setSubmitError(null);
       setSubmittedRequestId(created.id);
       setSubmitted(true);
     },
-    onError: () => {
-      toast({ title: "Σφάλμα", description: "Αποτυχία υποβολής. Παρακαλώ προσπαθήστε ξανά.", variant: "destructive" });
+    onError: (err: unknown) => {
+      setSubmitError(parseApiErrorMessage(err));
+      requestAnimationFrame(() => {
+        document.getElementById("repair-submit-status")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      });
     },
   });
 
@@ -138,6 +166,7 @@ export function RepairRequestModal({
       const wasSubmitted = submitted;
       setSubmitted(false);
       setSubmittedRequestId(null);
+      setSubmitError(null);
       setGdprConsent(false);
       if (wasSubmitted) onSubmitSuccess?.();
       setGdprError(false);
@@ -154,22 +183,31 @@ export function RepairRequestModal({
         serialNumber: "",
         deviceCode: "",
         notes: defaultNotes,
-        status: "pending",
       });
     }
     onOpenChange(open);
   }
 
   function handleSubmit(data: FormValues) {
+    setSubmitError(null);
     if (!gdprConsent) {
       setGdprError(true);
+      setSubmitError("Απαιτείται αποδοχή των Όρων Service και GDPR για υποβολή.");
       return;
     }
     if (!serviceTermsConsent) {
       setServiceTermsError(true);
+      setSubmitError("Απαιτείται αποδοχή των Όρων Service και GDPR για υποβολή.");
       return;
     }
     mutation.mutate(data);
+  }
+
+  function handleInvalidSubmit() {
+    setSubmitError("Το αίτημά σας δεν καταχωρήθηκε. Συμπληρώστε όλα τα υποχρεωτικά πεδία (*) και δοκιμάστε ξανά.");
+    requestAnimationFrame(() => {
+      document.getElementById("repair-submit-status")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
   }
 
   const submitUpsell = useMemo(() => {
@@ -192,14 +230,20 @@ export function RepairRequestModal({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="bg-background border border-white/10 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
         {submitted ? (
-          <div className="flex flex-col items-center text-center py-8 gap-4">
-            <div className="w-16 h-16 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center">
-              <CheckCircle2 className="w-8 h-8 text-primary" />
+          <div className="flex flex-col items-center text-center py-8 gap-4" role="status" aria-live="polite">
+            <div className="w-16 h-16 rounded-full bg-emerald-500/15 border border-emerald-500/35 flex items-center justify-center">
+              <CheckCircle2 className="w-8 h-8 text-emerald-500" />
             </div>
             <div>
-              <h3 className="text-xl font-display font-bold text-foreground mb-2">Αίτημα Επισκευής Υποβλήθηκε!</h3>
+              <h3 className="text-xl font-display font-bold text-foreground mb-2">Το αίτημά σας καταχωρήθηκε</h3>
               <p className="text-sm text-muted-foreground max-w-sm">
-                Λάβαμε το αίτημά σας. Θα επικοινωνήσουμε μαζί σας το συντομότερο για να κλείσουμε ραντεβού.
+                Η καταχώρηση ολοκληρώθηκε επιτυχώς
+                {submittedRequestId != null ? (
+                  <>
+                    {" "}(αρ. <span className="font-mono text-foreground">#{submittedRequestId}</span>)
+                  </>
+                ) : null}
+                . Θα επικοινωνήσουμε μαζί σας το συντομότερο για να κλείσουμε ραντεβού.
               </p>
             </div>
             {submitUpsell?.kind === "tempered" ? (
@@ -277,7 +321,35 @@ export function RepairRequestModal({
             </DialogHeader>
 
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
+              <form onSubmit={form.handleSubmit(handleSubmit, handleInvalidSubmit)} className="space-y-3">
+                <div id="repair-submit-status" className="space-y-2">
+                  {submitError && (
+                    <div
+                      role="alert"
+                      aria-live="assertive"
+                      className="rounded-xl border border-red-500/40 bg-red-500/10 px-3.5 py-3 flex items-start gap-3"
+                      data-testid="repair-submit-error"
+                    >
+                      <div className="shrink-0 w-8 h-8 rounded-lg bg-red-500/15 border border-red-500/30 flex items-center justify-center mt-0.5">
+                        <XCircle className="w-4 h-4 text-red-500" aria-hidden />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-red-700 dark:text-red-300">Το αίτημά σας απορρίφθηκε</p>
+                        <p className="text-xs text-red-700/90 dark:text-red-200/90 mt-0.5 leading-relaxed">{submitError}</p>
+                      </div>
+                    </div>
+                  )}
+                  {mutation.isPending && (
+                    <div
+                      role="status"
+                      aria-live="polite"
+                      className="rounded-xl border border-primary/30 bg-primary/5 px-3.5 py-3 flex items-center gap-3"
+                    >
+                      <Loader2 className="w-4 h-4 text-primary shrink-0 animate-spin" aria-hidden />
+                      <p className="text-xs font-medium text-foreground">Αποστολή αιτήματος… παρακαλώ περιμένετε.</p>
+                    </div>
+                  )}
+                </div>
 
                 {/* Όνομα & Επίθετο */}
                 <div className="grid grid-cols-2 gap-3">
