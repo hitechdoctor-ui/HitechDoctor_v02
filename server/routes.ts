@@ -1086,12 +1086,13 @@ export async function registerRoutes(
       };
       const request = await storage.createRepairRequest(input);
       res.status(201).json(request);
-      sendRepairConfirmationEmail(request).catch((e) => console.error("[email] background send failed:", e));
-      // Auto-upsert customer in CRM
-      const fullName = `${input.firstName} ${input.lastName ?? ""}`.trim();
-      storage.upsertCustomerByEmail(fullName, input.email, input.phone).catch((e) =>
-        console.error("[crm] repair upsert failed:", e)
-      );
+      if (input.email?.trim()) {
+        sendRepairConfirmationEmail(request).catch((e) => console.error("[email] background send failed:", e));
+        const fullName = `${input.firstName} ${input.lastName ?? ""}`.trim();
+        storage.upsertCustomerByEmail(fullName, input.email, input.phone).catch((e) =>
+          console.error("[crm] repair upsert failed:", e)
+        );
+      }
     } catch (err) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: err.errors[0].message, field: err.errors[0].path.join('.') });

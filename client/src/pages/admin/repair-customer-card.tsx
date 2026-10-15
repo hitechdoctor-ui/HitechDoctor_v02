@@ -174,7 +174,10 @@ export default function AdminRepairCustomerCard() {
                           {current.deviceName || "Χωρίς όνομα συσκευής"}
                         </CardTitle>
                         {current.notes && (
-                          <p className="text-sm text-muted-foreground leading-relaxed">{current.notes}</p>
+                          <p className="text-sm text-muted-foreground leading-relaxed flex items-start gap-1.5">
+                            <Wrench className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" aria-hidden />
+                            <span>{current.notes}</span>
+                          </p>
                         )}
                         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
                           {current.serialNumber && (
@@ -268,7 +271,10 @@ export default function AdminRepairCustomerCard() {
                               {req.deviceName || "Χωρίς όνομα συσκευής"}
                             </p>
                             {req.notes && (
-                              <p className="text-xs text-muted-foreground line-clamp-2">{req.notes}</p>
+                              <p className="text-xs text-muted-foreground line-clamp-2 flex items-start gap-1.5">
+                                <Wrench className="w-3 h-3 text-primary shrink-0 mt-0.5" aria-hidden />
+                                <span>{req.notes}</span>
+                              </p>
                             )}
                           </div>
                           <Select

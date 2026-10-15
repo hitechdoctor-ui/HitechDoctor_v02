@@ -346,7 +346,11 @@ export const publicRepairRequestSchema = z.object({
   firstName: z.string().trim().min(1, "Συμπληρώστε το όνομά σας").max(100),
   lastName: z.string().trim().max(100).optional().nullable(),
   phone: z.string().trim().min(10, "Συμπληρώστε έγκυρο κινητό").max(32),
-  email: z.string().trim().email("Μη έγκυρο email").max(200),
+  email: z
+    .union([z.literal(""), z.string().trim().email("Μη έγκυρο email").max(200)])
+    .optional()
+    .nullable()
+    .transform((v) => (v == null ? "" : v)),
   deviceName: z.string().trim().max(200).optional().nullable().transform((v) => v || ""),
   serialNumber: z.string().trim().max(100).optional().nullable().transform((v) => v || ""),
   deviceCode: z.string().trim().max(100).optional().nullable(),

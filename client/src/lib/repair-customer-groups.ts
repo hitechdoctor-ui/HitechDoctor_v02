@@ -67,10 +67,7 @@ export function groupRepairRequestsByCustomer(requests: RepairRequest[]): Custom
     });
   });
 
-  return groups.sort((a, b) => {
-    if (a.openCount !== b.openCount) return b.openCount - a.openCount;
-    return createdAtMs(b.latest) - createdAtMs(a.latest);
-  });
+  return groups.sort((a, b) => createdAtMs(b.latest) - createdAtMs(a.latest));
 }
 
 /** Νεότερο ανοιχτό αίτημα, αλλιώς το νεότερο συνολικά. */

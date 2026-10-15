@@ -132,7 +132,7 @@ export function RepairRequestModal({
         firstName: data.firstName,
         lastName: data.lastName || null,
         phone: data.phone,
-        email: data.email,
+        email: data.email || "",
         deviceName: data.deviceName,
         serialNumber: data.serialNumber,
         deviceCode: data.deviceCode || null,
@@ -393,10 +393,10 @@ export function RepairRequestModal({
                   <FormField control={form.control} name="email" render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs font-semibold flex items-center gap-1.5">
-                        <Mail className="w-3 h-3 text-primary" />Email <span className="text-primary">*</span>
+                        <Mail className="w-3 h-3 text-primary" />Email <span className="text-muted-foreground text-[10px] font-normal">(προαιρετικό)</span>
                       </FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="name@email.com" type="email" className="bg-card border-white/10 focus:border-primary/40 h-9 text-sm" data-testid="input-email" />
+                        <Input {...field} value={field.value ?? ""} placeholder="name@email.com" type="email" className="bg-card border-white/10 focus:border-primary/40 h-9 text-sm" data-testid="input-email" />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>

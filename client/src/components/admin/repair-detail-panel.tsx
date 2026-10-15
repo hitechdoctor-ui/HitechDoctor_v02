@@ -293,10 +293,10 @@ export function RepairDetailPanel({ req, className = "" }: { req: RepairRequest;
 
   return (
     <div className={`bg-background/40 rounded-2xl px-1 py-1 sm:px-2 sm:py-2 ${className}`} data-testid={`repair-detail-panel-${req.id}`}>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="flex flex-col gap-6">
 
-            {/* ── Left: Line items editor ── */}
-            <div>
+            {/* ── Line items editor ── */}
+            <div className="rounded-2xl border border-red-500/60 bg-card/40 p-4 sm:p-5">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-7 h-7 rounded-lg bg-primary/15 border border-primary/25 flex items-center justify-center">
                   <Package className="w-3.5 h-3.5 text-primary" />
@@ -432,8 +432,8 @@ export function RepairDetailPanel({ req, className = "" }: { req: RepairRequest;
               )}
             </div>
 
-            {/* ── Right: Price box with VAT calculation ── */}
-            <div>
+            {/* ── Price box with VAT calculation ── */}
+            <div className="rounded-2xl border border-red-500/60 bg-card/40 p-4 sm:p-5">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-7 h-7 rounded-lg bg-primary/15 border border-primary/25 flex items-center justify-center">
                   <Euro className="w-3.5 h-3.5 text-primary" />

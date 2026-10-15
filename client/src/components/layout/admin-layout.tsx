@@ -2,6 +2,7 @@ import { Link, useLocation } from "wouter";
 import type { LucideIcon } from "lucide-react";
 import { Package, Users, ShoppingCart, LayoutDashboard, LogOut, Wrench, Euro, Menu, X, Shield, Globe, MessageSquare, Lock, UserCog, Download, Link2, Tag, RefreshCw, TableProperties, PieChart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@shared/routes";
@@ -258,125 +259,193 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         ? adminNavBlocks
         : filterNavBlocksForNonSuper(adminNavBlocks);
 
-  const SidebarContent = () => (
-    <>
-      <div className="p-5 border-b border-white/5 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity">
-          <h2 className="text-xl font-display font-bold">HiTech Admin</h2>
-        </Link>
-        <button
-          onClick={() => setMobileOpen(false)}
-          className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 text-muted-foreground hover:text-foreground transition-colors"
+  const renderNavLink = (link: NavLinkItem, compact: boolean) => {
+    const isActive = linkIsActive(link.href, location);
+    const badge =
+      link.href === "/admin/orders" && openOrdersCount > 0 ? (
+        <span
+          className={
+            compact
+              ? "absolute -top-0.5 -right-0.5 min-h-[1rem] min-w-[1rem] px-0.5 rounded-full bg-yellow-400 text-black text-[9px] font-bold leading-none flex items-center justify-center tabular-nums"
+              : "shrink-0 min-h-[1.25rem] min-w-[1.25rem] px-1.5 rounded-full bg-yellow-400 text-black text-[10px] font-bold leading-none flex items-center justify-center tabular-nums shadow-sm ring-1 ring-yellow-500/30"
+          }
+          aria-label={`${openOrdersCount} παραγγελίες χωρίς κατάσταση ολοκλήρωσης`}
+          data-testid="badge-admin-open-orders"
         >
-          <X className="w-4 h-4" />
-        </button>
+          {openOrdersCount > 99 ? "99+" : openOrdersCount}
+        </span>
+      ) : link.href === "/admin/repair-requests" && openRepairRequestsCount > 0 ? (
+        <span
+          className={
+            compact
+              ? "absolute -top-0.5 -right-0.5 min-h-[1rem] min-w-[1rem] px-0.5 rounded-full bg-sky-400 text-black text-[9px] font-bold leading-none flex items-center justify-center tabular-nums"
+              : "shrink-0 min-h-[1.25rem] min-w-[1.25rem] px-1.5 rounded-full bg-sky-400 text-black text-[10px] font-bold leading-none flex items-center justify-center tabular-nums shadow-sm ring-1 ring-sky-600/30"
+          }
+          aria-label={`${openRepairRequestsCount} αιτήματα επισκευής χωρίς ολοκλήρωση`}
+          data-testid="badge-admin-open-repair-requests"
+        >
+          {openRepairRequestsCount > 99 ? "99+" : openRepairRequestsCount}
+        </span>
+      ) : null;
+
+    if (compact) {
+      return (
+        <Tooltip key={link.href} delayDuration={150}>
+          <TooltipTrigger asChild>
+            <Link
+              href={link.href}
+              aria-label={link.label}
+              onClick={() => setMobileOpen(false)}
+              className={`relative flex items-center justify-center w-10 h-10 mx-auto rounded-xl transition-all duration-200 ${
+                isActive
+                  ? "bg-primary/10 text-primary border border-primary/20 shadow-[0_0_12px_rgba(0,229,255,0.1)]"
+                  : "text-muted-foreground hover:bg-white/5 hover:text-foreground border border-transparent"
+              }`}
+            >
+              <span className="relative inline-flex">
+                <link.icon className="w-4.5 h-4.5 shrink-0" />
+                {badge}
+              </span>
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="right" sideOffset={10} className="border-white/10 bg-card text-foreground">
+            {link.label}
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+
+    return (
+      <Link
+        key={link.href}
+        href={link.href}
+        onClick={() => setMobileOpen(false)}
+        className={`flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium transition-all duration-200 text-sm w-full ${
+          isActive
+            ? "bg-primary/10 text-primary border border-primary/20 shadow-[0_0_15px_rgba(0,229,255,0.1)]"
+            : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
+        }`}
+      >
+        <link.icon className="w-4 h-4 shrink-0" />
+        <span className="flex-1 truncate text-left leading-snug">{link.label}</span>
+        {badge}
+      </Link>
+    );
+  };
+
+  const SidebarContent = ({ compact = false }: { compact?: boolean }) => (
+    <>
+      <div className={`border-b border-white/5 flex items-center ${compact ? "p-3 justify-center" : "p-5 justify-between"}`}>
+        <Link href="/" className="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity" title="HiTech Admin">
+          {compact ? (
+            <span className="text-sm font-display font-bold tracking-tight">HT</span>
+          ) : (
+            <h2 className="text-xl font-display font-bold">HiTech Admin</h2>
+          )}
+        </Link>
+        {!compact && (
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
-      <nav className="flex-1 p-4 flex flex-col gap-3 overflow-y-auto">
+      <nav className={`flex-1 flex flex-col overflow-y-auto overflow-x-visible ${compact ? "p-2 gap-2" : "p-4 gap-3"}`}>
         {navBlocks.map((block, blockIdx) => {
           if (block.kind === "links") {
             return (
-              <div key={`links-${blockIdx}`} className="flex flex-col gap-1">
-                {block.items.map((link) => {
-                  const isActive = linkIsActive(link.href, location);
-                  return (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      onClick={() => setMobileOpen(false)}
-                      className={`flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium transition-all duration-200 text-sm w-full ${
-                        isActive
-                          ? "bg-primary/10 text-primary border border-primary/20 shadow-[0_0_15px_rgba(0,229,255,0.1)]"
-                          : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
-                      }`}
-                    >
-                      <link.icon className="w-4 h-4 shrink-0" />
-                      <span className="flex-1 truncate text-left">{link.label}</span>
-                      {link.href === "/admin/orders" && openOrdersCount > 0 && (
-                        <span
-                          className="shrink-0 min-h-[1.25rem] min-w-[1.25rem] px-1.5 rounded-full bg-yellow-400 text-black text-[10px] font-bold leading-none flex items-center justify-center tabular-nums shadow-sm ring-1 ring-yellow-500/30"
-                          aria-label={`${openOrdersCount} παραγγελίες χωρίς κατάσταση ολοκλήρωσης`}
-                          data-testid="badge-admin-open-orders"
-                        >
-                          {openOrdersCount > 99 ? "99+" : openOrdersCount}
-                        </span>
-                      )}
-                    </Link>
-                  );
-                })}
+              <div key={`links-${blockIdx}`} className={`flex flex-col ${compact ? "gap-1.5" : "gap-1"}`}>
+                {block.items.map((link) => renderNavLink(link, compact))}
               </div>
             );
           }
 
           return (
-            <div key={block.title} className="flex flex-col gap-1">
-              <p className="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
-                {block.title}
-              </p>
-              <div className="flex flex-col gap-0.5 border-l border-white/10 ml-3 pl-2">
-                {block.items.map((link) => {
-                  const isActive = linkIsActive(link.href, location);
-                  return (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      onClick={() => setMobileOpen(false)}
-                      className={`flex items-center gap-2.5 px-3 py-2 rounded-lg font-medium transition-all duration-200 text-sm w-full ${
-                        isActive
-                          ? "bg-primary/10 text-primary border border-primary/20 shadow-[0_0_12px_rgba(0,229,255,0.08)]"
-                          : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
-                      }`}
-                    >
-                      <link.icon className="w-4 h-4 shrink-0 opacity-90" />
-                      <span className="flex-1 truncate text-left leading-snug">{link.label}</span>
-                      {link.href === "/admin/repair-requests" && openRepairRequestsCount > 0 && (
-                        <span
-                          className="shrink-0 min-h-[1.25rem] min-w-[1.25rem] px-1.5 rounded-full bg-sky-400 text-black text-[10px] font-bold leading-none flex items-center justify-center tabular-nums shadow-sm ring-1 ring-sky-600/30"
-                          aria-label={`${openRepairRequestsCount} αιτήματα επισκευής χωρίς ολοκλήρωση`}
-                          data-testid="badge-admin-open-repair-requests"
-                        >
-                          {openRepairRequestsCount > 99 ? "99+" : openRepairRequestsCount}
-                        </span>
-                      )}
-                    </Link>
-                  );
-                })}
+            <div key={block.title} className={`flex flex-col ${compact ? "gap-1.5" : "gap-1"}`}>
+              {compact ? (
+                <div className="mx-2 my-1 border-t border-white/10" title={block.title} aria-hidden />
+              ) : (
+                <p className="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                  {block.title}
+                </p>
+              )}
+              <div className={compact ? "flex flex-col gap-1.5" : "flex flex-col gap-0.5 border-l border-white/10 ml-3 pl-2"}>
+                {block.items.map((link) => renderNavLink(link, compact))}
               </div>
             </div>
           );
         })}
       </nav>
 
-      <div className="p-4 border-t border-white/5 space-y-1">
-        {adminInfo?.name && (
+      <div className={`border-t border-white/5 space-y-1 ${compact ? "p-2" : "p-4"}`}>
+        {!compact && adminInfo?.name && (
           <div className="px-3 py-2 mb-1 rounded-xl bg-white/5">
             <p className="text-xs font-semibold text-foreground truncate">{adminInfo.name}</p>
             <p className="text-xs text-muted-foreground truncate">{adminInfo.email}</p>
           </div>
         )}
-        <Link href="/">
-          <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground">
-            <LogOut className="w-4 h-4 mr-2" />
-            Έξοδος στο Site
-          </Button>
-        </Link>
-        <Button
-          variant="ghost"
-          onClick={handleLogout}
-          className="w-full justify-start text-red-400/60 hover:text-red-400 hover:bg-red-400/5"
-          data-testid="button-admin-logout"
-        >
-          <Lock className="w-4 h-4 mr-2" />
-          Αποσύνδεση
-        </Button>
+        {compact ? (
+          <>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link href="/" aria-label="Έξοδος στο Site" className="flex justify-center">
+                  <Button variant="ghost" className="w-10 h-10 p-0 text-muted-foreground hover:text-foreground">
+                    <LogOut className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={10} className="border-white/10 bg-card text-foreground">
+                Έξοδος στο Site
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  onClick={handleLogout}
+                  aria-label="Αποσύνδεση"
+                  className="w-10 h-10 mx-auto p-0 text-red-400/60 hover:text-red-400 hover:bg-red-400/5"
+                  data-testid="button-admin-logout"
+                >
+                  <Lock className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={10} className="border-white/10 bg-card text-foreground">
+                Αποσύνδεση
+              </TooltipContent>
+            </Tooltip>
+          </>
+        ) : (
+          <>
+            <Link href="/">
+              <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground">
+                <LogOut className="w-4 h-4 mr-2" />
+                Έξοδος στο Site
+              </Button>
+            </Link>
+            <Button
+              variant="ghost"
+              onClick={handleLogout}
+              className="w-full justify-start text-red-400/60 hover:text-red-400 hover:bg-red-400/5"
+              data-testid="button-admin-logout"
+            >
+              <Lock className="w-4 h-4 mr-2" />
+              Αποσύνδεση
+            </Button>
+          </>
+        )}
       </div>
     </>
   );
 
   return (
+    <TooltipProvider delayDuration={150}>
     <div className="min-h-screen bg-background flex">
-      <aside className="hidden md:flex w-64 bg-card border-r border-white/5 flex-col sticky top-0 h-screen z-10 shrink-0">
-        <SidebarContent />
+      <aside className="hidden md:flex w-16 bg-card border-r border-white/5 flex-col sticky top-0 h-screen z-20 shrink-0">
+        <SidebarContent compact />
       </aside>
 
       {mobileOpen && (
@@ -411,5 +480,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       {/* Browser notifications + sound + favicon badge for νέες φόρμες */}
       <NotificationMonitor enabled={!!token && adminInfo?.role !== "staff"} />
     </div>
+    </TooltipProvider>
   );
 }
