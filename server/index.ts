@@ -109,6 +109,12 @@ async function checkSubscriptionExpiry() {
         "express"
       );
     }
+    if (!process.env.GEMINI_API_KEY?.trim() && !process.env.OPENAI_API_KEY?.trim()) {
+      log(
+        "GEMINI_API_KEY / OPENAI_API_KEY λείπουν — το AI intake επικοινωνίας (/api/contact/ai-intake) θα επιστρέφει 503.",
+        "express"
+      );
+    }
 
     registerRedirects(app);
     await registerRoutes(httpServer, app);

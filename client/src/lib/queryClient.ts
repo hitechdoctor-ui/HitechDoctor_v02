@@ -31,6 +31,23 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+/** Δημόσια POST/δημιουργία — χωρίς admin Bearer (αποφυγή 403 / Cloudflare challenge). */
+function shouldOmitAdminAuth(method: string, url: string): boolean {
+  try {
+    const path = url.startsWith("http") ? new URL(url).pathname : url.split("?")[0] || url;
+    const m = method.toUpperCase();
+    if (m === "POST" && path === "/api/repair-requests") return true;
+    if (m === "POST" && path === "/api/contact/ai-intake") return true;
+    if (m === "POST" && path.startsWith("/api/product-offer-interests")) return true;
+    if (m === "POST" && path.startsWith("/api/website-inquiries")) return true;
+    if (m === "POST" && path.startsWith("/api/boxnow")) return true;
+    if (m === "POST" && path.startsWith("/api/subscriptions")) return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 export async function apiRequest(
   method: string,
   url: string,
@@ -40,7 +57,7 @@ export async function apiRequest(
     method,
     headers: {
       ...(data ? { "Content-Type": "application/json" } : {}),
-      ...getAdminAuthHeaders(),
+      ...(shouldOmitAdminAuth(method, url) ? {} : getAdminAuthHeaders()),
     },
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",

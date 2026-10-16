@@ -29,14 +29,22 @@ type FormValues = z.infer<typeof repairFormSchema>;
 
 function parseApiErrorMessage(err: unknown): string {
   const raw = err instanceof Error ? err.message : "";
-  const apiMsg = raw.includes(": ") ? raw.slice(raw.indexOf(": ") + 2) : raw;
+  const statusMatch = /^(\d{3}):\s*/.exec(raw);
+  const status = statusMatch ? Number(statusMatch[1]) : null;
+  const apiMsg = statusMatch ? raw.slice(statusMatch[0].length) : raw;
   try {
     const parsed = JSON.parse(apiMsg) as { message?: string };
     if (parsed?.message) return parsed.message;
   } catch {
     /* keep fallback */
   }
-  if (apiMsg && apiMsg.length < 180 && !apiMsg.startsWith("{")) return apiMsg;
+  if (status === 403 || /just a moment|cf-mitigated|cloudflare/i.test(apiMsg)) {
+    return "Η υποβολή μπλοκαρίστηκε από προστασία ασφαλείας. Ανανεώστε τη σελίδα και δοκιμάστε ξανά (χωρίς VPN αν χρησιμοποιείτε).";
+  }
+  if (status === 400 && apiMsg && apiMsg.length < 180 && !apiMsg.startsWith("<") && !apiMsg.startsWith("{")) {
+    return apiMsg;
+  }
+  if (apiMsg && apiMsg.length < 180 && !apiMsg.startsWith("{") && !apiMsg.startsWith("<")) return apiMsg;
   return "Δεν ήταν δυνατή η καταχώρηση. Ελέγξτε τα στοιχεία και δοκιμάστε ξανά.";
 }
 
@@ -129,17 +137,18 @@ export function RepairRequestModal({
   const mutation = useMutation({
     mutationFn: async (data: FormValues) => {
       const payload: Record<string, unknown> = {
-        firstName: data.firstName,
-        lastName: data.lastName || null,
-        phone: data.phone,
-        email: data.email || "",
-        deviceName: data.deviceName,
-        serialNumber: data.serialNumber,
-        deviceCode: data.deviceCode || null,
-        notes: data.notes || null,
+        firstName: data.firstName.trim(),
+        lastName: (data.lastName ?? "").trim() || null,
+        phone: data.phone.trim(),
+        email: (data.email ?? "").trim(),
+        deviceName: (data.deviceName ?? "").trim(),
+        serialNumber: (data.serialNumber ?? "").trim(),
+        deviceCode: (data.deviceCode ?? "").trim() || null,
+        notes: (data.notes ?? "").trim() || null,
         status: "pending",
       };
-      if (hasPrice) {
+      // Μην στέλνεις price: "" / 0 — σπάει validation ή μπερδεύει το Postgres
+      if (hasPrice && netPrice > 0) {
         payload.price = netPrice.toFixed(2);
         payload.priceIncludesVat = selectedBox === "gross";
       }

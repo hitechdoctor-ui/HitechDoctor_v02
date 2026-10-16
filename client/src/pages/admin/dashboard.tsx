@@ -34,7 +34,6 @@ import {
   RepairStatusBadge,
   RepairIdBadge,
   REPAIR_STATUSES,
-  repairStatusRowClass,
 } from "@/components/admin/repair-detail-panel";
 
 const STATUSES = REPAIR_STATUSES;
@@ -126,12 +125,12 @@ function RepairRequestsSection() {
   const hasMore = filtered.length > 5;
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.05] to-transparent overflow-hidden">
-      <div className="flex flex-col gap-2.5 px-3.5 sm:px-4 py-3 border-b border-white/8">
+    <section className="rounded-2xl border-2 border-red-500/70 border-l-[4px] border-l-red-500 bg-gradient-to-b from-red-500/[0.07] to-transparent overflow-hidden shadow-[0_0_24px_rgba(239,68,68,0.12)]">
+      <div className="flex flex-col gap-2.5 px-3.5 sm:px-4 py-3 border-b border-red-500/20">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center">
-              <Wrench className="w-4 h-4 text-primary" />
+            <div className="w-8 h-8 rounded-xl bg-red-500/15 border border-red-500/35 flex items-center justify-center">
+              <Wrench className="w-4 h-4 text-red-400" />
             </div>
             <div>
               <h2 className="text-sm sm:text-base font-display font-bold tracking-tight">Αιτήματα Επισκευής</h2>
@@ -194,25 +193,29 @@ function RepairRequestsSection() {
           </div>
         ) : (
           <div>
-            <div className="hidden lg:grid grid-cols-[auto_minmax(7rem,1fr)_minmax(9rem,1.1fr)_minmax(8rem,1.1fr)_minmax(6rem,0.9fr)_auto_auto] gap-3 px-1 pb-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+            <div className="hidden lg:grid grid-cols-[auto_minmax(7rem,1fr)_minmax(9rem,1.1fr)_minmax(8rem,1.1fr)_minmax(6rem,0.9fr)_auto] gap-3 px-1 pb-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
               <span>#</span>
               <span>Πελάτης</span>
               <span>Επικοινωνία</span>
               <span>Συσκευή</span>
               <span>Serial / Κωδικός</span>
-              <span>Ημερομηνία</span>
               <span>Κατάσταση</span>
             </div>
             <ul className="flex flex-col gap-2.5">
               {preview.map((req) => (
                 <li
                   key={req.id}
-                  className={`rounded-xl border px-3 py-2.5 transition-colors ${repairStatusRowClass(req.status)}`}
+                  className="rounded-xl border border-white/15 bg-white/[0.03] px-3 py-2.5 transition-colors hover:bg-white/[0.06] hover:border-white/25"
                   data-testid={`row-repair-${req.id}`}
                 >
-                  <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-[auto_minmax(7rem,1fr)_minmax(9rem,1.1fr)_minmax(8rem,1.1fr)_minmax(6rem,0.9fr)_auto_auto] lg:items-center lg:gap-3">
+                  <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-[auto_minmax(7rem,1fr)_minmax(9rem,1.1fr)_minmax(8rem,1.1fr)_minmax(6rem,0.9fr)_auto] lg:items-center lg:gap-3">
                     <RepairIdBadge id={req.id} status={req.status} />
-                    <p className="font-semibold text-foreground text-sm">{req.firstName} {req.lastName}</p>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-foreground text-sm">{req.firstName} {req.lastName}</p>
+                      <p className="text-xs sm:text-sm font-semibold text-foreground/85 tabular-nums mt-0.5">
+                        {formatDate(req.createdAt)}
+                      </p>
+                    </div>
                     <div className="flex flex-col gap-0.5">
                       <a href={`tel:${req.phone}`} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors">
                         <Phone className="w-3 h-3 text-primary shrink-0" />{req.phone}
@@ -244,7 +247,6 @@ function RepairRequestsSection() {
                         </div>
                       )}
                     </div>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">{formatDate(req.createdAt)}</span>
                     <Select
                       value={req.status}
                       onValueChange={(val) => statusMutation.mutate({ id: req.id, status: val })}

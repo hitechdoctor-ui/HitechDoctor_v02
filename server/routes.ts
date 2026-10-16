@@ -42,6 +42,7 @@ import { resolveCheckStatus } from "./check-status";
 import { refreshCompetitorPrices } from "./price-compare";
 import { APIError } from "openai";
 import { getRepairCatalogPromptBlock, runRepairAssistantChat } from "./chat-assistant";
+import { extractContactIntakeFields } from "./contact-ai-intake";
 import {
   compactAssistantDisplayText,
   splitAssistantReply,
@@ -1884,6 +1885,37 @@ export async function registerRoutes(
       res.json(rows);
     } catch {
       res.status(401).json({ message: "Unauthorized" });
+    }
+  });
+
+  /**
+   * AI intake φόρμας επικοινωνίας — ελεύθερο κείμενο → structured JSON.
+   * Gemini (GEMINI_API_KEY) με fallback OpenAI. Δημόσιο, χωρίς auth.
+   */
+  app.post("/api/contact/ai-intake", async (req, res) => {
+    try {
+      const schema = z.object({
+        text: z.string().trim().min(3, "Γράψτε ή υπαγορεύστε λίγο περισσότερα").max(6000),
+      });
+      const { text } = schema.parse(req.body);
+      const { fields, provider } = await extractContactIntakeFields(text);
+      res.json({ fields, provider });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      const msg = err instanceof Error ? err.message : "";
+      if (msg === "AI_KEY_MISSING" || msg === "GEMINI_API_KEY_MISSING" || msg === "OPENAI_API_KEY_MISSING") {
+        return res.status(503).json({ message: "Η υπηρεσία AI δεν είναι διαθέσιμη προσωρινά." });
+      }
+      if (msg === "AI_RATE_LIMIT") {
+        return res.status(429).json({ message: "Πολλά αιτήματα. Δοκιμάστε ξανά σε λίγο." });
+      }
+      if (msg === "GEMINI_UNAUTHORIZED") {
+        return res.status(503).json({ message: "Η υπηρεσία AI δεν είναι ρυθμισμένη σωστά." });
+      }
+      console.error("[contact/ai-intake]", err);
+      res.status(500).json({ message: "Αποτυχία εξαγωγής στοιχείων. Δοκιμάστε ξανά." });
     }
   });
 

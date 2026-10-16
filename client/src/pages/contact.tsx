@@ -16,6 +16,7 @@ import {
   BUSINESS_TRADE_NAME,
   BUSINESS_HOURS_SUMMARY,
 } from "@/lib/business-info";
+import { ContactAiIntake, type ContactAiFields } from "@/components/contact-ai-intake";
 
 const HOURS = [
   { day: "Δευτέρα – Παρασκευή", time: "10:00 – 19:00", open: true },
@@ -67,15 +68,43 @@ URL:https://hitechdoctor.com
 END:VCARD`;
 
 export default function Contact() {
-  const [form, setForm] = useState({ name: "", phone: "", message: "", gdpr: false });
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    deviceModel: "",
+    message: "",
+    gdpr: false,
+  });
   const [sent, setSent] = useState(false);
+
+  function applyAiFields(fields: ContactAiFields) {
+    setForm((f) => ({
+      ...f,
+      name: fields.name?.trim() || f.name,
+      phone: fields.phone?.trim() || f.phone,
+      email: fields.email?.trim() || f.email,
+      deviceModel: fields.device_model?.trim() || f.deviceModel,
+      message: fields.message?.trim() || f.message,
+    }));
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.gdpr) return;
     const subject = encodeURIComponent("Επικοινωνία από hitechdoctor.com");
     const body = encodeURIComponent(
-      `Όνομα: ${form.name}\nΤηλέφωνο: ${form.phone}\n\nΜήνυμα:\n${form.message}`
+      [
+        `Όνομα: ${form.name}`,
+        form.phone ? `Τηλέφωνο: ${form.phone}` : null,
+        form.email ? `Email: ${form.email}` : null,
+        form.deviceModel ? `Συσκευή: ${form.deviceModel}` : null,
+        "",
+        "Μήνυμα:",
+        form.message,
+      ]
+        .filter((line) => line !== null)
+        .join("\n"),
     );
     window.location.href = `mailto:info@hitechdoctor.com?subject=${subject}&body=${body}`;
     setSent(true);
@@ -215,13 +244,18 @@ export default function Contact() {
                       variant="ghost"
                       size="sm"
                       className="text-primary mt-2"
-                      onClick={() => { setSent(false); setForm({ name: "", phone: "", message: "", gdpr: false }); }}
+                      onClick={() => {
+                        setSent(false);
+                        setForm({ name: "", phone: "", email: "", deviceModel: "", message: "", gdpr: false });
+                      }}
                     >
                       Νέο μήνυμα
                     </Button>
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+                    <ContactAiIntake onExtracted={applyAiFields} />
+
                     <div>
                       <label htmlFor="contact-name" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 block">
                         Όνομα
@@ -248,6 +282,34 @@ export default function Contact() {
                         value={form.phone}
                         onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
                         placeholder="69x xxx xxxx"
+                        className="w-full h-10 rounded-xl bg-white/5 border border-white/10 px-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="contact-email" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 block">
+                        Email
+                      </label>
+                      <input
+                        id="contact-email"
+                        type="email"
+                        data-testid="input-contact-email"
+                        value={form.email}
+                        onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                        placeholder="you@email.com"
+                        className="w-full h-10 rounded-xl bg-white/5 border border-white/10 px-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="contact-device" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 block">
+                        Μοντέλο συσκευής
+                      </label>
+                      <input
+                        id="contact-device"
+                        type="text"
+                        data-testid="input-contact-device"
+                        value={form.deviceModel}
+                        onChange={(e) => setForm((f) => ({ ...f, deviceModel: e.target.value }))}
+                        placeholder="π.χ. iPhone 13, Samsung A54"
                         className="w-full h-10 rounded-xl bg-white/5 border border-white/10 px-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 transition-colors"
                       />
                     </div>
