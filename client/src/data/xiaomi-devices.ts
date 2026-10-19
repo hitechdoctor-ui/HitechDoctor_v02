@@ -76,7 +76,7 @@ export const XIAOMI_SERIES: XiaomiSeries[] = [
       { name: "Xiaomi 15",        slug: slug("Xiaomi 15"),        screen: "6.36″ AMOLED 120Hz",       tag: "NEW", screenPrice: 185, batteryPrice: 80, portPrice: 65 },
       { name: "Xiaomi 14T Pro",   slug: slug("Xiaomi 14T Pro"),   screen: "6.67″ LTPO AMOLED 144Hz",              screenPrice: 170, batteryPrice: 75, portPrice: 60 },
       { name: "Xiaomi 14T",       slug: slug("Xiaomi 14T"),       screen: "6.67″ AMOLED 144Hz",                   screenPrice: 145, batteryPrice: 70, portPrice: 55 },
-      { name: "Xiaomi 14 Ultra",  slug: slug("Xiaomi 14 Ultra"),  screen: "6.73″ LTPO AMOLED 120Hz",              screenPrice: 220, batteryPrice: 88, portPrice: 70 },
+      { name: "Xiaomi 14 Ultra",  slug: slug("Xiaomi 14 Ultra"),  screen: "6.73″ LTPO AMOLED 120Hz",              screenPrice: 556.76, batteryPrice: 88, portPrice: 70 },
       { name: "Xiaomi 14",        slug: slug("Xiaomi 14"),        screen: "6.36″ AMOLED 120Hz",                   screenPrice: 155, batteryPrice: 72, portPrice: 55 },
       { name: "Xiaomi 13T Pro",   slug: slug("Xiaomi 13T Pro"),   screen: "6.67″ AMOLED 144Hz",                   screenPrice: 160, batteryPrice: 72, portPrice: 55 },
       { name: "Xiaomi 13T",       slug: slug("Xiaomi 13T"),       screen: "6.67″ AMOLED 144Hz",                   screenPrice: 135, batteryPrice: 68, portPrice: 55 },

@@ -211,7 +211,7 @@ export function buildGlobalSearchIndex(): GlobalSearchIndexEntry[] {
     entries.push({
       name: `Επισκευή ${model.name}`,
       href: "/services/episkeui-apple-watch",
-      sub: `Apple Watch · ${model.sizes} · Touch από €${model.touchPriceFrom} · Μπαταρία €${model.batteryPriceFrom}`,
+      sub: `Apple Watch · ${model.sizes} · Touch: Πάρε τηλέφωνο · Μπαταρία από €${model.batteryPriceFrom}`,
       category: "watch",
       keywords: `apple watch ${model.name.toLowerCase()} επισκευη touch μπαταρια αλλαγη τζαμι`,
     });

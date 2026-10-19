@@ -26,31 +26,54 @@ type RepairPrefill = {
   totalInclVat?: number;
 };
 
+const WATCH_CALL_TEL = "tel:+306981882005";
+const WATCH_CALL_LABEL = "Πάρε τηλέφωνο";
+
+function WatchTouchCallLink({
+  modelName,
+  testId,
+  className,
+  compact = false,
+}: {
+  modelName: string;
+  testId: string;
+  className?: string;
+  compact?: boolean;
+}) {
+  return (
+    <a
+      href={WATCH_CALL_TEL}
+      className={cn(
+        "inline-flex items-center justify-center gap-1.5 rounded-lg border border-primary/35 bg-primary/10 px-3 py-1.5 text-primary font-bold transition-all hover:bg-primary/20 hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+        compact ? "text-xs sm:text-sm" : "text-sm",
+        className,
+      )}
+      aria-label={`${modelName} — αντικατάσταση Touch: ${WATCH_CALL_LABEL}`}
+      data-testid={testId}
+    >
+      <Phone className="w-3.5 h-3.5 shrink-0" aria-hidden />
+      {WATCH_CALL_LABEL}
+    </a>
+  );
+}
+
 function WatchPriceButton({
   model,
-  kind,
   amount,
   onSelect,
-  variant = "touch",
   testId,
 }: {
   model: WatchModel;
-  kind: RepairKind;
   amount: number;
   onSelect: (model: WatchModel, kind: RepairKind) => void;
-  variant?: "touch" | "battery";
   testId: string;
 }) {
-  const repairLabel = kind === "touch" ? "αντικατάσταση Touch" : "αλλαγή μπαταρίας";
   return (
     <button
       type="button"
-      onClick={() => onSelect(model, kind)}
-      className={cn(
-        priceButtonClass,
-        variant === "touch" ? "text-primary" : "text-foreground hover:text-cyan-400",
-      )}
-      aria-label={`${model.name} — ${repairLabel} από €${amount}`}
+      onClick={() => onSelect(model, "battery")}
+      className={cn(priceButtonClass, "text-foreground hover:text-cyan-400")}
+      aria-label={`${model.name} — αλλαγή μπαταρίας από €${amount}`}
       data-testid={testId}
     >
       €{amount}
@@ -61,7 +84,6 @@ function WatchPriceButton({
 
 function WatchPriceCard({
   model,
-  kind,
   amount,
   label,
   onSelect,
@@ -69,7 +91,6 @@ function WatchPriceCard({
   className,
 }: {
   model: WatchModel;
-  kind: RepairKind;
   amount: number;
   label: string;
   onSelect: (model: WatchModel, kind: RepairKind) => void;
@@ -79,7 +100,7 @@ function WatchPriceCard({
   return (
     <button
       type="button"
-      onClick={() => onSelect(model, kind)}
+      onClick={() => onSelect(model, "battery")}
       className={cn(
         "p-2 rounded-lg border text-center transition-all duration-200 cursor-pointer hover:border-primary/45 hover:bg-primary/15 hover:text-cyan-400 active:scale-[0.98]",
         className,
@@ -112,13 +133,13 @@ const jsonLd = {
     "telephone": "+306981882005",
     "address": { "@type": "PostalAddress", "addressLocality": "Αθήνα", "addressCountry": "GR" },
   },
-  "description": "Επισκευή Apple Watch στην Αθήνα. Αντικατάσταση touch (εξωτερικό τζάμι) από €80 και αλλαγή μπαταρίας από €40. Series 3 έως Ultra 2. Γραπτή εγγύηση.",
+  "description": "Επισκευή Apple Watch στην Αθήνα. Αντικατάσταση touch (εξωτερικό τζάμι) κατόπιν τηλεφωνικής επικοινωνίας και αλλαγή μπαταρίας από €40. Series 3 έως Ultra 2. Γραπτή εγγύηση.",
   "serviceType": "Επισκευή Apple Watch",
   "areaServed": "Αθήνα",
   "offers": APPLE_WATCH_MODELS.map((m) => ({
     "@type": "Offer",
-    "name": `Αντικατάσταση Touch ${m.name}`,
-    "price": m.touchPriceFrom,
+    "name": `Αλλαγή Μπαταρίας ${m.name}`,
+    "price": m.batteryPriceFrom,
     "priceCurrency": "EUR",
   })),
 };
@@ -138,13 +159,14 @@ export default function ServiceAppleWatch() {
   const [repairPrefill, setRepairPrefill] = useState<RepairPrefill>(defaultRepairPrefill);
 
   const handleOpenContactForm = useCallback((model: WatchModel, kind: RepairKind) => {
-    const isTouch = kind === "touch";
+    if (kind === "touch") {
+      window.location.href = WATCH_CALL_TEL;
+      return;
+    }
     setRepairPrefill({
       deviceName: model.name,
-      notes: isTouch
-        ? `Ενδιαφέρομαι για αντικατάσταση Touch (εξωτερικό τζάμι) — ${model.name}. Ενδεικτική τιμή από €${model.touchPriceFrom}.`
-        : `Ενδιαφέρομαι για αλλαγή μπαταρίας — ${model.name}. Ενδεικτική τιμή από €${model.batteryPriceFrom}.`,
-      totalInclVat: isTouch ? model.touchPriceFrom : model.batteryPriceFrom,
+      notes: `Ενδιαφέρομαι για αλλαγή μπαταρίας — ${model.name}. Ενδεικτική τιμή από €${model.batteryPriceFrom}.`,
+      totalInclVat: model.batteryPriceFrom,
     });
     setModalOpen(true);
   }, []);
@@ -161,8 +183,8 @@ export default function ServiceAppleWatch() {
   return (
     <div className="min-h-screen bg-background circuit-bg">
       <Seo
-        title="Επισκευή Apple Watch Αθήνα — Αντικατάσταση Touch & Μπαταρία από €40 | HiTech Doctor"
-        description="Επισκευή Apple Watch στην Αθήνα. Αντικατάσταση touch (εξωτερικό τζάμι) από €80 και αλλαγή μπαταρίας από €40. Series 3 έως Ultra 2. Γραπτή εγγύηση."
+        title="Επισκευή Apple Watch Αθήνα — Touch & Μπαταρία από €40 | HiTech Doctor"
+        description="Επισκευή Apple Watch στην Αθήνα. Αντικατάσταση touch κατόπιν τηλεφώνου και αλλαγή μπαταρίας από €40. Series 3 έως Ultra 2. Γραπτή εγγύηση."
         url="https://hitechdoctor.com/services/episkeui-apple-watch"
       />
       <Helmet>
@@ -225,8 +247,8 @@ export default function ServiceAppleWatch() {
                         <strong className="text-amber-200">Δεν</strong> πραγματοποιούμε αντικατάσταση εσωτερικής OLED/LCD οθόνης
                       </li>
                       <li className="flex items-center gap-2 text-xs text-amber-200/80">
-                        <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0" />
-                        Οι τιμές είναι <strong className="text-amber-200">ενδεικτικές — ξεκινούν από</strong> το αναφερόμενο ποσό. Η τελική τιμή εξαρτάται από το μοντέλο και την κατάσταση της συσκευής.
+                        <Phone className="w-3 h-3 text-amber-400 shrink-0" />
+                        Για <strong className="text-amber-200">Touch</strong>: καλέστε μας — <strong className="text-amber-200">Πάρε τηλέφωνο</strong>. Για μπαταρία οι τιμές είναι ενδεικτικές «από».
                       </li>
                     </ul>
                   </div>
@@ -267,10 +289,15 @@ export default function ServiceAppleWatch() {
                 <Watch className="w-6 h-6 text-primary mb-3" />
                 <p className="text-sm font-bold text-foreground mb-1">Αντικατάσταση Touch</p>
                 <p className="text-xs text-muted-foreground mb-3">Εξωτερικό γυάλινο τζάμι — όχι OLED panel</p>
-                <p className="text-3xl font-extrabold text-primary">
-                  από €80
-                </p>
-                <p className="text-[10px] text-muted-foreground mt-1">ενδεικτική τιμή εκκίνησης · συμπ. ΦΠΑ</p>
+                <a
+                  href={WATCH_CALL_TEL}
+                  className="inline-flex items-center gap-2 text-xl sm:text-2xl font-extrabold text-primary hover:underline underline-offset-4"
+                  data-testid="link-touch-call-hero"
+                >
+                  <Phone className="w-5 h-5 shrink-0" aria-hidden />
+                  {WATCH_CALL_LABEL}
+                </a>
+                <p className="text-[10px] text-muted-foreground mt-1">καλέστε για προσφορά ανά μοντέλο</p>
               </div>
               <div className="p-5 rounded-2xl border border-white/10 bg-card">
                 <Battery className="w-6 h-6 text-primary mb-3" />
@@ -296,18 +323,18 @@ export default function ServiceAppleWatch() {
           </p>
           <p className="text-xs text-primary/90 mb-6 flex items-center gap-1.5">
             <Info className="w-3.5 h-3.5 shrink-0" />
-            Κάντε κλικ σε μια τιμή Touch ή Μπαταρίας για να ανοίξει η φόρμα αιτήματος επισκευής.
+            Touch: πατήστε «Πάρε τηλέφωνο». Μπαταρία: κλικ στην τιμή για φόρμα αιτήματος.
           </p>
 
           {/* Desktop table — χωρίς στήλη Ραντεβού */}
-          <div className="hidden md:block rounded-2xl border border-white/10 overflow-hidden" data-watch-table-version="clickable-prices-v2">
+          <div className="hidden md:block rounded-2xl border border-white/10 overflow-hidden" data-watch-table-version="touch-call-v3">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-white/10 bg-white/3">
                   <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">Μοντέλο</th>
                   <th className="text-center px-4 py-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">Έτος</th>
                   <th className="text-center px-4 py-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">Μέγεθος</th>
-                  <th className="text-center px-4 py-3 text-xs font-bold uppercase tracking-widest text-primary">Touch από</th>
+                  <th className="text-center px-4 py-3 text-xs font-bold uppercase tracking-widest text-primary">Touch</th>
                   <th className="text-center px-4 py-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">Μπαταρία από</th>
                 </tr>
               </thead>
@@ -331,22 +358,16 @@ export default function ServiceAppleWatch() {
                     <td className="px-4 py-4 text-center text-sm text-muted-foreground">{model.year}</td>
                     <td className="px-4 py-4 text-center text-sm text-muted-foreground">{model.sizes}</td>
                     <td className="px-4 py-4 text-center">
-                      <WatchPriceButton
-                        model={model}
-                        kind="touch"
-                        amount={model.touchPriceFrom}
-                        onSelect={handleOpenContactForm}
-                        variant="touch"
+                      <WatchTouchCallLink
+                        modelName={model.name}
                         testId={`button-touch-${model.slug}`}
                       />
                     </td>
                     <td className="px-4 py-4 text-center">
                       <WatchPriceButton
                         model={model}
-                        kind="battery"
                         amount={model.batteryPriceFrom}
                         onSelect={handleOpenContactForm}
-                        variant="battery"
                         testId={`button-battery-${model.slug}`}
                       />
                     </td>
@@ -372,18 +393,16 @@ export default function ServiceAppleWatch() {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
+                  <div className="p-2 rounded-lg border border-primary/20 bg-primary/8 flex flex-col items-center justify-center gap-1.5 min-h-[4.5rem]">
+                    <p className="text-[9px] text-muted-foreground">Touch</p>
+                    <WatchTouchCallLink
+                      modelName={model.name}
+                      testId={`button-touch-mobile-${model.slug}`}
+                      compact
+                    />
+                  </div>
                   <WatchPriceCard
                     model={model}
-                    kind="touch"
-                    amount={model.touchPriceFrom}
-                    label="Touch από"
-                    onSelect={handleOpenContactForm}
-                    testId={`button-touch-mobile-${model.slug}`}
-                    className="border-primary/20 bg-primary/8 text-primary"
-                  />
-                  <WatchPriceCard
-                    model={model}
-                    kind="battery"
                     amount={model.batteryPriceFrom}
                     label="Μπαταρία από"
                     onSelect={handleOpenContactForm}
@@ -398,8 +417,7 @@ export default function ServiceAppleWatch() {
           <div className="mt-4 p-3 rounded-lg border border-white/8 bg-white/3 flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Οι τιμές <strong className="text-foreground">ξεκινούν από</strong> το αναγραφόμενο ποσό και <strong className="text-foreground">δεν είναι τελικές</strong>.
-              Η τελική τιμή επιβεβαιώνεται μετά την αξιολόγηση της συσκευής από τον τεχνικό. Δωρεάν έλεγχος χωρίς δέσμευση επισκευής.
+              Για <strong className="text-foreground">Touch</strong> καλέστε μας («Πάρε τηλέφωνο»). Οι τιμές <strong className="text-foreground">μπαταρίας</strong> ξεκινούν από το αναγραφόμενο ποσό και δεν είναι τελικές — επιβεβαίωση μετά την αξιολόγηση.
             </p>
           </div>
         </section>
@@ -430,7 +448,14 @@ export default function ServiceAppleWatch() {
                   ))}
                 </ul>
                 <div className="mt-4 p-2 rounded-lg bg-primary/15 text-center">
-                  <p className="text-xl font-extrabold text-primary">από €80<span className="text-sm font-normal text-muted-foreground ml-1">(ενδεικτικά)</span></p>
+                  <a
+                    href={WATCH_CALL_TEL}
+                    className="inline-flex items-center justify-center gap-2 text-lg font-extrabold text-primary hover:underline underline-offset-4"
+                    data-testid="link-touch-call-explain"
+                  >
+                    <Phone className="w-4 h-4" aria-hidden />
+                    {WATCH_CALL_LABEL}
+                  </a>
                 </div>
               </div>
               <div className="p-5 rounded-2xl border border-red-500/20 bg-red-500/5">
@@ -493,7 +518,7 @@ export default function ServiceAppleWatch() {
             <div className="space-y-3 max-w-3xl">
               {[
                 { q: "Κάνετε αντικατάσταση της οθόνης Apple Watch;", a: "Όχι — πραγματοποιούμε αποκλειστικά αντικατάσταση του εξωτερικού γυάλινου τζαμιού (touch/digitizer) και αλλαγή μπαταρίας. Δεν αντικαθιστούμε εσωτερική OLED/LCD οθόνη (display panel)." },
-                { q: "Ποια είναι η τιμή αντικατάστασης touch Apple Watch;", a: "Η αντικατάσταση touch ξεκινά από €80 — αυτή είναι η ελάχιστη, ενδεικτική τιμή εκκίνησης, ΟΧΙ η τελική. Η τελική τιμή εξαρτάται από το μοντέλο και επιβεβαιώνεται μετά την αξιολόγηση." },
+                { q: "Ποια είναι η τιμή αντικατάστασης touch Apple Watch;", a: "Για αντικατάσταση Touch καλέστε μας στο 6981 882 005 — «Πάρε τηλέφωνο». Η τιμή επιβεβαιώνεται τηλεφωνικά ανά μοντέλο και κατάσταση συσκευής." },
                 { q: "Πόσο κοστίζει η αλλαγή μπαταρίας Apple Watch;", a: "Η αλλαγή μπαταρίας ξεκινά από €40 (ελάχιστη ενδεικτική τιμή). Για νεότερα μοντέλα (Ultra, Series 9/10) η τιμή είναι υψηλότερη λόγω πολυπλοκότερης αποσυναρμολόγησης." },
                 { q: "Πόσο χρόνο κάνει η επισκευή;", a: "Αντικατάσταση touch: συνήθως εντός ημέρας. Αλλαγή μπαταρίας: εντός ημέρας ή έως 24 ώρες. Η αποσυναρμολόγηση Apple Watch απαιτεί χρόνο για σωστή εκτέλεση." },
                 { q: "Επισκευάζετε όλα τα μοντέλα Apple Watch;", a: "Ναι — από Series 3 (2017) έως Ultra 2 (2024). Για κάθε μοντέλο έχουμε διαφορετική τιμολόγηση. Δείτε τον τιμοκατάλογο παραπάνω." },
