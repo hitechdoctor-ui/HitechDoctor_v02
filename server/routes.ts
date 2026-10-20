@@ -44,6 +44,10 @@ import { APIError } from "openai";
 import { getRepairCatalogPromptBlock, runRepairAssistantChat } from "./chat-assistant";
 import { extractContactIntakeFields } from "./contact-ai-intake";
 import {
+  adminOverviewPeriodSchema,
+  adminOverviewResponseSchema,
+} from "@shared/admin-overview";
+import {
   compactAssistantDisplayText,
   splitAssistantReply,
   tryParseLeadFromText,
@@ -1764,6 +1768,44 @@ export async function registerRoutes(
       res.json(stats);
     } catch {
       res.status(401).json({ message: "Unauthorized" });
+    }
+  });
+
+  /** Συγκεντρωτικά KPI Επισκόπησης — authenticated admin */
+  app.get("/api/admin/overview", async (req, res) => {
+    try {
+      const u = await getAdminUserFromRequest(req);
+      if (!u) return res.status(401).json({ message: "Σύνδεση απαιτείται" });
+      const periodParsed = adminOverviewPeriodSchema.safeParse(
+        typeof req.query.period === "string" ? req.query.period : "week",
+      );
+      const analyticsPeriod = periodParsed.success ? periodParsed.data : "week";
+      const superAdmin = isSuperAdminUser(u);
+      const data = await storage.getAdminOverview({
+        analyticsPeriod,
+        includeAnalytics: superAdmin,
+        includeFinancials: superAdmin,
+      });
+      if (superAdmin) {
+        const ga4 = await fetchGa4Summary(
+          analyticsPeriod === "day" ? "day" : analyticsPeriod === "month" ? "month" : "week",
+        );
+        data.ga4 = {
+          configured: ga4.configured,
+          activeUsers: ga4.activeUsers,
+          screenPageViews: ga4.screenPageViews,
+          propertyId: ga4.propertyId,
+        };
+      }
+      data.canViewFinancials = superAdmin;
+      const parsed = adminOverviewResponseSchema.parse(data);
+      res.json(parsed);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(500).json({ message: "Μη έγκυρη απάντηση overview", details: err.errors });
+      }
+      console.error("[admin/overview]", err);
+      res.status(500).json({ message: "Αποτυχία φόρτωσης επισκόπησης" });
     }
   });
 

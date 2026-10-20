@@ -51,6 +51,11 @@ import {
 import { eq, desc, and, sql, lte, gte, count, lt, isNotNull, type SQL } from "drizzle-orm";
 import { siteAnalyticsDashboardFilter } from "./analytics-filter";
 import { queueHubSpotContactSync } from "./hubspot";
+import {
+  friendlyAnalyticsPathLabel,
+  type AdminOverviewAction,
+  type AdminOverviewResponse,
+} from "@shared/admin-overview";
 
 export interface IStorage {
   // Products
@@ -217,6 +222,12 @@ export interface IStorage {
     today: number;
     dailyLast7Days: { date: string; count: number }[];
   }>;
+
+  getAdminOverview(opts: {
+    analyticsPeriod: "day" | "week" | "month";
+    includeAnalytics: boolean;
+    includeFinancials: boolean;
+  }): Promise<import("@shared/admin-overview").AdminOverviewResponse>;
 
   // Suppliers & sync
   getSuppliers(): Promise<Supplier[]>;
@@ -1102,6 +1113,265 @@ export class DatabaseStorage implements IStorage {
     }
 
     return { today, dailyLast7Days };
+  }
+
+  async getAdminOverview(opts: {
+    analyticsPeriod: "day" | "week" | "month";
+    includeAnalytics: boolean;
+    includeFinancials: boolean;
+  }): Promise<AdminOverviewResponse> {
+    const now = new Date();
+    const startToday = this.startOfLocalDay(now);
+    const startYesterday = new Date(startToday.getTime() - 86400000);
+    const startWeek = new Date(startToday.getTime() - 6 * 86400000);
+    const startMonth = new Date(startToday);
+    startMonth.setDate(1);
+    const prevMonthStart = new Date(startMonth);
+    prevMonthStart.setMonth(prevMonthStart.getMonth() - 1);
+
+    const countRepairs = async (cond: SQL) => {
+      const [r] = await db
+        .select({ c: sql<number>`cast(count(*) as integer)` })
+        .from(repairRequests)
+        .where(cond);
+      return r?.c ?? 0;
+    };
+    const countOrders = async (cond: SQL) => {
+      const [r] = await db.select({ c: sql<number>`cast(count(*) as integer)` }).from(orders).where(cond);
+      return r?.c ?? 0;
+    };
+    const countInquiries = async (cond: SQL) => {
+      const [r] = await db
+        .select({ c: sql<number>`cast(count(*) as integer)` })
+        .from(websiteInquiries)
+        .where(cond);
+      return r?.c ?? 0;
+    };
+    const countOffers = async (cond: SQL) => {
+      const [r] = await db
+        .select({ c: sql<number>`cast(count(*) as integer)` })
+        .from(productOfferInterests)
+        .where(cond);
+      return r?.c ?? 0;
+    };
+
+    const sumRepairRevenue = async (from: Date, to: Date) => {
+      // Aggregate στη βάση: τιμή αίτησης (τα line items συνοψίζονται στο admin Οικονομικά)
+      const [row] = await db
+        .select({
+          s: sql<number>`cast(coalesce(sum(${repairRequests.price}::numeric), 0) as float)`,
+        })
+        .from(repairRequests)
+        .where(
+          and(
+            eq(repairRequests.status, "completed"),
+            gte(repairRequests.createdAt, from),
+            lt(repairRequests.createdAt, to),
+          )!,
+        );
+      return Number(row?.s ?? 0);
+    };
+
+    const [
+      repairsToday,
+      repairsTodayPrev,
+      repairsPending,
+      repairsInProgress,
+      repairsReady,
+      ordersToday,
+      ordersTodayPrev,
+      inquiriesPending,
+      inquiriesPendingPrev,
+      offersToday,
+      offersYesterday,
+    ] = await Promise.all([
+      countRepairs(gte(repairRequests.createdAt, startToday)),
+      countRepairs(and(gte(repairRequests.createdAt, startYesterday), lt(repairRequests.createdAt, startToday))!),
+      countRepairs(eq(repairRequests.status, "pending")),
+      countRepairs(eq(repairRequests.status, "in-progress")),
+      countRepairs(eq(repairRequests.status, "completed")),
+      countOrders(gte(orders.createdAt, startToday)),
+      countOrders(and(gte(orders.createdAt, startYesterday), lt(orders.createdAt, startToday))!),
+      countInquiries(eq(websiteInquiries.status, "pending")),
+      countInquiries(
+        and(
+          eq(websiteInquiries.status, "pending"),
+          gte(websiteInquiries.createdAt, startYesterday),
+          lt(websiteInquiries.createdAt, startToday),
+        )!,
+      ),
+      countOffers(gte(productOfferInterests.createdAt, startToday)),
+      countOffers(
+        and(gte(productOfferInterests.createdAt, startYesterday), lt(productOfferInterests.createdAt, startToday))!,
+      ),
+    ]);
+
+    const unreadMessages = inquiriesPending + offersToday;
+    const unreadMessagesPrev = inquiriesPendingPrev + offersYesterday;
+
+    let monthRevenue = 0;
+    let monthRevenuePrev = 0;
+    if (opts.includeFinancials) {
+      [monthRevenue, monthRevenuePrev] = await Promise.all([
+        sumRepairRevenue(startMonth, now),
+        sumRepairRevenue(prevMonthStart, startMonth),
+      ]);
+    }
+
+    const pendingRepairs = await db
+      .select({
+        id: repairRequests.id,
+        firstName: repairRequests.firstName,
+        lastName: repairRequests.lastName,
+        deviceName: repairRequests.deviceName,
+        phone: repairRequests.phone,
+        createdAt: repairRequests.createdAt,
+      })
+      .from(repairRequests)
+      .where(eq(repairRequests.status, "pending"))
+      .orderBy(desc(repairRequests.createdAt))
+      .limit(4);
+
+    const readyRepairs = await db
+      .select({
+        id: repairRequests.id,
+        firstName: repairRequests.firstName,
+        lastName: repairRequests.lastName,
+        deviceName: repairRequests.deviceName,
+        phone: repairRequests.phone,
+        createdAt: repairRequests.createdAt,
+      })
+      .from(repairRequests)
+      .where(eq(repairRequests.status, "completed"))
+      .orderBy(desc(repairRequests.createdAt))
+      .limit(3);
+
+    const pendingOrders = await db
+      .select({
+        id: orders.id,
+        totalAmount: orders.totalAmount,
+        createdAt: orders.createdAt,
+        customerId: orders.customerId,
+      })
+      .from(orders)
+      .where(eq(orders.status, "pending"))
+      .orderBy(desc(orders.createdAt))
+      .limit(3);
+
+    const pendingMsgs = await db
+      .select({
+        id: websiteInquiries.id,
+        firstName: websiteInquiries.firstName,
+        lastName: websiteInquiries.lastName,
+        createdAt: websiteInquiries.createdAt,
+      })
+      .from(websiteInquiries)
+      .where(eq(websiteInquiries.status, "pending"))
+      .orderBy(desc(websiteInquiries.createdAt))
+      .limit(2);
+
+    const actions: AdminOverviewAction[] = [];
+    for (const r of pendingRepairs) {
+      const name = `${r.firstName} ${r.lastName ?? ""}`.trim();
+      actions.push({
+        id: `repair-pending-${r.id}`,
+        kind: "repair_pending",
+        title: `Νέο αίτημα #${r.id} — ${name}`,
+        subtitle: `${r.deviceName || "Συσκευή"} · ${r.phone}`,
+        href: `/admin/repair-requests`,
+        actionLabel: "Άνοιγμα",
+        createdAt: r.createdAt ? r.createdAt.toISOString() : null,
+      });
+    }
+    for (const r of readyRepairs) {
+      const name = `${r.firstName} ${r.lastName ?? ""}`.trim();
+      actions.push({
+        id: `repair-ready-${r.id}`,
+        kind: "repair_ready",
+        title: `Έτοιμο για παραλαβή #${r.id} — ${name}`,
+        subtitle: r.deviceName || "Συσκευή",
+        href: `/admin/repair-requests`,
+        actionLabel: "Κάρτα",
+        createdAt: r.createdAt ? r.createdAt.toISOString() : null,
+      });
+    }
+    for (const o of pendingOrders) {
+      actions.push({
+        id: `order-pending-${o.id}`,
+        kind: "order_pending",
+        title: `Παραγγελία #${o.id} προς αποστολή`,
+        subtitle: `${Number(o.totalAmount).toFixed(2)} €`,
+        href: `/admin/orders`,
+        actionLabel: "Παραγγελίες",
+        createdAt: o.createdAt ? o.createdAt.toISOString() : null,
+      });
+    }
+    for (const m of pendingMsgs) {
+      const name = `${m.firstName} ${m.lastName ?? ""}`.trim();
+      actions.push({
+        id: `msg-pending-${m.id}`,
+        kind: "message_pending",
+        title: `Μήνυμα ιστοσελίδας — ${name}`,
+        subtitle: "Αναμονή απάντησης",
+        href: `/admin/website-inquiries`,
+        actionLabel: "Άνοιγμα",
+        createdAt: m.createdAt ? m.createdAt.toISOString() : null,
+      });
+    }
+
+    actions.sort((a, b) => {
+      const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return tb - ta;
+    });
+
+    let analytics: AdminOverviewResponse["analytics"] = null;
+    if (opts.includeAnalytics) {
+      const stats = await this.getAnalyticsStats();
+      const chat = await this.getChatActivityStats();
+      const topPeriod =
+        opts.analyticsPeriod === "day" ? "day" : opts.analyticsPeriod === "month" ? "month" : "week";
+      const topRaw = await this.getAnalyticsTopPages(topPeriod);
+      const chatByDate = new Map(chat.dailyLast7Days.map((d) => [d.date, d.count]));
+      analytics = {
+        visitsToday: stats.today,
+        visitsYesterday: stats.yesterday,
+        visitsWeek: stats.weekTotal,
+        visitsMonth: stats.monthTotal,
+        chatToday: chat.today,
+        daily: stats.dailyLast7Days.map((d) => ({
+          date: d.date,
+          visits: d.count,
+          chat: chatByDate.get(d.date) ?? 0,
+        })),
+        topPages: topRaw.slice(0, 5).map((r) => ({
+          path: r.path,
+          label: friendlyAnalyticsPathLabel(r.path),
+          count: r.count,
+        })),
+      };
+    }
+
+    return {
+      generatedAt: now.toISOString(),
+      kpi: {
+        repairsToday,
+        repairsTodayPrev,
+        repairsPending,
+        unreadMessages,
+        unreadMessagesPrev,
+        repairsInProgress,
+        repairsReady,
+        ordersToday,
+        ordersTodayPrev,
+        monthRevenue,
+        monthRevenuePrev,
+      },
+      actions: actions.slice(0, 8),
+      analytics,
+      ga4: null,
+      canViewFinancials: opts.includeFinancials,
+    };
   }
 
   // --- Suppliers & XML sync ---
