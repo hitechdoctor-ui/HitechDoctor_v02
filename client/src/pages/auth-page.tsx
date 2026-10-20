@@ -32,7 +32,12 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
-export function decodeAdminToken(token: string | null): { name?: string; email?: string; role?: string } {
+export function decodeAdminToken(token: string | null): {
+  name?: string;
+  email?: string;
+  role?: string;
+  superAdmin?: boolean;
+} {
   if (!token) return {};
   try {
     const decoded = atob(token);

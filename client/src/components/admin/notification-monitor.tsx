@@ -256,7 +256,7 @@ export function NotificationMonitor({ enabled }: { enabled: boolean }) {
   if (!enabled) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-[80] flex gap-2">
+    <div className="fixed bottom-4 right-4 z-[80] flex gap-2 pointer-events-auto max-w-[calc(100vw-1.5rem)]">
       {unread > 0 && (
         <Button
           variant="outline"

@@ -1,9 +1,10 @@
 import { Link, useLocation } from "wouter";
 import type { LucideIcon } from "lucide-react";
-import { Package, Users, ShoppingCart, LayoutDashboard, LogOut, Wrench, Euro, Menu, X, Shield, Globe, MessageSquare, Lock, UserCog, Download, Link2, Tag, RefreshCw, TableProperties, PieChart } from "lucide-react";
+import { Package, Users, ShoppingCart, LayoutDashboard, LogOut, Wrench, Euro, Menu, X, Shield, Globe, MessageSquare, Lock, UserCog, Download, Link2, Tag, RefreshCw, TableProperties, PieChart, Settings, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useState, useEffect, useMemo, useRef } from "react";
+import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@shared/routes";
 import { getAdminAuthHeaders } from "@/lib/queryClient";
@@ -13,6 +14,7 @@ import { AdminAuthPanel, decodeAdminToken } from "@/pages/auth-page";
 import { NotificationMonitor } from "@/components/admin/notification-monitor";
 
 const STORAGE_KEY = ADMIN_TOKEN_STORAGE_KEY;
+const SIDEBAR_EXPANDED_KEY = "hitech_admin_sidebar_expanded";
 /** Διακριτικός ήχος όταν αυξάνεται ο αριθμός μη ολοκληρωμένων παραγγελιών (public). */
 const OPEN_ORDERS_NOTIFICATION_MP3 = "/notification.mp3";
 
@@ -66,12 +68,27 @@ function linkIsActive(href: string, location: string): boolean {
 export function AdminLayout({ children }: AdminLayoutProps) {
   const [location, setLocation] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(() => {
+    try {
+      return localStorage.getItem(SIDEBAR_EXPANDED_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
   const [token, setToken] = useState<string | null>(() => {
     try { return localStorage.getItem(STORAGE_KEY); } catch { return null; }
   });
   const [adminInfo, setAdminInfo] = useState(() => decodeAdminToken(
     (() => { try { return localStorage.getItem(STORAGE_KEY); } catch { return null; } })()
   ));
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SIDEBAR_EXPANDED_KEY, sidebarExpanded ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  }, [sidebarExpanded]);
 
   /** Token από Google OAuth redirect (#hitech_google_auth=...) */
   useEffect(() => {
@@ -240,6 +257,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         { href: "/admin/oikonomika", label: "Οικονομικά", icon: Euro },
         { href: "/admin/ipsw-downloads", label: "IPSW λήψεις", icon: Download },
         { href: "/admin/users", label: "Διαχειριστές", icon: UserCog },
+        { href: "/admin/settings", label: "Ρυθμίσεις", icon: Settings },
       ],
     },
   ];
@@ -333,24 +351,63 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     );
   };
 
-  const SidebarContent = ({ compact = false }: { compact?: boolean }) => (
+  const SidebarContent = ({
+    compact = false,
+    showDesktopToggle = false,
+  }: {
+    compact?: boolean;
+    showDesktopToggle?: boolean;
+  }) => (
     <>
-      <div className={`border-b border-white/5 flex items-center ${compact ? "p-3 justify-center" : "p-5 justify-between"}`}>
-        <Link href="/" className="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity" title="HiTech Admin">
+      <div
+        className={`border-b border-white/5 flex ${
+          compact ? "flex-col items-center gap-1.5 p-2" : "items-center gap-2 p-5 justify-between"
+        }`}
+      >
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity min-w-0"
+          title="HiTech Admin"
+        >
           {compact ? (
-            <span className="text-sm font-display font-bold tracking-tight">HT</span>
+            <span className="text-sm font-display font-bold tracking-tight py-1">HT</span>
           ) : (
-            <h2 className="text-xl font-display font-bold">HiTech Admin</h2>
+            <h2 className="text-xl font-display font-bold truncate">HiTech Admin</h2>
           )}
         </Link>
-        {!compact && (
-          <button
-            onClick={() => setMobileOpen(false)}
-            className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        )}
+        <div className="flex items-center gap-1 shrink-0">
+          {showDesktopToggle ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => setSidebarExpanded((v) => !v)}
+                  className="hidden md:flex w-9 h-9 items-center justify-center rounded-xl bg-white/5 text-muted-foreground hover:text-foreground hover:bg-white/10 transition-colors"
+                  aria-label={sidebarExpanded ? "Σύμπτυξη μενού" : "Επέκταση μενού"}
+                  aria-expanded={sidebarExpanded}
+                >
+                  {sidebarExpanded ? (
+                    <PanelLeftClose className="w-4 h-4" />
+                  ) : (
+                    <PanelLeftOpen className="w-4 h-4" />
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={10} className="border-white/10 bg-card text-foreground">
+                {sidebarExpanded ? "Σύμπτυξη" : "Επέκταση"}
+              </TooltipContent>
+            </Tooltip>
+          ) : null}
+          {!compact && (
+            <button
+              onClick={() => setMobileOpen(false)}
+              className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Κλείσιμο μενού"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       <nav className={`flex-1 flex flex-col overflow-y-auto overflow-x-visible ${compact ? "p-2 gap-2" : "p-4 gap-3"}`}>
@@ -441,11 +498,18 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     </>
   );
 
+  const desktopCompact = !sidebarExpanded;
+
   return (
     <TooltipProvider delayDuration={150}>
     <div className="min-h-screen bg-background flex">
-      <aside className="hidden md:flex w-16 bg-card border-r border-white/5 flex-col sticky top-0 h-screen z-20 shrink-0">
-        <SidebarContent compact />
+      <aside
+        className={cn(
+          "hidden md:flex bg-card border-r border-white/5 flex-col sticky top-0 h-screen z-20 shrink-0 transition-[width] duration-200 ease-out",
+          desktopCompact ? "w-16" : "w-64",
+        )}
+      >
+        <SidebarContent compact={desktopCompact} showDesktopToggle />
       </aside>
 
       {mobileOpen && (
@@ -472,7 +536,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <span className="text-sm font-display font-bold text-primary">HiTech Admin</span>
         </div>
 
-        <div className="p-3 sm:p-5 md:p-6 lg:p-8 max-w-7xl mx-auto">
+        {/* Extra bottom/right padding so floating notifications δεν καλύπτουν περιεχόμενο */}
+        <div className="p-3 sm:p-5 md:p-6 lg:p-8 max-w-7xl mx-auto pb-24 pr-4 sm:pr-6 md:pr-8 lg:pr-10">
           {children}
         </div>
       </main>

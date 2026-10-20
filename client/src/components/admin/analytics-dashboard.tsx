@@ -139,14 +139,6 @@ export function AnalyticsDashboard() {
           <p className="text-xs text-muted-foreground mt-0.5">
             Επισκέψεις ιστοτόπου, AI chat και δημοφιλείς σελίδες (τελευταία ενημέρωση κάθε ~1 λεπτό)
           </p>
-          <p className="text-[11px] text-muted-foreground/90 mt-2 max-w-3xl leading-relaxed border-l-2 border-primary/30 pl-3">
-            Τα νούμερα «Επισκέψεις» εδώ είναι{" "}
-            <span className="text-foreground/90 font-medium">πρώτο-πρόσωπο</span> (καταγραφή SPA στον server)· το
-            Google Analytics μετράει μόνο αν έχει οριστεί{" "}
-            <code className="text-[10px] bg-white/5 px-1 rounded">VITE_GA_MEASUREMENT_ID=G-…</code> στο build και ο
-            επισκέπτης έχει αποδεχτεί cookies ανάλυσης. Φίλτρα IP/health check: env{" "}
-            <code className="text-[10px] bg-white/5 px-1 rounded">ANALYTICS_EXCLUDE_IPS</code>.
-          </p>
         </div>
         <Button variant="outline" size="sm" className="border-white/15 shrink-0 w-full sm:w-auto" asChild>
           <Link href="/admin/insights" data-testid="btn-analytics-more-insights">
@@ -251,27 +243,28 @@ export function AnalyticsDashboard() {
 
       <Card className="bg-card/80 border-white/10 backdrop-blur-sm border-blue-500/15">
         <CardHeader className="pb-2">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-            <div>
-              <CardTitle className="text-base font-display flex items-center gap-2">
-                <LineChart className="w-4 h-4 text-blue-400" aria-hidden />
-                Google Analytics 4 (Data API)
-              </CardTitle>
-              <CardDescription className="text-xs mt-1">
-                Ίδια περίοδο με «Top σελίδα» πάνω — απαιτεί{" "}
-                <code className="text-[10px] bg-white/5 px-1 rounded">GA4_PROPERTY_ID</code> (αριθμός property) + service
-                account στο GA4 ως Viewer.
-              </CardDescription>
-            </div>
-          </div>
+          <CardTitle className="text-base font-display flex items-center gap-2">
+            <LineChart className="w-4 h-4 text-blue-400" aria-hidden />
+            Google Analytics 4
+          </CardTitle>
+          <CardDescription className="text-xs mt-1">
+            Ίδια περίοδος με «Top σελίδα». Οδηγίες σύνδεσης στις{" "}
+            <Link href="/admin/settings" className="text-primary hover:underline font-medium">
+              Ρυθμίσεις
+            </Link>
+            .
+          </CardDescription>
         </CardHeader>
         <CardContent className="text-sm">
           {ga4Q.isLoading ? (
             <p className="text-muted-foreground">Φόρτωση GA4…</p>
           ) : ga4Q.data?.configured === false ? (
-            <p className="text-muted-foreground leading-relaxed">
-              Δεν είναι ενεργό: {ga4Q.data?.reason ?? "λείπει ρύθμιση server env."}
-            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-muted-foreground leading-relaxed">Το GA4 δεν είναι ακόμα συνδεδεμένο.</p>
+              <Button variant="outline" size="sm" className="border-white/15" asChild>
+                <Link href="/admin/settings">Σύνδεση GA4</Link>
+              </Button>
+            </div>
           ) : ga4Q.data?.error ? (
             <p className="text-rose-300/95 text-xs leading-relaxed">Σφάλμα API: {ga4Q.data.error}</p>
           ) : (
