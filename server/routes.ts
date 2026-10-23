@@ -34,7 +34,6 @@ import { runImeiLookup } from "./imei-lookup";
 import { getClientIp, lookupGeoForIp, parseUserAgent } from "./analytics-enrichment";
 import { shouldSkipAnalyticsTrack } from "./analytics-filter";
 import { fetchGa4Summary, type Ga4Period } from "./ga4-admin";
-import { fetchHubSpotContacts } from "./hubspot";
 import bcrypt from "bcrypt";
 import { sendOrderStatusEmail } from "./nodemailer-mail";
 import { notifyOrderStatusChange, notifyRepairStatusChange, sendViberText } from "./viber";
@@ -1439,20 +1438,27 @@ export async function registerRoutes(
       const body = schema.parse(req.body);
       const ua = typeof req.headers["user-agent"] === "string" ? req.headers["user-agent"] : null;
       const ip = getClientIp(req);
+      // Γρήγορο skip πριν το geo lookup (bots / excluded IP / empty UA)
       if (shouldSkipAnalyticsTrack(ip, ua)) {
         return res.status(204).end();
       }
       const { osFamily, browserFamily } = parseUserAgent(ua);
       let geoCity: string | null = null;
       let geoRegion: string | null = null;
+      let geoCountry: string | null = null;
       if (ip) {
         try {
           const g = await lookupGeoForIp(ip);
           geoCity = g.city;
           geoRegion = g.region;
+          geoCountry = g.country;
         } catch {
           /* geolocation optional */
         }
+      }
+      // Defense in depth: ANALYTICS_GREECE_ONLY=1 μετά το geo
+      if (shouldSkipAnalyticsTrack(ip, ua, geoCountry)) {
+        return res.status(204).end();
       }
       await storage.trackPageVisit({
         sessionId: body.sessionId,
@@ -1463,6 +1469,7 @@ export async function registerRoutes(
         browserFamily,
         geoCity,
         geoRegion,
+        geoCountry,
         clientIp: ip,
       });
       res.status(204).end();
@@ -1490,20 +1497,6 @@ export async function registerRoutes(
         msg.includes("IMEI_LOOKUP_URL_TEMPLATE not set");
       const status = isConfig ? 503 : 400;
       res.status(status).json({ ok: false, error: msg });
-    }
-  });
-
-  app.get("/api/admin/hubspot/contacts", async (req, res) => {
-    try {
-      const user = await requireSuperAdmin(req, res);
-      if (!user) return;
-      const contacts = await fetchHubSpotContacts();
-      res.json(contacts);
-    } catch (err) {
-      console.error("[hubspot/contacts]", err);
-      const msg = err instanceof Error ? err.message : "HubSpot error";
-      const status = msg.includes("HUBSPOT_ACCESS_TOKEN") ? 503 : 500;
-      res.status(status).json({ message: msg });
     }
   });
 

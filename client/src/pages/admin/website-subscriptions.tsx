@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getAdminAuthHeaders } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Globe, Plus, Pencil, Trash2, AlertTriangle, CheckCircle2, XCircle, Download, Search, Printer } from "lucide-react";
 import { exportToCsv, formatDateEl } from "@/lib/csv-export";
@@ -132,10 +132,17 @@ export default function AdminWebsiteSubscriptions() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const { data: subs = [], isLoading } = useQuery<Subscription[]>({
+  const { data: subsData, isLoading } = useQuery<Subscription[]>({
     queryKey: ["/api/subscriptions", "website"],
-    queryFn: () => fetch("/api/subscriptions?type=website").then(r => r.json()),
+    queryFn: async () => {
+      const res = await fetch("/api/subscriptions?type=website", {
+        headers: getAdminAuthHeaders(),
+      });
+      if (!res.ok) throw new Error("Failed to fetch subscriptions");
+      return res.json();
+    },
   });
+  const subs = Array.isArray(subsData) ? subsData : [];
 
   const filtered = useMemo(() => {
     let list = subs;
@@ -143,8 +150,8 @@ export default function AdminWebsiteSubscriptions() {
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(s =>
-        s.customerName.toLowerCase().includes(q) ||
-        s.email.toLowerCase().includes(q) ||
+        (s.customerName || "").toLowerCase().includes(q) ||
+        (s.email || "").toLowerCase().includes(q) ||
         (s.phone || "").includes(q) ||
         (s.notes || "").toLowerCase().includes(q)
       );

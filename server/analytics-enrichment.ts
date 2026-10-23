@@ -1,7 +1,14 @@
 import type { Request } from "express";
 
+export type GeoLookupResult = {
+  city: string | null;
+  region: string | null;
+  /** ISO 3166-1 alpha-2 (π.χ. GR) */
+  country: string | null;
+};
+
 /** Cache IP → geo ώστε να μην υπερβαίνουμε τα όρια του δωρεάν ipapi.co */
-const GEO_CACHE = new Map<string, { city: string | null; region: string | null; expires: number }>();
+const GEO_CACHE = new Map<string, GeoLookupResult & { expires: number }>();
 const GEO_TTL_MS = 24 * 60 * 60 * 1000;
 const GEO_FETCH_TIMEOUT_MS = 2500;
 
@@ -68,13 +75,21 @@ export function parseUserAgent(ua: string | null): { osFamily: string; browserFa
   return { osFamily, browserFamily };
 }
 
-/** Δωρεάν tier: https://ipapi.co — city + region (πολιτεία/περιοχή) */
-export async function lookupGeoForIp(ip: string): Promise<{ city: string | null; region: string | null }> {
-  if (isPrivateOrLocalIp(ip)) return { city: null, region: null };
+function normalizeCountryCode(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const c = raw.trim().toUpperCase();
+  return /^[A-Z]{2}$/.test(c) ? c : null;
+}
+
+/** Δωρεάν tier: https://ipapi.co — city + region + country_code */
+export async function lookupGeoForIp(ip: string): Promise<GeoLookupResult> {
+  if (isPrivateOrLocalIp(ip)) return { city: null, region: null, country: null };
 
   const now = Date.now();
   const hit = GEO_CACHE.get(ip);
-  if (hit && hit.expires > now) return { city: hit.city, region: hit.region };
+  if (hit && hit.expires > now) {
+    return { city: hit.city, region: hit.region, country: hit.country };
+  }
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), GEO_FETCH_TIMEOUT_MS);
@@ -85,20 +100,32 @@ export async function lookupGeoForIp(ip: string): Promise<{ city: string | null;
       headers: { Accept: "application/json" },
     });
     if (!res.ok) {
-      GEO_CACHE.set(ip, { city: null, region: null, expires: now + 60 * 60 * 1000 });
-      return { city: null, region: null };
+      GEO_CACHE.set(ip, {
+        city: null,
+        region: null,
+        country: null,
+        expires: now + 60 * 60 * 1000,
+      });
+      return { city: null, region: null, country: null };
     }
     const j = (await res.json()) as Record<string, unknown>;
     if (j.error) {
-      GEO_CACHE.set(ip, { city: null, region: null, expires: now + 60 * 60 * 1000 });
-      return { city: null, region: null };
+      GEO_CACHE.set(ip, {
+        city: null,
+        region: null,
+        country: null,
+        expires: now + 60 * 60 * 1000,
+      });
+      return { city: null, region: null, country: null };
     }
     const city = typeof j.city === "string" && j.city.trim() ? j.city.trim() : null;
     const region = typeof j.region === "string" && j.region.trim() ? j.region.trim() : null;
-    GEO_CACHE.set(ip, { city, region, expires: now + GEO_TTL_MS });
-    return { city, region };
+    const country =
+      normalizeCountryCode(j.country_code) ?? normalizeCountryCode(j.country);
+    GEO_CACHE.set(ip, { city, region, country, expires: now + GEO_TTL_MS });
+    return { city, region, country };
   } catch {
-    return { city: null, region: null };
+    return { city: null, region: null, country: null };
   } finally {
     clearTimeout(timer);
   }

@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import type { LucideIcon } from "lucide-react";
-import { Package, Users, ShoppingCart, LayoutDashboard, LogOut, Wrench, Euro, Menu, X, Shield, Globe, MessageSquare, Lock, UserCog, Download, Link2, Tag, RefreshCw, TableProperties, PieChart, Settings, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Package, Users, ShoppingCart, LayoutDashboard, LogOut, Wrench, Euro, Menu, X, Shield, Globe, MessageSquare, Lock, UserCog, Download, Tag, RefreshCw, TableProperties, PieChart, Settings, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useState, useEffect, useMemo, useRef } from "react";
@@ -34,7 +34,6 @@ const SUPER_ADMIN_ROUTE_PREFIXES = [
   "/admin/antivirus-subscriptions",
   "/admin/website-subscriptions",
   "/admin/customers",
-  "/admin/hubspot",
   "/admin/sync",
   "/admin/repair-price-overrides",
   "/admin/oikonomika",
@@ -235,7 +234,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       title: "CRM",
       items: [
         { href: "/admin/customers", label: "Πελατολόγιο (CRM)", icon: Users },
-        { href: "/admin/hubspot", label: "HubSpot — Επαφές", icon: Link2 },
       ],
     },
     {

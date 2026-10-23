@@ -95,7 +95,6 @@ const AdminIpswDownloads = lazyWithReload(() => import("./pages/admin/ipsw-downl
 const AdminProductOfferInterests = lazyWithReload(() => import("./pages/admin/product-offer-interests"));
 const AdminSupplierSync = lazyWithReload(() => import("./pages/admin/supplier-sync"));
 const AdminRepairPriceOverrides = lazyWithReload(() => import("./pages/admin/repair-price-overrides"));
-const AdminHubspotContacts = lazyWithReload(() => import("./pages/admin/hubspot-contacts"));
 const AdminSettings = lazyWithReload(() => import("./pages/admin/settings"));
 
 function PageLoader() {
@@ -291,14 +290,6 @@ function Router() {
             component={() => (
               <SuperAdminGuard>
                 <AdminCustomers />
-              </SuperAdminGuard>
-            )}
-          />
-          <Route
-            path="/admin/hubspot"
-            component={() => (
-              <SuperAdminGuard>
-                <AdminHubspotContacts />
               </SuperAdminGuard>
             )}
           />

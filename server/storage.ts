@@ -50,7 +50,6 @@ import {
 } from "@shared/schema";
 import { eq, desc, and, sql, lte, gte, count, lt, isNotNull, type SQL } from "drizzle-orm";
 import { siteAnalyticsDashboardFilter } from "./analytics-filter";
-import { queueHubSpotContactSync } from "./hubspot";
 import {
   friendlyAnalyticsPathLabel,
   type AdminOverviewAction,
@@ -195,6 +194,7 @@ export interface IStorage {
     browserFamily: string;
     geoCity?: string | null;
     geoRegion?: string | null;
+    geoCountry?: string | null;
     clientIp?: string | null;
   }): Promise<void>;
 
@@ -376,7 +376,6 @@ export class DatabaseStorage implements IStorage {
       const [created] = await db.insert(customers).values({ name, email, phone: phone || null }).returning();
       result = created;
     }
-    queueHubSpotContactSync({ name: result.name, email: result.email, phone: result.phone });
     return result;
   }
 
@@ -477,15 +476,6 @@ export class DatabaseStorage implements IStorage {
     } else {
       const [newCustomer] = await db.insert(customers).values(payload.customer).returning();
       customerId = newCustomer.id;
-    }
-
-    const customerForHubspot = await this.getCustomer(customerId);
-    if (customerForHubspot) {
-      queueHubSpotContactSync({
-        name: customerForHubspot.name,
-        email: customerForHubspot.email,
-        phone: customerForHubspot.phone,
-      });
     }
 
     let totalAmount = 0;
@@ -887,6 +877,7 @@ export class DatabaseStorage implements IStorage {
     browserFamily: string;
     geoCity?: string | null;
     geoRegion?: string | null;
+    geoCountry?: string | null;
     clientIp?: string | null;
   }): Promise<void> {
     await db.insert(siteAnalytics).values({
@@ -898,6 +889,7 @@ export class DatabaseStorage implements IStorage {
       browserFamily: data.browserFamily.slice(0, 64),
       geoCity: data.geoCity?.slice(0, 128) ?? null,
       geoRegion: data.geoRegion?.slice(0, 128) ?? null,
+      geoCountry: data.geoCountry?.slice(0, 8)?.toUpperCase() ?? null,
       clientIp: data.clientIp?.slice(0, 64) ?? null,
     });
   }

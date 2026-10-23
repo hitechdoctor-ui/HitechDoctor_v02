@@ -12,7 +12,8 @@
     "sync:fixmobile-pdf": "tsx script/sync-fixmobile-pdf.ts",
     "gsc:404-import": "tsx script/parse-gsc-404-csv.ts",
     "sync:device-catalog": "tsx script/sync-device-catalog.ts",
-    "enrich:device-catalog-images": "tsx script/enrich-device-catalog-images.ts"
+    "enrich:device-catalog-images": "tsx script/enrich-device-catalog-images.ts",
+    "cleanup:analytics-bots": "tsx script/cleanup-analytics-bots.ts"
   },
   "dependencies": {
     "@google-analytics/data": "^4.12.1",

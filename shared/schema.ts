@@ -192,6 +192,8 @@ export const siteAnalytics = pgTable(
     geoCity: text("geo_city"),
     /** Περιοχή / νομός (region) από geolocation API */
     geoRegion: text("geo_region"),
+    /** ISO country code (π.χ. GR) από geolocation — null σε παλιές εγγραφές */
+    geoCountry: text("geo_country"),
     /** IP επισκέπτη (για φίλτρα dashboard / εξαίρεση admin) — null σε παλιές εγγραφές */
     clientIp: text("client_ip"),
     visitedAt: timestamp("visited_at").defaultNow(),
@@ -203,6 +205,7 @@ export const siteAnalytics = pgTable(
     index("site_analytics_session_id_idx").on(t.sessionId),
     index("site_analytics_os_family_idx").on(t.osFamily),
     index("site_analytics_geo_city_idx").on(t.geoCity),
+    index("site_analytics_geo_country_idx").on(t.geoCountry),
   ]
 );
 

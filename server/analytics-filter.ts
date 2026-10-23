@@ -1,5 +1,5 @@
 import type { SQL } from "drizzle-orm";
-import { and, ilike, inArray, isNull, not, or } from "drizzle-orm";
+import { and, ilike, inArray, isNull, not, or, sql } from "drizzle-orm";
 import { siteAnalytics } from "@shared/schema";
 
 /**
@@ -25,28 +25,130 @@ function parseExtraUaSubstrings(): string[] {
     .filter(Boolean);
 }
 
-/** Υπο-συμβολοσειρές User-Agent που αγνοούμε (bots / health checks). Απενεργοποίηση: ANALYTICS_DISABLE_UA_BOT_FILTER=1 */
+/**
+ * Γνωστά bots / crawlers / AI scrapers / uptime & health probes.
+ * Case-insensitive substring match στο User-Agent.
+ * Κρατάμε συγκεκριμένα tokens (όχι γενικό "bot") για λιγότερα false positives.
+ */
+export const DEFAULT_ANALYTICS_BOT_UA_SUBSTRINGS: readonly string[] = [
+  // Search crawlers
+  "googlebot",
+  "bingbot",
+  "slurp",
+  "duckduckbot",
+  "baiduspider",
+  "yandexbot",
+  "yandex.com/bots",
+  "applebot",
+  "seznambot",
+  "exabot",
+  // SEO / site auditors
+  "ahrefs",
+  "semrush",
+  "majestic",
+  "dotbot",
+  "mj12bot",
+  "rogerbot",
+  "screaming frog",
+  "seobility",
+  "serpstat",
+  "dataforseo",
+  // AI / LLM scrapers
+  "gptbot",
+  "chatgpt-user",
+  "oai-searchbot",
+  "claudebot",
+  "anthropic-ai",
+  "claude-web",
+  "ccbot",
+  "bytespider",
+  "perplexitybot",
+  "perplexity",
+  "meta-externalagent",
+  "meta-externalfetcher",
+  "amazonbot",
+  "cohere-ai",
+  "diffbot",
+  "img2dataset",
+  // Social / link preview fetchers (όχι πραγματικοί επισκέπτες)
+  "facebookexternalhit",
+  "facebot",
+  "twitterbot",
+  "linkedinbot",
+  "slackbot",
+  "discordbot",
+  "telegrambot",
+  "whatsapp",
+  "pinterest",
+  "embedly",
+  "quora link preview",
+  "vkshare",
+  // Uptime / synthetic monitors
+  "uptimerobot",
+  "pingdom",
+  "statuscake",
+  "site24x7",
+  "betteruptime",
+  "better stack",
+  "healthcheck",
+  "health-check",
+  "nodeping",
+  "freshping",
+  "monitoringservice",
+  // Cloud / PaaS probes
+  "kube-probe",
+  "googlehc",
+  "google-apps-script",
+  "amazon-route53",
+  "cloudflare-healthchecks",
+  "cloudflare-traffic-manager",
+  "railway",
+  "render/",
+  "fly.io",
+  "digitalocean uptime",
+  // Headless / automation / HTTP clients
+  "headlesschrome",
+  "phantomjs",
+  "selenium",
+  "puppeteer",
+  "playwright",
+  "cypress",
+  "go-http-client",
+  "python-requests",
+  "python-urllib",
+  "aiohttp",
+  "httpx",
+  "libwww-perl",
+  "scrapy",
+  "okhttp",
+  "curl/",
+  "wget",
+  "httpie",
+  "java/",
+  "apache-httpclient",
+  "node-fetch",
+  "undici",
+  // Generic crawler markers (σχετικά ασφαλή)
+  "bot/",
+  "bot;",
+  "spider",
+  "crawler",
+  "crawl/",
+];
+
+/** Υπο-συμβολοσειρές User-Agent που αγνοούμε. Απενεργοποίηση defaults: ANALYTICS_DISABLE_UA_BOT_FILTER=1 */
 export function analyticsExcludedUaSubstrings(): string[] {
   const extra = parseExtraUaSubstrings();
   if (process.env.ANALYTICS_DISABLE_UA_BOT_FILTER === "1") {
     return extra;
   }
-  const defaults = [
-    "railway",
-    "go-http-client",
-    "kube-probe",
-    "googlehc",
-    "okhttp",
-    "healthcheck",
-    "pingdom",
-    "uptimerobot",
-  ];
-  return [...defaults, ...extra];
+  return [...DEFAULT_ANALYTICS_BOT_UA_SUBSTRINGS, ...extra];
 }
 
-function uaMatchesExcluded(ua: string | null): boolean {
-  if (!ua || !ua.trim()) return false;
-  const lower = ua.toLowerCase();
+/** True αν το UA ταιριάζει σε γνωστό bot/crawler (ή extra env substrings). */
+export function isBotUserAgent(userAgent: string | null | undefined): boolean {
+  if (!userAgent || !userAgent.trim()) return false;
+  const lower = userAgent.toLowerCase();
   return analyticsExcludedUaSubstrings().some((sub) => lower.includes(sub));
 }
 
@@ -57,9 +159,29 @@ function ipMatchesExcluded(ip: string | null): boolean {
   return set.some((ex) => ex === normalized);
 }
 
-/** Αν true, δεν αποθηκεύουμε εγγραφή (και το API επιστρέφει 204). */
-export function shouldSkipAnalyticsTrack(ip: string | null, userAgent: string | null): boolean {
-  return ipMatchesExcluded(ip) || uaMatchesExcluded(userAgent);
+/**
+ * Αν true, δεν αποθηκεύουμε εγγραφή (και το API επιστρέφει 204).
+ * - excluded IP (env)
+ * - missing/blank UA (άμεσο API hit χωρίς browser)
+ * - bot/crawler UA denylist
+ * - προαιρετικά: μη-Ελλάδα όταν ANALYTICS_GREECE_ONLY=1 και υπάρχει country code
+ */
+export function shouldSkipAnalyticsTrack(
+  ip: string | null,
+  userAgent: string | null,
+  geoCountry?: string | null
+): boolean {
+  if (ipMatchesExcluded(ip)) return true;
+  if (!userAgent || !userAgent.trim()) return true;
+  if (isBotUserAgent(userAgent)) return true;
+  if (
+    process.env.ANALYTICS_GREECE_ONLY === "1" &&
+    geoCountry &&
+    geoCountry.trim().toUpperCase() !== "GR"
+  ) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -81,6 +203,16 @@ export function siteAnalyticsDashboardFilter(): SQL | undefined {
     const pattern = `%${sub}%`;
     parts.push(
       or(isNull(siteAnalytics.userAgent), not(ilike(siteAnalytics.userAgent, pattern))) as SQL
+    );
+  }
+
+  if (process.env.ANALYTICS_GREECE_ONLY === "1") {
+    // Κρύβει μη-GR όταν υπάρχει country· παλιές γραμμές χωρίς country μένουν ορατές
+    parts.push(
+      or(
+        isNull(siteAnalytics.geoCountry),
+        sql`upper(${siteAnalytics.geoCountry}) = 'GR'`
+      ) as SQL
     );
   }
 
